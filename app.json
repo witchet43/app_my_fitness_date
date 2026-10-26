@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "my_fitness_date",
+    "slug": "my-fitness-date",
+    "scheme": "myfitnessdate",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "edgeToEdgeEnabled": true
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}
