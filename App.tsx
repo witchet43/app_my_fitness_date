@@ -5,11 +5,12 @@ import AuthPanel from './src/features/AuthPanel';
 import LiveCommunity from './src/features/LiveCommunity';
 import LiveTogether from './src/features/LiveTogether';
 import LiveDating from './src/features/LiveDating';
+import AdminModeration from './src/features/AdminModeration';
 import { supabase, supabaseIsConfigured } from './src/lib/supabase';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
 
-type Tab = 'community' | 'together' | 'dating';
+type Tab = 'community' | 'together' | 'dating' | 'admin';
 const TABS: Array<{ id: Tab; title: string; emoji: string }> = [
   { id: 'community', title: 'Comunidad', emoji: '◉' },
   { id: 'together', title: 'Actividades', emoji: '◎' },
@@ -22,6 +23,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(!supabaseIsConfigured);
   const [authError, setAuthError] = useState('');
+  const [moderator, setModerator] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -46,6 +48,29 @@ export default function App() {
     return ()=>{active=false;listener.data.subscription.unsubscribe();};
   },[]);
 
+  useEffect(() => {
+    setModerator(false);
+    if (!session || !supabase) return;
+    const client = supabase;
+    let active = true;
+    void (async () => {
+      try {
+        const { data, error } = await client.rpc('is_moderator');
+        if (active) {
+          if (error) setAuthError(error.message);
+          setModerator(!error && data === true);
+        }
+      } catch (error: unknown) {
+        if (active) setAuthError(error instanceof Error ? error.message : 'Error al verificar permisos');
+      }
+    })();
+    return () => { active = false; };
+  }, [session?.user.id]);
+
+  const visibleTabs: Array<{ id: Tab; title: string; emoji: string }> = moderator && session
+    ? [...TABS, { id: 'admin', title: 'Moderación', emoji: '⚑' }]
+    : TABS;
+
   const matches = useMemo(() =>
     demoCandidates.filter(candidate=>isEligibleForDating({...currentUser,mode},candidate)),[mode]);
 
@@ -60,7 +85,7 @@ export default function App() {
       </Pressable>}
     </View>
     <View style={s.tabs}>
-      {TABS.map(item=><Pressable key={item.id} accessibilityRole="tab"
+      {visibleTabs.map(item=><Pressable key={item.id} accessibilityRole="tab"
         accessibilityState={{selected:tab===item.id}} onPress={()=>setTab(item.id)}
         style={[s.tab,tab===item.id&&s.tabActive]}>
         <Text style={[s.tabText,tab===item.id&&s.tabTextActive]}>
@@ -70,12 +95,14 @@ export default function App() {
     </View>
     <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <View style={s.notice}><Text style={s.noticeText}>DESARROLLO · Sin usuarios reales · Acceso controlado pendiente</Text></View>
+      {tab==='admin' && !moderator && <Text style={s.warning}>Acceso administrativo no autorizado.</Text>}
       {supabaseIsConfigured ? (
         !authReady ? <Text style={s.lead}>Comprobando sesión...</Text> :
         session ? <View key={session.user.id + tab}>
           {tab==='community' && <LiveCommunity session={session}/>}
           {tab==='together' && <LiveTogether session={session}/>}
           {tab==='dating' && <LiveDating session={session}/>}
+          {tab==='admin' && moderator && <AdminModeration session={session}/>}
         </View> : <AuthPanel/>
       ) : <>
         <Text style={s.lead}>Demostración local con datos ficticios. Configura Supabase para activar las funciones sociales.</Text>
