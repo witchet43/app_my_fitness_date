@@ -1,0 +1,20 @@
+# Run manually with Maestro on an installed Android/iOS native DEV build.
+# Must launch without EXPO_PUBLIC_SUPABASE_URL to stay in synthetic demo mode.
+appId: com.myfitnessdate.dev
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: tab-community
+- assertVisible: "Tu gente se mueve"
+- tapOn:
+    id: tab-together
+- assertVisible: "Entrena acompañado"
+- tapOn:
+    id: tab-dating
+- assertVisible: "Gym Shield"
+- tapOn: "Mismo gym, otro horario"
+- assertVisible: "Solo otros gimnasios"
+- tapOn:
+    id: tab-community
+- assertVisible: "Tu gente se mueve"
