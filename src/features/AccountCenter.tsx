@@ -19,7 +19,8 @@ export default function AccountCenter({session,onStatusChange}:AccountCenterProp
   if(error)throw error;
   const result=data as AccountStatus;
   setStatus(result);onStatusChange(Boolean(result?.pending));
- },[session.user.id,onStatusChange]);
+ // onStatusChange updates parent state but does not affect the RPC inputs.
+ },[session.user.id]);
  useEffect(()=>{
   let active=true;
   async function load(){
