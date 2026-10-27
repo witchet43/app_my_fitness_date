@@ -216,7 +216,7 @@ export default function App() {
       {authError?<Text style={s.warning}>{authError}</Text>:null}
     </ScrollView>
     </KeyboardAvoidingView>
-    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.15.0</Text></View>
+    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.17.0</Text></View>
   </SafeAreaView>;
 }
 
