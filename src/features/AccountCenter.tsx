@@ -118,7 +118,13 @@ export default function AccountCenter({session,onStatusChange}:AccountCenterProp
    </>}
   </View>
   {message?<Text style={styles.feedback}>{message}</Text>:null}
-  <Text style={styles.help}>Solo entorno de desarrollo. Las solicitudes no se ejecutan automáticamente después de siete días. Los plazos definitivos de conservación están pendientes de definición legal.</Text>
+  <View style={styles.card}>
+   <Text style={styles.subtitle}>Conservación de información</Text>
+   <Text style={styles.help}>Los registros temporales de consultas de citas pueden limpiarse después de 30 días, exclusivamente mediante un procedimiento administrativo autorizado y auditado.</Text>
+   <Text style={styles.help}>Si tu cuenta está vinculada a denuncias, apelaciones o incidentes, esos registros y sus contadores asociados quedan sujetos a revisión de conservación y no se borran automáticamente.</Text>
+   <Text style={styles.help}>Las copias de seguridad, archivos de Storage y registros del proveedor requieren verificación y tratamiento por separado. Este proceso no representa una eliminación instantánea de todos tus datos.</Text>
+  </View>
+  <Text style={styles.help}>Solo entorno de desarrollo. Las solicitudes de baja no se ejecutan automáticamente después de siete días. Los plazos definitivos de conservación de evidencias dependen de una política legal todavía pendiente.</Text>
  </View>;
 }
 function formatError(error:unknown){return error instanceof Error?error.message:'Operación no disponible';}
