@@ -14,11 +14,16 @@ alter table app_private.erasure_approvals
 create or replace function app_private.cancel_account_deletion()
 returns jsonb language plpgsql security definer set search_path = ''
 as $$
-declare v_user uuid:=(select auth.uid());
+declare
+ v_user uuid:=(select auth.uid());
+ v_processing timestamptz;
 begin
  if v_user is null then raise exception 'Sign-in required'; end if;
- if exists(select 1 from app_private.erasure_approvals a
-           where a.user_id=v_user and a.processing_at is not null) then
+ -- Serialize with the operator's SELECT FOR UPDATE on this approval row.
+ -- Cancellation wins -> preflight fails; claim wins -> cancellation fails.
+ select processing_at into v_processing from app_private.erasure_approvals a
+ where a.user_id=v_user for update;
+ if v_processing is not null then
   raise exception 'ERASURE_IN_PROGRESS' using errcode='P0001';
  end if;
  delete from app_private.account_deletion_requests where user_id=v_user;
