@@ -58,3 +58,7 @@ jobs:
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/appeals_notifications_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202610270007_account_privacy.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/account_privacy_integration.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202610270008_operator_erasure_preflight.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/operator_erasure_integration.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202610270009_erasure_claim_session_guard.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/erasure_claim_session_guard_integration.sql
