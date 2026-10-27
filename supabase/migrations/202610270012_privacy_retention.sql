@@ -20,6 +20,39 @@ grant usage on schema app_private to service_role;
 grant select,insert on app_private.privacy_prune_audit to service_role;
 grant select,delete on app_private.dating_request_counters to service_role;
 
+grant select on
+ app_private.user_notifications,
+ app_private.safety_reports,
+ app_private.moderation_appeals,
+ app_private.moderation_audit,
+ app_private.incident_escalations,
+ app_private.incident_audit,
+ app_private.account_deletion_requests
+ to service_role;
+
+-- Even temporary telemetry is kept when a person participated in a case.
+-- Release of evidentiary holds requires separate legal/human review.
+create function app_private.counter_has_evidence_hold(p_user_id uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $
+ select exists(select 1 from app_private.safety_reports r
+    where r.reporter_id=p_user_id or r.subject_user_id=p_user_id)
+ or exists(select 1 from app_private.moderation_appeals a
+    where a.appellant_id=p_user_id)
+ or exists(select 1 from app_private.moderation_audit a
+    where a.actor_id=p_user_id)
+ or exists(select 1 from app_private.appeal_decision_audit a
+    where a.reviewer_id=p_user_id)
+ or exists(select 1 from app_private.incident_escalations e
+    where e.escalated_by=p_user_id or e.closed_by=p_user_id)
+ or exists(select 1 from app_private.incident_audit a
+    where a.actor_id=p_user_id);
+$;
+revoke execute on function app_private.counter_has_evidence_hold(uuid)
+ from public,anon,authenticated;
+grant execute on function app_private.counter_has_evidence_hold(uuid) to service_role;
+
+
 -- Read-only inventory. Aggregated counts only; no identities or case details.
 create function public.operator_privacy_inventory()
 returns jsonb language plpgsql stable security invoker set search_path = ''
@@ -34,7 +67,11 @@ begin
   'generated_at',now(),
   'counters_cutoff',v_cutoff,
   'eligible_dating_counters',(select count(*) from app_private.dating_request_counters
-    where bucket_start<v_cutoff),
+    where bucket_start<v_cutoff
+      and not app_private.counter_has_evidence_hold(user_id)),
+  'held_dating_counters',(select count(*) from app_private.dating_request_counters
+    where bucket_start<v_cutoff
+      and app_private.counter_has_evidence_hold(user_id)),
   'retained_notifications',(select count(*) from app_private.user_notifications),
   'retained_safety_reports',(select count(*) from app_private.safety_reports),
   'retained_appeals',(select count(*) from app_private.moderation_appeals),
@@ -70,6 +107,7 @@ begin
    select c.user_id,c.action,c.bucket_start
    from app_private.dating_request_counters c
    where c.bucket_start<v_cutoff
+     and not app_private.counter_has_evidence_hold(c.user_id)
    order by c.bucket_start,c.user_id,c.action
    limit p_limit for update skip locked
  ), removed as(
@@ -88,7 +126,8 @@ begin
    'evidence_deleted',false,
    'remaining_eligible_dating_counters',(
      select count(*) from app_private.dating_request_counters
-       where bucket_start<v_cutoff)
+       where bucket_start<v_cutoff
+         and not app_private.counter_has_evidence_hold(user_id))
  );
 end;
 $$;
