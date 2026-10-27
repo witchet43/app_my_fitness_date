@@ -91,3 +91,29 @@ begin
  end if;
 end $$;
 reset role;
+
+-- Clean synthetic account, eligible only after approval and seven days.
+insert into auth.users(id) values('10000000-0000-4000-8000-000000000005');
+set role authenticated;
+select set_config('request.jwt.claim.sub',
+ '10000000-0000-4000-8000-000000000005',false);
+select public.request_account_deletion();
+reset role;
+insert into app_private.erasure_approvals(user_id,ticket,reviewer_note)
+values('10000000-0000-4000-8000-000000000005',
+ 'DEV-ERASURE-TICKET-005','Clean synthetic test account approved for dry-run.');
+update app_private.account_deletion_requests
+ set requested_at=now()-interval '8 days'
+ where user_id='10000000-0000-4000-8000-000000000005';
+set role service_role;
+do $$
+declare result jsonb;
+begin
+ select public.operator_erasure_preflight(
+ '10000000-0000-4000-8000-000000000005',
+ 'DEV-ERASURE-TICKET-005') into result;
+ if result->>'eligible' is distinct from 'true' then
+  raise exception 'Clean account should be eligible: %',result;
+ end if;
+end $$;
+reset role;
