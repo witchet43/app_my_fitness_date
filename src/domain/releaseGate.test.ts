@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {evaluateCandidateManifest,REQUIRED_GATES} from './releaseGate';
+import {evaluateCandidateManifest,REQUIRED_GATES,type GateId,type GateEvidence} from './releaseGate';
 const pending=Object.fromEntries(REQUIRED_GATES.map(k=>[k,{
  status:'pending',evidence_url:null,verified_at:null,
-}]));
+}])) as Record<GateId,GateEvidence>;
 const manifest=()=>({
  schema_version:1,candidate:'v19-integration-dev',project_ref:'jtrdvnwbxpfdnbzasvcj',
  release_channel:'not_published',environment:'development',gates:structuredClone(pending),
