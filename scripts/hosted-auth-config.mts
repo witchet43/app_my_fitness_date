@@ -1,3 +1,4 @@
+import {URL} from 'node:url';
 /**
  * Management API Auth configuration for the exact HOSTED DEV project only.
  * Usage:
