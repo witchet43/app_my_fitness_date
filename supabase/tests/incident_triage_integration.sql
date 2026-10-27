@@ -160,4 +160,31 @@ begin
   raise exception 'Independent reviewer was not persisted';
  end if;
 end $$;
+
+-- Operator preflight must account for an incident reviewer even if they were
+-- never a subject/reporter of a safety report.
+insert into auth.users(id) values('10000000-0000-4000-8000-000000000015');
+insert into app_private.account_deletion_requests(user_id,requested_at)
+values('10000000-0000-4000-8000-000000000015',now()-interval '8 days');
+insert into app_private.erasure_approvals(user_id,ticket,reviewer_note)
+values('10000000-0000-4000-8000-000000000015',
+ 'QA17-ERASURE-REVIEWER-15','Synthetic incident reviewer evidence retention test.');
+insert into app_private.incident_audit(report_id,actor_id,action,priority,note)
+values('17000000-0000-4000-8000-000000000001',
+ '10000000-0000-4000-8000-000000000015',
+ 'reviewed','urgent','Independent synthetic review evidence.');
+set role service_role;
+do $$
+declare v jsonb;
+begin
+ select public.operator_erasure_preflight(
+  '10000000-0000-4000-8000-000000000015',
+  'QA17-ERASURE-REVIEWER-15') into v;
+ if v->>'eligible' <> 'false'
+   or not(v->'blockers' ? 'incident_retention_review_required') then
+  raise exception 'Erasure preflight ignored reviewer evidence: %',v;
+ end if;
+end $$;
+reset role;
+
 rollback;
