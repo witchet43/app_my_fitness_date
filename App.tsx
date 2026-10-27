@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import LiveDating from './src/features/LiveDating';
+import { supabaseIsConfigured } from './src/lib/supabase';
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
@@ -78,7 +80,8 @@ export default function App() {
           </>
         )}
 
-        {tab === 'dating' && (
+        {tab === 'dating' && supabaseIsConfigured && <LiveDating />}
+        {tab === 'dating' && !supabaseIsConfigured && (
           <>
             <Text style={styles.sectionTitle}>Fitness Dating</Text>
             <Text style={styles.lead}>Las citas son opcionales. Tú decides qué parte de tu círculo quieres mantener separada.</Text>

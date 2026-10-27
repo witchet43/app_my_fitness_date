@@ -1,21 +1,22 @@
 # my_fitness_date
 
-**Red social fitness con comunidades, actividades y citas opcionales.** Proyecto en desarrollo: esta versión es una demostración local, **no un servicio operativo ni apto para datos reales**.
+**Red social fitness para personas adultas con comunidades, entrenamientos y citas opcionales.**
 
-## Primer alcance
+**Estado:** MVP técnico en construcción. El entorno principal aún usa datos ficticios y **no está aprobado para usuarios reales**.
 
-- **Community:** publicaciones y logros de muestra.
-- **Together:** actividades deportivas de muestra.
-- **Dating:** descubre perfiles simulados con la opción de activar una de las dos reglas Gym Shield:
-  1. **Otros gimnasios:** no recomendar personas del gimnasio habitual.
-  2. **Mismo gimnasio, otro horario:** permitir personas de otros gimnasios o del mismo gimnasio si sus bloques semanales de entrenamiento no se superponen.
-- **Privacidad recíproca:** los dos perfiles deben permitir una coincidencia. Se incluyen pruebas de casos límite, falta de horarios y un margen de 30 minutos.
+## Funcionalidades
 
-El gimnasio y los horarios son **datos privados**: nunca deben mostrarse en el perfil público. La app de demostración únicamente manipula datos ficticios; el filtrado en cliente **NO** constituye una medida de seguridad de producción.
+- **Fitness Community:** publicaciones deportivas de demostración.
+- **Fitness Together:** eventos y grupos de demostración.
+- **Fitness Dating / Gym Shield:** dos modos para recomendaciones románticas:
+  1. **Solo otros gimnasios:** personas del mismo gimnasio excluidas.
+  2. **Mismo gimnasio, horario distinto:** requiere que ambas personas acepten este modo, tengan horario recurrente completo y no compartan horarios, con un margen de 30 minutos.
+- **Autenticación Supabase (opcional):** cuando se configura un proyecto de desarrollo, el módulo de citas pasa a usar registro, configuración privada, descubrimiento en servidor, desactivación y bloqueo.
+- **Privacidad:** los horarios y gimnasio de terceros no aparecen en los resultados de descubrimiento.
 
-## Desarrollo local
+## Inicio rápido
 
-Requisitos: Node.js 22+ y npm.
+Requisitos: Node.js 22+, npm, dispositivo/simulador compatible con Expo.
 
 ```bash
 npm install
@@ -24,21 +25,29 @@ npm test
 npm start
 ```
 
-Abre el código QR con una versión de Expo Go compatible con la versión de Expo utilizada o con un simulador Android/iOS configurado. Si tu Expo Go no admite la versión del proyecto, utiliza una build de desarrollo o ajusta la versión de SDK según la guía oficial.
+Sin variables de Supabase, el modo de citas muestra únicamente datos simulados. **No equivale a tener cuentas o matching real.**
 
-## Estructura
+Para preparar una **instancia aislada de desarrollo Supabase**, consulta [docs/SUPABASE.md](docs/SUPABASE.md). Nunca conectes un entorno con personas reales sin completar la evaluación de seguridad y privacidad.
+
+## Código relevante
 
 ```text
-App.tsx                      Demo móvil: Community / Together / Dating
-src/domain/gymShield.ts      Reglas puras de elegibilidad privada
-src/domain/gymShield.test.ts Pruebas automáticas
-src/demo/fixtures.ts         Perfiles y eventos estrictamente ficticios
-docs/MVP.md                  Alcance, criterios y siguientes hitos
-.github/workflows/ci.yml     Comprobación de TypeScript y pruebas en PR
+App.tsx                               App móvil: Community / Together / Dating
+src/features/LiveDating.tsx          Registro y configuración en Supabase
+src/lib/supabase.ts                  Cliente Supabase (publishable key)
+src/domain/gymShield.ts              Motor local *solo para la demo*
+src/domain/gymShield.test.ts         Pruebas unitarias
+supabase/migrations/                 Esquema privado y RPC seguras
+supabase/tests/                      Tests reales PostgreSQL (CI desechable)
+docs/SUPABASE.md                     Instrucciones de despliegue manual
+.github/workflows/ci.yml             TypeScript + Node tests + PostgreSQL
 ```
 
-## Antes de cualquier beta con personas reales
+## Seguridad y límites actuales
 
-Faltan autenticación, verificación de mayoría de edad, consentimiento, base de datos, ejecución **exclusivamente en servidor** del matching, reglas de acceso, bloqueo, reportes, moderación, eliminación de cuenta, política de privacidad y auditoría de seguridad. **No subir datos privados, tokens ni secretos a GitHub.**
+- El filtrado local no protege la privacidad; **solo** el backend migrado utiliza reglas Gym Shield como criterio de descubrimiento.
+- La validación de fecha de nacimiento es **autodeclarada**: todavía no hay verificación real de identidad y edad.
+- La app no tiene chat, reportes, moderación ni prevención exhaustiva contra inferencia de horarios. **No habilitar registros abiertos a usuarios externos.**
+- No guardar credenciales de privilegios elevados, llaves `service_role` ni datos personales en GitHub.
 
-Código sujeto a revisión por pull request. Nombre público del producto: **my_fitness_date**.
+Se trabaja con ramas y pull requests en borrador. Consulta [docs/MVP.md](docs/MVP.md) para el alcance y decisiones.
