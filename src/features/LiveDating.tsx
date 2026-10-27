@@ -68,8 +68,20 @@ export default function LiveDating() {
 
   useEffect(() => {
     if (!session || !supabase) {
+      // Never carry private onboarding fields between signed-in users on one device.
       setCandidates([]);
       setEnabled(false);
+      setHasSetup(false);
+      setGyms([]);
+      setGymId('');
+      setDisplayName('');
+      setCity('Querétaro');
+      setSports('Running, Pesas');
+      setDob('');
+      setMode('other_gyms');
+      setSlots([{ id: 1, day: 1, start: '07:00', end: '08:30' }]);
+      nextSlotId.current = 2;
+      setPassword('');
       return;
     }
     const client = supabase;
@@ -300,7 +312,7 @@ export default function LiveDating() {
         <Text style={styles.body}>＋ Agregar bloque semanal ({slots.length}/14)</Text>
       </Pressable>
       <Pressable style={styles.button} disabled={busy || gyms.length === 0} onPress={() => void saveSettings()}>
-        <Text style={styles.buttonText}>{busy ? 'Guardando...' : hasSetup ? 'Guardar preferencias' : 'Guardar y activar FitDating'}</Text>
+        <Text style={styles.buttonText}>{busy ? 'Guardando...' : hasSetup && enabled ? 'Guardar preferencias' : 'Guardar y activar FitDating'}</Text>
       </Pressable>
       {enabled ? (
         <Pressable style={styles.secondaryButton} disabled={busy} onPress={() => void turnOffDating()}>
