@@ -1,38 +1,56 @@
-# Supabase backend integration
+# Supabase integration — my_fitness_date
 
-## State
-Implemented in source control, **not deployed**. No Supabase project credentials have been provided. The Expo app runs with synthetic data without env settings. When env settings are provided, the **Dating** tab switches to Supabase sign-in and remote discovery.
+## Estado de desarrollo (27 oct 2026)
 
-## Setup (a development environment only)
-1. Create a Supabase development project with Data API exposed schema set to **public** only. Never expose app_private.
-2. Apply supabase/migrations/202610260001_private_dating.sql with the Supabase SQL editor or CLI in that project. Read/review the SQL before deployment.
-3. Copy .env.example to .env and enter the project's URL and **publishable** (not secret/service_role) key. .env is gitignored. Expo variables are public inside the mobile app.
-4. Run npm install then npm start. Create at least two **test-only** accounts and use clearly synthetic names; signup email confirmation may be required.
-5. In Dating, sign in, declare age, fill in dating preferences, choose a synthetic gym, and explore results.
+**Desplegado y probado en** `my_fitness_date_dev`, proyecto `jtrdvnwbxpfdnbzasvcj`, región `us-east-1`.
 
-## Exposure model
-- auth.users is owned by Supabase Auth.
-- public.gyms is a read-only gym catalog; synthetic entries must be replaced before any beta.
-- app_private.dating_profiles, app_private.training_slots and app_private.user_blocks have no direct client permissions and are intentionally outside exposed schemas.
-- app_private.* SECURITY DEFINER functions are deliberately not exposed by the Data API and check auth.uid().
-- public.* RPC wrappers are SECURITY INVOKER and callable only to authenticated role; they return the user's own settings or an allowed **safe card** (id/name/city/sports), without gym IDs or schedule.
-- Dating consent is separate from being signed up to the application. Inactive users cannot discover or appear in candidates.
-- The two server-side rules are reciprocal, with a 30-minute buffer. Same-gym matches require nonempty valid schedules for both profiles.
+- Migración `private_dating_gym_shield_v1`: tablas privadas, bloqueos, dos modalidades Gym Shield.
+- Migración `dating_birthdate_owner_only`: fecha de nacimiento consultable solo por su propietario.
+- Pruebas SQL contra el Supabase real superadas usando usuarios ficticios en una transacción con `ROLLBACK`.
+- **No hay cuentas reales** y el servicio no está listo para el público.
+- El proyecto React Native/Expo se ha integrado a nivel de código, **pero no se ha probado en un dispositivo físico**.
 
-## Current limits: NOT PRODUCTION READY
-- A user may self-report DOB but is **not identity/age verified**.
-- The client currently lets editing one recurrent time interval on several days. API accepts up to 14 slots.
-- Canonical gym list uses **synthetic data**. Gym chain vs branch identity needs policy.
-- No rate limiting, abuse monitoring, chat, mutual likes, moderation, reporting, age-verification provider, profile photo controls, deletion/account export, or privacy-law review.
-- An attacker may infer attributes by manipulating their own settings and observing recommendation changes. Add rate controls and risk assessment before beta.
-- Supabase is not connected/deployed in this code change. GitHub Actions tests use a minimal PostgreSQL auth stub; test again in a real isolated Supabase project before public release.
+## Conexión local (desarrollo)
 
-## Automated validation
-GitHub Actions runs TypeScript/unit tests plus a disposable PostgreSQL 16 instance. Bootstrap shims mimic auth.uid(), roles and auth.users for integration tests; never run bootstrap.sql on Supabase itself.
+Crea el archivo `.env` en la raíz del repositorio (ya ignorado por Git):
 
-## API operations
-- RPC save_dating_setup(...) — writes only own setup; rejects minors by DOB.
-- RPC my_dating_setup() — returns only caller's private preferences.
-- RPC discover_dating_candidates(p_limit) — eligible cards only; p_limit 1..30.
-- RPC disable_dating() — hides user immediately while retaining account.
-- RPC block_user(p_blocked_user_id) — unilateral block applies in both directions to candidate discovery.
+```ini
+EXPO_PUBLIC_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_REEMPLAZAR_POR_LA_CLAVE_PUBLICABLE
+```
+
+Consulta la clave **publishable** en [API Keys del proyecto](https://supabase.com/dashboard/project/jtrdvnwbxpfdnbzasvcj/settings/api-keys). No uses ninguna clave `service_role` o `sb_secret_`.
+
+Ejecuta:
+
+```bash
+npm install
+npm run typecheck
+npm test
+npm start
+```
+
+La pestaña Dating se conectará a Supabase **solo si existen las dos variables**. Sin ellas se mantiene el modo de demostración con datos ficticios. Los gimnasios activos en este entorno son sucursales sintéticas "Gym Demo".
+
+## API y reglas
+
+- `public.gyms`: catálogo RLS, solo lectura para `authenticated`.
+- `app_private.dating_profiles`, `training_slots`, `user_blocks`: sin acceso directo de usuarios.
+- `public.save_dating_setup(...)`: configuraciones propias, consentimiento y DOB autodeclarado.
+- `public.my_dating_setup()`: solo propias preferencias.
+- `public.my_dating_birthdate()`: solo propia fecha; jamás la devuelve un perfil candidato.
+- `public.discover_dating_candidates(p_limit)`: solo tarjetas que pasan filtro privado y recíproco, nunca gimnasio u horarios.
+- `public.disable_dating()` y `public.block_user(...)`: ocultan al usuario y restringen descubrimiento.
+
+### Restricciones
+
+1. Gym Shield exige gimnasio distinto o, si es el mismo, consentimiento recíproco y cero cruces entre todos los intervalos semanales, con margen de 30 minutos.
+2. La autenticación y el DOB declarado **no equivalen a verificación de mayoría de edad**.
+3. El backend todavía permite inferencia por modificaciones repetidas y descubrimientos. **No permitir beta externa** sin rate limits, auditoría y diseño de anti-inferencia.
+4. Antes de beta faltan aceptación de Términos/Privacidad, verificación de edad, denuncias, moderación, eliminación completa y protocolos de seguridad.
+
+## Validación
+
+Las GitHub Actions incluyen pruebas TypeScript, Node, bundle de Android Metro y pruebas PostgreSQL en contenedor desechable. El despliegue real se verificó aparte con una transacción revertida (sin cuentas guardadas).
+
+Documentación adicional: [Iteración 3](ITERATION_3.md) y [Despliegue inicial](DEPLOYMENT_DEV.md).
