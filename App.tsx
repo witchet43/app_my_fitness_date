@@ -1,7 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import LiveDating from './src/features/LiveDating';
-import { supabaseIsConfigured } from './src/lib/supabase';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import type { Session } from '@supabase/supabase-js';
+import AuthPanel from './src/features/AuthPanel';
+import LiveCommunity from './src/features/LiveCommunity';
+import LiveTogether from './src/features/LiveTogether';
+import LiveDating from './src/features/LiveDating';
+import { supabase, supabaseIsConfigured } from './src/lib/supabase';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
 
@@ -15,154 +19,129 @@ const TABS: Array<{ id: Tab; title: string; emoji: string }> = [
 export default function App() {
   const [tab, setTab] = useState<Tab>('community');
   const [mode, setMode] = useState<GymShieldMode>('other_gyms');
+  const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(!supabaseIsConfigured);
+  const [authError, setAuthError] = useState('');
 
-  const matches = useMemo(
-    () => demoCandidates.filter((candidate) =>
-      isEligibleForDating({ ...currentUser, mode }, candidate)),
-    [mode],
-  );
+  useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+    let active = true;
+    void client.auth.getSession().then(({data,error}) => {
+      if (!active) return;
+      if (error) setAuthError(error.message);
+      setSession(data.session);
+      setAuthReady(true);
+    }).catch((error:unknown) => {
+      if (!active) return;
+      setAuthError(error instanceof Error ? error.message : 'Error al obtener sesión');
+      setAuthReady(true);
+    });
+    const listener=client.auth.onAuthStateChange((_event,next)=>{
+      if (active) {
+        setSession(next);
+        setAuthReady(true);
+      }
+    });
+    return ()=>{active=false;listener.data.subscription.unsubscribe();};
+  },[]);
 
-  return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
-      <View style={styles.header}>
-        <Text style={styles.kicker}>TRAIN · CONNECT · BELONG</Text>
-        <Text style={styles.brand}>my_fitness_<Text style={styles.accent}>date</Text></Text>
-        <Text style={styles.subtitle}>Tu comunidad fitness, a tu ritmo.</Text>
-      </View>
+  const matches = useMemo(() =>
+    demoCandidates.filter(candidate=>isEligibleForDating({...currentUser,mode},candidate)),[mode]);
 
-      <View style={styles.tabs}>
-        {TABS.map((item) => (
-          <Pressable
-            key={item.id}
-            onPress={() => setTab(item.id)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: tab === item.id }}
-            style={[styles.tab, tab === item.id && styles.tabActive]}
-          >
-            <Text style={[styles.tabText, tab === item.id && styles.tabTextActive]}>
-              {item.emoji} {item.title}
-            </Text>
+  return <SafeAreaView style={s.safe}>
+    <StatusBar barStyle="light-content" />
+    <View style={s.header}>
+      <Text style={s.kicker}>TRAIN · CONNECT · BELONG</Text>
+      <Text style={s.brand}>my_fitness_<Text style={s.accent}>date</Text></Text>
+      <Text style={s.subtitle}>La comunidad y las citas son espacios independientes.</Text>
+      {session && <Pressable onPress={()=>void supabase?.auth.signOut()} style={s.signout}>
+        <Text style={s.signoutText}>Cerrar sesión</Text>
+      </Pressable>}
+    </View>
+    <View style={s.tabs}>
+      {TABS.map(item=><Pressable key={item.id} accessibilityRole="tab"
+        accessibilityState={{selected:tab===item.id}} onPress={()=>setTab(item.id)}
+        style={[s.tab,tab===item.id&&s.tabActive]}>
+        <Text style={[s.tabText,tab===item.id&&s.tabTextActive]}>
+          {item.emoji} {item.title}
+        </Text>
+      </Pressable>)}
+    </View>
+    <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <View style={s.notice}><Text style={s.noticeText}>DESARROLLO · Sin usuarios reales · Acceso controlado pendiente</Text></View>
+      {supabaseIsConfigured ? (
+        !authReady ? <Text style={s.lead}>Comprobando sesión...</Text> :
+        session ? <View key={session.user.id + tab}>
+          {tab==='community' && <LiveCommunity session={session}/>}
+          {tab==='together' && <LiveTogether session={session}/>}
+          {tab==='dating' && <LiveDating session={session}/>}
+        </View> : <AuthPanel/>
+      ) : <>
+        <Text style={s.lead}>Demostración local con datos ficticios. Configura Supabase para activar las funciones sociales.</Text>
+        {tab==='community' && <>
+          <Text style={s.sectionTitle}>Tu gente se mueve</Text>
+          {demoPosts.map(post=><View style={s.card} key={post.author}>
+            <Text style={s.tag}>{post.sport}</Text>
+            <Text style={s.cardTitle}>{post.author}</Text>
+            <Text style={s.body}>{post.body}</Text>
+          </View>)}
+        </>}
+        {tab==='together' && <>
+          <Text style={s.sectionTitle}>Entrena acompañado</Text>
+          {demoActivities.map(activity=><View style={s.card} key={activity.title}>
+            <Text style={s.tag}>{activity.sport}</Text>
+            <Text style={s.cardTitle}>{activity.title}</Text>
+            <Text style={s.body}>{activity.detail}</Text>
+          </View>)}
+        </>}
+        {tab==='dating' && <>
+          <Text style={s.sectionTitle}>Gym Shield</Text>
+          <Pressable style={[s.option,mode==='other_gyms'&&s.optionActive]} onPress={()=>setMode('other_gyms')}>
+            <Text style={s.body}>Solo otros gimnasios</Text>
           </Pressable>
-        ))}
-      </View>
-
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.notice}>
-          <Text style={styles.noticeText}>DEMO LOCAL · Datos ficticios · Sin usuarios reales</Text>
-        </View>
-
-        {tab === 'community' && (
-          <>
-            <Text style={styles.sectionTitle}>Tu gente se mueve</Text>
-            <Text style={styles.lead}>Una red social para compartir lo que te apasiona del deporte.</Text>
-            {demoPosts.map((post) => (
-              <View key={post.author} style={styles.card}>
-                <Text style={styles.tag}>{post.sport}</Text>
-                <Text style={styles.cardTitle}>{post.author}</Text>
-                <Text style={styles.body}>{post.body}</Text>
-              </View>
-            ))}
-          </>
-        )}
-
-        {tab === 'together' && (
-          <>
-            <Text style={styles.sectionTitle}>Entrena acompañado</Text>
-            <Text style={styles.lead}>Actividades grupales que podrás descubrir y organizar.</Text>
-            {demoActivities.map((activity) => (
-              <View key={activity.title} style={styles.card}>
-                <Text style={styles.tag}>{activity.sport}</Text>
-                <Text style={styles.cardTitle}>{activity.title}</Text>
-                <Text style={styles.body}>{activity.detail}</Text>
-              </View>
-            ))}
-          </>
-        )}
-
-        {tab === 'dating' && supabaseIsConfigured && <LiveDating />}
-        {tab === 'dating' && !supabaseIsConfigured && (
-          <>
-            <Text style={styles.sectionTitle}>Fitness Dating</Text>
-            <Text style={styles.lead}>Las citas son opcionales. Tú decides qué parte de tu círculo quieres mantener separada.</Text>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Gym Shield</Text>
-              <Text style={styles.body}>¿Quién puede aparecer en tus recomendaciones?</Text>
-              <Pressable
-                onPress={() => setMode('other_gyms')}
-                style={[styles.option, mode === 'other_gyms' && styles.optionSelected]}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: mode === 'other_gyms' }}
-              >
-                <Text style={styles.optionTitle}>◉ Solo otros gimnasios</Text>
-                <Text style={styles.body}>No ver personas de tu gimnasio habitual.</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setMode('same_gym_other_time')}
-                style={[styles.option, mode === 'same_gym_other_time' && styles.optionSelected]}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: mode === 'same_gym_other_time' }}
-              >
-                <Text style={styles.optionTitle}>◷ Mismo gym, diferente horario</Text>
-                <Text style={styles.body}>Permitir coincidencias sin cruces semanales, con 30 minutos de margen.</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.sectionTitle}>Perfiles de ejemplo · {matches.length}</Text>
-            {matches.map((candidate) => (
-              <View key={candidate.id} style={styles.person}>
-                <View style={styles.avatar}><Text style={styles.avatarText}>{candidate.displayName[0]}</Text></View>
-                <View style={styles.personBody}>
-                  <Text style={styles.cardTitle}>{candidate.displayName}</Text>
-                  <Text style={styles.body}>{candidate.sports}</Text>
-                  <Text style={styles.secondary}>{candidate.city}</Text>
-                </View>
-                <Text style={styles.heart}>♡</Text>
-              </View>
-            ))}
-            {matches.length === 0 && <Text style={styles.body}>No hay perfiles disponibles en esta demostración.</Text>}
-            <Text style={styles.footnote}>Ningún horario o gimnasio individual se revela en la interfaz. Las exclusiones requieren implementación segura en servidor antes de lanzar.</Text>
-          </>
-        )}
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>PROTOTIPO MVP · v0.1.0</Text>
-      </View>
-    </SafeAreaView>
-  );
+          <Pressable style={[s.option,mode==='same_gym_other_time'&&s.optionActive]} onPress={()=>setMode('same_gym_other_time')}>
+            <Text style={s.body}>Mismo gym, otro horario</Text>
+          </Pressable>
+          <Text style={s.sectionTitle}>Perfiles ficticios: {matches.length}</Text>
+          {matches.map(candidate=><View style={s.card} key={candidate.id}>
+            <Text style={s.cardTitle}>{candidate.displayName}</Text>
+            <Text style={s.body}>{candidate.sports} · {candidate.city}</Text>
+          </View>)}
+        </>}
+      </>}
+      {authError?<Text style={s.warning}>{authError}</Text>:null}
+    </ScrollView>
+    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.4.0</Text></View>
+  </SafeAreaView>;
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#091319' },
-  header: { paddingHorizontal: 22, paddingTop: 18, paddingBottom: 18 },
-  kicker: { fontSize: 10, letterSpacing: 2, color: '#9EB2BC', fontWeight: '700' },
-  brand: { fontSize: 28, fontWeight: '800', letterSpacing: -0.9, color: '#F8FAFA', marginTop: 4 },
-  accent: { color: '#B6F266' },
-  subtitle: { marginTop: 5, color: '#B6C6CB', fontSize: 13 },
-  tabs: { flexDirection: 'row', marginHorizontal: 17, backgroundColor: '#15252C', borderRadius: 14, padding: 4 },
-  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 11 },
-  tabActive: { backgroundColor: '#B6F266' },
-  tabText: { color: '#BECBD0', fontWeight: '700', fontSize: 11 },
-  tabTextActive: { color: '#101C20' },
-  content: { padding: 20, paddingBottom: 30 },
-  notice: { backgroundColor: '#26302C', padding: 10, borderRadius: 10, marginBottom: 16 },
-  noticeText: { color: '#D5F9A1', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
-  sectionTitle: { color: '#F7FAFA', fontWeight: '800', fontSize: 21, marginBottom: 6 },
-  lead: { color: '#B8C6CC', fontSize: 14, lineHeight: 21, marginBottom: 16 },
-  card: { padding: 18, backgroundColor: '#16262D', borderRadius: 16, marginBottom: 12, borderColor: '#263B43', borderWidth: 1 },
-  tag: { color: '#B6F266', fontWeight: '800', fontSize: 11, marginBottom: 9, letterSpacing: 1 },
-  cardTitle: { color: '#F3F7F8', fontSize: 17, fontWeight: '800', marginBottom: 7 },
-  body: { color: '#C4D0D5', fontSize: 13, lineHeight: 20 },
-  secondary: { color: '#93A7AE', fontSize: 12 },
-  option: { padding: 14, borderRadius: 11, marginTop: 12, borderColor: '#43525A', borderWidth: 1 },
-  optionSelected: { borderColor: '#B6F266', backgroundColor: '#283B2B' },
-  optionTitle: { color: '#F3F7F8', fontWeight: '800', marginBottom: 4, fontSize: 14 },
-  person: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#16262D', borderRadius: 14, padding: 12, marginBottom: 10 },
-  avatar: { backgroundColor: '#B6F266', height: 47, width: 47, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#132022', fontSize: 23, fontWeight: '900' },
-  personBody: { flex: 1, paddingHorizontal: 13 },
-  heart: { color: '#B6F266', fontSize: 29 },
-  footnote: { color: '#8CA1A9', fontSize: 11, lineHeight: 17, marginTop: 12 },
-  footer: { paddingVertical: 10, alignItems: 'center', borderTopWidth: 1, borderTopColor: '#1A3038' },
-  footerText: { color: '#718B94', fontWeight: '800', fontSize: 10, letterSpacing: 1 },
+const s=StyleSheet.create({
+ safe:{flex:1,backgroundColor:'#091319'},
+ header:{paddingHorizontal:20,paddingTop:17,paddingBottom:14},
+ kicker:{fontSize:10,letterSpacing:2,color:'#9EB2BC',fontWeight:'700'},
+ brand:{fontSize:28,fontWeight:'800',letterSpacing:-0.8,color:'#F8FAFA',marginTop:4},
+ accent:{color:'#B6F266'},
+ subtitle:{marginTop:5,color:'#B6C6CB',fontSize:12},
+ signout:{marginTop:9,alignSelf:'flex-start'},
+ signoutText:{color:'#B6F266',fontSize:12,fontWeight:'700'},
+ tabs:{flexDirection:'row',marginHorizontal:16,backgroundColor:'#15252C',borderRadius:14,padding:4},
+ tab:{flex:1,paddingVertical:12,alignItems:'center',borderRadius:11},
+ tabActive:{backgroundColor:'#B6F266'},
+ tabText:{color:'#BECBD0',fontWeight:'700',fontSize:11},
+ tabTextActive:{color:'#101C20'},
+ content:{padding:19,paddingBottom:32},
+ notice:{backgroundColor:'#26302C',padding:10,borderRadius:10,marginBottom:15},
+ noticeText:{color:'#D5F9A1',fontSize:10,fontWeight:'800'},
+ sectionTitle:{color:'#F7FAFA',fontWeight:'800',fontSize:21,marginVertical:8},
+ lead:{color:'#B8C6CC',fontSize:13,lineHeight:20,marginBottom:14},
+ card:{padding:16,backgroundColor:'#16262D',borderRadius:14,marginBottom:12,borderWidth:1,borderColor:'#263B43'},
+ tag:{color:'#B6F266',fontWeight:'800',fontSize:11,marginBottom:8},
+ cardTitle:{color:'#F3F7F8',fontSize:17,fontWeight:'800',marginBottom:7},
+ body:{color:'#C4D0D5',fontSize:13,lineHeight:20},
+ option:{padding:14,borderRadius:11,marginVertical:6,borderWidth:1,borderColor:'#43525A'},
+ optionActive:{borderColor:'#B6F266',backgroundColor:'#283B2B'},
+ footer:{paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#1A3038'},
+ footerText:{color:'#718B94',fontWeight:'800',fontSize:10,letterSpacing:1},
+ warning:{color:'#FFC9A0',fontSize:12},
 });

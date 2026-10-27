@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -21,12 +21,7 @@ const MODE_OPTIONS: Array<{ value: GymShieldMode; label: string }> = [
   { value: 'same_gym_other_time', label: 'Mi gimnasio, pero en otros horarios' },
 ];
 
-export default function LiveDating() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [adultAcknowledged, setAdultAcknowledged] = useState(false);
+export default function LiveDating({ session }: { session: Session }) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [gyms, setGyms] = useState<Gym[]>([]);
@@ -44,20 +39,6 @@ export default function LiveDating() {
   const [enabled, setEnabled] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
 
-  useEffect(() => {
-    if (!supabase) return;
-    const client = supabase;
-    client.auth.getSession().then(({ data, error }) => {
-      if (error) setMessage(error.message);
-      setSession(data.session);
-      setReady(true);
-    }).catch((e: unknown) => {
-      setMessage(errorMessage(e));
-      setReady(true);
-    });
-    const subscription = client.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
-    return () => subscription.data.subscription.unsubscribe();
-  }, []);
 
   const refreshCandidates = useCallback(async () => {
     if (!supabase) return;
@@ -81,7 +62,6 @@ export default function LiveDating() {
       setMode('other_gyms');
       setSlots([{ id: 1, day: 1, start: '07:00', end: '08:30' }]);
       nextSlotId.current = 2;
-      setPassword('');
       return;
     }
     const client = supabase;
@@ -131,25 +111,6 @@ export default function LiveDating() {
     return () => { cancelled = true; };
   }, [session?.user.id]);
 
-  async function authenticate(signUp: boolean) {
-    if (!supabase) return;
-    if (signUp && (!adultAcknowledged || !isAdult(dob))) {
-      setMessage('Para registrarte debes confirmar tu mayoría de edad e introducir una fecha válida.');
-      return;
-    }
-    setBusy(true);
-    setMessage('');
-    try {
-      const credentials = { email: email.trim(), password };
-      const { error, data } = signUp
-        ? await supabase.auth.signUp(credentials)
-        : await supabase.auth.signInWithPassword(credentials);
-      if (error) throw error;
-      if (signUp && !data.session) setMessage('Comprueba tu correo para activar la cuenta.');
-    } catch (e) {
-      setMessage(errorMessage(e));
-    } finally { setBusy(false); }
-  }
 
   async function saveSettings() {
     if (!supabase) return;
@@ -216,34 +177,6 @@ export default function LiveDating() {
     } finally { setBusy(false); }
   }
 
-  if (!ready) return <ActivityIndicator color="#B6F266" />;
-  if (!session) {
-    return (
-      <View>
-        <Text style={styles.heading}>Accede a Fitness Dating</Text>
-        <Text style={styles.hint}>Autenticación Supabase. Sin chat, likes ni verificación de identidad todavía: entorno técnico de prueba.</Text>
-        <TextInput style={styles.field} autoCapitalize="none" keyboardType="email-address"
-          autoComplete="email" placeholder="Correo electrónico" placeholderTextColor="#80949B"
-          value={email} onChangeText={setEmail} />
-        <TextInput style={styles.field} secureTextEntry placeholder="Contraseña"
-          placeholderTextColor="#80949B" value={password} onChangeText={setPassword} />
-        <Text style={styles.caption}>Fecha de nacimiento para registro (AAAA-MM-DD)</Text>
-        <TextInput style={styles.field} placeholder="1995-08-30"
-          placeholderTextColor="#80949B" value={dob} onChangeText={setDob}
-          keyboardType="numbers-and-punctuation" />
-        <Pressable style={styles.choice} onPress={() => setAdultAcknowledged(x => !x)}>
-          <Text style={styles.body}>{adultAcknowledged ? '☑' : '☐'} Confirmo tener 18 años o más para registrarme.</Text>
-        </Pressable>
-        <Pressable style={styles.button} disabled={busy} onPress={() => void authenticate(false)}>
-          <Text style={styles.buttonText}>Iniciar sesión</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} disabled={busy} onPress={() => void authenticate(true)}>
-          <Text style={styles.body}>Crear cuenta de prueba</Text>
-        </Pressable>
-        {message ? <Text style={styles.feedback}>{message}</Text> : null}
-      </View>
-    );
-  }
 
   return (
     <ScrollView nestedScrollEnabled>
@@ -334,9 +267,6 @@ export default function LiveDating() {
           </Pressable>
         </View>
       ))}
-      <Pressable style={styles.secondaryButton} onPress={() => void supabase?.auth.signOut()}>
-        <Text style={styles.body}>Cerrar sesión</Text>
-      </Pressable>
       <Text style={styles.hint}>Aviso: la autodeclaración de edad no constituye verificación. No habilitar una beta con usuarios reales sin los controles adicionales de seguridad y moderación.</Text>
     </ScrollView>
   );
