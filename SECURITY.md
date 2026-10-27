@@ -1,21 +1,27 @@
-# Seguridad y privacidad
+# Seguridad de my_fitness_date
 
-**Estado:** código en desarrollo, no listo para producción. El repositorio es actualmente **público**, y no debe contener secretos ni información personal real.
+**Estado:** desarrollo y candidato de integración V19. Repositorio público. **Prohibido almacenar secretos, tokens o datos personales reales en GitHub.** La beta está bloqueada.
 
-## Controles incorporados en este incremento
-- RPC públicas SECURITY INVOKER delegan la lógica a funciones SECURITY DEFINER dentro de `app_private` (no expuesto por Data API).
-- Funciones privadas usan `auth.uid()`, `search_path = ''` y concesiones explícitas a `authenticated`.
-- Tablas sensibles no conceden lectura/escritura directa a `anon` ni `authenticated`.
-- Las respuestas de candidatos no contienen ID de gimnasio, fecha de nacimiento, modalidades ni horarios.
-- Bloqueos y desactivación se respetan en recomendaciones.
-- CI ejecuta casos de elegibilidad contra PostgreSQL descartable.
+## Medidas implementadas
 
-## Obligatorio antes de personas reales
-- Verificación de edad/identidad. La fecha autodeclarada NO verifica la identidad.
-- Rate limit de consultas y cambios de configuración para impedir inferir gimnasio u horarios; análisis de ataques de enumeración.
-- Denuncias, moderación, antispam, protección de cuentas y procedimientos de seguridad infantil.
-- Borrado de cuenta/datos, minimización, política de retención, consentimiento y cumplimiento legal.
-- Pruebas en Supabase de desarrollo real, incluida configuración de esquemas expuestos.
-- Revisión de logging, secretos, configuración y operación de la infraestructura.
+- \`app_private\` no expuesto por Data API; funciones de negocio con \`auth.uid()\`, validación de roles, permisos explícitos y \`search_path\` restringido. RLS en tablas relevantes.
+- Gym Shield con consentimiento recíproco, ocultamiento de gimnasio y horario, margen de 30 minutos, bloqueos y límites de consultas.
+- Edad: puerta técnica por aprobación externa y revocación; ninguna persona fue realmente verificada.
+- Reportes, apelaciones, auditorías, conflictos de interés, prioridades y segunda revisión. Sin atención humana operativa.
+- Exportación personal, solicitud de baja reversible y operador protegido para revisar eliminación Auth. Tokens antiguos y datos de Storage/backups requieren evaluación aparte.
+- Inventario y limpieza manual de cuotas antiguas: no afecta a las evidencias de denuncias, apelaciones o incidentes.
+- Tests PostgreSQL, GoTrue/Mailpit local y bundles JavaScript Android/iOS en GitHub Actions.
 
-Reporta vulnerabilidades por un canal privado al propietario del repositorio: no publiques datos sensibles en issues públicas.
+## No resuelto / riesgo de lanzamiento
+
+- Configuración efectiva de correos y control de altas en Auth hospedado (la ocultación de botones no sustituye el bloqueo del servidor).
+- Integración externa y jurídica de verificación de mayoría de edad.
+- Atención a incidentes, revisión de abuso, antispam y operadores autorizados.
+- Verificación de la baja real y tratamiento de fotografías, archivos, respaldos y registros del proveedor.
+- QA con sesiones reales en Android/iOS, pruebas ofensivas de privacidad/IDOR/múltiples cuentas y seguridad independiente.
+- Revisión del contrato de retención y solicitudes de derechos sobre datos personales.
+- Sin mensajes/chat románticos ni matching mutuo; no anunciar capacidades inexistentes.
+
+El manifiesto \`release/readiness.json\` requiere evidencia fechada para cada puerta. \`npm run candidate:audit\` revisa la preparación sin habilitar usuarios. \`npm run candidate:require-beta\` falla mientras persistan pendientes.
+
+**Reportes de seguridad:** contactar al propietario por un canal privado, sin incluir credenciales o PII en issues públicos.

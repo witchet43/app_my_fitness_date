@@ -1,43 +1,33 @@
-# MVP · my_fitness_date
+# MVP — Estado de integración V19
 
-## Visión
-Red social deportiva para adultos con tres experiencias independientes: **Community**, **Together** y **Dating**. Nadie necesita habilitar citas para usar la comunidad (integración social real pendiente).
+**Candidato de revisión del código, no versión publicable.** Las 18 iteraciones anteriores están apiladas en PR en borrador. El PR #23 integra su historial para revisión contra \`main\`; no se ha fusionado.
 
-## Estado por área
+## Capacidades técnicas actuales
 
-| Área | Implementado | Pendiente para beta |
+| Dominio | Implementado | Pendiente antes de beta |
 | --- | --- | --- |
-| Comunidad | UI y publicaciones ficticias | Perfiles, posts, moderación, bases de datos |
-| Actividades | UI con eventos ficticios | Eventos, grupos, permisos y reportes |
-| Auth | Registro y sesión Supabase en módulo Dating (si se configura) | Verificación sólida de edad/identidad |
-| Dating | Activación voluntaria y filtros en base de datos | Preferencias románticas completas, likes, matches y chat |
-| Gym Shield | Dos modos recíprocos, horarios semanales y 30 min de buffer en servidor | Antiinferencia, edición de múltiples rangos, historial de cambios |
-| Seguridad | Esquema privado, sin SELECT directo, bloqueo en descubrimiento | Moderación, limitadores, auditoría, políticas/consentimientos completos |
+| Comunidad | Perfiles, feed, publicaciones y reportes con RLS | QA real, antispam operativo |
+| Actividades | Eventos, organizadores autorizados, RSVPs privados | Calendario público/crecimiento, QA real |
+| Dating | Descubrimiento opcional Gym Shield con dos modos | Verificación externa real de edad, evaluación antiinferencia |
+| Auth | Sign-up OTP y recuperación verificados con GoTrue+Mailpit **local** | Configuración hospedada, correo real controlado y móvil |
+| Moderación | Bloqueo, ocultamiento, apelaciones, cola y segunda firma | Nombramiento de moderadores, protocolo de emergencias |
+| Cuenta/privacidad | Exportación técnica, baja en espera, preflight/claim Auth Admin, inventario y retención | Baja end-to-end real, retención legal, Storage/backups |
+| QA móvil | Bundles Metro de Android/iOS, selectores Maestro y navegación accesible | Instalar y probar builds nativos en dispositivos |
+| Mensajería romántica | No implementada | Likes, matching mutuo y chat si se incorporan al alcance |
 
-## Reglas implementadas
-- **MFD-05:** modo `other_gyms` excluye el mismo gimnasio.
-- **MFD-06:** `same_gym_other_time` exige consentimiento de ambas cuentas, intervalos válidos, sin cruces en mismo día y margen de 30 min.
-- **MFD-07:** bloqueo recíproco para el descubrimiento; perfiles inactivos se excluyen, horarios faltantes no se aprueban para mismo gimnasio.
-- Gimnasios mediante ID canónico desde catálogo, no texto libre.
-- Excepciones de privacidad, bloqueo y horario se evalúan **antes** de responder.
-- La función de descubrimiento solo devuelve tarjetas permitidas, nunca nombre de gimnasio ni horario.
+## Requisitos Gym Shield conservados
 
-## En desarrollo
-- **MFD-01:** autenticar con Supabase (implementado condicionalmente); verificación verdadera de edad aún pendiente.
-- **MFD-04:** preferencias privadas y consentimiento Dating (backend implementado; requiere desplegar migración).
-- **MFD-08:** match mutuo, chat autorizado y denuncias no implementados.
-- **MFD-09:** borrado total, moderación, retención y auditoría no implementados.
+- Otros gimnasios: no se devuelven miembros del mismo gimnasio.
+- Mismo gimnasio, otro horario: consentimiento recíproco, horarios semanales válidos, sin solapamiento y separación mínima de 30 minutos.
+- No se exponen gimnasios, horarios privados, DOB ni razones de exclusión.
+- Bloqueos y solicitudes de baja retiran perfiles del descubrimiento.
+- Las aprobaciones administrativas de edad caducan y se pueden revocar; autodeclaración de nacimiento no activa Dating.
+- Máximo 10 candidatos por llamada y 10 consultas de descubrimiento por hora. Es una limitación de sondeo, no prueba de resistencia frente a múltiples cuentas.
 
-## Puertas de salida antes de beta
-1. Conectar un proyecto Supabase **de desarrollo** y aplicar migración. No se ha aplicado de forma remota desde esta conversación.
-2. Hacer pruebas manuales end-to-end de identidad, configuración y descubrimiento.
-3. Seguridad ofensiva: no inferencia por consultas repetidas, IDOR, limitadores y protección de registros.
-4. Moderación, denuncia, bloqueo integral, eliminación de cuenta, aviso de privacidad y verificación de edad.
-5. Reemplazar gimnasios **Demo** por catálogo real gobernado con nombres y sucursales canónicas.
-6. Evaluar compliance de políticas de tiendas y legislación mexicana.
+## Condiciones de aceptación y seguridad
 
-## Criterios de aceptación de este incremento
-- CI: tipos, pruebas unitarias y PostgreSQL efímero en verde.
-- Consulta RPC solo ejecutable por `authenticated`; datos sensibles fuera de schemas expuestos.
-- Al cambiar de modo las recomendaciones se recalculan en servidor.
-- No se revela el motivo de exclusión a terceros.
+Se audita el manifiesto \`release/readiness.json\` que **debe seguir bloqueado** hasta acumular evidencia independiente para autenticación hospedada, verificación de edad, moderación real, bases legales, eliminación Auth, QA nativo, seguridad y soporte. No cambiar a \`verified\` solo porque las pruebas unitarias sean verdes.
+
+Supabase DEV dispone de las migraciones V1–V18 según el historial. **Cero usuarios** no equivale a un flujo probado con clientes hospedados ni a preparación de beta.
+
+Los requisitos de protección de datos en México requieren revisión jurídica; los 30 días de contadores son un umbral técnico, no una política legal aprobada.

@@ -1,53 +1,53 @@
 # my_fitness_date
 
-**Red social fitness para personas adultas con comunidades, entrenamientos y citas opcionales.**
+**Red social deportiva con comunidad, actividades y citas opcionales para adultos.**
 
-**Estado:** MVP técnico en construcción. El entorno principal aún usa datos ficticios y **no está aprobado para usuarios reales**.
+**Estado (27 oct 2026): candidato de integración V19 exclusivamente de desarrollo. No se ha lanzado una beta, ni se han fusionado los cambios en la rama principal.**
 
-## Funcionalidades
+La experiencia de citas se llama **FitDating** y protege el gimnasio y los horarios privados mediante **Gym Shield**. La comunidad deportiva no exige activar las citas.
 
-- **Fitness Community:** publicaciones deportivas de demostración.
-- **Fitness Together:** eventos y grupos de demostración.
-- **Fitness Dating / Gym Shield:** dos modos para recomendaciones románticas:
-  1. **Solo otros gimnasios:** personas del mismo gimnasio excluidas.
-  2. **Mismo gimnasio, horario distinto:** requiere que ambas personas acepten este modo, tengan horario recurrente completo y no compartan horarios, con un margen de 30 minutos.
-- **Autenticación Supabase (opcional):** cuando se configura un proyecto de desarrollo, el módulo de citas pasa a usar registro, configuración privada, descubrimiento en servidor, desactivación y bloqueo.
-- **Privacidad:** los horarios y gimnasio de terceros no aparecen en los resultados de descubrimiento.
+## Funciones implementadas en las ramas de desarrollo
 
-## Inicio rápido
+| Área | Capacidad técnica | Restricciones |
+| --- | --- | --- |
+| Comunidad | Perfiles sociales, publicaciones y reportes | No hay base de usuarios real |
+| Actividades | Eventos deportivos y confirmación privada de asistencia | Solo organizadores autorizados |
+| FitDating / Gym Shield | Preferencias privadas, descubrimiento protegido, bloques recíprocos, consentimiento para mismo gym y margen de 30 minutos | Requiere revisión de mayoría de edad por operador; **no se ha verificado a ninguna persona real** |
+| Auth | Registro/correo confirmado/recuperación usando GoTrue y Mailpit en stack **local** | Registro hospedado cerrado en UI; configuración Auth hospedada no verificada |
+| Buzón | Notificaciones de moderación y apelaciones | No hay actividad real |
+| Moderación | Reportes, decisiones auditadas, revisión independiente y cola priorizada de incidentes | Sin moderadores humanos designados |
+| Cuenta | Exportación técnica, baja reversible y revisión privilegiada para eliminación Auth | No se ha probado una baja completa con cuenta real; Storage/backups requieren atención separada |
+| Privacidad | Inventario de conservación y depuración manual auditada de contadores vencidos | No se borran expedientes; pendiente política legal |
 
-Requisitos: Node.js 22+, npm, dispositivo/simulador compatible con Expo.
+**No hay chat privado, likes ni emparejamiento romántico mutuo operativos.** Descubrimiento de perfiles no equivale a citas realizadas.
 
-```bash
-npm install
+## Cómo probar el código
+
+Se requiere Node.js 22+, npm y, para pruebas de autenticación local, Docker con la CLI de Supabase.
+
+\`\`\`bash
+npm ci
 npm run typecheck
 npm test
+npm run candidate:audit
 npm start
-```
+\`\`\`
 
-Sin variables de Supabase, el modo de citas muestra únicamente datos simulados. **No equivale a tener cuentas o matching real.**
+Sin las variables de Supabase la aplicación muestra exclusivamente datos de demostración. Para pruebas de Auth local usa los procedimientos de \`docs/ITERATION_13.md\`. Nunca publiques una credencial privilegiada en las variables \`EXPO_PUBLIC_*\`.
 
-Para preparar una **instancia aislada de desarrollo Supabase**, consulta [docs/SUPABASE.md](docs/SUPABASE.md). Nunca conectes un entorno con personas reales sin completar la evaluación de seguridad y privacidad.
+Las verificaciones automatizadas de GitHub incluyen exportación de bundles JavaScript Android e iOS, PostgreSQL con las migraciones acumuladas, Auth local con JWT reales y Mailpit. **Los bundles no son builds nativos ni pruebas físicas.**
 
-## Código relevante
+## Proyecto y entrega
 
-```text
-App.tsx                               App móvil: Community / Together / Dating
-src/features/LiveDating.tsx          Registro y configuración en Supabase
-src/lib/supabase.ts                  Cliente Supabase (publishable key)
-src/domain/gymShield.ts              Motor local *solo para la demo*
-src/domain/gymShield.test.ts         Pruebas unitarias
-supabase/migrations/                 Esquema privado y RPC seguras
-supabase/tests/                      Tests reales PostgreSQL (CI desechable)
-docs/SUPABASE.md                     Instrucciones de despliegue manual
-.github/workflows/ci.yml             TypeScript + Node tests + PostgreSQL
-```
+- **Repositorio:** \`witchet43/app_my_fitness_date\`.
+- **Desarrollo hospedado:** Supabase \`my_fitness_date_dev\`, ref \`jtrdvnwbxpfdnbzasvcj\`. 12 migraciones de negocio/seguridad aplicadas hasta V18.
+- **Integración V19:** [PR #23](https://github.com/witchet43/app_my_fitness_date/pull/23), borrador dirigido a \`main\`; no está fusionado.
+- **Estado beta:** evaluado mediante \`release/readiness.json\` y \`npm run candidate:audit\`. Una CI verde no autoriza a invitar usuarios.
+- **Informe de integración:** [docs/INTEGRATION_V19.md](docs/INTEGRATION_V19.md).
+- **Seguridad y reporte de vulnerabilidades:** [SECURITY.md](SECURITY.md).
 
-## Seguridad y límites actuales
+## Puertas obligatorias para beta
 
-- El filtrado local no protege la privacidad; **solo** el backend migrado utiliza reglas Gym Shield como criterio de descubrimiento.
-- La validación de fecha de nacimiento es **autodeclarada**: todavía no hay verificación real de identidad y edad.
-- La app no tiene chat, reportes, moderación ni prevención exhaustiva contra inferencia de horarios. **No habilitar registros abiertos a usuarios externos.**
-- No guardar credenciales de privilegios elevados, llaves `service_role` ni datos personales en GitHub.
+Antes de admitir personas reales faltan la configuración y prueba de email en Auth hospedado, un mecanismo externo y operativo de verificación de edad, personas moderadoras y soporte, política legal de privacidad y conservación, pruebas de eliminación definitiva con cuentas QA autorizadas, pruebas en Android e iOS nativos y revisión de seguridad independiente.
 
-Se trabaja con ramas y pull requests en borrador. Consulta [docs/MVP.md](docs/MVP.md) para el alcance y decisiones.
+**No fusionar ni desplegar a producción hasta obtener autorización expresa.**
