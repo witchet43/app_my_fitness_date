@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { isAdult, parseClock } from '../domain/onboarding';
+import { isAdult } from '../domain/onboarding';
+import { parseScheduleDrafts, type ScheduleDraft } from '../domain/scheduleDraft';
 import type { GymShieldMode } from '../domain/gymShield';
 
 type Gym = { id: string; name: string; city: string };
@@ -35,9 +36,11 @@ export default function LiveDating() {
   const [sports, setSports] = useState('Running, Pesas');
   const [dob, setDob] = useState('');
   const [mode, setMode] = useState<GymShieldMode>('other_gyms');
-  const [days, setDays] = useState<number[]>([1, 3, 5]);
-  const [start, setStart] = useState('07:00');
-  const [end, setEnd] = useState('08:30');
+  const [slots, setSlots] = useState<ScheduleDraft[]>([
+    { id: 1, day: 1, start: '07:00', end: '08:30' },
+  ]);
+  const nextSlotId = useRef(2);
+  const [hasSetup, setHasSetup] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
 
@@ -80,22 +83,26 @@ export default function LiveDating() {
         ]);
         if (gymResult.error) throw gymResult.error;
         if (ownResult.error) throw ownResult.error;
+        const birthResult = await client.rpc('my_dating_birthdate');
+        if (birthResult.error) throw birthResult.error;
         if (cancelled) return;
         const catalog = (gymResult.data || []) as Gym[];
         setGyms(catalog);
         const current = ((ownResult.data || []) as OwnSettings[])[0];
+        setHasSetup(Boolean(current));
         if (current) {
+          if (typeof birthResult.data === 'string') setDob(birthResult.data);
           setDisplayName(current.display_name);
           setCity(current.city);
           setSports(current.sports.join(', '));
           setGymId(current.gym_id);
           setMode(current.mode);
           setEnabled(current.dating_enabled);
-          setDays([...new Set(current.weekly_slots.map(s => s.day))]);
-          if (current.weekly_slots[0]) {
-            setStart(clockString(current.weekly_slots[0].startMinutes));
-            setEnd(clockString(current.weekly_slots[0].endMinutes));
-          }
+          const saved = current.weekly_slots.map((s, index) => ({
+            id: index + 1, day: s.day, start: clockString(s.startMinutes), end: clockString(s.endMinutes),
+          }));
+          setSlots(saved);
+          nextSlotId.current = saved.length + 1;
         } else {
           setGymId(catalog[0]?.id ?? '');
         }
@@ -114,8 +121,8 @@ export default function LiveDating() {
 
   async function authenticate(signUp: boolean) {
     if (!supabase) return;
-    if (signUp && !adultAcknowledged) {
-      setMessage('Confirma que tienes al menos 18 años antes de registrarte.');
+    if (signUp && (!adultAcknowledged || !isAdult(dob))) {
+      setMessage('Para registrarte debes confirmar tu mayoría de edad e introducir una fecha válida.');
       return;
     }
     setBusy(true);
@@ -138,14 +145,9 @@ export default function LiveDating() {
       setMessage('Ingresa una fecha válida. FitDating solo está disponible para mayores de 18 años.');
       return;
     }
-    const startMinute = parseClock(start);
-    const endMinute = parseClock(end);
-    if (startMinute === null || endMinute === null || startMinute >= endMinute) {
-      setMessage('Ingresa un horario válido, por ejemplo 07:00 a 08:30.');
-      return;
-    }
-    if (mode === 'same_gym_other_time' && days.length === 0) {
-      setMessage('Selecciona al menos un día para el filtro de horarios.');
+    const parsed = parseScheduleDrafts(slots, mode === 'same_gym_other_time');
+    if (!parsed.ok) {
+      setMessage(parsed.error);
       return;
     }
     if (!gymId || !displayName.trim()) {
@@ -162,13 +164,12 @@ export default function LiveDating() {
         p_dob: dob,
         p_gym_id: gymId,
         p_mode: mode,
-        p_weekly_slots: days.map(day => ({
-          day, startMinutes: startMinute, endMinutes: endMinute,
-        })),
+        p_weekly_slots: parsed.slots,
         p_dating_enabled: true,
       });
       if (error) throw error;
       setEnabled(true);
+      setHasSetup(true);
       await refreshCandidates();
       setMessage('Preferencias guardadas. Gym Shield ya se evalúa en el servidor.');
     } catch (e) {
@@ -214,6 +215,10 @@ export default function LiveDating() {
           value={email} onChangeText={setEmail} />
         <TextInput style={styles.field} secureTextEntry placeholder="Contraseña"
           placeholderTextColor="#80949B" value={password} onChangeText={setPassword} />
+        <Text style={styles.caption}>Fecha de nacimiento para registro (AAAA-MM-DD)</Text>
+        <TextInput style={styles.field} placeholder="1995-08-30"
+          placeholderTextColor="#80949B" value={dob} onChangeText={setDob}
+          keyboardType="numbers-and-punctuation" />
         <Pressable style={styles.choice} onPress={() => setAdultAcknowledged(x => !x)}>
           <Text style={styles.body}>{adultAcknowledged ? '☑' : '☐'} Confirmo tener 18 años o más para registrarme.</Text>
         </Pressable>
@@ -238,7 +243,7 @@ export default function LiveDating() {
       <TextInput style={styles.field} value={city} onChangeText={setCity} />
       <Text style={styles.caption}>Deportes (separados por coma)</Text>
       <TextInput style={styles.field} value={sports} onChangeText={setSports} />
-      <Text style={styles.caption}>Fecha de nacimiento (AAAA-MM-DD). Declarada, aún no verificada.</Text>
+      <Text style={styles.caption}>Fecha de nacimiento · privada, autodeclarada</Text>
       <TextInput style={styles.field} placeholder="1995-08-30" placeholderTextColor="#80949B" value={dob} onChangeText={setDob} keyboardType="numbers-and-punctuation" />
       <Text style={styles.caption}>Gimnasio habitual · solo visible para ti</Text>
       {gyms.length === 0 ? <Text style={styles.feedback}>No hay gimnasios configurados. Aplica la migración SQL al proyecto Supabase.</Text> : null}
@@ -255,23 +260,47 @@ export default function LiveDating() {
           <Text style={styles.body}>{mode === option.value ? '◉' : '○'} {option.label}</Text>
         </Pressable>
       ))}
-      <Text style={styles.caption}>Días habituales de entrenamiento (privados)</Text>
-      <View style={styles.days}>
-        {DAYS.map((name, day) => (
-          <Pressable key={day} onPress={() => setDays(curr => curr.includes(day) ? curr.filter(x => x !== day) : [...curr, day])}
-            style={[styles.day, days.includes(day) && styles.active]}>
-            <Text style={styles.body}>{name}</Text>
-          </Pressable>
-        ))}
-      </View>
-      <Text style={styles.caption}>Bloque habitual de entrenamiento · 24 horas</Text>
-      <View style={styles.hours}>
-        <TextInput style={[styles.field, styles.hour]} value={start} onChangeText={setStart} placeholder="07:00" placeholderTextColor="#80949B" />
-        <Text style={styles.body}>a</Text>
-        <TextInput style={[styles.field, styles.hour]} value={end} onChangeText={setEnd} placeholder="08:30" placeholderTextColor="#80949B" />
-      </View>
+      <Text style={styles.caption}>Horarios semanales privados · máximo 14 bloques</Text>
+      <Text style={styles.hint}>Cada día puede tener horarios distintos. Gym Shield compara todos los bloques.</Text>
+      {slots.map(slot => (
+        <View key={slot.id} style={styles.slotCard}>
+          <View style={styles.slotRow}>
+            <Pressable style={styles.dayControl} onPress={() => setSlots(existing => existing.map(s =>
+              s.id === slot.id ? { ...s, day: (s.day + 6) % 7 } : s))}>
+              <Text style={styles.body}>◀</Text>
+            </Pressable>
+            <Text style={[styles.body, styles.slotDay]}>{DAYS[slot.day]}</Text>
+            <Pressable style={styles.dayControl} onPress={() => setSlots(existing => existing.map(s =>
+              s.id === slot.id ? { ...s, day: (s.day + 1) % 7 } : s))}>
+              <Text style={styles.body}>▶</Text>
+            </Pressable>
+            <Pressable style={styles.removeControl} onPress={() => setSlots(existing => existing.filter(s => s.id !== slot.id))}>
+              <Text style={styles.removeText}>Eliminar</Text>
+            </Pressable>
+          </View>
+          <View style={styles.hours}>
+            <TextInput style={[styles.field, styles.hour]} value={slot.start}
+              onChangeText={startTime => setSlots(existing => existing.map(s =>
+                s.id === slot.id ? { ...s, start: startTime } : s))}
+              placeholder="07:00" keyboardType="numbers-and-punctuation"
+              placeholderTextColor="#80949B" />
+            <Text style={styles.body}>a</Text>
+            <TextInput style={[styles.field, styles.hour]} value={slot.end}
+              onChangeText={endTime => setSlots(existing => existing.map(s =>
+                s.id === slot.id ? { ...s, end: endTime } : s))}
+              placeholder="08:30" keyboardType="numbers-and-punctuation"
+              placeholderTextColor="#80949B" />
+          </View>
+        </View>
+      ))}
+      <Pressable style={styles.choice} disabled={slots.length >= 14}
+        onPress={() => { const id = nextSlotId.current++;
+          setSlots(current => [...current, { id, day: 1, start: '07:00', end: '08:30' }]);
+        }}>
+        <Text style={styles.body}>＋ Agregar bloque semanal ({slots.length}/14)</Text>
+      </Pressable>
       <Pressable style={styles.button} disabled={busy || gyms.length === 0} onPress={() => void saveSettings()}>
-        <Text style={styles.buttonText}>{busy ? 'Guardando...' : 'Guardar y activar FitDating'}</Text>
+        <Text style={styles.buttonText}>{busy ? 'Guardando...' : hasSetup ? 'Guardar preferencias' : 'Guardar y activar FitDating'}</Text>
       </Pressable>
       {enabled ? (
         <Pressable style={styles.secondaryButton} disabled={busy} onPress={() => void turnOffDating()}>
@@ -318,8 +347,12 @@ const styles = StyleSheet.create({
   button: { backgroundColor: '#B6F266', padding: 14, alignItems: 'center', borderRadius: 12, marginTop: 16 },
   buttonText: { color: '#14211D', fontWeight: '800' },
   secondaryButton: { padding: 12, alignItems: 'center', marginVertical: 5 },
-  days: { flexDirection: 'row', flexWrap: 'wrap' },
-  day: { padding: 9, marginRight: 5, marginVertical: 3, borderRadius: 9, borderWidth: 1, borderColor: '#324952' },
+  slotCard: { padding: 11, borderRadius: 10, borderWidth: 1, borderColor: '#344C55', marginVertical: 4 },
+  slotRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  slotDay: { minWidth: 42, textAlign: 'center', fontWeight: '800' },
+  dayControl: { padding: 10 },
+  removeControl: { marginLeft: 'auto', padding: 9 },
+  removeText: { color: '#FFD6D6', fontSize: 12 },
   hours: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
   hour: { width: '42%' },
   candidate: { backgroundColor: '#182930', borderRadius: 12, padding: 13, flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
