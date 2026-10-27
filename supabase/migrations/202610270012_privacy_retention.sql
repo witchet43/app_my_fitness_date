@@ -18,7 +18,7 @@ alter table app_private.privacy_prune_audit enable row level security;
 revoke all on app_private.privacy_prune_audit from public,anon,authenticated;
 grant usage on schema app_private to service_role;
 grant select,insert on app_private.privacy_prune_audit to service_role;
-grant select,delete on app_private.dating_request_counters to service_role;
+grant select,update,delete on app_private.dating_request_counters to service_role;
 
 grant select on
  app_private.user_notifications,
