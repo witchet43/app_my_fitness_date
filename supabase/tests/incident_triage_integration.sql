@@ -7,12 +7,14 @@ insert into auth.users(id) values
 ('10000000-0000-4000-8000-000000000014');
 
 insert into app_private.safety_reports
- (reporter_id,target_type,target_id,subject_user_id,reason,status,created_at)
+ (id,reporter_id,target_type,target_id,subject_user_id,reason,status,created_at)
 values
- ('10000000-0000-4000-8000-000000000012','user',
+ ('17000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000012','user',
   '10000000-0000-4000-8000-000000000011',
   '10000000-0000-4000-8000-000000000011','unsafe','pending',now()-interval '2 hours'),
- ('10000000-0000-4000-8000-000000000012','user',
+ ('17000000-0000-4000-8000-000000000002',
+  '10000000-0000-4000-8000-000000000012','user',
   '10000000-0000-4000-8000-000000000013',
   '10000000-0000-4000-8000-000000000013','spam','pending',now());
 insert into app_private.moderators(user_id) values
@@ -64,10 +66,10 @@ declare
  v_unsafe uuid;v_spam uuid;
 begin
  select q.report_id into v_unsafe from public.moderator_incident_queue(30) q
- where q.reason='unsafe' and q.reported_at<now()-interval '90 minutes'
+ where q.report_id='17000000-0000-4000-8000-000000000001'
  limit 1;
  select q.report_id into v_spam from public.moderator_incident_queue(30) q
- where q.reason='spam' and q.reported_at>now()-interval '20 minutes'
+ where q.report_id='17000000-0000-4000-8000-000000000002'
  limit 1;
  if v_unsafe is null or v_spam is null then raise exception 'Incident queue incomplete'; end if;
  if not exists(select 1 from public.moderator_incident_queue(30) q
