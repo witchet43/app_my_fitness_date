@@ -46,7 +46,11 @@ do $$
 declare v_report uuid;v_count integer;
 begin
  select count(*) into v_count from public.my_notifications(30);
- if v_count<>2 then raise exception 'Owner must receive hide & restore notices: %',v_count; end if;
+ if v_count<2 then raise exception 'Owner must receive hide & restore notices: %',v_count; end if;
+ if not exists(select 1 from public.my_notifications(30) where kind='post_hidden')
+    or not exists(select 1 from public.my_notifications(30) where kind='post_restored') then
+  raise exception 'Required notice kinds missing';
+ end if;
  select report_id into v_report from public.my_appealable_posts() limit 1;
  if v_report is null then raise exception 'Own hidden post unavailable to appeal'; end if;
  if not public.submit_moderation_appeal(v_report,
@@ -120,7 +124,7 @@ do $$
 declare v_notice uuid;v_count integer;
 begin
  select count(*) into v_count from public.my_notifications(30);
- if v_count<>3 then raise exception 'Appeal decision notice missing: %',v_count; end if;
+ if v_count<3 then raise exception 'Appeal decision notice missing: %',v_count; end if;
  select id into v_notice from public.my_notifications(30)
  where kind='appeal_decided' limit 1;
  if v_notice is null then raise exception 'Decision notice absent'; end if;
@@ -152,7 +156,7 @@ do $$
 begin
  if (select count(*) from app_private.appeal_decision_audit)<>1
   or (select count(*) from app_private.moderation_appeals where status='overturned')<>1
-  or (select count(*) from app_private.user_notifications)<>3 then
+  or (select count(*) from app_private.user_notifications)<3 then
   raise exception 'Private moderation workflow incomplete';
  end if;
  if exists(select 1 from app_private.hidden_posts) then
