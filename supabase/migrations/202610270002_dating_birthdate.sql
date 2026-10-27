@@ -3,8 +3,9 @@
 create function app_private.my_dating_birthdate()
 returns date language plpgsql security definer set search_path = '' stable
 as $$
-declare v_user uuid := (select auth.uid());
-declare v_birthdate date;
+declare
+  v_user uuid := (select auth.uid());
+  v_birthdate date;
 begin
   if v_user is null then raise exception 'Sign-in required'; end if;
   select p.date_of_birth into v_birthdate
