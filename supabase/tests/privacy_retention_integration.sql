@@ -3,13 +3,15 @@ begin;
 
 insert into auth.users(id,email) values
  ('10000000-0000-4000-8000-000000000018','qa-privacy-a@example.invalid'),
- ('10000000-0000-4000-8000-000000000019','qa-privacy-b@example.invalid');
+ ('10000000-0000-4000-8000-000000000019','qa-privacy-b@example.invalid'),
+ ('10000000-0000-4000-8000-000000000020','qa-privacy-c@example.invalid');
 
 insert into app_private.dating_request_counters
 (user_id,action,bucket_start,attempts) values
 ('10000000-0000-4000-8000-000000000018','discover',now()-interval '40 days',1),
-('10000000-0000-4000-8000-000000000018','settings',now()-interval '31 days',1),
-('10000000-0000-4000-8000-000000000019','discover',now(),1);
+('10000000-0000-4000-8000-000000000020','settings',now()-interval '31 days',1),
+('10000000-0000-4000-8000-000000000020','discover',now()-interval '40 days',1),
+('10000000-0000-4000-8000-000000000020','discover',now(),1);
 
 insert into app_private.safety_reports
 (reporter_id,target_type,target_id,subject_user_id,reason,details)
@@ -71,6 +73,7 @@ declare v jsonb;
 begin
  v:=public.operator_privacy_inventory();
  if (v->>'eligible_dating_counters')::integer<2 or
+    (v->>'held_dating_counters')::integer<1 or
     (v->>'retained_safety_reports')::integer<1 or
     v->>'dry_run'<>'true' then
   raise exception 'Retention inventory incomplete: %',v;
@@ -106,9 +109,12 @@ begin
    raise exception 'Repeat prune should be idempotent: %',v;
  end if;
  if (select count(*) from app_private.dating_request_counters
-  where user_id in('10000000-0000-4000-8000-000000000018',
-     '10000000-0000-4000-8000-000000000019'))<>1 then
-   raise exception 'Recent throttle record was accidentally removed';
+  where user_id='10000000-0000-4000-8000-000000000018')<>1 then
+   raise exception 'Evidence-linked counter was purged';
+ end if;
+ if (select count(*) from app_private.dating_request_counters
+  where user_id='10000000-0000-4000-8000-000000000020')<>1 then
+   raise exception 'Recent clean counter was accidentally removed';
  end if;
  if not exists(select 1 from app_private.safety_reports
   where reporter_id='10000000-0000-4000-8000-000000000018') then
