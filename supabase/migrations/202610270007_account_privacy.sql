@@ -34,13 +34,11 @@ $$;
 -- Moderator privileges are inactive during a pending deletion request.
 create or replace function app_private.is_moderator()
 returns boolean language sql security definer set search_path = '' stable
-as $
+as $function$
  select (select auth.uid()) is not null
   and app_private.account_is_active((select auth.uid()))
-  and exists(
-    select 1 from app_private.moderators m where m.user_id=(select auth.uid())
-  );
-$;
+  and exists(select 1 from app_private.moderators m where m.user_id=(select auth.uid()));
+$function$;
 
 -- No new posts/profiles/RSVPs or changes to public profile while deletion is pending.
 drop policy social_profiles_create_own on public.social_profiles;
