@@ -32,3 +32,11 @@ Las pruebas PostgreSQL verifican rechazo de roles anónimos, solicitudes recient
 La designación de tickets solo es posible mediante una sesión SQL administrativa privilegiada, nunca a través de un endpoint para usuarios. No almacenar claves de servicio en repositorios o clientes. La API operativa permanecerá reservada a personal autorizado.
 
 Proyecto DEV: jtrdvnwbxpfdnbzasvcj. Esta rama depende de la iteración 8.
+
+## Seguridad adicional V9b
+- La función administrativa usa un reclamo transaccional operator_erasure_claim antes de invocar la API de Auth. Una segunda ejecución del mismo ticket no puede avanzar.
+- La cancelación de solicitud se serializa con el reclamo mediante bloqueos de fila. Si el proceso está iniciado, se rechaza con ERASURE_IN_PROGRESS.
+- Si Auth Admin no consigue borrar la cuenta, el reclamo queda marcado y requiere comprobación y liberación **manual** por un administrador. Jamás liberar un reclamo mientras la operación de Auth pueda seguir ejecutándose.
+- La consulta account_is_active exige que la identidad exista todavía en auth.users; un JWT antiguo no puede seguir leyendo contenido social tras un borrado exitoso.
+- Las pruebas de baja simulada se ejecutan solo contra una tabla Auth ficticia de CI, nunca con DELETE directo sobre auth.users administrada por Supabase.
+- Edge Function DEV: operator-finalize-erasure versión 2, verify_jwt=true. Sigue pendiente una prueba extremo a extremo con un usuario Auth real de desarrollo y un operador autorizado.
