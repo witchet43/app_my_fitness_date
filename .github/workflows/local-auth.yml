@@ -20,7 +20,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Start isolated local Supabase Auth and REST
         run: |
-          npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler,mail
+          npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler
       - name: Test real Auth JWT and PostgREST row security
         env:
           MFD_LOCAL_AUTH_E2E: LOCAL_ONLY

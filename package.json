@@ -10,7 +10,8 @@
     "test": "tsx --test src/domain/*.test.ts",
     "typecheck": "tsc --noEmit",
     "smoke:dev": "tsx scripts/smoke-dev.mts",
-    "test:auth:local": "tsx scripts/local-auth-e2e.mts"
+    "test:auth:local": "tsx scripts/local-auth-e2e.mts",
+    "test:auth:email:local": "tsx scripts/local-email-e2e.mts"
   },
   "dependencies": {
     "expo": "~57.0.31",
