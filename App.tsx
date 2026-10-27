@@ -6,11 +6,12 @@ import LiveCommunity from './src/features/LiveCommunity';
 import LiveTogether from './src/features/LiveTogether';
 import LiveDating from './src/features/LiveDating';
 import AdminModeration from './src/features/AdminModeration';
+import ModerationInbox from './src/features/ModerationInbox';
 import { supabase, supabaseIsConfigured } from './src/lib/supabase';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
 
-type Tab = 'community' | 'together' | 'dating' | 'admin';
+type Tab = 'community' | 'together' | 'dating' | 'inbox' | 'admin';
 const TABS: Array<{ id: Tab; title: string; emoji: string }> = [
   { id: 'community', title: 'Comunidad', emoji: '◉' },
   { id: 'together', title: 'Actividades', emoji: '◎' },
@@ -67,8 +68,9 @@ export default function App() {
     return () => { active = false; };
   }, [session?.user.id]);
 
-  const visibleTabs: Array<{ id: Tab; title: string; emoji: string }> = moderator && session
-    ? [...TABS, { id: 'admin', title: 'Moderación', emoji: '⚑' }]
+  const visibleTabs: Array<{ id: Tab; title: string; emoji: string }> = session
+    ? [...TABS,{id:'inbox',title:'Buzón',emoji:'✉'},
+       ...(moderator ? [{id:'admin' as Tab,title:'Moderación',emoji:'⚑'}] : [])]
     : TABS;
 
   const matches = useMemo(() =>
@@ -102,6 +104,7 @@ export default function App() {
           {tab==='community' && <LiveCommunity session={session}/>}
           {tab==='together' && <LiveTogether session={session}/>}
           {tab==='dating' && <LiveDating session={session}/>}
+          {tab==='inbox' && <ModerationInbox session={session}/>}
           {tab==='admin' && moderator && <AdminModeration session={session}/>}
         </View> : <AuthPanel/>
       ) : <>
@@ -139,7 +142,7 @@ export default function App() {
       </>}
       {authError?<Text style={s.warning}>{authError}</Text>:null}
     </ScrollView>
-    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.4.0</Text></View>
+    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.7.0</Text></View>
   </SafeAreaView>;
 }
 

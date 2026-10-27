@@ -2,6 +2,7 @@ import React,{useCallback,useEffect,useState} from 'react';
 import {Pressable,StyleSheet,Text,TextInput,View} from 'react-native';
 import type {Session} from '@supabase/supabase-js';
 import {supabase} from '../lib/supabase';
+import AdminAppeals from './AdminAppeals';
 
 type Status='pending'|'reviewing'|'resolved'|'dismissed'|'all';
 type Action='review'|'dismiss'|'resolve'|'hide_post'|'restore_post';
@@ -121,6 +122,7 @@ export default function AdminModeration({session}:{session:Session}){
     </View>
    </View>}
   </View>)}
+  <AdminAppeals session={session}/>
   <Text style={s.subhead}>Últimas acciones</Text>
   {recent.length===0?<Text style={s.hint}>Aún no hay decisiones registradas.</Text>:null}
   {recent.map((item,index)=><View key={item.report_id+':'+index} style={s.audit}>
