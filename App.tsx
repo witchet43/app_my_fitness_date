@@ -53,14 +53,17 @@ export default function App() {
     if (!session || !supabase) return;
     const client = supabase;
     let active = true;
-    void client.rpc('is_moderator').then(({ data, error }) => {
-      if (active) {
-        if (error) setAuthError(error.message);
-        setModerator(!error && data === true);
+    void (async () => {
+      try {
+        const { data, error } = await client.rpc('is_moderator');
+        if (active) {
+          if (error) setAuthError(error.message);
+          setModerator(!error && data === true);
+        }
+      } catch (error: unknown) {
+        if (active) setAuthError(error instanceof Error ? error.message : 'Error al verificar permisos');
       }
-    }).catch((error: unknown) => {
-      if (active) setAuthError(error instanceof Error ? error.message : 'Error al verificar permisos');
-    });
+    })();
     return () => { active = false; };
   }, [session?.user.id]);
 
