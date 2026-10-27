@@ -117,3 +117,24 @@ begin
  end if;
 end $$;
 reset role;
+
+-- Old approvals from a cancelled-and-restarted request cannot be reused.
+set role authenticated;
+select set_config('request.jwt.claim.sub',
+ '10000000-0000-4000-8000-000000000005',false);
+select public.cancel_account_deletion();
+select public.request_account_deletion();
+reset role;
+set role service_role;
+do $$
+declare result jsonb;
+begin
+ select public.operator_erasure_preflight(
+ '10000000-0000-4000-8000-000000000005',
+ 'DEV-ERASURE-TICKET-005') into result;
+ if result->>'eligible' <> 'false'
+    or not (result->'blockers' ? 'stale_operator_approval') then
+  raise exception 'Old approval valid after new deletion request: %',result;
+ end if;
+end $$;
+reset role;
