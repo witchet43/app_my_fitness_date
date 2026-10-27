@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AppState, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { AppState, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import AuthPanel from './src/features/AuthPanel';
 import LiveCommunity from './src/features/LiveCommunity';
@@ -12,13 +12,9 @@ import { supabase, supabaseIsConfigured } from './src/lib/supabase';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
 import { isVerified, mayEnter, readPendingFlag, type AccountGate } from './src/domain/sessionGate';
+import { BASE_TABS, tabsForAccount, type MobileTab as Tab } from './src/domain/mobileNavigation';
 
-type Tab = 'community' | 'together' | 'dating' | 'inbox' | 'admin' | 'account';
-const TABS: Array<{ id: Tab; title: string; emoji: string }> = [
-  { id: 'community', title: 'Comunidad', emoji: '◉' },
-  { id: 'together', title: 'Actividades', emoji: '◎' },
-  { id: 'dating', title: 'Citas', emoji: '♡' },
-];
+const TABS=BASE_TABS;
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('community');
@@ -70,7 +66,7 @@ export default function App() {
       }
     })();
     return () => { active = false; };
-  }, [session?.user.id]);
+  }, [session?.user.id,gateVersion]);
 
   // Fail closed. Account status is authenticated on every session change or
   // foreground resumption. Never render private tabs until the request succeeds.
@@ -116,13 +112,9 @@ export default function App() {
   const deletionPending=verified && accountGate.state==='allowed' && accountGate.pending;
   const allowedContent=mayEnter(accountGate,uid,'social');
 
-  const visibleTabs: Array<{ id: Tab; title: string; emoji: string }> = session
-    ? !verified? [] : deletionPending
-      ? [{id:'account',title:'Cuenta',emoji:'⚙'}]
-      : [...TABS,{id:'inbox',title:'Buzón',emoji:'✉'},
-         ...(moderator ? [{id:'admin' as Tab,title:'Moderación',emoji:'⚑'}] : []),
-         {id:'account',title:'Cuenta',emoji:'⚙'}]
-    : TABS;
+  const visibleTabs=tabsForAccount({
+    authenticated:Boolean(session),verified,deletionPending,moderator,
+  });
 
   const matches = useMemo(() =>
     demoCandidates.filter(candidate=>isEligibleForDating({...currentUser,mode},candidate)),[mode]);
@@ -133,39 +125,50 @@ export default function App() {
       <Text style={s.kicker}>TRAIN · CONNECT · BELONG</Text>
       <Text style={s.brand}>my_fitness_<Text style={s.accent}>date</Text></Text>
       <Text style={s.subtitle}>La comunidad y las citas son espacios independientes.</Text>
-      {session && <Pressable onPress={()=>void supabase?.auth.signOut()} style={s.signout}>
+      {session && <Pressable testID="header-signout" accessibilityRole="button"
+        accessibilityLabel="Cerrar sesión de my fitness date"
+        onPress={()=>void supabase?.auth.signOut()} style={s.signout}>
         <Text style={s.signoutText}>Cerrar sesión</Text>
       </Pressable>}
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false}
       style={s.tabs} contentContainerStyle={s.tabsContent}
       keyboardShouldPersistTaps="handled" accessibilityLabel="Secciones de la aplicación">
-      {visibleTabs.map(item=><Pressable key={item.id} accessibilityRole="tab"
-        accessibilityState={{selected:tab===item.id}} onPress={()=>setTab(item.id)}
+      {visibleTabs.map(item=><Pressable key={item.id} testID={'tab-'+item.id}
+        accessibilityLabel={item.title} accessibilityHint={'Abrir sección '+item.title}
+        accessibilityRole="tab" accessibilityState={{selected:tab===item.id}}
+        onPress={()=>setTab(item.id)}
         style={[s.tab,tab===item.id&&s.tabActive]}>
         <Text style={[s.tabText,tab===item.id&&s.tabTextActive]}>
           {item.emoji} {item.title}
         </Text>
       </Pressable>)}
     </ScrollView>
-    <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView style={s.main} behavior={Platform.OS==='ios'?'padding':undefined}>
+    <ScrollView testID="main-scroll" contentContainerStyle={s.content}
+      keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}>
       <View style={s.notice}><Text style={s.noticeText}>DESARROLLO · Sin usuarios reales · Acceso controlado pendiente</Text></View>
       {tab==='admin' && !moderator && <Text style={s.warning}>Acceso administrativo no autorizado.</Text>}
       {deletionPending && tab!=='account' && <Text style={s.warning}>La solicitud de baja está pendiente. Abre Cuenta para revisarla o cancelarla.</Text>}
       {supabaseIsConfigured ? (
         !authReady ? <Text style={s.lead}>Comprobando sesión...</Text> :
-        session ? !verified ? <View style={s.gate}>
+        session ? !verified ? <View style={s.gate} testID="access-check">
           <Text style={s.sectionTitle}>Validando acceso</Text>
           {accountGate.state==='error' ?
             <Text style={s.warning}>{accountGate.reason}</Text> :
             <Text style={s.lead}>Comprobando permisos y privacidad de tu cuenta…</Text>}
-          <Pressable style={s.option} onPress={()=>setGateVersion(v=>v+1)}>
+          <Pressable testID="access-retry" accessibilityRole="button"
+            accessibilityLabel="Reintentar verificación de cuenta"
+            style={s.option} onPress={()=>setGateVersion(v=>v+1)}>
             <Text style={s.body}>Reintentar verificación</Text>
           </Pressable>
-          <Pressable style={s.option} onPress={()=>void supabase?.auth.signOut()}>
+          <Pressable testID="access-signout" accessibilityRole="button"
+            accessibilityLabel="Salir de la cuenta"
+            style={s.option} onPress={()=>void supabase?.auth.signOut()}>
             <Text style={s.body}>Cerrar sesión</Text>
           </Pressable>
-        </View> : <View key={session.user.id + tab}>
+        </View> : <View testID={'screen-'+tab} key={session.user.id + tab}>
           {tab==='community' && allowedContent && <LiveCommunity session={session}/>}
           {tab==='together' && allowedContent && <LiveTogether session={session}/>}
           {tab==='dating' && allowedContent && <LiveDating session={session}/>}
@@ -212,12 +215,14 @@ export default function App() {
       </>}
       {authError?<Text style={s.warning}>{authError}</Text>:null}
     </ScrollView>
-    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.11.0</Text></View>
+    </KeyboardAvoidingView>
+    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.14.0</Text></View>
   </SafeAreaView>;
 }
 
 const s=StyleSheet.create({
  safe:{flex:1,backgroundColor:'#091319'},
+ main:{flex:1},
  header:{paddingHorizontal:20,paddingTop:17,paddingBottom:14},
  kicker:{fontSize:10,letterSpacing:2,color:'#9EB2BC',fontWeight:'700'},
  brand:{fontSize:28,fontWeight:'800',letterSpacing:-0.8,color:'#F8FAFA',marginTop:4},
