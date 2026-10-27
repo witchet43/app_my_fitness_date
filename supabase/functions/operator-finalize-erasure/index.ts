@@ -32,7 +32,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
   };
   let preflight: Response;
   try {
-    preflight = await fetch(url + '/rest/v1/rpc/operator_erasure_preflight', {
+    preflight = await fetch(url + '/rest/v1/rpc/operator_erasure_claim', {
       method: 'POST', headers,
       body: JSON.stringify({ p_user_id: body.user_id, p_ticket: body.ticket }),
     });
