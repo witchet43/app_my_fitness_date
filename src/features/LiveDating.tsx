@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { isAdult } from '../domain/onboarding';
 import { parseScheduleDrafts, type ScheduleDraft } from '../domain/scheduleDraft';
 import type { GymShieldMode } from '../domain/gymShield';
+import ReportPicker,{type ReportReason} from './ReportPicker';
 
 type Gym = { id: string; name: string; city: string };
 type Candidate = { user_id: string; display_name: string; city: string; sports: string[] };
@@ -38,6 +39,7 @@ export default function LiveDating({ session }: { session: Session }) {
   const [hasSetup, setHasSetup] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [reportId,setReportId]=useState<string|null>(null);
 
 
   const refreshCandidates = useCallback(async () => {
@@ -51,6 +53,7 @@ export default function LiveDating({ session }: { session: Session }) {
     if (!session || !supabase) {
       // Never carry private onboarding fields between signed-in users on one device.
       setCandidates([]);
+      setReportId(null);
       setEnabled(false);
       setHasSetup(false);
       setGyms([]);
@@ -178,6 +181,17 @@ export default function LiveDating({ session }: { session: Session }) {
   }
 
 
+  async function submitReport(userId:string,reason:ReportReason){
+    if(!supabase)return;
+    setBusy(true);setMessage('');
+    try{
+      const {error}=await supabase.rpc('submit_safety_report',{
+        p_target_type:'user',p_target_id:userId,p_reason:reason,p_details:null,
+      });
+      if(error)throw error;
+      setReportId(null);setMessage('Reporte recibido para revisión.');
+    }catch(e){setMessage(errorMessage(e));}finally{setBusy(false);}
+  }
   return (
     <ScrollView nestedScrollEnabled>
       <Text style={styles.heading}>Gym Shield · Perfil privado</Text>
@@ -262,11 +276,18 @@ export default function LiveDating({ session }: { session: Session }) {
             <Text style={styles.name}>{c.display_name}</Text>
             <Text style={styles.body}>{c.city} · {c.sports.join(' · ')}</Text>
           </View>
-          <Pressable disabled={busy} onPress={() => void blockCandidate(c.user_id)} style={styles.block}>
-            <Text style={styles.blockText}>Bloquear</Text>
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable disabled={busy} onPress={() => void blockCandidate(c.user_id)} style={styles.block}>
+              <Text style={styles.blockText}>Bloquear</Text>
+            </Pressable>
+            <Pressable disabled={busy} onPress={()=>setReportId(c.user_id)} style={styles.block}>
+              <Text style={styles.blockText}>Reportar</Text>
+            </Pressable>
+          </View>
         </View>
       ))}
+      {reportId && <ReportPicker busy={busy} onSubmit={reason=>void submitReport(reportId,reason)}
+        onCancel={()=>setReportId(null)}/>} 
       <Text style={styles.hint}>Aviso: la autodeclaración de edad no constituye verificación. No habilitar una beta con usuarios reales sin los controles adicionales de seguridad y moderación.</Text>
     </ScrollView>
   );
@@ -300,5 +321,6 @@ const styles = StyleSheet.create({
   candidate: { backgroundColor: '#182930', borderRadius: 12, padding: 13, flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
   name: { color: '#FFFFFF', fontWeight: '800', fontSize: 16 },
   block: { borderColor: '#80676B', borderWidth: 1, borderRadius: 8, padding: 8 },
+  actions: {gap:6},
   blockText: { color: '#FFD6D6', fontSize: 11 },
 });
