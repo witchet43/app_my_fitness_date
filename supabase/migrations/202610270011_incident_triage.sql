@@ -75,7 +75,7 @@ begin
  from app_private.safety_reports r
  left join app_private.incident_escalations e on e.report_id=r.id
  where r.status in ('pending','reviewing') or e.status='open'
- order by (e.status='open') desc,
+ order by coalesce(e.status='open',false) desc,
           (r.reason='unsafe') desc,
           clock_timestamp() > r.created_at+(case r.reason
               when 'unsafe' then interval '1 hour'
