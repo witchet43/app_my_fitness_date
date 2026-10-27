@@ -35,6 +35,8 @@ begin
     where user_id=p_user_id and ticket=p_ticket;
   if v_approved is null then
     v_blockers:=array_append(v_blockers,'missing_operator_approval');
+  elsif v_requested is not null and v_approved<v_requested then
+    v_blockers:=array_append(v_blockers,'stale_operator_approval');
   end if;
 
   if exists(select 1 from app_private.moderators where user_id=p_user_id)
