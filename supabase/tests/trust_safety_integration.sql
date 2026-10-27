@@ -4,7 +4,7 @@ set role anon;
 do $$
 begin
  if has_function_privilege(current_user,'public.submit_safety_report(text,uuid,text,text)','EXECUTE')
-    or has_table_privilege(current_user,'app_private.safety_reports','SELECT') then
+    or has_schema_privilege(current_user,'app_private','USAGE') then
    raise exception 'Safety reports exposed to anonymous users';
  end if;
 end $$;
