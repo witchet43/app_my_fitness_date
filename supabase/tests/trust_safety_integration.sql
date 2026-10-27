@@ -11,7 +11,9 @@ end $$;
 reset role;
 
 set role authenticated;
-select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
+-- User 2 was deliberately blocked by User 1 in the earlier dating tests.
+-- User 3 remains unblocked and can see/report User 1's content.
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
 do $$
 declare
   v_post uuid;
