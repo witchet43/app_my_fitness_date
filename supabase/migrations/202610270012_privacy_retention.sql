@@ -34,7 +34,7 @@ grant select on
 -- Release of evidentiary holds requires separate legal/human review.
 create function app_private.counter_has_evidence_hold(p_user_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $
+as $hold$
  select exists(select 1 from app_private.safety_reports r
     where r.reporter_id=p_user_id or r.subject_user_id=p_user_id)
  or exists(select 1 from app_private.moderation_appeals a
@@ -47,7 +47,7 @@ as $
     where e.escalated_by=p_user_id or e.closed_by=p_user_id)
  or exists(select 1 from app_private.incident_audit a
     where a.actor_id=p_user_id);
-$;
+$hold$;
 revoke execute on function app_private.counter_has_evidence_hold(uuid)
  from public,anon,authenticated;
 grant execute on function app_private.counter_has_evidence_hold(uuid) to service_role;
