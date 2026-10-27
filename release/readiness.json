@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "candidate": "v19-integration-dev",
+  "project_ref": "jtrdvnwbxpfdnbzasvcj",
+  "release_channel": "not_published",
+  "environment": "development",
+  "gates": {
+    "hosted_email_configuration": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "external_age_verification": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "staffed_moderation": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "legal_privacy_retention": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "real_auth_erasure_e2e": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "physical_android_qa": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "physical_ios_qa": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "independent_security_review": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "support_and_incident_response": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    }
+  }
+}
