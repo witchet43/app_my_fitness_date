@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import AuthPanel from './src/features/AuthPanel';
 import LiveCommunity from './src/features/LiveCommunity';
@@ -11,6 +11,7 @@ import AccountCenter from './src/features/AccountCenter';
 import { supabase, supabaseIsConfigured } from './src/lib/supabase';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
+import { isVerified, mayEnter, readPendingFlag, type AccountGate } from './src/domain/sessionGate';
 
 type Tab = 'community' | 'together' | 'dating' | 'inbox' | 'admin' | 'account';
 const TABS: Array<{ id: Tab; title: string; emoji: string }> = [
@@ -26,7 +27,8 @@ export default function App() {
   const [authReady, setAuthReady] = useState(!supabaseIsConfigured);
   const [authError, setAuthError] = useState('');
   const [moderator, setModerator] = useState(false);
-  const [deletionPending,setDeletionPending]=useState(false);
+  const [accountGate,setAccountGate]=useState<AccountGate>({state:'idle'});
+  const [gateVersion,setGateVersion]=useState(0);
 
   useEffect(() => {
     if (!supabase) return;
@@ -70,25 +72,52 @@ export default function App() {
     return () => { active = false; };
   }, [session?.user.id]);
 
+  // Fail closed. Account status is authenticated on every session change or
+  // foreground resumption. Never render private tabs until the request succeeds.
   useEffect(()=>{
-    setDeletionPending(false);
-    if(!session||!supabase)return;
+    if (!session || !supabase) {
+      setAccountGate({state:'idle'});
+      return;
+    }
+    const uid=session.user.id;
+    const client=supabase;
     let active=true;
+    setAccountGate({state:'checking',userId:uid});
+    setTab('community');
     void (async()=>{
-      try{
-        const {data,error}=await supabase!.rpc('my_account_status');
-        if(active && !error){
-          const pending=Boolean((data as {pending?:boolean}|null)?.pending);
-          setDeletionPending(pending);
+      try {
+        const {data,error}=await client.rpc('my_account_status');
+        if(error)throw error;
+        const pending=readPendingFlag(data);
+        if(active){
+          setAccountGate({state:'allowed',userId:uid,pending});
           if(pending)setTab('account');
         }
-      }catch{ /* AccountCenter reports status errors to the account owner. */ }
+      }catch(e){
+        if(active)setAccountGate({
+          state:'error',userId:uid,
+          reason:e instanceof Error?e.message:'No se pudo validar tu cuenta',
+        });
+      }
     })();
     return ()=>{active=false;};
-  },[session?.user.id]);
+  },[session?.user.id,gateVersion]);
+
+  useEffect(()=>{
+    if(!supabase)return;
+    const sub=AppState.addEventListener('change',state=>{
+      if(state==='active')setGateVersion(version=>version+1);
+    });
+    return ()=>sub.remove();
+  },[]);
+
+  const uid=session?.user.id||null;
+  const verified=isVerified(accountGate,uid);
+  const deletionPending=verified && accountGate.state==='allowed' && accountGate.pending;
+  const allowedContent=mayEnter(accountGate,uid,'social');
 
   const visibleTabs: Array<{ id: Tab; title: string; emoji: string }> = session
-    ? deletionPending
+    ? !verified? [] : deletionPending
       ? [{id:'account',title:'Cuenta',emoji:'⚙'}]
       : [...TABS,{id:'inbox',title:'Buzón',emoji:'✉'},
          ...(moderator ? [{id:'admin' as Tab,title:'Moderación',emoji:'⚑'}] : []),
@@ -123,14 +152,28 @@ export default function App() {
       {deletionPending && tab!=='account' && <Text style={s.warning}>La solicitud de baja está pendiente. Abre Cuenta para revisarla o cancelarla.</Text>}
       {supabaseIsConfigured ? (
         !authReady ? <Text style={s.lead}>Comprobando sesión...</Text> :
-        session ? <View key={session.user.id + tab}>
-          {tab==='community' && !deletionPending && <LiveCommunity session={session}/>}
-          {tab==='together' && !deletionPending && <LiveTogether session={session}/>}
-          {tab==='dating' && !deletionPending && <LiveDating session={session}/>}
-          {tab==='inbox' && !deletionPending && <ModerationInbox session={session}/>}
-          {tab==='admin' && moderator && !deletionPending && <AdminModeration session={session}/>}
+        session ? !verified ? <View style={s.gate}>
+          <Text style={s.sectionTitle}>Validando acceso</Text>
+          {accountGate.state==='error' ?
+            <Text style={s.warning}>{accountGate.reason}</Text> :
+            <Text style={s.lead}>Comprobando permisos y privacidad de tu cuenta…</Text>}
+          <Pressable style={s.option} onPress={()=>setGateVersion(v=>v+1)}>
+            <Text style={s.body}>Reintentar verificación</Text>
+          </Pressable>
+          <Pressable style={s.option} onPress={()=>void supabase?.auth.signOut()}>
+            <Text style={s.body}>Cerrar sesión</Text>
+          </Pressable>
+        </View> : <View key={session.user.id + tab}>
+          {tab==='community' && allowedContent && <LiveCommunity session={session}/>}
+          {tab==='together' && allowedContent && <LiveTogether session={session}/>}
+          {tab==='dating' && allowedContent && <LiveDating session={session}/>}
+          {tab==='inbox' && allowedContent && <ModerationInbox session={session}/>}
+          {tab==='admin' && moderator && allowedContent && <AdminModeration session={session}/>}
           {tab==='account' && <AccountCenter session={session}
-            onStatusChange={pending=>{setDeletionPending(pending);if(pending)setTab('account');}}/>}
+            onStatusChange={pending=>{
+              setAccountGate({state:'allowed',userId:session.user.id,pending});
+              if(pending)setTab('account');
+            }}/>}
         </View> : <AuthPanel/>
       ) : <>
         <Text style={s.lead}>Demostración local con datos ficticios. Configura Supabase para activar las funciones sociales.</Text>
@@ -167,7 +210,7 @@ export default function App() {
       </>}
       {authError?<Text style={s.warning}>{authError}</Text>:null}
     </ScrollView>
-    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.8.0</Text></View>
+    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.10.0</Text></View>
   </SafeAreaView>;
 }
 
@@ -196,6 +239,7 @@ const s=StyleSheet.create({
  body:{color:'#C4D0D5',fontSize:13,lineHeight:20},
  option:{padding:14,borderRadius:11,marginVertical:6,borderWidth:1,borderColor:'#43525A'},
  optionActive:{borderColor:'#B6F266',backgroundColor:'#283B2B'},
+ gate:{padding:14,borderRadius:12,backgroundColor:'#16262D'},
  footer:{paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#1A3038'},
  footerText:{color:'#718B94',fontWeight:'800',fontSize:10,letterSpacing:1},
  warning:{color:'#FFC9A0',fontSize:12},
