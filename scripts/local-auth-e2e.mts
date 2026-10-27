@@ -127,6 +127,31 @@ try{
  assert.ifError(still.error);assert.equal(still.data?.length,1);
  checks.push('real signed post create, read, impersonation denied, cross-account delete denied');
 
+ const statusBefore=await a.rpc('my_adult_eligibility');
+ assert.ifError(statusBefore.error);
+ assert.equal((statusBefore.data as {approved:boolean}).approved,false,
+  'A real new GoTrue account must not receive implicit adult eligibility');
+ const deniedDiscover=await a.rpc('discover_dating_candidates',{p_limit:10});
+ assert.ok(deniedDiscover.error,'Dating discovery should reject users awaiting age review');
+
+ // Controlled local-only operator fixture. The hosted DEV service key must
+ // never be used here: the caller verifies a strict loopback API URL.
+ const localServiceKey=process.env.SERVICE_ROLE_KEY;
+ assert.ok(localServiceKey,'Local CLI must provide SERVICE_ROLE_KEY in status env');
+ const operator=createClient(apiUrl,localServiceKey!,{
+   auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},
+ });
+ for(const uid of [uidA,uidB]){
+   const grant=await operator.rpc('operator_set_adult_eligibility',{
+     p_user_id:uid,
+     p_review_ref:'LOCAL-QA-REVIEW-'+runId,
+     p_expires_at:new Date(Date.now()+14*86400*1000).toISOString(),
+     p_approve:true,
+   });
+   assert.ifError(grant.error);
+ }
+ checks.push('adult gate closed by default; only local operator fixture can unlock Dating');
+
  const gyms=await a.from('gyms').select('id,name').order('name').limit(2);
  assert.ifError(gyms.error);
  assert.equal(gyms.data?.length,2);

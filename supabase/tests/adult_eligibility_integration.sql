@@ -131,7 +131,8 @@ end $$;
 reset role;
 
 -- Expiry must fail even if a profile still has dating_enabled=true.
-update app_private.adult_eligibility set expires_at=now()-interval '1 hour'
+update app_private.adult_eligibility
+set approved_at=now()-interval '2 days',expires_at=now()-interval '1 hour'
 where user_id='10000000-0000-4000-8000-000000000009';
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000009',false);
