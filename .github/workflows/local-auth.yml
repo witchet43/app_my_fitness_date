@@ -30,6 +30,7 @@ jobs:
           eval "$(npx --yes supabase@latest status -o env)"
           set +a
           npm run test:auth:local
+          npm run test:auth:email:local
       - name: Stop and destroy local-only test data
         if: always()
         run: |
