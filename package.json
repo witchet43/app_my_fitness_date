@@ -13,7 +13,9 @@
     "test:auth:local": "tsx scripts/local-auth-e2e.mts",
     "test:auth:email:local": "tsx scripts/local-email-e2e.mts",
     "auth:hosted:audit": "tsx scripts/hosted-auth-config.mts audit",
-    "auth:hosted:lock": "tsx scripts/hosted-auth-config.mts lock"
+    "auth:hosted:lock": "tsx scripts/hosted-auth-config.mts lock",
+    "candidate:audit": "tsx scripts/candidate-audit.mts",
+    "candidate:require-beta": "tsx scripts/candidate-audit.mts --require-beta"
   },
   "dependencies": {
     "expo": "~57.0.31",

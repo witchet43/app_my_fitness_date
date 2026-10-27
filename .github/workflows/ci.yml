@@ -38,6 +38,8 @@ jobs:
         run: npm run typecheck
       - name: Unit tests
         run: npm test
+      - name: Candidate integration audit (does not authorize beta)
+        run: npm run candidate:audit
       - name: Android JavaScript bundle
         run: npx expo export --platform android --output-dir /tmp/mfd-android-bundle
       - name: iOS JavaScript bundle
