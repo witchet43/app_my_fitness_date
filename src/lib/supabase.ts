@@ -2,12 +2,16 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, Platform } from 'react-native';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { isDemoOnlyFlag, shouldConnectBackend } from '../domain/deploymentMode';
 
 // Publishable key is intentionally PUBLIC; never embed secret/service_role keys.
 // Before real users, deploy SQL migrations and finish access/security review.
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-export const supabaseIsConfigured = Boolean(url && publishableKey);
+export const demoOnlyBuild = isDemoOnlyFlag(process.env.EXPO_PUBLIC_MFD_DEMO_BUILD);
+export const supabaseIsConfigured = shouldConnectBackend(
+  process.env.EXPO_PUBLIC_MFD_DEMO_BUILD, url, publishableKey,
+);
 
 export const supabase: SupabaseClient | null = supabaseIsConfigured
   ? createClient(url!, publishableKey!, {
