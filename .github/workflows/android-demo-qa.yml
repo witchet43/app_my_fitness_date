@@ -35,7 +35,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      # GitHub ubuntu-latest already provides ANDROID_HOME/Android SDK.
+      # Avoid reinstalling cmdline-tools: hosted sdkmanager license step is unstable.
+      - name: Verify preinstalled Android SDK
+        run: |
+          test -d "$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platform-tools"
       - name: Install reproducible dependencies
         run: npm ci --no-audit --no-fund
       - name: Check offline QA deployment gate
