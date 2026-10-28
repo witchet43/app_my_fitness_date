@@ -19,7 +19,7 @@ export type GateStatus='pending'|'verified';
 export type GateEvidence={status:GateStatus;evidence_url:string|null;verified_at:string|null};
 export type CandidateManifest={
  schema_version:1;
- candidate:'v19-integration-dev';
+ candidate:'v20-deployment-dev';
  project_ref:'jtrdvnwbxpfdnbzasvcj';
  release_channel:'not_published';
  environment:'development';
@@ -42,7 +42,7 @@ export function evaluateCandidateManifest(raw:unknown):Readiness {
  };
  const obj=raw as Record<string,unknown>;
  if(obj.schema_version!==1)errors.push('Unsupported schema_version');
- if(obj.candidate!=='v19-integration-dev')errors.push('Wrong candidate');
+ if(obj.candidate!=='v20-deployment-dev')errors.push('Wrong candidate');
  if(obj.project_ref!=='jtrdvnwbxpfdnbzasvcj')errors.push('Wrong project');
  if(obj.environment!=='development'||obj.release_channel!=='not_published'){
    errors.push('Unapproved environment or release channel');

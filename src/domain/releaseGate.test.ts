@@ -5,7 +5,7 @@ const pending=Object.fromEntries(REQUIRED_GATES.map(k=>[k,{
  status:'pending',evidence_url:null,verified_at:null,
 }])) as Record<GateId,GateEvidence>;
 const manifest=()=>({
- schema_version:1,candidate:'v19-integration-dev',project_ref:'jtrdvnwbxpfdnbzasvcj',
+ schema_version:1,candidate:'v20-deployment-dev',project_ref:'jtrdvnwbxpfdnbzasvcj',
  release_channel:'not_published',environment:'development',gates:structuredClone(pending),
 });
 test('candidate is structurally valid but never beta ready by default',()=>{
