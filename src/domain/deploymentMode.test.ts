@@ -10,7 +10,8 @@ test('QA demo cannot connect to hosted, even with accidental env credentials',()
    ['http://127.0.0.1:54321',publicKey],
    [url,'sb_secret_FORBIDDEN'],
  ]){
-   assert.equal(shouldConnectBackend('YES',...backend),false);
+   const [uri,key]=backend;
+   assert.equal(shouldConnectBackend('YES',uri,key),false);
  }
  assert.equal(isDemoOnlyFlag('YES'),true);
  assert.equal(isDemoOnlyFlag('yes'),false);
