@@ -47,15 +47,15 @@ jobs:
         run: npm run release:preflight:demo
       - name: Generate ephemeral native Android project
         run: npx expo prebuild --platform android --no-install
-      - name: Build disposable Android debug APK (not Play Store)
+      - name: Build standalone Android QA APK with bundled JS (not Play Store)
         working-directory: android
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
       - name: Hash APK without logging secrets
-        run: sha256sum android/app/build/outputs/apk/debug/app-debug.apk
-      - name: Attach 7-day synthetic QA APK
+        run: sha256sum android/app/build/outputs/apk/release/app-release.apk
+      - name: Attach 7-day synthetic standalone QA APK
         uses: actions/upload-artifact@v4
         with:
           name: my-fitness-date-v20-demo-android-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7

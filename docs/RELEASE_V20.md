@@ -19,7 +19,7 @@ El resultado de \`npm run release:preflight:beta\` debe ser **error** hasta cont
 - \`eas.json\` define exclusivamente \`qa-demo-android\` (APK interno) y \`qa-demo-ios-simulator\` (simulador). **No** define ningún perfil de publicación en tiendas.
 - \`src/domain/deploymentMode.ts\` y \`src/lib/supabase.ts\` fuerzan aislamiento real de la demo: si \`EXPO_PUBLIC_MFD_DEMO_BUILD=YES\`, no existe cliente Supabase, aunque aparezcan otras variables.
 - \`scripts/release-preflight.mts\` verifica perfiles, ID DEV, estado del manifiesto, integridad básica de lockfile y variables. No llama servicios externos ni imprime llaves.
-- \`android-demo-qa.yml\` compila un **APK Android debug temporal** en CI para la rama V20; exige preflight de demo, no usa secretos y conserva el artefacto durante 7 días. Este APK es instalable pero no se firma con credenciales de Play Store.
+- \`android-demo-qa.yml\` compila un **APK Android autónomo de variante Release** en CI para la rama V20; exige preflight de demo, no usa secretos y conserva el artefacto durante 7 días. Este APK incorpora JavaScript para funcionar sin Metro y no usa credenciales de Play Store. Su firma es exclusivamente de pruebas.
 - El código React Native conserva los \`testID\` y el flujo Maestro \`maestro/demo-navigation.yaml\` para probar una instalación en Android/iOS.
 
 ## Verificación reproducible
