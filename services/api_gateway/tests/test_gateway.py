@@ -64,3 +64,35 @@ def test_proxy_drops_private_data(monkeypatch):
     assert response.json()["count"] == 1
     assert "gym_id" not in response.text
     assert "weekly_slots" not in response.text
+
+
+def test_readiness_makes_database_probe(monkeypatch):
+    calls = []
+
+    async def probe():
+        calls.append("postgres")
+
+    monkeypatch.setattr(main, "probe_database", probe)
+    for path in ("/readyz", "/heartbeat"):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert response.json() == {
+            "status": "ok", "service": "api-gateway",
+            "dependencies": {"database": "ok"},
+        }
+    assert calls == ["postgres", "postgres"]
+
+
+def test_readiness_fails_closed(monkeypatch):
+    async def probe():
+        raise HTTPException(503, "Dependency unavailable")
+
+    monkeypatch.setattr(main, "probe_database", probe)
+    response = client.get("/heartbeat")
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Dependency unavailable"}
+
+
+def test_readiness_requires_backend_configuration(monkeypatch):
+    monkeypatch.delenv("MFD_SUPABASE_URL", raising=False)
+    assert client.get("/readyz").status_code == 503
