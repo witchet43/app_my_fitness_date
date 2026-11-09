@@ -14,7 +14,7 @@ flutter create . --project-name my_fitness_date --platforms=web,android,ios
 flutter pub get
 flutter analyze
 flutter test
-flutter run -d chrome --dart-define=MFD_API_BASE_URL=http://localhost:8080
+flutter run -d chrome --web-port=5173 --dart-define=MFD_API_BASE_URL=http://localhost:8080
 ```
 
 `flutter create` genera los directorios de plataforma hasta que se
