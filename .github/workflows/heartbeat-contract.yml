@@ -43,3 +43,16 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611090013_saas_heartbeat.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/tests/saas_heartbeat_test.sql
+
+  deployed-edge-http:
+    name: Verify deployed public HTTP readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify deployed Edge Function makes real database query
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error --location \
+            --retry 2 --retry-delay 3 --retry-all-errors --max-time 12 \
+            'https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/heartbeat' \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("status")=="ok" and d.get("dependencies",{}).get("database")=="ok", "Database heartbeat degraded"; print("Heartbeat HTTP verified")'
