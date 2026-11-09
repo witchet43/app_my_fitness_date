@@ -76,10 +76,12 @@ def test_readiness_makes_database_probe(monkeypatch):
     for path in ("/readyz", "/heartbeat"):
         response = client.get(path)
         assert response.status_code == 200
-        assert response.json() == {
-            "status": "ok", "service": "api-gateway",
-            "dependencies": {"database": "ok"},
-        }
+        payload = response.json()
+        assert payload["status"] == "ok"
+        assert payload["service"] == "api-gateway"
+        assert payload["dependencies"] == {"database": "ok"}
+        assert payload["checked_at"].endswith("Z")
+        assert response.headers["cache-control"] == "no-store, max-age=0"
     assert calls == ["postgres", "postgres"]
 
 
@@ -91,6 +93,7 @@ def test_readiness_fails_closed(monkeypatch):
     response = client.get("/heartbeat")
     assert response.status_code == 503
     assert response.json() == {"detail": "Dependency unavailable"}
+    assert response.headers["cache-control"] == "no-store, max-age=0"
 
 
 def test_readiness_requires_backend_configuration(monkeypatch):
