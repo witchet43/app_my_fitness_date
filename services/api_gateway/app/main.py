@@ -4,12 +4,13 @@ Cloud Run: only this service is public; Gym Shield requires roles/run.invoker.
 No database key or privileged credentials ever reach Flutter.
 """
 import asyncio
+from datetime import datetime, timezone
 import os
 from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
@@ -139,11 +140,20 @@ async def probe_database() -> None:
 
 @app.get("/readyz")
 @app.get("/heartbeat")
-async def database_heartbeat() -> dict[str, object]:
+async def database_heartbeat(response: Response) -> dict[str, object]:
     """Readiness, unlike /healthz, fails if PostgreSQL is unavailable."""
-    await probe_database()
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    try:
+        await probe_database()
+    except HTTPException:
+        raise HTTPException(
+            503, "Dependency unavailable",
+            headers={"Cache-Control": "no-store, max-age=0"},
+        ) from None
     return {"status": "ok", "service": "api-gateway",
-            "dependencies": {"database": "ok"}}
+            "dependencies": {"database": "ok"},
+            "checked_at": datetime.now(timezone.utc).isoformat(
+                timespec="seconds").replace("+00:00", "Z")}
 
 
 @app.get("/v1/dating/candidates", response_model=CandidateResponse)
