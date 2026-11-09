@@ -113,6 +113,39 @@ async def healthz() -> dict[str, str]:
     return {"status": "ok", "service": "api-gateway"}
 
 
+async def probe_database() -> None:
+    """Exercise PostgreSQL through an unprivileged Supabase RPC."""
+    base = config_url("MFD_SUPABASE_URL")
+    key = os.getenv("MFD_SUPABASE_PUBLISHABLE_KEY", "")
+    if not key:
+        raise HTTPException(503, "Dependency unavailable")
+    try:
+        async with httpx.AsyncClient(timeout=4) as client:
+            result = await client.post(
+                base + "/rest/v1/rpc/saas_heartbeat_v1",
+                headers={"apikey": key, "Content-Type": "application/json"},
+                json={},
+            )
+    except httpx.HTTPError:
+        raise HTTPException(503, "Dependency unavailable") from None
+    if result.status_code != 200:
+        raise HTTPException(503, "Dependency unavailable")
+    try:
+        if result.json() != {"status": "ok"}:
+            raise HTTPException(503, "Dependency unavailable")
+    except (ValueError, TypeError):
+        raise HTTPException(503, "Dependency unavailable") from None
+
+
+@app.get("/readyz")
+@app.get("/heartbeat")
+async def database_heartbeat() -> dict[str, object]:
+    """Readiness, unlike /healthz, fails if PostgreSQL is unavailable."""
+    await probe_database()
+    return {"status": "ok", "service": "api-gateway",
+            "dependencies": {"database": "ok"}}
+
+
 @app.get("/v1/dating/candidates", response_model=CandidateResponse)
 async def candidates(
     limit: int = Query(default=10, ge=1, le=10),
