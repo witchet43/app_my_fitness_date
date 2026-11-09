@@ -10,12 +10,22 @@ from uuid import UUID
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
 from pydantic import BaseModel, ConfigDict
 
 app = FastAPI(title="my_fitness_date API Gateway", version="0.1.0",
               docs_url=None, redoc_url=None)
+
+# Browser clients need CORS, but only configured web origins may call APIs.
+# No wildcard and no credentials; native Android/iOS are unaffected by CORS.
+allowed_origins = [origin.strip() for origin in
+                   os.getenv("MFD_WEB_ALLOWED_ORIGINS", "").split(",")
+                   if origin.strip() and origin.strip() != "*"]
+app.add_middleware(CORSMiddleware, allow_origins=allowed_origins,
+                   allow_methods=["GET"], allow_headers=["Authorization"],
+                   allow_credentials=False)
 
 
 class Candidate(BaseModel):
