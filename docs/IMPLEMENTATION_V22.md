@@ -45,7 +45,7 @@ La segunda llamada debe devolver 401. Sin `MFD_SUPABASE_URL` y
 `MFD_SUPABASE_PUBLISHABLE_KEY` en el contenedor, cualquier llamada
 autenticada debe fallar cerrada. Esos valores públicos deben llegar
 por variables de entorno, no quedar incorporados en Flutter ni en Git.
-Para Cloud Run remoto usar HTTPS y cuenta de servicio/IAM. No conectar
+Para Flutter Web, configurar \`MFD_WEB_ALLOWED_ORIGINS\` con el origen HTTPS exacto del sitio (sin comodín). Compose permite únicamente \`localhost:5173\` para QA. Para Cloud Run remoto usar HTTPS y cuenta de servicio/IAM. No conectar
 Auth hospedado ni abrir registro público hasta completar los nueve gates
 de `release/readiness.json`.
 
