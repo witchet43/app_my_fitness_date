@@ -11,6 +11,11 @@ def test_public_health():
     assert client.get("/healthz").json() == {"status": "ok", "service": "api-gateway"}
 
 
+def test_cors_never_allows_unlisted_origins():
+    response = client.get("/healthz", headers={"Origin": "https://hostile.example"})
+    assert "access-control-allow-origin" not in response.headers
+
+
 def test_fails_closed_without_auth():
     response = client.get("/v1/dating/candidates")
     assert response.status_code == 401
