@@ -31,3 +31,7 @@ content_path = "./supabase/templates/confirmation.html"
 [auth.email.template.recovery]
 subject = "my_fitness_date QA recovery"
 content_path = "./supabase/templates/recovery.html"
+
+# Public read-only database readiness endpoint; no credentials or PII.
+[functions.heartbeat]
+verify_jwt = false
