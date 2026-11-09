@@ -1,0 +1,22 @@
+# Solo desarrollo local. No publicar estos puertos en infraestructura pública.
+services:
+  api-gateway:
+    build: ./api_gateway
+    environment:
+      MFD_APP_ENV: local
+      MFD_SUPABASE_URL: ${MFD_SUPABASE_URL:-}
+      MFD_SUPABASE_PUBLISHABLE_KEY: ${MFD_SUPABASE_PUBLISHABLE_KEY:-}
+      MFD_GYM_SHIELD_URL: http://gym-shield:8080
+      PORT: "8080"
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - gym-shield
+  gym-shield:
+    build: ./gym_shield
+    environment:
+      MFD_APP_ENV: local
+      MFD_SUPABASE_URL: ${MFD_SUPABASE_URL:-}
+      MFD_SUPABASE_PUBLISHABLE_KEY: ${MFD_SUPABASE_PUBLISHABLE_KEY:-}
+      PORT: "8080"
+    # No port publishing: available only on the compose network.
