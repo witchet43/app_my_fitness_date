@@ -1,0 +1,58 @@
+name: Flutter and microservices V22
+
+on:
+  pull_request:
+    paths:
+      - "services/**"
+      - "apps/flutter_client/**"
+      - ".github/workflows/flutter-services-v22.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-services:
+    name: Python tests (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [api_gateway, gym_shield]
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/${{ matrix.service }}/requirements.txt
+      - name: Install service and test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Contract and privacy unit tests
+        run: python -m pytest -q tests
+
+  flutter:
+    name: Flutter analyze, test, web build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/flutter_client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate uncommitted platform runners for QA
+        run: flutter create . --project-name my_fitness_date --platforms=web,android,ios
+      - name: Resolve Flutter dependencies
+        run: flutter pub get
+      - name: Analyze Flutter
+        run: flutter analyze
+      - name: Test Flutter
+        run: flutter test
+      - name: Build Web DEV (not deploy)
+        run: flutter build web --release --dart-define=MFD_API_BASE_URL=
