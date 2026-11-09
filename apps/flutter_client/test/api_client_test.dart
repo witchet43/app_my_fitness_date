@@ -4,10 +4,10 @@ import 'package:http/testing.dart';
 import 'package:my_fitness_date/src/core/api_client.dart';
 
 void main() {
-  test('no API configured means fail closed', () {
+  test('no API configured means fail closed', () async {
     final api = ApiClient(baseUrl: '');
     expect(api.isConfigured, isFalse);
-    expect(api.health(), throwsStateError);
+    await expectLater(api.health(), throwsStateError);
   });
 
   test('API health is consumed through gateway only', () async {
@@ -30,7 +30,7 @@ void main() {
           '"city":"Qro","sports":["Running"],"gym_id":"PRIVATE"}],'
           '"count":1}', 200);
     }));
-    expect(() => api.candidates(accessToken: ''), throwsArgumentError);
+    await expectLater(api.candidates(accessToken: ''), throwsArgumentError);
     final people = await api.candidates(accessToken: 'sample-session');
     expect(people.single.displayName, 'Demo');
     expect(people.single.id, 'id-1');
