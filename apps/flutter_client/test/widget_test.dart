@@ -9,7 +9,7 @@ void main() {
     await tester.pumpWidget(FitnessDateApp(api: ApiClient(baseUrl: '')));
     expect(find.text('FitCommunity'), findsOneWidget);
     expect(find.textContaining('API sin configurar'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(NavigationRail), findsOneWidget);
   });
 
   testWidgets('Gym Shield navigation shows two privacy modes',
