@@ -15,7 +15,9 @@
     "auth:hosted:audit": "tsx scripts/hosted-auth-config.mts audit",
     "auth:hosted:lock": "tsx scripts/hosted-auth-config.mts lock",
     "candidate:audit": "tsx scripts/candidate-audit.mts",
-    "candidate:require-beta": "tsx scripts/candidate-audit.mts --require-beta"
+    "candidate:require-beta": "tsx scripts/candidate-audit.mts --require-beta",
+    "release:preflight:demo": "tsx scripts/release-preflight.mts demo",
+    "release:preflight:beta": "tsx scripts/release-preflight.mts beta"
   },
   "dependencies": {
     "expo": "~57.0.31",

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "candidate": "v19-integration-dev",
+  "candidate": "v20-deployment-dev",
   "project_ref": "jtrdvnwbxpfdnbzasvcj",
   "release_channel": "not_published",
   "environment": "development",

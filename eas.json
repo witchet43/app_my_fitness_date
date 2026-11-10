@@ -1,0 +1,25 @@
+{
+  "cli": {
+    "version": ">= 15.0.0"
+  },
+  "build": {
+    "qa-demo-android": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_MFD_DEMO_BUILD": "YES"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "qa-demo-ios-simulator": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_MFD_DEMO_BUILD": "YES"
+      },
+      "ios": {
+        "simulator": true
+      }
+    }
+  }
+}
