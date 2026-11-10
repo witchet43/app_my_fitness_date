@@ -1,6 +1,13 @@
 name: Flutter and microservices V22
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/flutter_client/**"
+      - "services/**"
+      - ".github/workflows/flutter-services-v22.yml"
+      - "cloudbuild.yaml"
   pull_request:
     paths:
       - "services/**"

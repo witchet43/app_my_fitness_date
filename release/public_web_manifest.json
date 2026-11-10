@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "channel": "public_anonymous_web",
+  "product": "my_fitness_date",
+  "module": "pace_calculator",
+  "requires_authentication": false,
+  "enabled_features": [
+    "anonymous_pace_calculator"
+  ],
+  "disabled_features": [
+    "public_signup",
+    "qa_login",
+    "community_profiles",
+    "community_posts",
+    "events",
+    "dating_discovery",
+    "gym_shield_settings"
+  ],
+  "network_backend_enabled": false,
+  "production_deploy_requires": [
+    "flutter_analyze",
+    "flutter_test",
+    "flutter_web_release",
+    "cloudflare_pages_upload",
+    "http_commit_smoke"
+  ],
+  "beta_and_real_user_gates": "release/readiness.json (all pending: not waived)"
+}
