@@ -115,14 +115,15 @@ class _FitnessDateAppState extends State<FitnessDateApp>
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final wide = width >= 720;
     return MaterialApp(
       title: 'My Fitness Date',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _messageKey,
       theme: FitDateTheme.dark(),
-      home: Scaffold(
+      home: LayoutBuilder(builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final wide = width >= 720;
+        return Scaffold(
         appBar: AppBar(
           backgroundColor: FitDateColors.inkDeep,
           elevation: 0,
@@ -239,7 +240,8 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                   ],
                 ),
               ),
-      ),
+      );
+      }),
     );
   }
 
@@ -294,7 +296,11 @@ class _FitnessDateAppState extends State<FitnessDateApp>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 8),
-        const _Eyebrow('FitCommunity  /  FITNESS + CONEXIÓN'),
+        const Text('FitCommunity',
+            style: TextStyle(color: FitDateColors.muted, fontSize: 12,
+                fontWeight: FontWeight.w700)),
+        const SizedBox(height: 7),
+        const _Eyebrow('FITNESS + CONEXIÓN'),
         const SizedBox(height: 18),
         LayoutBuilder(
           builder: (context, box) {
@@ -755,7 +761,7 @@ class _ChemistryArt extends StatelessWidget {
         height: 290,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final side = constraints.biggest.shortestSide.clamp(170.0, 270.0);
+            final side = constraints.biggest.shortestSide.clamp(170.0, 270.0).toDouble();
             return Center(
               child: SizedBox(
                 width: side, height: side,
