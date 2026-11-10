@@ -81,23 +81,10 @@ steps:
           exit 1
         fi
         test -s apps/flutter_client/build/web/mfd-release.json
-        npx --yes wrangler@4.158.0 pages project list --json > /tmp/mfd-projects.json
-        if node -e '
-          const fs=require("fs");
-          const p=JSON.parse(fs.readFileSync("/tmp/mfd-projects.json","utf8"));
-          const arr=Array.isArray(p)?p:(Array.isArray(p.result)?p.result:null);
-          if (!arr) process.exit(10);
-          process.exit(arr.some(x=>x.name==="my-fitness-date")?0:3);
-        '; then
-          echo "My Fitness Date Pages project exists."
-        else
-          result=$?
-          if [ "$$result" -ne 3 ]; then
-            echo "Cloudflare project listing could not be parsed." >&2
-            exit 1
-          fi
-          npx --yes wrangler@4.158.0 pages project create my-fitness-date --production-branch=main
-        fi
+        # Cloudflare Pages project is already provisioned.
+        # Never attempt project creation on each release. Deploy to existing
+        # project and fail closed if it cannot be found or authorized.
+        echo "Deploying to existing Cloudflare Pages project my-fitness-date."
         npx --yes wrangler@4.158.0 pages deploy apps/flutter_client/build/web \
           --project-name=my-fitness-date --branch=main
         node -e '
