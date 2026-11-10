@@ -76,7 +76,7 @@ jobs:
           sha=os.environ["GITHUB_SHA"]
           assert len(sha)==40
           Path("build/web/mfd-release.json").write_text(
-            json.dumps({"commit":sha,"channel":"public_anonymous_web","version":"v24"})+"\n")
+            json.dumps({"commit":sha,"channel":"public_anonymous_web","version":"v25"})+"\n")
           PY
       - name: Keep public web build artifact
         uses: actions/upload-artifact@v4
@@ -114,7 +114,7 @@ jobs:
                       release=json.load(r)
                   with urllib.request.urlopen("https://my-fitness-date.pages.dev/",timeout=12) as r:
                       index=r.read().decode("utf8")
-                  assert release=={"commit":sha,"channel":"public_anonymous_web","version":"v24"}
+                  assert release=={"commit":sha,"channel":"public_anonymous_web","version":"v25"}
                   assert "flutter" in index.lower()
                   print("PUBLIC CLOUDFLARE RELEASE VERIFIED:",sha)
                   break
