@@ -1,0 +1,125 @@
+name: My Fitness Date — Cloudflare Pages production
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/flutter_client/**"
+      - "release/public_web_manifest.json"
+      - ".github/workflows/cloudflare-pages-production.yml"
+      - "cloudbuild.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: mfd-cloudflare-pages-production
+  cancel-in-progress: false
+
+jobs:
+  production:
+    name: Public Flutter build, QA and Cloudflare Pages deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require production main branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Only main can deploy to production."
+          exit 1
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Create Flutter Web runner
+        working-directory: apps/flutter_client
+        run: flutter create --platforms=web . --project-name=my_fitness_date
+      - name: Resolve Flutter dependencies
+        working-directory: apps/flutter_client
+        run: flutter pub get
+      - name: Validate anonymous public release manifest
+        run: |
+          python3 scripts/check_saas_factory.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("release/public_web_manifest.json").read_text())
+          assert m["channel"]=="public_anonymous_web"
+          assert m["requires_authentication"] is False
+          assert m["network_backend_enabled"] is False
+          assert m["enabled_features"] == ["anonymous_pace_calculator"]
+          assert "public_signup" in m["disabled_features"]
+          assert "dating_discovery" in m["disabled_features"]
+          PY
+      - name: Analyze Flutter
+        working-directory: apps/flutter_client
+        run: flutter analyze
+      - name: Test Flutter
+        working-directory: apps/flutter_client
+        run: flutter test
+      - name: Build production Flutter Web (no identity/API)
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release \
+            --dart-define=MFD_PUBLIC_PRODUCTION=true \
+            --dart-define=MFD_QA_LOGIN_UI=false \
+            --dart-define=MFD_API_BASE_URL=
+          test -s build/web/index.html
+          cp cloudflare/_headers build/web/_headers
+          cp cloudflare/_redirects build/web/_redirects
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          sha=os.environ["GITHUB_SHA"]
+          assert len(sha)==40
+          Path("build/web/mfd-release.json").write_text(
+            json.dumps({"commit":sha,"channel":"public_anonymous_web","version":"v24"})+"\n")
+          PY
+      - name: Keep public web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mfd-cloudflare-public-web
+          path: apps/flutter_client/build/web/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Require Cloudflare Pages repository token
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_TOKEN" ]; then
+            echo "::error::Missing CLOUDFLARE_API_TOKEN in THIS repository Actions secrets. Shared MUV GitHub secrets are not inherited."
+            exit 1
+          fi
+      - name: Deploy public app to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: d10780918aa05ee5532c754371c60c94
+          command: pages deploy apps/flutter_client/build/web --project-name=my-fitness-date --branch=main
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify live HTTP and exact release commit
+        env:
+          MFD_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json,os,time,urllib.request
+          sha=os.environ["MFD_SHA"]
+          url="https://my-fitness-date.pages.dev/mfd-release.json"
+          for attempt in range(7):
+              try:
+                  with urllib.request.urlopen(url+"?v="+sha,timeout=12) as r:
+                      release=json.load(r)
+                  with urllib.request.urlopen("https://my-fitness-date.pages.dev/",timeout=12) as r:
+                      index=r.read().decode("utf8")
+                  assert release=={"commit":sha,"channel":"public_anonymous_web","version":"v24"}
+                  assert "flutter" in index.lower()
+                  print("PUBLIC CLOUDFLARE RELEASE VERIFIED:",sha)
+                  break
+              except Exception as error:
+                  if attempt==6:
+                      raise RuntimeError("Cloudflare production commit smoke failed") from error
+                  time.sleep(5)
+          PY
