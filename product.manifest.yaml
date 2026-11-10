@@ -1,0 +1,123 @@
+# SaaS Factory v1.9 — datos verificables y decisiones pendientes.
+# Archivo de intencion; NO confirma cumplimiento, despliegue ni autorizaciones.
+standard: "1.9"
+status: "NO_GO_BETA_PROD"
+source_of_truth:
+  index: "https://docs.google.com/document/d/1jl6c96siJ1ef501iYKH3tM7eEV1bcB_IRDmownnxiLQ/edit"
+  canonical_standard: "https://docs.google.com/document/d/11hytKADuIUpmWzHEmAfZwcYNJ04M7n1ev4A1fbeZy9Q/edit"
+  compliance_matrix: "docs/compliance/SAAS_V19_CONTROL_BASELINE.csv"
+product:
+  id: "my_fitness_date"
+  display_name: "My Fitness Date"
+  owner: "PENDIENTE_DESIGNACION"
+  repository: "witchet43/app_my_fitness_date"
+  website: null
+  audience: ["personas adultas interesadas en comunidad deportiva y actividades", "participantes adultos de FitDating opt-in"]
+  countries: ["MX"]
+  value_proposition: "HIPOTESIS_POR_VALIDAR: comunidad deportiva y citas opcionales seguras con Gym Shield"
+  brand_kit_reference: "PENDIENTE"
+platforms:
+  web:
+    enabled: true
+    deployment_status: "NO_VERIFICADO"
+    seo_landing: "PENDIENTE"
+    pwa: false
+  android:
+    enabled: true
+    technology: "Flutter V22 (scaffold; Expo anterior legado para QA)"
+    target_sdk: "REVALIDAR_AL_PUBLICAR"
+    package_name: "PENDIENTE"
+    signing: "NO_VERIFICADA"
+    real_device_qa: false
+    distribution: "NO_PUBLICADO"
+  ios:
+    enabled: true
+    technology: "Flutter V22 (scaffold)"
+    xcode_sdk: "REVALIDAR_AL_PUBLICAR"
+    bundle_id: "PENDIENTE"
+    signing: "NO_VERIFICADA"
+    real_device_qa: false
+    distribution: "NO_PUBLICADO"
+architecture:
+  default: "modular-first; servicios separados solo con justificacion ADR"
+  client_framework: "Flutter"
+  backend: "FastAPI API Gateway + Gym Shield privado, ambos en PR V22"
+  api_contract: "OpenAPI autogenerado por FastAPI; contrato versionado en repo PENDIENTE"
+  data_provider: "Supabase PostgreSQL DEV"
+  project_ref_public: "jtrdvnwbxpfdnbzasvcj"
+  tenancy: "producto aislado; permisos por actor y recurso; modelo tenant comercial NO_EVALUADO"
+  environments:
+    dev: "Supabase DEV existente"
+    staging: "NO_CONFIGURADO"
+    prod: "NO_CONFIGURADO"
+  healthz: "/healthz"
+  readyz: "/readyz"
+  heartbeat: "/heartbeat"
+identity:
+  provider: "Supabase Auth"
+  client_login_flow: "PENDIENTE_FLUTTER"
+  roles: ["member", "moderator", "operator"]
+  privileged_mfa: "PENDIENTE"
+  age_policy: "solo personas adultas; comprobacion externa PENDIENTE"
+  account_export_deletion: "implementacion parcial en ramas y pruebas; E2E hospedada PENDIENTE"
+  data_classification: "PENDIENTE_EVALUACION"
+  sensitive_data: ["perfil", "ubicacion", "gimnasio", "horarios", "preferencias de citas", "reportes de seguridad"]
+features:
+  gym_shield: "RPC privada vigente y servicio Python V22; NO exponer gimnasio/horarios"
+  dating_opt_in: true
+  generative_ai: false
+  external_integrations: []
+  offline_policy: "demo offline existente; funcionamiento de cuenta real pendiente"
+commerce:
+  free_plan: "PENDIENTE_DEFINICION"
+  paid_plans: []
+  store_payment_policy: "NO_EVALUADO_POR_CANAL"
+  entitlement_source: "BACKEND_SI_SE_ACTIVA"
+quality:
+  release_gates: "release/readiness.json y docs/operations/RELEASE_GATE_V19.md"
+  control_register: "docs/compliance/SAAS_V19_CONTROL_BASELINE.csv"
+  contract_tests: "PARCIALES"
+  browser_device_matrix: "PENDIENTE"
+  web_accessibility_wcag22aa: "NO_EVALUADO"
+  mobile_masvs: "NO_EVALUADO"
+  qa_real_android: false
+  qa_real_ios: false
+operations:
+  external_monitoring: "NO_VERIFICADO"
+  incident_owner: "PENDIENTE"
+  rto_hours: null
+  rpo_hours: null
+  backup_restore_drill: "NO_VERIFICADO"
+  rollback: "PENDIENTE_GATES_PROD"
+  support: "docs/product/CUSTOMER_SUPPORT.md"
+free_first:
+  dev_incremental_infrastructure_target_usd_month: 0
+  spend_verified_usd_month: null
+  prod_budget_usd_month: null
+  alerts_percent: [50, 75, 90, 100]
+  upgrades_require_explicit_approval: true
+  catalog_last_verified: "2026-11-09 (snapshot; revalidar)"
+chatgpt_factory:
+  connected_tools_preflight: "REQUERIDO_POR_OPERACION"
+  read_draft_write_deploy_admin_separated: true
+  credentials_in_client: false
+  changes_to_prod_require_approval: true
+  store_publication_requires_approval: true
+product_excellence:
+  discovery_brief: "docs/product/DISCOVERY_BRIEF.md"
+  value_metrics: "docs/product/VALUE_METRICS.md"
+  support_plan: "docs/product/CUSTOMER_SUPPORT.md"
+  customer_learnings: "docs/product/CUSTOMER_LEARNINGS.md"
+  target_segments: ["comunidad deportiva adulta", "personas adultas que activan FitDating"]
+  hypothesis_status: "PENDIENTE_VALIDACION"
+  first_value_event: "PENDIENTE_ELEGIR_CON_USUARIOS"
+  interviews_completed_verified: null
+  usability_testing_verified: false
+  product_analytics_active_verified: false
+  consent_for_research: "PENDIENTE"
+  pricing_validation: "NO_EVALUADO"
+approvals:
+  product_scope: "PENDIENTE"
+  privacy_security: "PENDIENTE"
+  release_owner: "PENDIENTE"
+  billing_owner: "PENDIENTE"

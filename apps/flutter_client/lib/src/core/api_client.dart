@@ -39,6 +39,21 @@ class ApiClient {
     return result is Map && result['status'] == 'ok';
   }
 
+  /// Readiness verifies the real PostgreSQL dependency, unlike liveness.
+  /// A healthy process can still be unable to serve user requests.
+  Future<bool> readiness() async {
+    final response = await _http.get(_uri('/readyz')).timeout(
+      const Duration(seconds: 8),
+    );
+    if (response.statusCode != 200) return false;
+    final data = jsonDecode(response.body);
+    if (data is! Map || data['status'] != 'ok') return false;
+    final dependencies = data['dependencies'];
+    return dependencies is Map && dependencies['database'] == 'ok' &&
+        data['checked_at'] is String &&
+        (data['checked_at'] as String).isNotEmpty;
+  }
+
   /// Requires an access token provided by the future identity/session module.
   /// No secret, Supabase URL, gym, or training schedule lives in this client.
   Future<List<DatingCandidate>> candidates({

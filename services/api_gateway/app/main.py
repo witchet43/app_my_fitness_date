@@ -7,10 +7,10 @@ import asyncio
 from datetime import datetime, timezone
 import os
 from urllib.parse import urlparse
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
-from fastapi import FastAPI, Header, HTTPException, Query, Response
+from fastapi import FastAPI, Header, HTTPException, Query, Response, Request as HttpRequest
 from fastapi.middleware.cors import CORSMiddleware
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
@@ -26,7 +26,18 @@ allowed_origins = [origin.strip() for origin in
                    if origin.strip() and origin.strip() != "*"]
 app.add_middleware(CORSMiddleware, allow_origins=allowed_origins,
                    allow_methods=["GET"], allow_headers=["Authorization"],
-                   allow_credentials=False)
+                   allow_credentials=False, expose_headers=["X-Request-ID"])
+
+@app.middleware("http")
+async def response_security_headers(request: HttpRequest, call_next):
+    """Correlate requests without trusting client supplied identifiers."""
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = str(uuid4())
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    if request.url.path.startswith("/v1/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 class Candidate(BaseModel):

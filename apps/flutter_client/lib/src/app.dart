@@ -20,20 +20,20 @@ class _FitnessDateAppState extends State<FitnessDateApp> {
   void initState() {
     super.initState();
     if (widget.api.isConfigured) {
-      _apiStatus = 'Comprobando API…';
+      _apiStatus = 'Comprobando servicio…';
       _checkConnection();
     }
   }
 
   Future<void> _checkConnection() async {
     try {
-      final ready = await widget.api.health();
+      final ready = await widget.api.readiness();
       if (mounted) {
         setState(() => _apiStatus =
-            ready ? 'Gateway disponible' : 'Gateway no disponible');
+            ready ? 'Servicio disponible' : 'Servicio no disponible');
       }
     } catch (_) {
-      if (mounted) setState(() => _apiStatus = 'Gateway no disponible');
+      if (mounted) setState(() => _apiStatus = 'Servicio no disponible');
     }
   }
 
@@ -136,7 +136,7 @@ class _FitnessDateAppState extends State<FitnessDateApp> {
               child: _section == 2
                   ? Column(crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Privacidad de gimnasio',
+                        const Text('Privacidad de gimnasio · vista previa',
                             style: TextStyle(fontSize: 18)),
                         const SizedBox(height: 12),
                         SegmentedButton<String>(
@@ -154,7 +154,8 @@ class _FitnessDateAppState extends State<FitnessDateApp> {
                               setState(() => _mode = values.first),
                         ),
                         const SizedBox(height: 14),
-                        const Text('La elegibilidad se decide exclusivamente '
+                        const Text('Esta selección no se guarda todavía. '
+                            'La elegibilidad se decide exclusivamente '
                             'en el servidor. La búsqueda permanece desactivada '
                             'hasta completar autenticación y verificación de edad.'),
                       ])

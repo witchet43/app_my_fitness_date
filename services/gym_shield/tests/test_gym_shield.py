@@ -83,3 +83,13 @@ def test_missing_supabase_fails_closed(monkeypatch):
     with pytest.raises(HTTPException) as error:
         main.supabase_config()
     assert error.value.status_code == 503
+
+
+def test_internal_candidate_response_has_no_store_headers():
+    from uuid import UUID
+    response = client.get("/internal/v1/dating/candidates")
+    assert response.status_code == 401
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["Referrer-Policy"] == "no-referrer"
+    UUID(response.headers["X-Request-ID"])
