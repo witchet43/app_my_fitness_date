@@ -99,3 +99,17 @@ def test_readiness_fails_closed(monkeypatch):
 def test_readiness_requires_backend_configuration(monkeypatch):
     monkeypatch.delenv("MFD_SUPABASE_URL", raising=False)
     assert client.get("/readyz").status_code == 503
+
+
+def test_private_api_denies_cache_and_does_not_echo_untrusted_request_id():
+    from uuid import UUID
+    response = client.get("/v1/dating/candidates", headers={"X-Request-ID": "untrusted"})
+    assert response.status_code == 401
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["Referrer-Policy"] == "no-referrer"
+    assert str(UUID(response.headers["X-Request-ID"])) != "untrusted"
+
+
+def test_health_does_not_change_readiness_cache_contract():
+    assert client.get("/healthz").headers["X-Content-Type-Options"] == "nosniff"

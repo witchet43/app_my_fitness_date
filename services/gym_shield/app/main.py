@@ -6,14 +6,25 @@ The user's validated JWT is forwarded to existing RLS/role-protected SQL RPC.
 """
 import os
 from urllib.parse import urlparse
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict
 
 app = FastAPI(title="my_fitness_date Gym Shield", version="0.1.0",
               docs_url=None, redoc_url=None)
+
+@app.middleware("http")
+async def response_security_headers(request: Request, call_next):
+    """Avoid proxy caches of protected candidates and expose safe diagnostics."""
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = str(uuid4())
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    if request.url.path.startswith("/internal/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 class Candidate(BaseModel):
