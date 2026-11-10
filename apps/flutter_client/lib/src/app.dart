@@ -21,6 +21,7 @@ class FitnessDateApp extends StatefulWidget {
 class _FitnessDateAppState extends State<FitnessDateApp>
     with WidgetsBindingObserver {
   late final IdentitySessionManager _identity;
+  final GlobalKey<ScaffoldMessengerState> _messageKey = GlobalKey<ScaffoldMessengerState>();
 
   int _section = 0;
   String _apiStatus = 'API sin configurar';
@@ -66,16 +67,16 @@ class _FitnessDateAppState extends State<FitnessDateApp>
       await _identity.validateCurrentIdentity();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        _messageKey.currentState?.showSnackBar(const SnackBar(
           content: Text('Sesión QA finalizada. Inicia sesión de nuevo.'),
         ));
       }
     }
   }
 
-  Future<void> _openQaLogin() async {
+  Future<void> _openQaLogin(BuildContext dialogContext) async {
     await showDialog<bool>(
-      context: context,
+      context: dialogContext,
       builder: (_) => QaSignInDialog(manager: _identity),
     );
   }
@@ -115,6 +116,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
     return MaterialApp(
       title: 'my_fitness_date',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: _messageKey,
       theme: theme,
       home: LayoutBuilder(builder: (context, size) {
         final wide = size.maxWidth >= 720;
@@ -137,7 +139,8 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                   key: const Key('qa-identity-action'),
                   tooltip: _identity.signedIn
                       ? 'Cerrar sesión QA' : 'Iniciar sesión QA',
-                  onPressed: _identity.signedIn ? _signOutQa : _openQaLogin,
+                  onPressed: _identity.signedIn
+                      ? _signOutQa : () => _openQaLogin(context),
                   icon: Icon(_identity.signedIn
                       ? Icons.logout : Icons.account_circle_outlined),
                 ),
