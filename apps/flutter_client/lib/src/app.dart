@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/api_client.dart';
 import 'core/identity_session_manager.dart';
 import 'qa_sign_in_dialog.dart';
+import 'features/pace_calculator.dart';
 
 class FitnessDateApp extends StatefulWidget {
   const FitnessDateApp({
@@ -20,6 +21,9 @@ class FitnessDateApp extends StatefulWidget {
 
 class _FitnessDateAppState extends State<FitnessDateApp>
     with WidgetsBindingObserver {
+  static const bool _publicProduction =
+      bool.fromEnvironment('MFD_PUBLIC_PRODUCTION', defaultValue: false);
+
   late final IdentitySessionManager _identity;
   final GlobalKey<ScaffoldMessengerState> _messageKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -147,7 +151,9 @@ class _FitnessDateAppState extends State<FitnessDateApp>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Center(
-                  child: Text('DEV · $_apiStatus',
+                  child: Text(_publicProduction
+                      ? 'PRODUCCIÓN · herramientas públicas'
+                      : 'DEV · $_apiStatus',
                       style: const TextStyle(fontSize: 12)),
                 ),
               )
@@ -243,15 +249,19 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                             'en el servidor. La búsqueda permanece desactivada '
                             'hasta completar autenticación y verificación de edad.'),
                       ])
-                  : Text(_section == 0
-                      ? 'La comunidad se conectará a su microservicio mediante '
-                        'API versionada. Sin datos reales en esta entrega.'
-                      : 'Actividades y eventos se conectarán a su microservicio '
-                        'mediante API versionada. Sin datos reales en esta entrega.'),
+                  : _section == 1
+                      ? const PaceCalculator()
+                      : const Text(
+                          'FitCommunity está en preparación. Mientras tanto, '
+                          'puedes utilizar la calculadora de ritmo en '
+                          'Actividades sin crear una cuenta. '
+                          'Aún no se publican perfiles ni datos de personas.'),
             ),
           ),
           const SizedBox(height: 12),
-          const Text('Candidato de arquitectura V22 · No es beta pública',
+          Text(_publicProduction
+                  ? 'Primera entrega pública segura · sin registro ni citas activas'
+                  : 'Candidato de arquitectura V22 · No es beta pública',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12)),
         ]),
