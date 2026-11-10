@@ -4,12 +4,13 @@ Cloud Run: only this service is public; Gym Shield requires roles/run.invoker.
 No database key or privileged credentials ever reach Flutter.
 """
 import asyncio
+from datetime import datetime, timezone
 import os
 from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
@@ -111,6 +112,48 @@ async def proxy_candidates(access_token: str, limit: int) -> CandidateResponse:
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
     return {"status": "ok", "service": "api-gateway"}
+
+
+async def probe_database() -> None:
+    """Exercise PostgreSQL through an unprivileged Supabase RPC."""
+    base = config_url("MFD_SUPABASE_URL")
+    key = os.getenv("MFD_SUPABASE_PUBLISHABLE_KEY", "")
+    if not key:
+        raise HTTPException(503, "Dependency unavailable")
+    try:
+        async with httpx.AsyncClient(timeout=4) as client:
+            result = await client.post(
+                base + "/rest/v1/rpc/saas_heartbeat_v1",
+                headers={"apikey": key, "Content-Type": "application/json"},
+                json={},
+            )
+    except httpx.HTTPError:
+        raise HTTPException(503, "Dependency unavailable") from None
+    if result.status_code != 200:
+        raise HTTPException(503, "Dependency unavailable")
+    try:
+        if result.json() != {"status": "ok"}:
+            raise HTTPException(503, "Dependency unavailable")
+    except (ValueError, TypeError):
+        raise HTTPException(503, "Dependency unavailable") from None
+
+
+@app.get("/readyz")
+@app.get("/heartbeat")
+async def database_heartbeat(response: Response) -> dict[str, object]:
+    """Readiness, unlike /healthz, fails if PostgreSQL is unavailable."""
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    try:
+        await probe_database()
+    except HTTPException:
+        raise HTTPException(
+            503, "Dependency unavailable",
+            headers={"Cache-Control": "no-store, max-age=0"},
+        ) from None
+    return {"status": "ok", "service": "api-gateway",
+            "dependencies": {"database": "ok"},
+            "checked_at": datetime.now(timezone.utc).isoformat(
+                timespec="seconds").replace("+00:00", "Z")}
 
 
 @app.get("/v1/dating/candidates", response_model=CandidateResponse)
