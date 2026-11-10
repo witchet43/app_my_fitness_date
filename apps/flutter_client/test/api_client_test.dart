@@ -37,3 +37,6 @@ void main() {
     api.close();
   });
 }
+
+
+  // Place this test block within the existing main() function (see below).
