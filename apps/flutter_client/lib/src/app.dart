@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 
 import 'core/api_client.dart';
+import 'core/identity_session_manager.dart';
+import 'qa_sign_in_dialog.dart';
 
 class FitnessDateApp extends StatefulWidget {
-  const FitnessDateApp({super.key, required this.api});
+  const FitnessDateApp({
+    super.key,
+    required this.api,
+    this.qaLoginEnabled = const bool.fromEnvironment('MFD_QA_LOGIN_UI'),
+  });
 
   final ApiClient api;
+  final bool qaLoginEnabled;
 
   @override
   State<FitnessDateApp> createState() => _FitnessDateAppState();
 }
 
-class _FitnessDateAppState extends State<FitnessDateApp> {
+class _FitnessDateAppState extends State<FitnessDateApp>
+    with WidgetsBindingObserver {
+  late final IdentitySessionManager _identity;
+
   int _section = 0;
   String _apiStatus = 'API sin configurar';
   String _mode = 'other_gyms';
@@ -19,6 +29,9 @@ class _FitnessDateAppState extends State<FitnessDateApp> {
   @override
   void initState() {
     super.initState();
+    _identity = IdentitySessionManager(widget.api);
+    _identity.addListener(_identityChanged);
+    WidgetsBinding.instance.addObserver(this);
     if (widget.api.isConfigured) {
       _apiStatus = 'Comprobando servicio…';
       _checkConnection();
@@ -35,6 +48,56 @@ class _FitnessDateAppState extends State<FitnessDateApp> {
     } catch (_) {
       if (mounted) setState(() => _apiStatus = 'Servicio no disponible');
     }
+  }
+
+  void _identityChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _identity.signedIn) {
+      _checkSessionOnResume();
+    }
+  }
+
+  Future<void> _checkSessionOnResume() async {
+    try {
+      await _identity.validateCurrentIdentity();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Sesión QA finalizada. Inicia sesión de nuevo.'),
+        ));
+      }
+    }
+  }
+
+  Future<void> _openQaLogin() async {
+    await showDialog<bool>(
+      context: context,
+      builder: (_) => QaSignInDialog(manager: _identity),
+    );
+  }
+
+  Future<void> _signOutQa() async {
+    try {
+      await _identity.signOut();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Sesión local cerrada. Revocación remota no confirmada.'),
+        ));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _identity.removeListener(_identityChanged);
+    _identity.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,6 +132,15 @@ class _FitnessDateAppState extends State<FitnessDateApp> {
             title: const Text('my_fitness_date',
                 style: TextStyle(fontWeight: FontWeight.w800)),
             actions: [
+              if (widget.qaLoginEnabled && widget.api.isConfigured)
+                IconButton(
+                  key: const Key('qa-identity-action'),
+                  tooltip: _identity.signedIn
+                      ? 'Cerrar sesión QA' : 'Iniciar sesión QA',
+                  onPressed: _identity.signedIn ? _signOutQa : _openQaLogin,
+                  icon: Icon(_identity.signedIn
+                      ? Icons.logout : Icons.account_circle_outlined),
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Center(
@@ -124,6 +196,15 @@ class _FitnessDateAppState extends State<FitnessDateApp> {
         child: ListView(padding: const EdgeInsets.all(24), children: [
           const Text('TRAIN · CONNECT · BELONG',
               style: TextStyle(letterSpacing: 2, fontSize: 11)),
+          if (widget.qaLoginEnabled && widget.api.isConfigured)
+            Text(
+              _identity.signedIn
+                  ? 'Sesión QA: ${_identity.session!.user.email} · '
+                    'No autoriza FitDating'
+                  : 'Sin sesión QA · registro público cerrado',
+              key: const Key('qa-session-status'),
+              style: const TextStyle(fontSize: 12),
+            ),
           const SizedBox(height: 16),
           Text(title, style: const TextStyle(
               fontSize: 27, fontWeight: FontWeight.bold)),
