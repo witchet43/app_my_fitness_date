@@ -86,7 +86,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
       await _identity.signOut();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        _messageKey.currentState?.showSnackBar(const SnackBar(
           content: Text('Sesión local cerrada. Revocación remota no confirmada.'),
         ));
       }
