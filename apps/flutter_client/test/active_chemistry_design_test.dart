@@ -40,6 +40,8 @@ void main() {
   testWidgets('El héroe conduce a vista previa, no a registros ficticios',
       (tester) async {
     await tester.pumpWidget(FitnessDateApp(api: ApiClient(baseUrl: '')));
+    await tester.ensureVisible(find.byKey(const Key('go-to-dating')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('go-to-dating')));
     await tester.pumpAndSettle();
     expect(find.text('FitDating · Gym Shield'), findsOneWidget);

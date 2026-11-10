@@ -654,12 +654,16 @@ class _StatusPill extends StatelessWidget {
         children: [
           Icon(Icons.circle, size: 7, color: color),
           const SizedBox(width: 7),
-          Text(
-            title,
-            style: TextStyle(
-              color: color,
-              fontSize: 10, fontWeight: FontWeight.w800,
-              letterSpacing: .7,
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontSize: 10, fontWeight: FontWeight.w800,
+                letterSpacing: .7,
+              ),
             ),
           ),
         ],
