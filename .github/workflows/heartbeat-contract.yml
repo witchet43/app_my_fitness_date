@@ -1,0 +1,58 @@
+name: SaaS heartbeat contract
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/heartbeat/**'
+      - 'supabase/tests/saas_heartbeat_test.sql'
+      - 'supabase/migrations/202611090013_saas_heartbeat.sql'
+      - 'supabase/config.toml'
+      - '.github/workflows/heartbeat-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  heartbeat-db-contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: heartbeat_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d heartbeat_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGDATABASE: heartbeat_ci
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify read-only RPC and least-privilege grants
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611090013_saas_heartbeat.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/saas_heartbeat_test.sql
+
+  deployed-edge-http:
+    name: Verify deployed public HTTP readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify deployed Edge Function makes real database query
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error --location \
+            --retry 2 --retry-delay 3 --retry-all-errors --max-time 12 \
+            'https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/heartbeat' \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("status")=="ok" and d.get("dependencies",{}).get("database")=="ok", "Database heartbeat degraded"; print("Heartbeat HTTP verified")'

@@ -42,6 +42,7 @@ Las verificaciones automatizadas de GitHub incluyen exportación de bundles Java
 - **Repositorio:** \`witchet43/app_my_fitness_date\`.
 - **Desarrollo hospedado:** Supabase \`my_fitness_date_dev\`, ref \`jtrdvnwbxpfdnbzasvcj\`. 12 migraciones de negocio/seguridad aplicadas hasta V18.
 - **Integración V19:** [PR #23](https://github.com/witchet43/app_my_fitness_date/pull/23), borrador dirigido a \`main\`; no está fusionado.
+- **Entrega QA demo V20:** [rama V20](https://github.com/witchet43/app_my_fitness_date/tree/release/deployment-ready-v20), con APK offline de prueba y [runbook de despliegue](docs/RELEASE_V20.md). Sin cuentas ni beta real.
 - **Estado beta:** evaluado mediante \`release/readiness.json\` y \`npm run candidate:audit\`. Una CI verde no autoriza a invitar usuarios.
 - **Informe de integración:** [docs/INTEGRATION_V19.md](docs/INTEGRATION_V19.md).
 - **Seguridad y reporte de vulnerabilidades:** [SECURITY.md](SECURITY.md).

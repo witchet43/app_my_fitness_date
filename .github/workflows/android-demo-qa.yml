@@ -1,0 +1,61 @@
+name: Android DEMO QA APK (not beta)
+
+on:
+  pull_request:
+    paths:
+      - "App.tsx"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "app.json"
+      - "eas.json"
+      - "release/**"
+      - "scripts/release-preflight.mts"
+      - ".github/workflows/android-demo-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-demo-android:
+    # Never build for forks or unrelated branches, and never access secrets.
+    if: github.event_name == 'pull_request' && github.head_ref == 'release/deployment-ready-v20' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      EXPO_PUBLIC_MFD_DEMO_BUILD: "YES"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      # GitHub ubuntu-latest already provides ANDROID_HOME/Android SDK.
+      # Avoid reinstalling cmdline-tools: hosted sdkmanager license step is unstable.
+      - name: Verify preinstalled Android SDK
+        run: |
+          test -d "$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platform-tools"
+      - name: Install reproducible dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check offline QA deployment gate
+        run: npm run release:preflight:demo
+      - name: Generate ephemeral native Android project
+        run: npx expo prebuild --platform android --no-install
+      - name: Build standalone Android QA APK with bundled JS (not Play Store)
+        working-directory: android
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+      - name: Hash APK without logging secrets
+        run: sha256sum android/app/build/outputs/apk/release/app-release.apk
+      - name: Attach 7-day synthetic standalone QA APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-fitness-date-v20-demo-android-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7

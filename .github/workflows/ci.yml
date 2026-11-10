@@ -29,6 +29,10 @@ jobs:
       PGPASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
+      - name: SaaS Factory v1.9 registry integrity (not release approval)
+        run: |
+          python3 scripts/check_saas_factory.py
+          python3 -m unittest discover -s scripts -p 'test_saas_factory.py'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -40,6 +44,10 @@ jobs:
         run: npm test
       - name: Candidate integration audit (does not authorize beta)
         run: npm run candidate:audit
+      - name: Demo deployment preflight (no backend, no accounts)
+        env:
+          EXPO_PUBLIC_MFD_DEMO_BUILD: 'YES'
+        run: npm run release:preflight:demo
       - name: Android JavaScript bundle
         run: npx expo export --platform android --output-dir /tmp/mfd-android-bundle
       - name: iOS JavaScript bundle
@@ -73,3 +81,5 @@ jobs:
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/incident_triage_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202610270012_privacy_retention.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/privacy_retention_integration.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611090013_saas_heartbeat.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/saas_heartbeat_test.sql

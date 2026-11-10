@@ -8,7 +8,7 @@ import LiveDating from './src/features/LiveDating';
 import AdminModeration from './src/features/AdminModeration';
 import ModerationInbox from './src/features/ModerationInbox';
 import AccountCenter from './src/features/AccountCenter';
-import { supabase, supabaseIsConfigured } from './src/lib/supabase';
+import { supabase, supabaseIsConfigured, demoOnlyBuild } from './src/lib/supabase';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
 import { isVerified, mayEnter, readPendingFlag, type AccountGate } from './src/domain/sessionGate';
@@ -148,7 +148,9 @@ export default function App() {
     <ScrollView testID="main-scroll" contentContainerStyle={s.content}
       keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}>
-      <View style={s.notice}><Text style={s.noticeText}>DESARROLLO · Sin usuarios reales · Acceso controlado pendiente</Text></View>
+      <View style={s.notice}><Text style={s.noticeText}>{demoOnlyBuild
+        ? 'QA DEMO SIN CONEXIÓN · Solo datos ficticios · Sin registro de personas'
+        : 'DESARROLLO · Sin usuarios reales · Acceso controlado pendiente'}</Text></View>
       {tab==='admin' && !moderator && <Text style={s.warning}>Acceso administrativo no autorizado.</Text>}
       {deletionPending && tab!=='account' && <Text style={s.warning}>La solicitud de baja está pendiente. Abre Cuenta para revisarla o cancelarla.</Text>}
       {supabaseIsConfigured ? (
@@ -216,7 +218,7 @@ export default function App() {
       {authError?<Text style={s.warning}>{authError}</Text>:null}
     </ScrollView>
     </KeyboardAvoidingView>
-    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.18.0</Text></View>
+    <View style={s.footer}><Text style={s.footerText}>CANDIDATO QA · v0.20.0</Text></View>
   </SafeAreaView>;
 }
 
