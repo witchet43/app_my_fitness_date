@@ -1,0 +1,37 @@
+name: Local Auth E2E
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-local-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install app dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Start isolated local Supabase Auth and REST
+        run: |
+          npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler
+      - name: Test real Auth JWT and PostgREST row security
+        env:
+          MFD_LOCAL_AUTH_E2E: LOCAL_ONLY
+        run: |
+          set -euo pipefail
+          set -a
+          eval "$(npx --yes supabase@latest status -o env)"
+          set +a
+          npm run test:auth:local
+          npm run test:auth:email:local
+      - name: Stop and destroy local-only test data
+        if: always()
+        run: |
+          npx --yes supabase@latest stop --no-backup || true
