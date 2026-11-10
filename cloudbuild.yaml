@@ -1,0 +1,135 @@
+# Cloudflare Pages public V24 (NO beta or dating signup).
+# Initial/manual builds validate only unless _DEPLOY=true on main.
+steps:
+  - id: validate-build-public-flutter
+    name: ubuntu:24.04
+    entrypoint: bash
+    env:
+      - 'MFD_COMMIT=$COMMIT_SHA'
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq
+        apt-get install -y -qq --no-install-recommends ca-certificates curl xz-utils git unzip libstdc++6 libglu1-mesa python3
+        curl --fail --location --retry 3 --silent --show-error \
+          https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.9-stable.tar.xz \
+          --output /tmp/flutter.tar.xz
+        echo "25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a  /tmp/flutter.tar.xz" | sha256sum --check -
+        mkdir -p /opt/flutter-sdk
+        tar --no-same-owner -xJf /tmp/flutter.tar.xz -C /opt/flutter-sdk
+        git config --global --add safe.directory /opt/flutter-sdk/flutter
+        export PATH="/opt/flutter-sdk/flutter/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        flutter config --no-analytics
+        flutter precache --web
+        python3 scripts/check_saas_factory.py
+        python3 - <<'PY'
+        import json
+        from pathlib import Path
+        m=json.loads(Path("release/public_web_manifest.json").read_text())
+        assert m["channel"]=="public_anonymous_web"
+        assert m["network_backend_enabled"] is False
+        assert m["requires_authentication"] is False
+        assert m["enabled_features"] == ["anonymous_pace_calculator"]
+        assert "public_signup" in m["disabled_features"]
+        assert "dating_discovery" in m["disabled_features"]
+        PY
+        cd apps/flutter_client
+        flutter create --platforms=web . --project-name=my_fitness_date
+        flutter pub get
+        flutter analyze
+        flutter test
+        flutter build web --release \
+          --dart-define=MFD_PUBLIC_PRODUCTION=true \
+          --dart-define=MFD_QA_LOGIN_UI=false \
+          --dart-define=MFD_API_BASE_URL=
+        test -s build/web/index.html
+        cp cloudflare/_headers build/web/_headers
+        cp cloudflare/_redirects build/web/_redirects
+        if ! printf '%s' "$$MFD_COMMIT" | grep -Eq '^[0-9a-f]{40}$'; then
+          echo "Missing or invalid source commit SHA" >&2
+          exit 1
+        fi
+        printf '{"commit":"%s","channel":"public_anonymous_web","version":"v24"}\n' "$$MFD_COMMIT" > build/web/mfd-release.json
+        echo "Public anonymous release built; social and dating features disabled."
+
+  - id: deploy-cloudflare-pages-public
+    name: node:22-bookworm
+    entrypoint: bash
+    env:
+      - 'MFD_DEPLOY=$_DEPLOY'
+      - 'MFD_BRANCH=$BRANCH_NAME'
+      - 'MFD_COMMIT=$COMMIT_SHA'
+      - 'CLOUDFLARE_ACCOUNT_ID=$_CF_ACCOUNT_ID'
+    secretEnv:
+      - CLOUDFLARE_API_TOKEN
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [ "$$MFD_DEPLOY" = "false" ]; then
+          echo "Validation completed; production deploy not requested."
+          exit 0
+        fi
+        if [ "$$MFD_DEPLOY" != "true" ] || [ "$$MFD_BRANCH" != "main" ]; then
+          echo "Refusing non-main or ambiguous production deployment." >&2
+          exit 1
+        fi
+        if [ -z "$$CLOUDFLARE_API_TOKEN" ] || [ -z "$$CLOUDFLARE_ACCOUNT_ID" ]; then
+          echo "Missing Cloudflare Pages credentials via Secret Manager." >&2
+          exit 1
+        fi
+        test -s apps/flutter_client/build/web/mfd-release.json
+        npx --yes wrangler@4.158.0 pages project list --json > /tmp/mfd-projects.json
+        if node -e '
+          const fs=require("fs");
+          const p=JSON.parse(fs.readFileSync("/tmp/mfd-projects.json","utf8"));
+          const arr=Array.isArray(p)?p:(Array.isArray(p.result)?p.result:null);
+          if (!arr) process.exit(10);
+          process.exit(arr.some(x=>x.name==="my-fitness-date")?0:3);
+        '; then
+          echo "My Fitness Date Pages project exists."
+        else
+          result=$?
+          if [ "$$result" -ne 3 ]; then
+            echo "Cloudflare project listing could not be parsed." >&2
+            exit 1
+          fi
+          npx --yes wrangler@4.158.0 pages project create my-fitness-date --production-branch=main
+        fi
+        npx --yes wrangler@4.158.0 pages deploy apps/flutter_client/build/web \
+          --project-name=my-fitness-date --branch=main
+        node -e '
+          const wanted=process.env.MFD_COMMIT;
+          if(!wanted||wanted.length!==40)process.exit(1);
+          const run=async()=>{
+            for(let i=0;i<7;i++){
+              try {
+                const r=await fetch("https://my-fitness-date.pages.dev/mfd-release.json",{headers:{"Cache-Control":"no-cache"}});
+                const d=await r.json();
+                if(r.ok&&d.commit===wanted&&d.channel==="public_anonymous_web"){
+                  const h=await fetch("https://my-fitness-date.pages.dev/");
+                  if(!h.ok||!(await h.text()).includes("flutter"))throw Error("HTML unavailable");
+                  process.stdout.write("Cloudflare Pages commit verified: "+wanted+"\n");
+                  return;
+                }
+              }catch{}
+              await new Promise(resolve=>setTimeout(resolve,5000));
+            }
+            throw Error("Public site failed commit smoke check");
+          };
+          run().catch(e=>{process.stderr.write(e.message+"\n");process.exit(1)});
+        '
+
+serviceAccount: projects/jv-apps-ci-cd-hub/serviceAccounts/mfd-cloudbuild-runner@jv-apps-ci-cd-hub.iam.gserviceaccount.com
+availableSecrets:
+  secretManager:
+    - versionName: projects/jv-apps-ci-cd-hub/secrets/cloudflare-pages-api-token/versions/latest
+      env: CLOUDFLARE_API_TOKEN
+substitutions:
+  _DEPLOY: 'false'
+  _CF_ACCOUNT_ID: 'd10780918aa05ee5532c754371c60c94'
+options:
+  logging: CLOUD_LOGGING_ONLY
+timeout: 1800s
