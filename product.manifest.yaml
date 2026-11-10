@@ -55,7 +55,7 @@ architecture:
   heartbeat: "/heartbeat"
 identity:
   provider: "Supabase Auth"
-  client_login_flow: "PENDIENTE_FLUTTER"
+  client_login_flow: "V23 QA: BFF password, refresh rotation, revoke, memory-only; OIDC/PKCE y hospedado PENDIENTE"
   roles: ["member", "moderator", "operator"]
   privileged_mfa: "PENDIENTE"
   age_policy: "solo personas adultas; comprobacion externa PENDIENTE"

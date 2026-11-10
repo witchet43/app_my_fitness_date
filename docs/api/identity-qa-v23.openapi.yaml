@@ -1,0 +1,89 @@
+openapi: 3.1.0
+info:
+  title: My Fitness Date — Identity QA (solo BFF)
+  version: 0.23.0-dev
+  description: Endpoints locales/DEV de QA; no registrar usuarios ni habilitar producción.
+paths:
+  /v1/identity/session:
+    post:
+      summary: Iniciar sesión con cuenta QA verificada y permitida
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password]
+              properties:
+                email: { type: string, maxLength: 254 }
+                password: { type: string, writeOnly: true, maxLength: 1024 }
+      responses:
+        '200':
+          description: Tokens de QA rotables; Cache-Control no-store
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IdentitySession' }
+        '401': { description: No autorizado }
+        '404': { description: QA deshabilitado }
+        '422': { description: Solicitud inválida y datos redactados }
+        '429': { description: Cuota excedida }
+        '503': { description: Dependencia indisponible }
+    delete:
+      summary: Revocar la sesión en el proveedor de identidad
+      security: [{ userBearer: [] }]
+      responses:
+        '204': { description: Revocación remota confirmada }
+        '401': { description: Token inválido }
+  /v1/identity/session/refresh:
+    post:
+      summary: Rotar credenciales de sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string, writeOnly: true }
+      responses:
+        '200':
+          description: Nueva sesión rotada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IdentitySession' }
+        '401': { description: No autorizado }
+        '404': { description: QA deshabilitado }
+        '503': { description: Servicio indisponible }
+  /v1/identity/me:
+    get:
+      summary: Identidad mínima vigente de QA
+      security: [{ userBearer: [] }]
+      responses:
+        '200':
+          description: Identidad mínima
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IdentityUser' }
+        '401': { description: Token inválido }
+components:
+  securitySchemes:
+    userBearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    IdentityUser:
+      type: object
+      required: [id, email, email_verified]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        email_verified: { type: boolean }
+    IdentitySession:
+      type: object
+      required: [access_token, refresh_token, expires_in, user]
+      properties:
+        access_token: { type: string, writeOnly: true }
+        refresh_token: { type: string, writeOnly: true }
+        expires_in: { type: integer, minimum: 1, maximum: 86400 }
+        user: { $ref: '#/components/schemas/IdentityUser' }

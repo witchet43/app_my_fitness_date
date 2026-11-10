@@ -12,6 +12,10 @@ from uuid import UUID, uuid4
 import httpx
 from fastapi import FastAPI, Header, HTTPException, Query, Response, Request as HttpRequest
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.responses import JSONResponse
+from .identity import router as identity_router
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
 from pydantic import BaseModel, ConfigDict
@@ -25,8 +29,20 @@ allowed_origins = [origin.strip() for origin in
                    os.getenv("MFD_WEB_ALLOWED_ORIGINS", "").split(",")
                    if origin.strip() and origin.strip() != "*"]
 app.add_middleware(CORSMiddleware, allow_origins=allowed_origins,
-                   allow_methods=["GET"], allow_headers=["Authorization"],
+                   allow_methods=["GET", "POST", "DELETE"],
+                   allow_headers=["Authorization", "Content-Type"],
                    allow_credentials=False, expose_headers=["X-Request-ID"])
+
+app.include_router(identity_router)
+
+
+@app.exception_handler(RequestValidationError)
+async def sanitize_identity_validation(request: HttpRequest, error: RequestValidationError):
+    if request.url.path.startswith("/v1/identity/"):
+        return JSONResponse(status_code=422, content={"detail": "Invalid identity request"},
+                            headers={"Cache-Control": "no-store"})
+    return await request_validation_exception_handler(request, error)
+
 
 @app.middleware("http")
 async def response_security_headers(request: HttpRequest, call_next):
