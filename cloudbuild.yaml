@@ -51,7 +51,7 @@ steps:
           echo "Missing or invalid source commit SHA" >&2
           exit 1
         fi
-        printf '{"commit":"%s","channel":"public_anonymous_web","version":"v24"}\n' "$$MFD_COMMIT" > build/web/mfd-release.json
+        printf '{"commit":"%s","channel":"public_anonymous_web","version":"v25"}\n' "$$MFD_COMMIT" > build/web/mfd-release.json
         echo "Public anonymous release built; social and dating features disabled."
 
   - id: deploy-cloudflare-pages-public

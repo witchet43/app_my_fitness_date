@@ -24,5 +24,8 @@
     "cloudflare_pages_upload",
     "http_commit_smoke"
   ],
-  "beta_and_real_user_gates": "release/readiness.json (all pending: not waived)"
+  "beta_and_real_user_gates": "release/readiness.json (all pending: not waived)",
+  "brand": "Active Chemistry",
+  "design_revision": "v25",
+  "brand_tagline": "Encuentra tu ritmo. Conecta de verdad."
 }
