@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_saas_factory import REGISTER, validate
+from check_saas_factory import REGISTER, validate, validate_existing_release_gates
 
 class FactoryComplianceTests(unittest.TestCase):
     @classmethod
@@ -19,6 +19,11 @@ class FactoryComplianceTests(unittest.TestCase):
     def test_release_is_not_approved_without_p0_evidence(self):
         failures = validate(self.rows, release=True)
         self.assertTrue(any("unresolved P0" in item for item in failures))
+
+    def test_existing_beta_gates_still_block_release(self):
+        reasons = validate_existing_release_gates()
+        self.assertTrue(any("Beta gate pending" in reason for reason in reasons))
+        self.assertTrue(any("not_published" in reason for reason in reasons))
 
     def test_duplicate_ids_are_rejected(self):
         failures = validate(self.rows + [self.rows[0]])

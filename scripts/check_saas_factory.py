@@ -6,6 +6,7 @@ all applicable P0 controls have evidence or a justified N/A exception.
 """
 import argparse
 import csv
+import json
 from collections import Counter
 from pathlib import Path
 
@@ -16,6 +17,12 @@ EXPECTED = {
     "ID":5,"SAAS":13,"FAC":13,"SAFE":7,"COST":24,
     "OPS-HB":10,"MP":10,"XPLAT":24,"PX":24
 }
+REQUIRED_BETA_GATES = (
+    'hosted_email_configuration', 'external_age_verification',
+    'staffed_moderation', 'legal_privacy_retention', 'real_auth_erasure_e2e',
+    'physical_android_qa', 'physical_ios_qa',
+    'independent_security_review', 'support_and_incident_response',
+)
 STATES = {"NO_EVALUADO","EN_PROGRESO","CUMPLE","NO_CUMPLE","NO_APLICA","BLOQUEADO"}
 
 def family(control_id):
@@ -51,6 +58,23 @@ def validate(rows, *, release=False):
             problems.append(f"{cid}: unresolved P0 before release ({state})")
     return problems
 
+
+def validate_existing_release_gates():
+    """Do not let the 219-control CSV bypass the pre-existing beta gates."""
+    manifest = json.loads((ROOT / "release/readiness.json").read_text(encoding="utf-8"))
+    issues = []
+    gates = manifest.get("gates", {})
+    for key in REQUIRED_BETA_GATES:
+        item = gates.get(key, {})
+        if item.get("status") != "verified":
+            issues.append(f"Beta gate pending: {key}")
+        elif not (str(item.get("evidence_url", "")).startswith("https://")
+                  and item.get("verified_at")):
+            issues.append(f"Beta gate lacks verified dated evidence: {key}")
+    if manifest.get("release_channel") == "not_published":
+        issues.append("Release channel still not_published")
+    return issues
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--release", action="store_true",
@@ -59,6 +83,8 @@ def main():
     with REGISTER.open(encoding="utf-8-sig", newline="") as file:
         rows = list(csv.DictReader(file))
     problems = validate(rows, release=args.release)
+    if args.release:
+        problems.extend(validate_existing_release_gates())
     if problems:
         for problem in problems[:30]:
             print("FAIL:", problem)
