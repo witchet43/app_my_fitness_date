@@ -4,6 +4,9 @@ services:
     build: ./api_gateway
     environment:
       MFD_APP_ENV: local
+      # Opt-in only for pre-provisioned QA accounts. No public signup.
+      MFD_QA_AUTH_ENABLED: ${MFD_QA_AUTH_ENABLED:-}
+      MFD_QA_AUTH_ALLOWLIST: ${MFD_QA_AUTH_ALLOWLIST:-}
       MFD_WEB_ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
       MFD_SUPABASE_URL: ${MFD_SUPABASE_URL:-}
       MFD_SUPABASE_PUBLISHABLE_KEY: ${MFD_SUPABASE_PUBLISHABLE_KEY:-}
