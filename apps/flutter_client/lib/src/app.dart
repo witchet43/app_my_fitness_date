@@ -158,7 +158,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                   child: _StatusPill(
                     title: _publicProduction
                         ? 'EXPERIENCIA PÚBLICA'
-                        : 'DEV · ' + _apiStatus,
+                        : 'DEV · $_apiStatus',
                     color: FitDateColors.lime,
                   ),
                 ),
@@ -250,7 +250,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1180),
         child: ListView(
-          key: ValueKey('content-section-' + _section.toString()),
+          key: ValueKey('content-section-$_section'),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           children: [
             if (widget.qaLoginEnabled && widget.api.isConfigured)
@@ -258,8 +258,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   _identity.signedIn
-                      ? 'Sesión QA: ' + _identity.session!.user.email +
-                          ' · No autoriza FitDating'
+                      ? 'Sesión QA: ${_identity.session!.user.email} · No autoriza FitDating'
                       : 'Sin sesión QA · registro público cerrado',
                   key: const Key('qa-session-status'),
                   style: const TextStyle(
@@ -932,7 +931,7 @@ class _ValueCard extends StatelessWidget {
     if (onTap == null) return child;
     return Semantics(
       button: true,
-      label: title + '. ' + note,
+      label: '$title. $note',
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
