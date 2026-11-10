@@ -29,6 +29,10 @@ jobs:
       PGPASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
+      - name: SaaS Factory v1.9 registry integrity (not release approval)
+        run: |
+          python3 scripts/check_saas_factory.py
+          python3 -m unittest discover -s scripts -p 'test_saas_factory.py'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
