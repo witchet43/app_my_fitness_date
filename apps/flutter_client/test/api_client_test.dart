@@ -102,4 +102,4 @@ const _userJson =
 
 String _sessionJson(String refresh) =>
     '{"access_token":"synthetic-access","refresh_token":"$refresh",'
-    '"expires_in":3600,"user":${_userJson}}';
+    '"expires_in":3600,"user":$_userJson}';
