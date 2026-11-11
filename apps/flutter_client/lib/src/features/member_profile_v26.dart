@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import '../theme/fitness_date_theme.dart';
@@ -281,24 +280,6 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     if(result==null)return;
     try{await widget.api.addPlace(result);await reload();}
     catch(_){if(mounted)setState(()=>problem='No se pudo guardar el lugar.');}
-  }
-
-  Future<void> addPhoto() async {
-    try {
-      final photo=await ImagePicker().pickImage(source:ImageSource.gallery,
-        maxWidth:1920,imageQuality:85);
-      if(photo==null)return;
-      final bytes=await photo.readAsBytes();
-      if(bytes.lengthInBytes>5*1024*1024){
-        if(mounted)setState(()=>problem='La imagen supera 5 MB.');
-        return;
-      }
-      await widget.api.uploadPhoto(bytes,
-        photo.name.toLowerCase().endsWith('.png')?'image/png':'image/jpeg');
-      await reload();
-    } catch(_) {
-      if(mounted)setState(()=>problem='No se pudo agregar la fotografía.');
-    }
   }
 
   Widget section(String title,IconData icon,Color color,Widget child)=>
