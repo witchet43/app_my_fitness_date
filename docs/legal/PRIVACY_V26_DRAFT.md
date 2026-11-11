@@ -10,9 +10,9 @@ El responsable del tratamiento de los datos personales será **una persona físi
 
 **Domicilio del responsable para efectos del aviso de privacidad (publicación expresamente autorizada por el titular):** Matancillas 1641, Residencial El Refugio, C.P. 76146, Querétaro, Querétaro, México.
 
-**Contacto para datos personales y ejercicio de derechos ARCO:** **[PENDIENTE: correo electrónico dedicado, funcional y autorizado para publicación]**.
+**Contacto para datos personales y ejercicio de derechos ARCO:** **witchet43@gmail.com** (designado por el titular para difusión pública el 10 de noviembre de 2026; pendiente prueba operativa de recepción y respuesta).
 
-El domicilio fue proporcionado por el titular y su divulgación pública fue autorizada expresamente el 10 de noviembre de 2026. El nombre del responsable debe cotejarse con documentación antes de la versión definitiva. El canal ARCO sigue sin designarse ni verificarse; no debe inventarse un correo de contacto.
+El domicilio fue proporcionado por el titular y su divulgación pública fue autorizada expresamente el 10 de noviembre de 2026. El nombre del responsable debe cotejarse con documentación antes de la versión definitiva. El canal ARCO fue designado por el titular como witchet43@gmail.com; aún debe verificarse su atención operativa, el procedimiento de solicitudes y la política de conservación.
 
 ## 2. Servicio y finalidades primarias
 My Fitness Date es una plataforma para adultos que comparten intereses deportivos, vida activa y afinidades personales. La zona de miembros exige una sesión válida; FitDating no está abierto y requiere controles adicionales. Los datos se tratarán para crear y proteger cuentas, autenticar mediante correo o Google, gestionar el perfil privado, permitir la edición de sus preferencias, almacenar fotografías, administrar sus lugares deportivos privados, prestar soporte, prevenir abusos y atender solicitudes de privacidad.
@@ -38,7 +38,7 @@ El perfil completo inicia privado. Ningún usuario ajeno debe acceder a la fecha
 Se prevé el uso de **Google** como proveedor de identidad federada, **Supabase** para autenticación y almacenamiento, **Cloudflare** para distribución de la web y servicios de backend autorizados; pueden existir encargados y procesamiento internacional de información. El proyecto de datos actual se encuentra en **us-east-1**. **[PENDIENTE: revisar contratos, transferencias y finalidades conforme a la operación real].**
 
 ## 6. Conservación y derechos
-Los datos se conservarán durante los periodos justificados por la finalidad y obligaciones legales y se eliminarán conforme a procesos verificados. El titular podrá solicitar acceso, rectificación, cancelación u oposición (ARCO) y revocar ciertos consentimientos mediante **[PENDIENTE: canal, documentación requerida, respuesta, recursos y plazos de conservación concretos]**.
+Los datos se conservarán durante los periodos justificados por la finalidad y obligaciones legales y se eliminarán conforme a procesos verificados. El titular podrá solicitar acceso, rectificación, cancelación u oposición (ARCO) y revocar ciertos consentimientos mediante un mensaje a **witchet43@gmail.com**, indicando su solicitud y un medio de respuesta. La identidad y representación se verificarán por medios proporcionales y seguros antes de comunicar o modificar datos personales. **[PENDIENTE: confirmar procedimiento operativo, requisitos, plazos de respuesta y conservación aplicables mediante revisión jurídica]**.
 
 ## 7. Seguridad y menores de edad
 Servicio dirigido a mayores de 18 años. Declarar la fecha de nacimiento no acredita independientemente la edad. Los mecanismos específicos de FitDating permanecerán cerrados hasta que exista verificación independiente y moderación. Los controles técnicos no garantizan riesgo cero.
@@ -47,4 +47,4 @@ Servicio dirigido a mayores de 18 años. Declarar la fecha de nacimiento no acre
 Se prevé informar cambios relevantes y mantener la versión vigente en https://my-fitness-date.pages.dev/privacy/ (ruta propuesta, aún no publicada).
 
 ---
-**No aprobar sin completar:** cotejo documental del nombre, medios ARCO funcionales y autorizados, finalidades y transferencias reales, proveedores, retención, detalles de derechos y revisión jurídica. **Domicilio: autorizado e incorporado; falta publicación web.** Referencia legal: Ley Federal de Protección de Datos Personales en Posesión de los Particulares, DOF 20-03-2025, última reforma reportada 14-11-2025.
+**No aprobar sin completar:** cotejo documental del nombre, prueba de funcionamiento del canal ARCO designado, finalidades y transferencias reales, proveedores, retención, procedimiento de derechos y revisión jurídica. **Domicilio: autorizado e incorporado; falta publicación web.** Referencia legal: Ley Federal de Protección de Datos Personales en Posesión de los Particulares, DOF 20-03-2025, última reforma reportada 14-11-2025.
