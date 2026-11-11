@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/member_v26_api.dart';
+import 'dating_v27.dart';
 import '../theme/fitness_date_theme.dart';
 
 List<String> _tokens(String text) => text.split(',')
@@ -392,9 +393,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                   'no se muestran a otras personas sin aprobación.',
                   style:TextStyle(color:FitDateColors.muted,fontSize:12)),
                 const SizedBox(height:12),
-                FilledButton.icon(onPressed:photos.length>=8?null:addPhoto,
-                  icon:const Icon(Icons.add_a_photo_outlined),
-                  label:const Text('Agregar fotografía')),
+                const Text('Carga de fotos suspendida hasta completar la sanitización y moderación del servicio.',
+                  style:TextStyle(color:FitDateColors.muted,fontSize:12)),
                 if(loading)const LinearProgressIndicator(),
                 Wrap(spacing:8,runSpacing:8,
                   children:photos.map(photoTile).toList()),
@@ -423,10 +423,16 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             ])),
           section('FitDating y seguridad',Icons.verified_user_outlined,
             FitDateColors.coral,
-            const Text('FitDating permanece cerrado. Iniciar sesión y '
-              'declarar la edad no equivale a verificación independiente '
-              'de mayoría de edad ni autoriza descubrir perfiles.',
-              style:TextStyle(color:FitDateColors.muted))),
+            Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
+              const Text('Revisa tu elegibilidad, registra el consentimiento separado y consulta personas compatibles cuando se apruebe tu verificación de edad.'),
+              const SizedBox(height:12),
+              FilledButton.icon(
+                key:const Key('fitdating-open'),
+                onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder:(_)=>DatingV27(api:widget.api))),
+                icon:const Icon(Icons.favorite_outline),
+                label:const Text('Explorar FitDating')),
+            ])),
           if(problem!=null)Text(problem!,
             style:const TextStyle(color:Colors.redAccent)),
         ]),
