@@ -6,9 +6,9 @@ Versión prevista: v26-terms-1. Fecha de redacción: 10 de noviembre de 2026.
 ## 1. Responsable
 **My Fitness Date** es un nombre comercial del servicio cuya operación y responsabilidad jurídica corresponderán a **una persona física**, actuando directamente a título personal y no en representación de una sociedad mercantil.
 
-**Nombre legal del titular responsable:** **[PENDIENTE: confirmar nombre completo con el titular para su publicación]**.
+**Nombre legal del titular responsable:** **Julio Alejandro Villeda Maldonado** (pendiente cotejo documental antes de aprobar el texto definitivo).
 
-**Domicilio válido para notificaciones legales:** **[PENDIENTE: domicilio autorizado para difusión pública]**.
+**Domicilio indicado por el responsable:** Matancillas 1641, Residencial El Refugio, C.P. 76146, Querétaro, Querétaro, México. Publicación del domicilio autorizada expresamente por el titular el 10 de noviembre de 2026. El procedimiento formal para notificaciones legales requiere validación jurídica.
 
 **Contacto de soporte y reclamaciones:** **[PENDIENTE: correo o canal de contacto operativo y autorizado]**.
 
@@ -39,4 +39,4 @@ No hay pagos, suscripciones ni tarifas definidos en esta V26. No se generan carg
 Los términos definitivos se prevé publicarlos en https://my-fitness-date.pages.dev/terms/ (ruta propuesta) con versión y fecha. Se observarán las leyes aplicables en México, sin excluir derechos irrenunciables de los usuarios.
 
 ---
-**No aprobar sin completar:** nombre legal de persona física confirmado, domicilio público autorizado, correo de soporte/ARCO, procedimientos efectivos, derechos de autor, reclamaciones, seguridad de encuentros, política de privacidad y revisión jurídica.
+**No aprobar sin completar:** cotejo documental del nombre, correo o canal funcional de soporte/ARCO, procedimientos efectivos, derechos de autor, reclamaciones, seguridad de encuentros, política de privacidad y revisión jurídica. **Domicilio: autorizado e incorporado; falta publicación web.**
