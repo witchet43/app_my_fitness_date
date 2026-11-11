@@ -106,61 +106,12 @@ create table public.member_media_v26 (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   object_key text not null unique check (
-    object_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg
+    object_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]jpg$'
+    and split_part(object_key, '/', 1) = user_id::text
+  ),
   alt_text text not null default '' check (char_length(alt_text) <= 240),
   position smallint not null default 0 check (position between 0 and 7),
   unique (user_id, position),
-  moderation_state text not null default 'pending' check (
-    moderation_state in ('pending','approved','rejected')
-  ),
-  created_at timestamptz not null default now()
-);
-create index member_media_v26_owner on public.member_media_v26 (user_id, position);
-alter table public.member_media_v26 enable row level security;
-revoke all on public.member_media_v26 from public, anon, authenticated;
-grant select on public.member_media_v26 to authenticated;
-grant insert (user_id, object_key, alt_text, position)
-  on public.member_media_v26 to authenticated;
-grant update (alt_text, position) on public.member_media_v26 to authenticated;
-grant delete on public.member_media_v26 to authenticated;
-create policy v26_media_read_own on public.member_media_v26 for select
-  to authenticated using ((select auth.uid()) = user_id);
-create policy v26_media_insert_own on public.member_media_v26 for insert
-  to authenticated with check (
-    (select auth.uid()) = user_id
-    and left(object_key, 37) = user_id::text || '/'
-  );
-create policy v26_media_update_own on public.member_media_v26 for update
-  to authenticated using ((select auth.uid()) = user_id)
-  with check ((select auth.uid()) = user_id);
-create policy v26_media_delete_own on public.member_media_v26 for delete
-  to authenticated using ((select auth.uid()) = user_id);
-
--- Storage bucket: private and owner-scoped, 5 MiB/file, restricted MIME.
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('mfd-profile-private', 'mfd-profile-private', false, 5242880,
-        array['image/jpeg','image/png']::text[])
-on conflict (id) do nothing;
-
-create policy mfd_v26_storage_read_own on storage.objects for select
-  to authenticated
-  using (bucket_id = 'mfd-profile-private'
-    and (storage.foldername(name))[1] = (select auth.uid())::text);
-create policy mfd_v26_storage_insert_own on storage.objects for insert
-  to authenticated
-  with check (bucket_id = 'mfd-profile-private'
-    and (storage.foldername(name))[1] = (select auth.uid())::text);
-create policy mfd_v26_storage_delete_own on storage.objects for delete
-  to authenticated
-  using (bucket_id = 'mfd-profile-private'
-    and (storage.foldername(name))[1] = (select auth.uid())::text);
-
--- Deliberately no public discovery view, no anonymous SELECT,
--- no social feed exposure, no photo publication, no dating activation.
-
-  ),
-  alt_text text not null default '' check (char_length(alt_text) <= 240),
-  position smallint not null default 0 check (position between 0 and 8),
   moderation_state text not null default 'pending' check (
     moderation_state in ('pending','approved','rejected')
   ),
