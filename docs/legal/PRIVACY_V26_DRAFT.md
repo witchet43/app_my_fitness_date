@@ -6,13 +6,13 @@ Versión prevista: v26-privacy-1. Fecha de redacción: 10 de noviembre de 2026.
 ## 1. Responsable y domicilio
 El responsable del tratamiento de los datos personales será **una persona física que operará bajo el nombre comercial «My Fitness Date»**, directamente y por cuenta propia, **sin constituir por este hecho una sociedad mercantil**.
 
-**[PENDIENTE: confirmar nombre completo de la persona física exactamente como aparece en identificación oficial, antes de su difusión]**.
+**Julio Alejandro Villeda Maldonado** (nombre del titular informado para la operación como persona física; cotejo con identificación oficial pendiente antes de aprobar el texto definitivo).
 
 **Domicilio del responsable para efectos del aviso de privacidad (publicación expresamente autorizada por el titular):** Matancillas 1641, Residencial El Refugio, C.P. 76146, Querétaro, Querétaro, México.
 
 **Contacto para datos personales y ejercicio de derechos ARCO:** **[PENDIENTE: correo electrónico dedicado, funcional y autorizado para publicación]**.
 
-El domicilio fue proporcionado por el titular y autorizado expresamente para su publicación en el aviso de privacidad. Aún debe confirmarse y autorizarse el nombre legal del responsable y el canal ARCO, que deberán constar de manera verificable en la versión final. No se deben inferir ni publicar dichos datos sin autorización.
+El domicilio fue proporcionado por el titular y su divulgación pública fue autorizada expresamente el 10 de noviembre de 2026. El nombre del responsable debe cotejarse con documentación antes de la versión definitiva. El canal ARCO sigue sin designarse ni verificarse; no debe inventarse un correo de contacto.
 
 ## 2. Servicio y finalidades primarias
 My Fitness Date es una plataforma para adultos que comparten intereses deportivos, vida activa y afinidades personales. La zona de miembros exige una sesión válida; FitDating no está abierto y requiere controles adicionales. Los datos se tratarán para crear y proteger cuentas, autenticar mediante correo o Google, gestionar el perfil privado, permitir la edición de sus preferencias, almacenar fotografías, administrar sus lugares deportivos privados, prestar soporte, prevenir abusos y atender solicitudes de privacidad.
@@ -47,4 +47,4 @@ Servicio dirigido a mayores de 18 años. Declarar la fecha de nacimiento no acre
 Se prevé informar cambios relevantes y mantener la versión vigente en https://my-fitness-date.pages.dev/privacy/ (ruta propuesta, aún no publicada).
 
 ---
-**No aprobar sin completar:** nombre legal de persona física confirmado y autorizado, medios ARCO, finalidades y transferencias reales, proveedores, retención, detalles de derechos y revisión jurídica. **Domicilio: autorizado e incorporado.** Referencia legal: Ley Federal de Protección de Datos Personales en Posesión de los Particulares, DOF 20-03-2025, última reforma reportada 14-11-2025.
+**No aprobar sin completar:** cotejo documental del nombre, medios ARCO funcionales y autorizados, finalidades y transferencias reales, proveedores, retención, detalles de derechos y revisión jurídica. **Domicilio: autorizado e incorporado; falta publicación web.** Referencia legal: Ley Federal de Protección de Datos Personales en Posesión de los Particulares, DOF 20-03-2025, última reforma reportada 14-11-2025.
