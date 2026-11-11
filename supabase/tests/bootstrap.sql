@@ -19,7 +19,7 @@ create schema storage;
 create table storage.buckets (id text primary key, name text, public boolean,
   file_size_limit bigint, allowed_mime_types text[]);
 create table storage.objects (id uuid primary key default gen_random_uuid(),
-  bucket_id text not null, name text not null);
+  bucket_id text not null, name text not null, owner_id uuid);
 create function storage.foldername(path text) returns text[] language sql immutable
   as $$ select string_to_array(path, '/') $$;
 alter table storage.objects enable row level security;
