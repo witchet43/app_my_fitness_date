@@ -4,7 +4,15 @@
 Versión prevista: v26-privacy-1. Fecha de redacción: 10 de noviembre de 2026.
 
 ## 1. Responsable y domicilio
-**[PENDIENTE: nombre completo o razón social del responsable]**, domicilio **[PENDIENTE: domicilio para el aviso]**, contacto de datos personales y derechos ARCO **[PENDIENTE: correo real y atendido]**.
+El responsable del tratamiento de los datos personales será **una persona física que operará bajo el nombre comercial «My Fitness Date»**, directamente y por cuenta propia, **sin constituir por este hecho una sociedad mercantil**.
+
+**[PENDIENTE: confirmar nombre completo de la persona física exactamente como aparece en identificación oficial, antes de su difusión]**.
+
+**Domicilio del responsable para efectos del aviso de privacidad:** **[PENDIENTE: domicilio real y apto para notificaciones que el titular autorice publicar; puede evaluarse domicilio profesional o comercial válido para preservar privacidad de vivienda]**.
+
+**Contacto para datos personales y ejercicio de derechos ARCO:** **[PENDIENTE: correo electrónico dedicado, funcional y autorizado para publicación]**.
+
+La identidad, el domicilio y el canal ARCO deberán constar de manera verificable en la versión pública. Estos datos no deben completarse a partir de información inferida, ni publicarse en el repositorio sin autorización expresa.
 
 ## 2. Servicio y finalidades primarias
 My Fitness Date es una plataforma para adultos que comparten intereses deportivos, vida activa y afinidades personales. La zona de miembros exige una sesión válida; FitDating no está abierto y requiere controles adicionales. Los datos se tratarán para crear y proteger cuentas, autenticar mediante correo o Google, gestionar el perfil privado, permitir la edición de sus preferencias, almacenar fotografías, administrar sus lugares deportivos privados, prestar soporte, prevenir abusos y atender solicitudes de privacidad.
@@ -39,4 +47,4 @@ Servicio dirigido a mayores de 18 años. Declarar la fecha de nacimiento no acre
 Se prevé informar cambios relevantes y mantener la versión vigente en https://my-fitness-date.pages.dev/privacy/ (ruta propuesta, aún no publicada).
 
 ---
-**No aprobar sin completar:** identidad y domicilio del responsable, medios ARCO, finalidad y transferencias reales, proveedores, retención, detalles de derechos y revisión jurídica. Referencia legal: Ley Federal de Protección de Datos Personales en Posesión de los Particulares, texto vigente publicado DOF 20-03-2025 y reformas.
+**No aprobar sin completar:** nombre legal de persona física confirmado, domicilio autorizado para publicación, medios ARCO, finalidades y transferencias reales, proveedores, retención, detalles de derechos y revisión jurídica. Referencia legal: Ley Federal de Protección de Datos Personales en Posesión de los Particulares, DOF 20-03-2025, última reforma reportada 14-11-2025.
