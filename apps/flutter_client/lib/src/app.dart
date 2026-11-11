@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'core/api_client.dart';
 import 'core/identity_session_manager.dart';
@@ -271,6 +272,29 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             if (_section == 2) _dating(),
             const SizedBox(height: 26),
             const Divider(color: FitDateColors.outline, thickness: .7),
+            const SizedBox(height: 14),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              children: [
+                TextButton(
+                  key: const Key('public-privacy-link'),
+                  onPressed: () async {
+                    await launchUrl(Uri.parse('https://my-fitness-date.pages.dev/privacy/'),
+                        mode: LaunchMode.externalApplication);
+                  },
+                  child: const Text('Aviso de privacidad'),
+                ),
+                TextButton(
+                  key: const Key('public-terms-link'),
+                  onPressed: () async {
+                    await launchUrl(Uri.parse('https://my-fitness-date.pages.dev/terms/'),
+                        mode: LaunchMode.externalApplication);
+                  },
+                  child: const Text('Términos y condiciones'),
+                ),
+              ],
+            ),
             const SizedBox(height: 14),
             const Text(
               'My Fitness Date · Muévete con propósito. Conecta con respeto.',
