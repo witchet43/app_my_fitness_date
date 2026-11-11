@@ -33,6 +33,7 @@ jobs:
         run: |
           python3 scripts/check_saas_factory.py
           python3 -m unittest discover -s scripts -p 'test_saas_factory.py'
+          python3 -m unittest discover -s scripts -p 'test_v26_legal_pages.py'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
