@@ -29,3 +29,8 @@ export function extractApiRoute(path: string): string | null {
   const i = path.lastIndexOf("/v1/");
   return i === -1 ? null : path.slice(i);
 }
+
+// A browser sends Cache-Control in the Flutter member client.
+// Preflight MUST allow it or the browser suppresses the authenticated GET.
+export const memberCorsRequestHeaders =
+  "authorization, apikey, content-type, cache-control, x-client-info";
