@@ -139,8 +139,10 @@ class _MemberV26AppState extends State<MemberV26App> {
               }
               await refresh();
             }catch(_){
-              if(ctx.mounted)setDialog(()=>error=
+              if(ctx.mounted) {
+                setDialog(()=>error=
                   'No fue posible completar la solicitud. Comprueba los datos.');
+              }
             }finally{
               if(ctx.mounted)setDialog(()=>submitting=false);
             }
