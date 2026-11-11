@@ -35,7 +35,7 @@ values (
 insert into public.member_media_v26 (user_id,object_key)
 values (
  '10000000-0000-4000-8000-000000000007',
- '10000000-0000-4000-8000-000000000007/photo-1.jpg');
+ '10000000-0000-4000-8000-000000000007/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.jpg');
 
 -- Foreign owner fields are rejected on INSERT, with user B as requester later.
 reset role;
