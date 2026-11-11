@@ -1,13 +1,12 @@
 // My Fitness Date V27: unprivileged, authenticated Edge API.
 // RLS is enforced by forwarding the end user's JWT to PostgREST.
 // There is deliberately no service-role key and no public media publishing.
+import { resolvePublishableKey, extractApiRoute } from "./config.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const keySet = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "{}";
-// SUPABASE_PUBLISHABLE_KEYS.default is the NAME of the secret environment
-// variable, NOT its key value. Resolve it before forwarding any user JWT.
-// See Supabase "Integrating With Supabase Auth" Edge Functions docs.
-const publishableEnvName = JSON.parse(keySet)["default"] as string | undefined;
-const publishable = publishableEnvName ? Deno.env.get(publishableEnvName) : undefined;
+const publishable = resolvePublishableKey(
+  Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
+  (name) => Deno.env.get(name),
+);
 const origin = "https://my-fitness-date.pages.dev";
 const cors = {
   "Access-Control-Allow-Origin": origin,
@@ -120,11 +119,8 @@ Deno.serve(async (req) => {
   const identity = await verify(token).catch(() => null);
   if (!identity) return error(401);
   const path = new URL(req.url).pathname;
-  // Routed paths may include /functions/v1/ before /member-api-v26/v1/.
-  // Choose the final version marker, never the proxy's version prefix.
-  const marker = path.lastIndexOf("/v1/");
-  if (marker < 0) return error(404);
-  const route = path.slice(marker);
+  const route = extractApiRoute(path);
+  if (!route) return error(404);
   try {
     if (route === "/v1/me/profile") {
       if (req.method === "GET") {
