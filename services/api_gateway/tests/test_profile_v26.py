@@ -139,3 +139,22 @@ def test_v26_rejects_anonymous_provider_even_with_token(monkeypatch):
     resp = client.get("/v1/me/profile",
                       headers={"Authorization": "Bearer test.token"})
     assert resp.status_code == 401
+
+
+def test_v26_pending_erasure_account_cannot_modify_profile(monkeypatch):
+    monkeypatch.setenv("MFD_APP_ENV", "prod")
+    monkeypatch.setenv("MFD_PROFILE_V26_ENABLED", "true")
+    monkeypatch.setenv("MFD_SUPABASE_URL", "https://mfdproduction.supabase.co")
+    monkeypatch.setenv("MFD_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_test")
+    async def provider(method, path, token, **kwargs):
+        if path.endswith("/auth/v1/user"):
+            return httpx.Response(200, json={"id": str(OWN),
+                "email_confirmed_at": "2026-11-10", "is_anonymous": False})
+        if path.endswith("/rpc/my_account_status"):
+            return httpx.Response(200, json={"pending": True})
+        raise AssertionError("No profile access after account deletion request")
+    monkeypatch.setattr(profile_v26, "_provider", provider)
+    response = client.get("/v1/me/profile",
+                          headers={"Authorization": "Bearer valid"})
+    assert response.status_code == 403
+    assert "gym" not in response.text.lower()
