@@ -11,8 +11,9 @@
 - Google Branding tenía vacías las URL Privacy Policy y Terms of Service.
 - Se redactaron documentos para revisión: docs/legal/PRIVACY_V26_DRAFT.md y TERMS_V26_DRAFT.md. **No son aún términos aprobados ni válidos para publicar.**
 - **Decisión legal confirmada por el propietario:** My Fitness Date operará a título personal mediante **persona física**, no sociedad constituida. Adaptados ambos borradores.
-- Por protección de la privacidad del titular, el **nombre legal y el domicilio no se han publicado en este repositorio**. Antes del aviso definitivo se debe verificar y autorizar nombre completo, domicilio válido para notificaciones y correo ARCO real.
-- Faltan nombre legal y domicilio autorizados, contacto ARCO, finalidades definitivas, retención, verificación de contratos/transferencias, procedimientos y revisión jurídica.
+- **Domicilio legal autorizado expresamente para aparecer en el Aviso de Privacidad:** incorporado al borrador del documento de privacidad en la rama V26. El repositorio es público, por lo que el texto del borrador también puede ser consultado allí.
+- El nombre legal completo y el correo ARCO **todavía requieren confirmación y autorización antes de publicarlos**; no inventar ni inferir datos.
+- Faltan nombre legal autorizado, contacto ARCO, finalidades definitivas, retención, verificación de contratos/transferencias, procedimientos y revisión jurídica.
 - La Ley Federal de Protección de Datos Personales en Posesión de los Particulares vigente, artículo 15, exige **identidad y domicilio del responsable**; el cambio a persona física no elimina ese requisito.
 - Publicar páginas estáticas HTML accesibles por robots y personas en /privacy/ y /terms/ de Cloudflare EN LA MISMA LIBERACIÓN V26. Añadir enlaces visibles desde la portada, verificar HTTP 200, contenido/versiones y que las URLs coincidan en Google Branding.
 - OAuth Google debe probarse con navegador real y callback/PKCE + sesión, logout y reentrada.
