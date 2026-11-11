@@ -4,7 +4,7 @@ import '../theme/fitness_date_theme.dart';
 import 'pace_calculator.dart';
 
 /// Marketing is public; member screens require verified authentication.
-/// No real OAuth/registration buttons are enabled until PROD is configured.
+/// Actions require configured production Auth and legal policy URLs.
 class PublicEntryShell extends StatefulWidget {
   const PublicEntryShell({super.key, this.onGoogle, this.onEmail,
     this.onEmailRegister, this.onEmailSignIn,
@@ -34,7 +34,10 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final canContinue=legalConfigured && acceptedLegal && adultDeclared;
+    // Existing members can sign in without re-declaring age or consent.
+    // Registration still requires legal acknowledgement and adult declaration.
+    final canRegister=legalConfigured && acceptedLegal && adultDeclared;
+    final canContinue=register ? canRegister : legalConfigured;
     final emailAction=register
         ? (widget.onEmailRegister ?? widget.onEmail)
         : (widget.onEmailSignIn ?? widget.onEmail);
@@ -108,7 +111,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           ]),
         ),
         const SizedBox(height:14),
-        Material(color:Colors.transparent,child:CheckboxListTile(
+        if(register) Material(color:Colors.transparent,child:CheckboxListTile(
           value:acceptedLegal,
           controlAffinity:ListTileControlAffinity.leading,
           contentPadding:EdgeInsets.zero,
@@ -117,7 +120,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           onChanged:legalConfigured
               ?(v)=>setState(()=>acceptedLegal=v??false):null,
         )),
-        Material(color:Colors.transparent,child:CheckboxListTile(
+        if(register) Material(color:Colors.transparent,child:CheckboxListTile(
           value:adultDeclared,
           controlAffinity:ListTileControlAffinity.leading,
           contentPadding:EdgeInsets.zero,
@@ -133,11 +136,10 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               ?()=>openPolicy(widget.privacyUrl):null,
             child:const Text('Privacidad')),
         ]),
-        if(!legalConfigured || widget.onGoogle==null ||
-            emailAction==null) ...[
+        if(!legalConfigured || (widget.onGoogle==null && emailAction==null)) ...[
           const SizedBox(height: 16),
-          const Text('Registro cerrado hasta configurar identidad de '
-            'producción y documentos legales aprobados.',
+          const Text('El acceso todavía no está configurado. '
+            'No compartas contraseñas por correo.',
             key: Key('signup-closed'),
             style: TextStyle(color: FitDateColors.muted, fontSize: 12)),
         ],
