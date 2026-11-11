@@ -10,7 +10,7 @@ Versión prevista: v26-terms-1. Fecha de redacción: 10 de noviembre de 2026.
 
 **Domicilio indicado por el responsable:** Matancillas 1641, Residencial El Refugio, C.P. 76146, Querétaro, Querétaro, México. Publicación del domicilio autorizada expresamente por el titular el 10 de noviembre de 2026. El procedimiento formal para notificaciones legales requiere validación jurídica.
 
-**Contacto de soporte y reclamaciones:** **[PENDIENTE: correo o canal de contacto operativo y autorizado]**.
+**Contacto de soporte, reclamaciones y privacidad (ARCO):** **witchet43@gmail.com** (designado por el titular para difusión pública el 10 de noviembre de 2026; pendiente verificación operativa).
 
 La edición final identificará claramente al titular antes de ofrecer registros o recabar consentimientos.
 
@@ -30,7 +30,7 @@ La persona mantiene los derechos que le correspondan sobre sus fotos y textos. P
 Las herramientas deportivas son informativas y no sustituyen asesoría médica ni garantizan resultados. Cada persona debe evaluar los riesgos físicos y de seguridad de sus actividades; los encuentros entre personas solo se podrán ofrecer con salvaguardas operativas.
 
 ## 7. Restricciones, eliminación y reclamaciones
-Se podrán restringir cuentas que incumplan reglas de seguridad según procedimientos documentados; el titular tendrá medios de reporte y, cuando aplique, revisión de restricciones. Las solicitudes de datos y eliminación se gestionarán conforme al aviso aprobado. **[PENDIENTE: procedimiento real de reclamación, apelación, conservación y eliminación].**
+Se podrán restringir cuentas que incumplan reglas de seguridad según procedimientos documentados; el titular tendrá medios de reporte y, cuando aplique, revisión de restricciones. Las solicitudes de datos y eliminación podrán remitirse a **witchet43@gmail.com** y se gestionarán conforme al Aviso de Privacidad definitivo y los procedimientos de verificación de identidad aplicables. **[PENDIENTE: procedimiento real de reclamación, apelación, conservación y eliminación].**
 
 ## 8. Pagos
 No hay pagos, suscripciones ni tarifas definidos en esta V26. No se generan cargos por autenticarse. Cualquier servicio de pago requerirá condiciones claras y consentimiento antes de cobrar.
@@ -39,4 +39,4 @@ No hay pagos, suscripciones ni tarifas definidos en esta V26. No se generan carg
 Los términos definitivos se prevé publicarlos en https://my-fitness-date.pages.dev/terms/ (ruta propuesta) con versión y fecha. Se observarán las leyes aplicables en México, sin excluir derechos irrenunciables de los usuarios.
 
 ---
-**No aprobar sin completar:** cotejo documental del nombre, correo o canal funcional de soporte/ARCO, procedimientos efectivos, derechos de autor, reclamaciones, seguridad de encuentros, política de privacidad y revisión jurídica. **Domicilio: autorizado e incorporado; falta publicación web.**
+**No aprobar sin completar:** cotejo documental del nombre, prueba de recepción y atención del correo de soporte/ARCO designado, procedimientos efectivos, derechos de autor, reclamaciones, seguridad de encuentros, política de privacidad y revisión jurídica. **Domicilio: autorizado e incorporado; falta publicación web.**
