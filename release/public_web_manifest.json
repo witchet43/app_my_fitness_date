@@ -1,31 +1,37 @@
 {
   "schema_version": 1,
-  "channel": "public_anonymous_web",
+  "channel": "member_profile_v27",
   "product": "my_fitness_date",
-  "module": "pace_calculator",
-  "requires_authentication": false,
+  "module": "secure_registration_profile_and_gated_fitdating",
+  "requires_authentication": true,
   "enabled_features": [
-    "anonymous_pace_calculator"
+    "anonymous_pace_calculator",
+    "email_registration",
+    "email_login",
+    "private_member_profile",
+    "private_training_places",
+    "fitdating_consent_and_eligibility"
   ],
   "disabled_features": [
-    "public_signup",
     "qa_login",
-    "community_profiles",
+    "public_media_upload",
     "community_posts",
-    "events",
-    "dating_discovery",
-    "gym_shield_settings"
+    "chat",
+    "unverified_dating_discovery",
+    "paid_memberships",
+    "google_oauth_unverified"
   ],
-  "network_backend_enabled": false,
+  "network_backend_enabled": true,
   "production_deploy_requires": [
     "flutter_analyze",
     "flutter_test",
-    "flutter_web_release",
     "cloudflare_pages_upload",
-    "http_commit_smoke"
+    "http_commit_smoke",
+    "edge_api_deployment",
+    "rls_verified"
   ],
-  "beta_and_real_user_gates": "release/readiness.json (all pending: not waived)",
+  "beta_and_real_user_gates": "release/readiness.json: comprehensive real-user beta pending (dating candidate discovery independently gated by verified age)",
   "brand": "Active Chemistry",
-  "design_revision": "v25",
+  "design_revision": "v27",
   "brand_tagline": "Encuentra tu ritmo. Conecta de verdad."
 }
