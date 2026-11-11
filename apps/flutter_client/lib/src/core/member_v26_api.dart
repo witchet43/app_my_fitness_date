@@ -103,6 +103,20 @@ class MemberV26Api {
         data: {'consent_kind': kind, 'document_version': version});
   }
 
+  Future<Map<String, dynamic>> datingStatus() async =>
+      _decode(await _request('GET', '/v1/dating/status'));
+
+  Future<void> acceptDating() async {
+    await _request('POST', '/v1/dating/consent',
+        data: {'opt_in': true});
+  }
+
+  Future<List<Map<String, dynamic>>> datingCandidates() async {
+    final response = _decode(await _request('GET', '/v1/dating/candidates'));
+    return (response['items'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+  }
+
   Future<List<Map<String, dynamic>>> loadPhotos() async {
     final body = _decode(await _request('GET', '/v1/me/photos'));
     return (body['photos'] as List<dynamic>? ?? [])
