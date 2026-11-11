@@ -94,16 +94,18 @@ steps:
         node -e '
           const wanted=process.env.MFD_COMMIT;
           if(!wanted||wanted.length!==40)process.exit(1);
+          // Cloudflare Pages BIC can reject default library User-Agent headers.
+          const smokeHeaders={"User-Agent":"MyFitnessDate-ReleaseSmoke/1.0 (+https://my-fitness-date.pages.dev/)","Cache-Control":"no-cache"};
           const run=async()=>{
             for(let i=0;i<7;i++){
               try {
-                const r=await fetch("https://my-fitness-date.pages.dev/mfd-release.json",{headers:{"Cache-Control":"no-cache"}});
+                const r=await fetch("https://my-fitness-date.pages.dev/mfd-release.json",{headers:smokeHeaders});
                 const d=await r.json();
                 if(r.ok&&d.commit===wanted&&d.channel==="public_anonymous_web"){
-                  const h=await fetch("https://my-fitness-date.pages.dev/");
+                  const h=await fetch("https://my-fitness-date.pages.dev/",{headers:smokeHeaders});
                   if(!h.ok||!(await h.text()).includes("flutter"))throw Error("HTML unavailable");
                   for(const slug of ["privacy","terms"]){
-                    const page=await fetch("https://my-fitness-date.pages.dev/"+slug+"/");
+                    const page=await fetch("https://my-fitness-date.pages.dev/"+slug+"/",{headers:smokeHeaders});
                     const html=await page.text();
                     if(!page.ok||!html.toLowerCase().includes("<!doctype html>")||!html.includes("witchet43@gmail.com"))throw Error("Legal route unavailable: "+slug);
                   }

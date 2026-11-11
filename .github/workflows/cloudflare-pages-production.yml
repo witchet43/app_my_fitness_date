@@ -112,16 +112,21 @@ jobs:
           import json,os,time,urllib.request
           sha=os.environ["MFD_SHA"]
           url="https://my-fitness-date.pages.dev/mfd-release.json"
+          # Cloudflare Pages Browser Integrity Check rejects Python urllib default User-Agent (HTTP 403/1010).
+          # Use an identified, descriptive CI client without reducing site protection.
+          def open_public(url):
+              request=urllib.request.Request(url,headers={"User-Agent":"MyFitnessDate-ReleaseSmoke/1.0 (+https://my-fitness-date.pages.dev/)"})
+              return urllib.request.urlopen(request,timeout=12)
           for attempt in range(7):
               try:
-                  with urllib.request.urlopen(url+"?v="+sha,timeout=12) as r:
+                  with open_public(url+"?v="+sha) as r:
                       release=json.load(r)
-                  with urllib.request.urlopen("https://my-fitness-date.pages.dev/",timeout=12) as r:
+                  with open_public("https://my-fitness-date.pages.dev/") as r:
                       index=r.read().decode("utf8")
                   assert release=={"commit":sha,"channel":"public_anonymous_web","version":"v25"}
                   assert "flutter" in index.lower()
                   for slug in ("privacy", "terms"):
-                      with urllib.request.urlopen("https://my-fitness-date.pages.dev/"+slug+"/?v="+sha,timeout=12) as r:
+                      with open_public("https://my-fitness-date.pages.dev/"+slug+"/?v="+sha) as r:
                           legal=r.read().decode("utf8")
                       assert "<!doctype html>" in legal.lower() and "witchet43@gmail.com" in legal
                   print("PUBLIC CLOUDFLARE RELEASE + LEGAL ROUTES VERIFIED:",sha)
