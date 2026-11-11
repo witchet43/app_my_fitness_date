@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/api_client.dart';
 import 'core/identity_session_manager.dart';
 import 'features/pace_calculator.dart';
+import 'features/public_entry_shell.dart';
 import 'qa_sign_in_dialog.dart';
 import 'theme/fitness_date_theme.dart';
 
@@ -13,10 +14,13 @@ class FitnessDateApp extends StatefulWidget {
     super.key,
     required this.api,
     this.qaLoginEnabled = const bool.fromEnvironment('MFD_QA_LOGIN_UI'),
+    this.requireMemberAuth = const bool.fromEnvironment('MFD_REQUIRE_MEMBER_AUTH', defaultValue: false),
   });
 
   final ApiClient api;
   final bool qaLoginEnabled;
+  /// Closed by default when enabled: only a future verified PROD auth session may unlock the app.
+  final bool requireMemberAuth;
 
   @override
   State<FitnessDateApp> createState() => _FitnessDateAppState();
@@ -120,7 +124,9 @@ class _FitnessDateAppState extends State<FitnessDateApp>
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _messageKey,
       theme: FitDateTheme.dark(),
-      home: LayoutBuilder(builder: (context, constraints) {
+      home: widget.requireMemberAuth
+          ? const PublicEntryShell()
+          : LayoutBuilder(builder: (context, constraints) {
         final width = constraints.maxWidth;
         final wide = width >= 720;
         return Scaffold(
