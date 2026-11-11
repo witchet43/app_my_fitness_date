@@ -1,21 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/fitness_date_theme.dart';
 
 /// Marketing is public; member screens require verified authentication.
 /// No real OAuth/registration buttons are enabled until PROD is configured.
 class PublicEntryShell extends StatefulWidget {
-  const PublicEntryShell({super.key, this.onGoogle, this.onEmail});
+  const PublicEntryShell({super.key, this.onGoogle, this.onEmail,
+    this.onEmailRegister, this.onEmailSignIn,
+    this.termsUrl = '', this.privacyUrl = ''});
   final VoidCallback? onGoogle;
   final VoidCallback? onEmail;
+  final VoidCallback? onEmailRegister;
+  final VoidCallback? onEmailSignIn;
+  final String termsUrl;
+  final String privacyUrl;
   @override
   State<PublicEntryShell> createState() => _PublicEntryShellState();
 }
 
 class _PublicEntryShellState extends State<PublicEntryShell> {
   bool register = true;
+  bool acceptedLegal = false;
+  bool adultDeclared = false;
+  bool get legalConfigured => widget.termsUrl.startsWith('https://') &&
+      widget.privacyUrl.startsWith('https://');
+  Future<void> openPolicy(String raw) async {
+    final url=Uri.tryParse(raw);
+    if(url!=null && url.scheme=='https') {
+      await launchUrl(url,mode:LaunchMode.externalApplication);
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    final canContinue=legalConfigured && acceptedLegal && adultDeclared;
+    final emailAction=register
+        ? (widget.onEmailRegister ?? widget.onEmail)
+        : (widget.onEmailSignIn ?? widget.onEmail);
     final story = Container(
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
@@ -63,7 +84,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         const SizedBox(height: 20),
         OutlinedButton(
           key: const Key('google-signin-entry'),
-          onPressed: widget.onGoogle,
+          onPressed:canContinue?widget.onGoogle:null,
           child: const Row(children: [
             Icon(Icons.account_circle_outlined, size: 20),
             SizedBox(width: 8),
@@ -74,7 +95,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         const SizedBox(height: 10),
         OutlinedButton(
           key: const Key('email-entry'),
-          onPressed: widget.onEmail,
+          onPressed:canContinue?emailAction:null,
           child: Row(children: [
             const Icon(Icons.mail_outline, size: 20),
             const SizedBox(width: 8),
@@ -85,10 +106,37 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             )),
           ]),
         ),
-        if (widget.onGoogle == null || widget.onEmail == null) ...[
+        const SizedBox(height:14),
+        CheckboxListTile(
+          value:acceptedLegal,
+          controlAffinity:ListTileControlAffinity.leading,
+          contentPadding:EdgeInsets.zero,
+          title:const Text('Acepto los términos y el aviso de privacidad',
+            style:TextStyle(fontSize:13)),
+          onChanged:legalConfigured
+              ?(v)=>setState(()=>acceptedLegal=v??false):null,
+        ),
+        CheckboxListTile(
+          value:adultDeclared,
+          controlAffinity:ListTileControlAffinity.leading,
+          contentPadding:EdgeInsets.zero,
+          title:const Text('Declaro ser mayor de 18 años',
+            style:TextStyle(fontSize:13)),
+          onChanged:(v)=>setState(()=>adultDeclared=v??false),
+        ),
+        Wrap(spacing:10,children:[
+          TextButton(onPressed:legalConfigured
+              ?()=>openPolicy(widget.termsUrl):null,
+            child:const Text('Términos')),
+          TextButton(onPressed:legalConfigured
+              ?()=>openPolicy(widget.privacyUrl):null,
+            child:const Text('Privacidad')),
+        ]),
+        if(!legalConfigured || widget.onGoogle==null ||
+            emailAction==null) ...[
           const SizedBox(height: 16),
-          const Text('Registro cerrado hasta configurar Google OAuth '
-            'y el entorno de identidad de producción.',
+          const Text('Registro cerrado hasta configurar identidad de '
+            'producción y documentos legales aprobados.',
             key: Key('signup-closed'),
             style: TextStyle(color: FitDateColors.muted, fontSize: 12)),
         ],
