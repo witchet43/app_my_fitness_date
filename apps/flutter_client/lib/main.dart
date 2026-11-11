@@ -34,7 +34,7 @@ Future<void> main() async {
   const providerVerified=bool.fromEnvironment(
       'MFD_GOOGLE_PROVIDER_VERIFIED',defaultValue:false);
 
-  final ready=providerVerified &&
+  final ready=
       supabaseUrl == 'https://jtrdvnwbxpfdnbzasvcj.supabase.co' &&
       publishableKey.startsWith('sb_publishable_') &&
       apiUrl.startsWith('https://') &&
@@ -68,5 +68,6 @@ Future<void> main() async {
     termsVersion:termsVersion,
     privacyVersion:privacyVersion,
     redirectUrl:redirectUrl,
+    googleEnabled:providerVerified,
   ));
 }
