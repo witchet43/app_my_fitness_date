@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -52,10 +51,10 @@ class _MemberV26AppState extends State<MemberV26App> {
     try{
       final session=widget.auth.auth.currentSession;
       if(session==null){
-        if(mounted)setState((){
+        if(mounted){setState((){
           verified=false; legalAccepted=false;
           profile=null;editing=false;loading=false;
-        });
+        });}
         return;
       }
       // Do not trust a locally stored session as identity until remote Auth
@@ -70,18 +69,18 @@ class _MemberV26AppState extends State<MemberV26App> {
       final privacy=records.any((r)=>r['consent_kind']=='privacy' &&
           r['document_version']==widget.privacyVersion);
       final own=terms && privacy ? await widget.api.loadProfile() : null;
-      if(mounted)setState((){
+      if(mounted){setState((){
         verified=true;legalAccepted=terms&&privacy;
         profile=own;
         loading=false;
-      });
+      });}
     }catch(_){
       // Fail closed; backend down or unverified means no member app.
-      if(mounted)setState((){
+      if(mounted){setState((){
         verified=false;legalAccepted=false;
         profile=null;loading=false;
         failure='No fue posible validar tu sesión de manera segura.';
-      });
+      });}
     }
   }
 
@@ -254,8 +253,9 @@ class _LegalGateState extends State<_LegalGate> {
   bool adult=false;
   Future<void> open(String url) async {
     final uri=Uri.tryParse(url);
-    if(uri!=null && uri.scheme=='https') await launchUrl(uri,
-      mode:LaunchMode.externalApplication);
+    if(uri!=null && uri.scheme=='https') {
+      await launchUrl(uri,mode:LaunchMode.externalApplication);
+    }
   }
   @override
   Widget build(BuildContext context)=>Scaffold(

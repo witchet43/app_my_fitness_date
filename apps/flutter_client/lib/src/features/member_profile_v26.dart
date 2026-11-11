@@ -44,9 +44,9 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
     for (var i=0;i<3;i++) {
       final prompt = i<prompts.length && prompts[i] is Map
         ? prompts[i] as Map : <String,dynamic>{};
-      fields['q'+i.toString()] = TextEditingController(
+      fields['q$i'] = TextEditingController(
           text:(prompt['question'] ?? '').toString());
-      fields['a'+i.toString()] = TextEditingController(
+      fields['a$i'] = TextEditingController(
           text:(prompt['answer'] ?? '').toString());
     }
     frequency = (data['training_frequency'] ?? 'flexible').toString();
@@ -64,7 +64,7 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
      int? maxLength,String? hint}) => Padding(
     padding:const EdgeInsets.only(bottom:12),
     child:TextFormField(
-      key:Key('profile-'+field),controller:fields[field],
+      key:Key('profile-$field'),controller:fields[field],
       maxLines:lines,maxLength:maxLength,
       decoration:InputDecoration(labelText:label,hintText:hint,
         alignLabelWithHint:lines>1),
@@ -89,8 +89,8 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
     }
     final prompts=<Map<String,String>>[];
     for(var i=0;i<3;i++){
-      final q=fields['q'+i.toString()]!.text.trim();
-      final a=fields['a'+i.toString()]!.text.trim();
+      final q=fields['q$i']!.text.trim();
+      final a=fields['a$i']!.text.trim();
       if(q.isNotEmpty&&a.isNotEmpty)prompts.add({'question':q,'answer':a});
     }
     const scalar=['display_name','date_of_birth','city','headline',
@@ -144,7 +144,7 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
       heading('Mi mundo fitness',Icons.directions_run,FitDateColors.lime),
       input('sports','Mis disciplinas',hint:'Running, fuerza, yoga, ciclismo'),
       DropdownButtonFormField<String>(
-        value:frequency,decoration:const InputDecoration(
+        initialValue:frequency,decoration:const InputDecoration(
           labelText:'Frecuencia de entrenamiento'),
         items:const [
           DropdownMenuItem(value:'starting',child:Text('Estoy empezando')),
@@ -161,12 +161,12 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
         hint:'Terminé mi primer 21K, carrera de montaña'),
       heading('Conversación y afinidad',Icons.auto_awesome,FitDateColors.lilac),
       for(var i=0;i<3;i++)...[
-        input('q'+i.toString(),'Pregunta '+(i+1).toString(),maxLength:110,
+        input('q$i','Pregunta ${i + 1}',maxLength:110,
           hint:'Mi plan favorito de fin de semana es...'),
-        input('a'+i.toString(),'Mi respuesta',lines:2,maxLength:280),
+        input('a$i','Mi respuesta',lines:2,maxLength:280),
       ],
       DropdownButtonFormField<String>(
-        value:intent,decoration:const InputDecoration(
+        initialValue:intent,decoration:const InputDecoration(
           labelText:'Tipo de conexión (privado)'),
         items:const [
           DropdownMenuItem(value:'unknown',child:Text('Prefiero decidir después')),
@@ -177,7 +177,7 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
         onChanged:(v)=>setState(()=>intent=v??'unknown')),
       heading('Privacidad',Icons.shield_outlined,FitDateColors.lime),
       DropdownButtonFormField<String>(
-        value:visibility,decoration:const InputDecoration(
+        initialValue:visibility,decoration:const InputDecoration(
           labelText:'Preferencia social futura'),
         items:const [
           DropdownMenuItem(value:'private',child:Text('Solo yo')),
@@ -241,7 +241,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
         AlertDialog(title:const Text('Mi lugar de entrenamiento'),
           content:SingleChildScrollView(child:Column(
             mainAxisSize:MainAxisSize.min,children:[
-              DropdownButtonFormField<String>(value:kind,
+              DropdownButtonFormField<String>(initialValue:kind,
                 decoration:const InputDecoration(labelText:'Tipo'),
                 items:const [
                   DropdownMenuItem(value:'gym',child:Text('Gimnasio')),
@@ -371,7 +371,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               Text((p['about_me']??'').toString()),
               const SizedBox(height:12),tags(p['hobbies']),
               const SizedBox(height:12),
-              Text('Valores: '+_list(p['life_values'])),
+              Text('Valores: ${_list(p['life_values'])}'),
               for(final answer in (p['prompts'] is List?p['prompts'] as List:[]))
                 if(answer is Map)
                   ListTile(title:Text((answer['question']??'').toString()),
