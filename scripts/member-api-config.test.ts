@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolvePublishableKey, extractApiRoute } from '../supabase/functions/member-api-v26/config';
+import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from '../supabase/functions/member-api-v26/config';
 
 test('modern Supabase keyset contains the publishable key directly', () => {
   const publicKey = 'sb_publishable_a_public_test_key';
@@ -41,3 +41,10 @@ test('resolve final business API version marker when proxy has its own version',
   assert.equal(extractApiRoute('/functions/v1/member-api-v26/v1/dating/status'), '/v1/dating/status');
   assert.equal(extractApiRoute('/healthz'), null);
 });
+test('browser preflight permits the exact headers Flutter sends', () => {
+  const allowed = memberCorsRequestHeaders.split(',').map(item => item.trim());
+  for (const required of ['authorization','content-type','cache-control']) {
+    assert.ok(allowed.includes(required), required);
+  }
+});
+
