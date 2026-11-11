@@ -52,10 +52,13 @@ async def _provider(method: str, path: str, token: str, *,
                     params: dict[str, str] | None = None,
                     data: dict | None = None,
                     binary: bytes | None = None,
-                    content_type: str = "application/json") -> httpx.Response:
+                    content_type: str = "application/json",
+                    upsert: bool = False) -> httpx.Response:
     url, key = _provider_config()
     headers = {"apikey": key, "Authorization": "Bearer " + token,
-               "Content-Type": content_type, "Prefer": "return=representation"}
+               "Content-Type": content_type,
+               "Prefer": ("resolution=merge-duplicates,return=representation"
+                          if upsert else "return=representation")}
     try:
         async with httpx.AsyncClient(timeout=9, follow_redirects=False) as client:
             return await client.request(
@@ -68,6 +71,8 @@ async def _provider(method: str, path: str, token: str, *,
 def _provider_response(response: httpx.Response, *, creation: bool = False) -> list[dict]:
     if response.status_code in (401, 403):
         raise HTTPException(403, "Profile access denied")
+    if response.status_code == 409:
+        raise HTTPException(409, "Conflicting profile update")
     if response.status_code == 429:
         raise HTTPException(429, "Too many requests")
     if response.status_code not in (200, 201, 204):
@@ -206,7 +211,7 @@ async def save_profile(profile: MemberProfile,
     record["user_id"] = str(user_id)
     data = _provider_response(await _provider(
         "POST", "/rest/v1/member_profiles_v26", token,
-        params={"on_conflict": "user_id"}, data=record))
+        params={"on_conflict": "user_id"}, data=record, upsert=True))
     return {"profile": data[0] if data else record}
 
 
