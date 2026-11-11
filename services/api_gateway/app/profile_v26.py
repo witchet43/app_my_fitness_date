@@ -338,6 +338,29 @@ async def upload_photo(request: Request,
     return {"photo": {"id": metadata[0]["id"], "moderation_state": "pending"}}
 
 
+@router.get("/photos/{photo_id}/content")
+async def read_photo_content(photo_id: UUID,
+                             authorization: str | None = Header(default=None)):
+    """Authenticated owner can preview their own (even pending) photo.
+    No external member can fetch pending or approved media by guessing IDs.
+    """
+    token = _bearer(authorization)
+    user_id = await _member(token)
+    rows = _provider_response(await _provider(
+        "GET", "/rest/v1/member_media_v26", token,
+        params={"id": "eq." + str(photo_id), **_profile_query(user_id),
+                "select": "object_key"}))
+    if not rows:
+        raise HTTPException(404, "Photo not found")
+    response = await _provider(
+        "GET", "/storage/v1/object/mfd-profile-private/" + rows[0]["object_key"],
+        token)
+    if response.status_code != 200 or len(response.content) > 5 * 1024 * 1024:
+        raise HTTPException(503, "Photo unavailable")
+    return Response(response.content, media_type="image/jpeg",
+                    headers={"Cache-Control": "private, no-store"})
+
+
 @router.delete("/photos/{photo_id}", status_code=204)
 async def delete_photo(photo_id: UUID,
                        authorization: str | None = Header(default=None)):
