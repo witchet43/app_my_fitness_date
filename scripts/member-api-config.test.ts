@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolvePublishableKey, extractApiRoute } from '../supabase/functions/member-api-v26/config.ts';
+import { resolvePublishableKey, extractApiRoute } from '../supabase/functions/member-api-v26/config';
 
 test('Supabase default is an env name; resolves actual publishable key', () => {
   const lookup = (name: string) =>
