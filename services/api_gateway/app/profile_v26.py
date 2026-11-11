@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 from io import BytesIO
+import re
 import os
 from typing import Literal
 from urllib.parse import urlparse
@@ -308,7 +309,7 @@ async def upload_photo(request: Request,
     user_id = await _member(token)
     existing = _provider_response(await _provider(
         "GET", "/rest/v1/member_media_v26", token,
-        params={**_profile_query(user_id), "select": "id"}))
+        params={**_profile_query(user_id), "select": "id,position"}))
     if len(existing) >= 8:
         raise HTTPException(409, "Maximum eight photos")
     content_type = request.headers.get("content-type", "").split(";")[0].lower()
@@ -331,11 +332,27 @@ async def upload_photo(request: Request,
         binary=clean, content_type="image/jpeg")
     if result.status_code not in (200, 201):
         raise HTTPException(503, "Photo upload unavailable")
+    used = {row["position"] for row in existing}
+    position = next((i for i in range(8) if i not in used), None)
+    if position is None:
+        raise HTTPException(409, "Maximum eight photos")
     record = {"user_id": str(user_id), "object_key": key,
-              "alt_text": "", "position": len(existing)}
+              "alt_text": "", "position": position}
     metadata = _provider_response(await _provider(
         "POST", "/rest/v1/member_media_v26", token, data=record))
     return {"photo": {"id": metadata[0]["id"], "moderation_state": "pending"}}
+
+
+def _checked_photo_key(raw: object, user_id: UUID) -> str:
+    """Prevent forged storage metadata from escaping own image namespace."""
+    key = str(raw)
+    if not key.startswith(str(user_id) + "/") or not re.fullmatch(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/"
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg",
+        key,
+    ):
+        raise HTTPException(503, "Photo unavailable")
+    return key
 
 
 @router.get("/photos/{photo_id}/content")
@@ -353,7 +370,7 @@ async def read_photo_content(photo_id: UUID,
     if not rows:
         raise HTTPException(404, "Photo not found")
     response = await _provider(
-        "GET", "/storage/v1/object/mfd-profile-private/" + rows[0]["object_key"],
+        "GET", "/storage/v1/object/mfd-profile-private/" + _checked_photo_key(rows[0]["object_key"], user_id),
         token)
     if response.status_code != 200 or len(response.content) > 5 * 1024 * 1024:
         raise HTTPException(503, "Photo unavailable")
