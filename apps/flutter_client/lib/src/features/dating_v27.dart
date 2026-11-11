@@ -32,10 +32,12 @@ class _DatingV27State extends State<DatingV27> {
       if (result['enabled'] == true) {
         matches = await widget.api.datingCandidates();
       }
-      if (mounted) setState(() {
-        status = result;
-        people = matches;
-      });
+      if (mounted) {
+        setState(() {
+          status = result;
+          people = matches;
+        });
+      }
     } catch (_) {
       if (mounted) {
         setState(() => error = 'FitDating no está disponible. Comprueba tu conexión.');
