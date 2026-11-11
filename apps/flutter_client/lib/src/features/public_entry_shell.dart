@@ -61,18 +61,29 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         const Text('Tu perfil comienza privado y tú decides qué compartir.',
           style: TextStyle(color: FitDateColors.muted)),
         const SizedBox(height: 20),
-        OutlinedButton.icon(
+        OutlinedButton(
           key: const Key('google-signin-entry'),
           onPressed: widget.onGoogle,
-          icon: const Icon(Icons.account_circle_outlined),
-          label: const Text('Continuar con Google'),
+          child: const Row(children: [
+            Icon(Icons.account_circle_outlined, size: 20),
+            SizedBox(width: 8),
+            Expanded(child: Text('Continuar con Google',
+              textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
+          ]),
         ),
         const SizedBox(height: 10),
-        OutlinedButton.icon(
+        OutlinedButton(
           key: const Key('email-entry'),
           onPressed: widget.onEmail,
-          icon: const Icon(Icons.mail_outline),
-          label: Text(register ? 'Registro con correo' : 'Acceso con correo'),
+          child: Row(children: [
+            const Icon(Icons.mail_outline, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(
+              register ? 'Registro con correo' : 'Acceso con correo',
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            )),
+          ]),
         ),
         if (widget.onGoogle == null || widget.onEmail == null) ...[
           const SizedBox(height: 16),
