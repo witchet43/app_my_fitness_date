@@ -96,7 +96,19 @@ async def _member(token: str) -> UUID:
         user = response.json()
         if user.get("is_anonymous") or not user.get("email_confirmed_at"):
             raise HTTPException(401, "Verified account required")
-        return UUID(str(user["id"]))
+        member_id = UUID(str(user["id"]))
+        # Existing account-erasure policy: a pending/deactivated member must
+        # not continue to write profile, photos, places or consent records.
+        state = await _provider("POST", "/rest/v1/rpc/my_account_status", token,
+                                data={})
+        if state.status_code != 200:
+            raise HTTPException(503, "Service unavailable")
+        account = state.json()
+        if not isinstance(account, dict) or not isinstance(account.get("pending"), bool):
+            raise HTTPException(503, "Service unavailable")
+        if account["pending"]:
+            raise HTTPException(403, "Account unavailable")
+        return member_id
     except (ValueError, KeyError, TypeError, AttributeError):
         raise HTTPException(401, "Authentication required") from None
 
