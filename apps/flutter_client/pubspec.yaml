@@ -21,3 +21,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/branding/mfd_icon.webp
+    - assets/branding/mfd_logo_full.webp
