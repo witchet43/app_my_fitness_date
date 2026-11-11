@@ -32,6 +32,7 @@ void main() {
       qaLoginEnabled: false,
     ));
     expect(find.byKey(const Key('landing-headline')), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    // Allow the framework to report a full layout exception if one occurs.
+    await tester.pump();
   });
 }
