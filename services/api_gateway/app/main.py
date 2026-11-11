@@ -16,6 +16,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.responses import JSONResponse
 from .identity import router as identity_router
+from .profile_v26 import router as profile_router
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
 from pydantic import BaseModel, ConfigDict
@@ -29,11 +30,12 @@ allowed_origins = [origin.strip() for origin in
                    os.getenv("MFD_WEB_ALLOWED_ORIGINS", "").split(",")
                    if origin.strip() and origin.strip() != "*"]
 app.add_middleware(CORSMiddleware, allow_origins=allowed_origins,
-                   allow_methods=["GET", "POST", "DELETE"],
+                   allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
                    allow_headers=["Authorization", "Content-Type"],
                    allow_credentials=False, expose_headers=["X-Request-ID"])
 
 app.include_router(identity_router)
+app.include_router(profile_router)
 
 
 @app.exception_handler(RequestValidationError)

@@ -313,10 +313,18 @@ async def upload_photo(request: Request,
         raise HTTPException(409, "Maximum eight photos")
     content_type = request.headers.get("content-type", "").split(";")[0].lower()
     # Stream a strict size cap before reading the whole body.
-    if int(request.headers.get("content-length", "0") or "0") > 5 * 1024 * 1024:
+    try:
+        declared = int(request.headers.get("content-length", "0") or "0")
+    except ValueError:
+        raise HTTPException(400, "Invalid content length") from None
+    if declared > 5 * 1024 * 1024:
         raise HTTPException(413, "Image is too large")
-    binary = await request.body()
-    clean = _safe_photo(binary, content_type)
+    buffer = bytearray()
+    async for chunk in request.stream():
+        buffer.extend(chunk)
+        if len(buffer) > 5 * 1024 * 1024:
+            raise HTTPException(413, "Image is too large")
+    clean = _safe_photo(bytes(buffer), content_type)
     key = f"{user_id}/{uuid4()}.jpg"
     result = await _provider(
         "POST", "/storage/v1/object/mfd-profile-private/" + key, token,
