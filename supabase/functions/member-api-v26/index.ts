@@ -3,7 +3,11 @@
 // There is deliberately no service-role key and no public media publishing.
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const keySet = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "{}";
-const publishable = JSON.parse(keySet)["default"] as string | undefined;
+// SUPABASE_PUBLISHABLE_KEYS.default is the NAME of the secret environment
+// variable, NOT its key value. Resolve it before forwarding any user JWT.
+// See Supabase "Integrating With Supabase Auth" Edge Functions docs.
+const publishableEnvName = JSON.parse(keySet)["default"] as string | undefined;
+const publishable = publishableEnvName ? Deno.env.get(publishableEnvName) : undefined;
 const origin = "https://my-fitness-date.pages.dev";
 const cors = {
   "Access-Control-Allow-Origin": origin,
@@ -93,8 +97,20 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   const requestedOrigin = req.headers.get("origin");
   if (requestedOrigin && requestedOrigin !== origin) return error(403);
-  if (!publishable || !SUPABASE_URL.startsWith("https://")) return error(503);
+  if (!publishable?.startsWith("sb_publishable_") || !SUPABASE_URL.startsWith("https://")) {
+    return error(503);
+  }
   if (req.method === "GET" && new URL(req.url).pathname.endsWith("/healthz")) {
+    // Verify the actual backend connection and public API key before claiming
+    // health; the old health check passed even when every login failed.
+    try {
+      const response = await fetch(new URL("/auth/v1/settings", SUPABASE_URL), {
+        headers: { "apikey": publishable, "Accept": "application/json" },
+      });
+      if (!response.ok) return error(503);
+    } catch {
+      return error(503);
+    }
     return json({ status: "ok", service: "member-api-v26", dating: "age-verified-only" });
   }
   const authorization = req.headers.get("authorization") ?? "";
@@ -104,7 +120,9 @@ Deno.serve(async (req) => {
   const identity = await verify(token).catch(() => null);
   if (!identity) return error(401);
   const path = new URL(req.url).pathname;
-  const marker = path.indexOf("/v1/");
+  // Routed paths may include /functions/v1/ before /member-api-v26/v1/.
+  // Choose the final version marker, never the proxy's version prefix.
+  const marker = path.lastIndexOf("/v1/");
   if (marker < 0) return error(404);
   const route = path.slice(marker);
   try {
