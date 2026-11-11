@@ -37,10 +37,13 @@ class _DatingV27State extends State<DatingV27> {
         people = matches;
       });
     } catch (_) {
-      if (mounted) setState(() =>
-        error = 'FitDating no está disponible. Comprueba tu conexión.');
+      if (mounted) {
+        setState(() => error = 'FitDating no está disponible. Comprueba tu conexión.');
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
@@ -51,10 +54,13 @@ class _DatingV27State extends State<DatingV27> {
       await widget.api.acceptDating();
       await refresh();
     } catch (_) {
-      if (mounted) setState(() =>
-        error = 'No pudimos guardar tu consentimiento. No se activaron citas.');
+      if (mounted) {
+        setState(() => error = 'No pudimos guardar tu consentimiento. No se activaron citas.');
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
