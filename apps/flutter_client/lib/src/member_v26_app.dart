@@ -15,12 +15,13 @@ class MemberV26App extends StatefulWidget {
   const MemberV26App({super.key,required this.auth,required this.api,
     required this.termsUrl,required this.privacyUrl,
     required this.redirectUrl,required this.termsVersion,
-    required this.privacyVersion});
+    required this.privacyVersion,this.googleEnabled=false});
   final SupabaseClient auth;
   final MemberV26Api api;
   final String termsUrl;
   final String privacyUrl;
   final String redirectUrl;
+  final bool googleEnabled;
   final String termsVersion;
   final String privacyVersion;
   @override
@@ -190,7 +191,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       body=const Scaffold(body:Center(child:CircularProgressIndicator()));
     }else if(widget.auth.auth.currentSession==null){
       body=PublicEntryShell(
-        onGoogle:google,
+        onGoogle:widget.googleEnabled?google:null,
         onEmailRegister:()=>email(register:true),
         onEmailSignIn:()=>email(register:false),
         termsUrl:widget.termsUrl,
