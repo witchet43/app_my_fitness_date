@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/fitness_date_theme.dart';
+import 'pace_calculator.dart';
 
 /// Marketing is public; member screens require verified authentication.
 /// No real OAuth/registration buttons are enabled until PROD is configured.
@@ -172,6 +173,15 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               Expanded(flex: 4, child: access),
             ])
           else ...[story, const SizedBox(height: 18), access],
+          const SizedBox(height: 25),
+          const Card(child: ExpansionTile(
+            key: Key('anonymous-pace-tool'),
+            title: Text('Calculadora de ritmo · sin registro'),
+            subtitle: Text('Tu herramienta deportiva gratuita sigue disponible'),
+            leading: Icon(Icons.directions_run_outlined),
+            children: [Padding(padding: EdgeInsets.all(12),
+              child: PaceCalculator())],
+          )),
           const SizedBox(height: 25),
           const Text('Perfiles y actividades de otras personas '
             'solo después de iniciar sesión.',
