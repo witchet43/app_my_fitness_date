@@ -107,7 +107,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           ]),
         ),
         const SizedBox(height:14),
-        CheckboxListTile(
+        Material(color:Colors.transparent,child:CheckboxListTile(
           value:acceptedLegal,
           controlAffinity:ListTileControlAffinity.leading,
           contentPadding:EdgeInsets.zero,
@@ -115,15 +115,15 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             style:TextStyle(fontSize:13)),
           onChanged:legalConfigured
               ?(v)=>setState(()=>acceptedLegal=v??false):null,
-        ),
-        CheckboxListTile(
+        )),
+        Material(color:Colors.transparent,child:CheckboxListTile(
           value:adultDeclared,
           controlAffinity:ListTileControlAffinity.leading,
           contentPadding:EdgeInsets.zero,
           title:const Text('Declaro ser mayor de 18 años',
             style:TextStyle(fontSize:13)),
           onChanged:(v)=>setState(()=>adultDeclared=v??false),
-        ),
+        )),
         Wrap(spacing:10,children:[
           TextButton(onPressed:legalConfigured
               ?()=>openPolicy(widget.termsUrl):null,

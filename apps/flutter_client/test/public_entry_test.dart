@@ -18,6 +18,8 @@ void main() {
     final google = tester.widget<OutlinedButton>(
       find.byKey(const Key('google-signin-entry')));
     expect(google.onPressed, isNull);
+    await tester.ensureVisible(find.byKey(const Key('switch-entry-mode')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('switch-entry-mode')));
     await tester.pump();
     expect(find.text('Bienvenido de nuevo'), findsOneWidget);
