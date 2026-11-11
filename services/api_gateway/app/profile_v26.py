@@ -34,7 +34,9 @@ def _provider_config() -> tuple[str, str]:
             or parsed.fragment or parsed.path not in ("", "/")
             or not key.startswith("sb_publishable_")):
         raise HTTPException(503, "Service unavailable")
-    if "jtrdvnwbxpfdnbzasvcj" in url or "mmainsfubddfojkbwjoq" in url:
+    # Promote the EXISTING MFD project, never MUV or a newly created project.
+    # This exact ref is permitted only after the independent prod enable flag.
+    if url != "https://jtrdvnwbxpfdnbzasvcj.supabase.co":
         raise HTTPException(503, "Production identity unavailable")
     return url, key
 

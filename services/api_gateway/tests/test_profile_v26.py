@@ -23,16 +23,24 @@ def test_v26_requires_bearer_and_is_disabled_in_prod_without_flag(monkeypatch):
                       headers={"Authorization": "Bearer fake"}).status_code == 404
 
 
-def test_v26_rejects_dev_and_muv_prod_backend(monkeypatch):
+def test_v26_designates_existing_mfd_ref_for_production_only_after_opt_in(monkeypatch):
     monkeypatch.setenv("MFD_APP_ENV", "prod")
     monkeypatch.setenv("MFD_PROFILE_V26_ENABLED", "true")
     monkeypatch.setenv("MFD_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_test")
-    for url in ("https://jtrdvnwbxpfdnbzasvcj.supabase.co",
-                "https://mmainsfubddfojkbwjoq.supabase.co"):
-        monkeypatch.setenv("MFD_SUPABASE_URL", url)
-        response = client.get("/v1/me/profile",
-                              headers={"Authorization": "Bearer qa.fake"})
-        assert response.status_code == 503
+    existing = "https://jtrdvnwbxpfdnbzasvcj.supabase.co"
+    monkeypatch.setenv("MFD_SUPABASE_URL", existing)
+    assert profile_v26._provider_config() == (existing, "sb_publishable_test")
+    # MUV production is completely isolated from My Fitness Date.
+    monkeypatch.setenv("MFD_SUPABASE_URL",
+                       "https://mmainsfubddfojkbwjoq.supabase.co")
+    response = client.get("/v1/me/profile",
+                          headers={"Authorization": "Bearer qa.fake"})
+    assert response.status_code == 503
+    # Deactivating the V26 backend makes all profile routes unavailable.
+    monkeypatch.setenv("MFD_SUPABASE_URL", existing)
+    monkeypatch.setenv("MFD_PROFILE_V26_ENABLED", "false")
+    assert client.get("/v1/me/profile",
+                      headers={"Authorization": "Bearer qa.fake"}).status_code == 404
 
 
 def test_v26_body_cannot_set_foreign_user_id():

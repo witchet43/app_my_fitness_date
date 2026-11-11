@@ -20,6 +20,8 @@ Future<void> main() async {
     return;
   }
 
+  // Existing Supabase project (formerly labeled DEV) is the intended PROD.
+  // Its project ref is immutable; activation still needs OAuth, legal and API gates.
   const supabaseUrl=String.fromEnvironment('MFD_PROD_SUPABASE_URL');
   const publishableKey=String.fromEnvironment(
       'MFD_PROD_SUPABASE_PUBLISHABLE_KEY');
@@ -33,10 +35,7 @@ Future<void> main() async {
       'MFD_GOOGLE_PROVIDER_VERIFIED',defaultValue:false);
 
   final ready=providerVerified &&
-      supabaseUrl.startsWith('https://') &&
-      supabaseUrl.endsWith('.supabase.co') &&
-      !supabaseUrl.contains('jtrdvnwbxpfdnbzasvcj') &&
-      !supabaseUrl.contains('mmainsfubddfojkbwjoq') &&
+      supabaseUrl == 'https://jtrdvnwbxpfdnbzasvcj.supabase.co' &&
       publishableKey.startsWith('sb_publishable_') &&
       apiUrl.startsWith('https://') &&
       termsUrl.startsWith('https://') &&
