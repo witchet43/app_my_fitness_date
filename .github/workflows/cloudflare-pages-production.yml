@@ -43,6 +43,7 @@ jobs:
       - name: Validate anonymous public release manifest
         run: |
           python3 scripts/check_saas_factory.py
+          python3 scripts/check_public_legal.py
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -70,6 +71,9 @@ jobs:
           test -s build/web/index.html
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
+          cp -R cloudflare/privacy cloudflare/terms build/web/
+          test -s build/web/privacy/index.html
+          test -s build/web/terms/index.html
           python3 - <<'PY'
           import json,os
           from pathlib import Path
@@ -116,7 +120,11 @@ jobs:
                       index=r.read().decode("utf8")
                   assert release=={"commit":sha,"channel":"public_anonymous_web","version":"v25"}
                   assert "flutter" in index.lower()
-                  print("PUBLIC CLOUDFLARE RELEASE VERIFIED:",sha)
+                  for slug in ("privacy", "terms"):
+                      with urllib.request.urlopen("https://my-fitness-date.pages.dev/"+slug+"/?v="+sha,timeout=12) as r:
+                          legal=r.read().decode("utf8")
+                      assert "<!doctype html>" in legal.lower() and "witchet43@gmail.com" in legal
+                  print("PUBLIC CLOUDFLARE RELEASE + LEGAL ROUTES VERIFIED:",sha)
                   break
               except Exception as error:
                   if attempt==6:
