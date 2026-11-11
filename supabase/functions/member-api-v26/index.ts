@@ -94,6 +94,9 @@ Deno.serve(async (req) => {
   const requestedOrigin = req.headers.get("origin");
   if (requestedOrigin && requestedOrigin !== origin) return error(403);
   if (!publishable || !SUPABASE_URL.startsWith("https://")) return error(503);
+  if (req.method === "GET" && new URL(req.url).pathname.endsWith("/healthz")) {
+    return json({ status: "ok", service: "member-api-v26", dating: "age-verified-only" });
+  }
   const authorization = req.headers.get("authorization") ?? "";
   if (!authorization.startsWith("Bearer ") || authorization.length > 8300) return error(401);
   const token = authorization.slice(7).trim();
