@@ -36,8 +36,9 @@ class MemberV26Api {
     } else if (data != null) {
       request.body = jsonEncode(data);
     }
+    final client = http.Client();
     try {
-      final result = await http.Client().send(request)
+      final result = await client.send(request)
           .timeout(const Duration(seconds: 20));
       final response = await http.Response.fromStream(result);
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -54,6 +55,8 @@ class MemberV26Api {
       rethrow;
     } catch (_) {
       throw const MemberApiException('No se pudo establecer una conexión segura.');
+    } finally {
+      client.close();
     }
   }
 
