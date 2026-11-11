@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
+import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
 
 List<String> _tokens(String text) => text.split(',')
@@ -337,6 +338,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               gradient:const LinearGradient(colors:[
                 Color(0xFF38233D),Color(0xFF1B3029)])),
             child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              const MfdBranding(full:false,width:80),
+              const SizedBox(height:12),
               const Text('MI PERFIL · PRIVADO',style:TextStyle(
                 color:FitDateColors.lime,letterSpacing:2,fontSize:11)),
               const SizedBox(height:10),

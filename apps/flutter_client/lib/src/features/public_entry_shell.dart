@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/fitness_date_theme.dart';
 import 'pace_calculator.dart';
+import '../widgets/mfd_branding.dart';
 
 /// Marketing is public; member screens require verified authentication.
 /// Actions require configured production Auth and legal policy URLs.
@@ -50,6 +51,8 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         ]),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const MfdBranding(full: true, width: 275),
+        const SizedBox(height: 18),
         const Text('ACTIVE CHEMISTRY',
           style: TextStyle(color: FitDateColors.lime,
             letterSpacing: 2, fontWeight: FontWeight.w800)),
@@ -158,7 +161,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     return Scaffold(
       appBar: AppBar(
         title: const Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.favorite, color: FitDateColors.coral),
+          MfdBranding(full: false, width: 52),
           SizedBox(width: 8),
           Flexible(child: Text('My Fitness Date',
             maxLines: 1, overflow: TextOverflow.ellipsis,

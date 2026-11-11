@@ -7,6 +7,7 @@ import 'core/member_v26_api.dart';
 import 'features/member_profile_v26.dart';
 import 'features/public_entry_shell.dart';
 import 'theme/fitness_date_theme.dart';
+import 'widgets/mfd_branding.dart';
 
 /// V26 sign-in gate: no member screen is reachable without remote validation
 /// of the Supabase Auth session plus accepted legal terms and an owner profile.
@@ -266,8 +267,7 @@ class _LegalGateState extends State<_LegalGate> {
     body:Center(child:ConstrainedBox(
       constraints:const BoxConstraints(maxWidth:520),
       child:ListView(padding:const EdgeInsets.all(22),children:[
-        const Icon(Icons.verified_user_outlined,
-          size:55,color:FitDateColors.lime),
+        const MfdBranding(full:true,width:220),
         const SizedBox(height:16),
         const Text('Antes de crear tu perfil',
           style:TextStyle(fontSize:25,fontWeight:FontWeight.w900)),
