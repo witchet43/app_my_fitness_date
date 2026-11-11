@@ -56,6 +56,8 @@ jobs:
           assert "unverified_dating_discovery" in m["disabled_features"]
           assert "public_media_upload" in m["disabled_features"]
           PY
+      - name: Verify hosted Google and email authentication
+        run: python3 scripts/verify_hosted_auth.py
       - name: Verify hosted member API before exposing registration
         run: |
           python3 - <<'PY'
@@ -91,7 +93,7 @@ jobs:
             --dart-define=MFD_PUBLIC_PRODUCTION=true \
             --dart-define=MFD_QA_LOGIN_UI=false \
             --dart-define=MFD_V26_ENABLED=true \
-            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=false \
+            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=true \
             --dart-define=MFD_PROD_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co \
             --dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk \
             --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
