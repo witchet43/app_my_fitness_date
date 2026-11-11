@@ -13,11 +13,14 @@ export function resolvePublishableKey(
     return undefined;
   }
   if (!names || typeof names !== "object") return undefined;
-  const keyName = (names as Record<string, unknown>)["default"];
-  if (typeof keyName !== "string" || !/^SUPABASE_[A-Z0-9_]+$/.test(keyName)) {
-    return undefined;
-  }
-  const value = readEnv(keyName);
+  const entry = (names as Record<string, unknown>)["default"];
+  if (typeof entry !== "string") return undefined;
+  // Supabase's modern Edge environment stores the public key directly:
+  // {"default":"sb_publishable_..."}. Some runtime examples instead
+  // reference its environment-variable name, so accept both safely.
+  if (entry.startsWith("sb_publishable_")) return entry;
+  if (!/^SUPABASE_[A-Z0-9_]+$/.test(entry)) return undefined;
+  const value = readEnv(entry);
   return value?.startsWith("sb_publishable_") ? value : undefined;
 }
 
@@ -26,3 +29,8 @@ export function extractApiRoute(path: string): string | null {
   const i = path.lastIndexOf("/v1/");
   return i === -1 ? null : path.slice(i);
 }
+
+// A browser sends Cache-Control in the Flutter member client.
+// Preflight MUST allow it or the browser suppresses the authenticated GET.
+export const memberCorsRequestHeaders =
+  "authorization, apikey, content-type, cache-control, x-client-info";

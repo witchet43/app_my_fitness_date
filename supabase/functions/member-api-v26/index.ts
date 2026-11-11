@@ -1,7 +1,7 @@
 // My Fitness Date V27: unprivileged, authenticated Edge API.
 // RLS is enforced by forwarding the end user's JWT to PostgREST.
 // There is deliberately no service-role key and no public media publishing.
-import { resolvePublishableKey, extractApiRoute } from "./config.ts";
+import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from "./config.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
@@ -10,7 +10,7 @@ const publishable = resolvePublishableKey(
 const origin = "https://my-fitness-date.pages.dev";
 const cors = {
   "Access-Control-Allow-Origin": origin,
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Headers": memberCorsRequestHeaders,
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Vary": "Origin",
 };
