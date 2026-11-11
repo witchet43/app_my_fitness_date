@@ -33,6 +33,7 @@ jobs:
         run: |
           python3 scripts/check_saas_factory.py
           python3 -m unittest discover -s scripts -p 'test_saas_factory.py'
+          python3 -m unittest discover -s scripts -p 'test_v26_legal_pages.py'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -83,3 +84,5 @@ jobs:
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/privacy_retention_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611090013_saas_heartbeat.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/saas_heartbeat_test.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611100014_member_profile_v26.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/member_profile_v26_integration.sql

@@ -1,15 +1,18 @@
 name: my_fitness_date
 description: Flutter client for the my_fitness_date API platform
 publish_to: none
-version: 0.25.0+25
+version: 0.26.0+26
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
+  sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   http: ^1.3.0
+  supabase_flutter: 2.18.3
+  image_picker: 1.2.2
+  url_launcher: 6.3.2
 
 dev_dependencies:
   flutter_test:
