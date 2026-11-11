@@ -2,6 +2,16 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolvePublishableKey, extractApiRoute } from '../supabase/functions/member-api-v26/config';
 
+test('modern Supabase keyset contains the publishable key directly', () => {
+  const publicKey = 'sb_publishable_a_public_test_key';
+  let called = false;
+  assert.equal(resolvePublishableKey(
+    JSON.stringify({default:publicKey}), () => {called = true; return undefined;}),
+    publicKey,
+  );
+  assert.equal(called,false);
+});
+
 test('Supabase default is an env name; resolves actual publishable key', () => {
   const lookup = (name: string) =>
     name === 'SUPABASE_PUBLISHABLE_KEY' ? 'sb_publishable_test_public_only' : undefined;
