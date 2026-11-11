@@ -14,7 +14,7 @@
 4. CI verde, revisión de cumplimiento, integración a `main`, despliegue Cloudflare y smoke de commit.
 
 ## Acciones que requieren intervención del propietario
-- Cambiar **solo el nombre visible** del proyecto Supabase existente `jtrdvnwbxpfdnbzasvcj` de `my_fitness_date_dev` a `My Fitness Date PROD` en **Project Settings → General**. No crear, pausar, borrar ni transferir proyectos, no modificar el identificador, URL, API keys o migraciones. El conector Supabase actual carece de la operación de renombrado, por lo que el cambio de etiqueta requiere la consola del propietario.
+- **COMPLETADO 10-nov-2026:** el propietario renombró el proyecto Supabase existente `jtrdvnwbxpfdnbzasvcj` a `my_fitness_date_prod` en Project Settings → General. El nombre fue confirmado nuevamente mediante `get_project`; identificador, URL y proyecto existentes se conservan. No crear, pausar, borrar ni transferir proyectos.
 - Consent screen y credencial OAuth Google para el dominio público, configurados desde Google Auth Platform; secretos **nunca** compartidos en ChatGPT ni escritos en el cliente.
 - Documentos legales de términos/privacidad y mecanismos de consentimiento/seguridad antes de abrir el registro.
 - Verificación de edad externa y moderación para FitDating (NO-GO mientras estén pendientes).
@@ -28,9 +28,14 @@ No declarar OAuth operativo hasta completar prueba real de Google+Supabase y con
 
 ## Decisión confirmada: un solo proyecto Supabase hospedado para My Fitness Date (10 nov 2026)
 - Referencia canónica: `jtrdvnwbxpfdnbzasvcj`, URL: `https://jtrdvnwbxpfdnbzasvcj.supabase.co`; **no se cambia el ref**.
-- Nombre visible solicitado: **My Fitness Date PROD**. Última verificación del proveedor: todavía `my_fitness_date_dev`. Etiqueta pendiente hasta renombrado en consola; **no declarar renombrado ejecutado**.
+- Nombre visible **confirmado por Supabase**: `my_fitness_date_prod` (equivalente a **My Fitness Date PROD**). Cambio de etiqueta completado por el propietario el 10-nov-2026; ref, URL y recursos conservados.
 - Estado observado: `ACTIVE_HEALTHY`, 13 migraciones y 0 usuarios en `auth.users`.
 - Flutter y API Gateway aceptan este ref **exclusivamente** cuando la configuración de producción y las banderas explícitas están activas; MUV sigue rechazado.
 - Ningún flujo QA local puede activarse en `MFD_APP_ENV=prod`. No copiar usuarios sintéticos ni credenciales locales al entorno hospedado.
 - El nombre visible no acredita la aptitud de producción: faltan Google OAuth validado, términos/privacidad, seguridad de fotos/edad/moderación, hosting Gateway y pruebas E2E.
 - Mantener PR en borrador y V25 en Cloudflare hasta todas las condiciones de V26; sin merge ni despliegue parcial.
+
+## Comprobación del renombrado (10 nov 2026)
+- Proyecto `jtrdvnwbxpfdnbzasvcj`, nombre devuelto por `Supabase.get_project`: `my_fitness_date_prod`.
+- Estado: `ACTIVE_HEALTHY`, región `us-east-1`.
+- La nueva etiqueta no habilita automáticamente OAuth Google, ni habilita API y registro público; la V26 sigue requiriendo comprobaciones E2E, protección de datos y un solo despliegue.
