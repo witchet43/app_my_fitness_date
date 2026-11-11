@@ -109,8 +109,9 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         title: const Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.favorite, color: FitDateColors.coral),
           SizedBox(width: 8),
-          Text('My Fitness Date',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+          Flexible(child: Text('My Fitness Date',
+            maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontWeight: FontWeight.w800))),
         ]),
       ),
       body: SafeArea(child: Center(child: ConstrainedBox(
