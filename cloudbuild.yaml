@@ -24,6 +24,7 @@ steps:
         flutter config --no-analytics
         flutter precache --web
         python3 scripts/check_saas_factory.py
+        python3 scripts/check_public_legal.py
         python3 - <<'PY'
         import json
         from pathlib import Path
@@ -47,6 +48,9 @@ steps:
         test -s build/web/index.html
         cp cloudflare/_headers build/web/_headers
         cp cloudflare/_redirects build/web/_redirects
+        cp -R cloudflare/privacy cloudflare/terms build/web/
+        test -s build/web/privacy/index.html
+        test -s build/web/terms/index.html
         if ! printf '%s' "$$MFD_COMMIT" | grep -Eq '^[0-9a-f]{40}$'; then
           echo "Missing or invalid source commit SHA" >&2
           exit 1
@@ -98,7 +102,12 @@ steps:
                 if(r.ok&&d.commit===wanted&&d.channel==="public_anonymous_web"){
                   const h=await fetch("https://my-fitness-date.pages.dev/");
                   if(!h.ok||!(await h.text()).includes("flutter"))throw Error("HTML unavailable");
-                  process.stdout.write("Cloudflare Pages commit verified: "+wanted+"\n");
+                  for(const slug of ["privacy","terms"]){
+                    const page=await fetch("https://my-fitness-date.pages.dev/"+slug+"/");
+                    const html=await page.text();
+                    if(!page.ok||!html.toLowerCase().includes("<!doctype html>")||!html.includes("witchet43@gmail.com"))throw Error("Legal route unavailable: "+slug);
+                  }
+                  process.stdout.write("Cloudflare Pages commit + legal routes verified: "+wanted+"\n");
                   return;
                 }
               }catch{}
