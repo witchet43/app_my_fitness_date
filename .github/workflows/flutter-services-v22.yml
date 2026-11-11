@@ -63,3 +63,24 @@ jobs:
         run: flutter test
       - name: Build Web DEV (not deploy)
         run: flutter build web --release --dart-define=MFD_API_BASE_URL=
+      - name: Smoke hosted member API (deny anonymous)
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,urllib.error
+          base="https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26"
+          headers={"User-Agent":"MyFitnessDate-CI-Smoke/1.0"}
+          def probe(path):
+              request=urllib.request.Request(base+path,headers=headers)
+              try:
+                  with urllib.request.urlopen(request,timeout=15) as r:
+                      return r.status,r.read().decode("utf8")
+              except urllib.error.HTTPError as e:
+                  return e.code,e.read().decode("utf8")
+          status,body=probe("/healthz")
+          assert status==200,(status,body[:150])
+          assert json.loads(body).get("status")=="ok"
+          for path in ("/v1/me/profile","/v1/dating/candidates"):
+              status,_=probe(path)
+              assert status==401,(path,status)
+          print("Member API healthy; anonymous profile and dating blocked.")
+          PY

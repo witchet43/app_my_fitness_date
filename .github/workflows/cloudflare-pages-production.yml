@@ -40,7 +40,7 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: apps/flutter_client
         run: flutter pub get
-      - name: Validate anonymous public release manifest
+      - name: Validate member V27 release manifest
         run: |
           python3 scripts/check_saas_factory.py
           python3 scripts/check_public_legal.py
@@ -48,12 +48,35 @@ jobs:
           import json
           from pathlib import Path
           m=json.loads(Path("release/public_web_manifest.json").read_text())
-          assert m["channel"]=="public_anonymous_web"
-          assert m["requires_authentication"] is False
-          assert m["network_backend_enabled"] is False
-          assert m["enabled_features"] == ["anonymous_pace_calculator"]
-          assert "public_signup" in m["disabled_features"]
-          assert "dating_discovery" in m["disabled_features"]
+          assert m["channel"]=="member_profile_v27"
+          assert m["requires_authentication"] is True
+          assert m["network_backend_enabled"] is True
+          assert "email_registration" in m["enabled_features"]
+          assert "fitdating_consent_and_eligibility" in m["enabled_features"]
+          assert "unverified_dating_discovery" in m["disabled_features"]
+          assert "public_media_upload" in m["disabled_features"]
+          PY
+      - name: Verify hosted member API before exposing registration
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,urllib.error
+          base="https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26"
+          headers={"User-Agent":"MyFitnessDate-ReleaseSmoke/1.0"}
+          def probe(path):
+              req=urllib.request.Request(base+path,headers=headers)
+              try:
+                  with urllib.request.urlopen(req,timeout=15) as r:
+                      return r.status,r.read().decode("utf-8")
+              except urllib.error.HTTPError as e:
+                  return e.code,e.read().decode("utf-8")
+          status,payload=probe("/healthz")
+          assert status==200,(status,payload[:200])
+          data=json.loads(payload)
+          assert data["status"]=="ok" and data["service"]=="member-api-v26"
+          for resource in ("/v1/me/profile","/v1/dating/candidates"):
+              status,_=probe(resource)
+              assert status==401,(resource,status)
+          print("Hosted member API: healthy; unauthorized profiles/dating denied")
           PY
       - name: Analyze Flutter
         working-directory: apps/flutter_client
@@ -61,13 +84,22 @@ jobs:
       - name: Test Flutter
         working-directory: apps/flutter_client
         run: flutter test
-      - name: Build production Flutter Web (no identity/API)
+      - name: Build production Flutter Web (identity and owner-only API)
         working-directory: apps/flutter_client
         run: |
           flutter build web --release \
             --dart-define=MFD_PUBLIC_PRODUCTION=true \
             --dart-define=MFD_QA_LOGIN_UI=false \
-            --dart-define=MFD_API_BASE_URL=
+            --dart-define=MFD_V26_ENABLED=true \
+            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=false \
+            --dart-define=MFD_PROD_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co \
+            --dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk \
+            --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
+            --dart-define=MFD_TERMS_URL=https://my-fitness-date.pages.dev/terms/ \
+            --dart-define=MFD_PRIVACY_URL=https://my-fitness-date.pages.dev/privacy/ \
+            --dart-define=MFD_TERMS_VERSION=v27-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v27-privacy-1 \
+            --dart-define=MFD_OAUTH_REDIRECT_URL=https://my-fitness-date.pages.dev/
           test -s build/web/index.html
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
@@ -80,7 +112,7 @@ jobs:
           sha=os.environ["GITHUB_SHA"]
           assert len(sha)==40
           Path("build/web/mfd-release.json").write_text(
-            json.dumps({"commit":sha,"channel":"public_anonymous_web","version":"v25"})+"\n")
+            json.dumps({"commit":sha,"channel":"member_profile_v27","version":"v27"})+"\n")
           PY
       - name: Keep public web build artifact
         uses: actions/upload-artifact@v4
@@ -123,7 +155,7 @@ jobs:
                       release=json.load(r)
                   with open_public("https://my-fitness-date.pages.dev/") as r:
                       index=r.read().decode("utf8")
-                  assert release=={"commit":sha,"channel":"public_anonymous_web","version":"v25"}
+                  assert release=={"commit":sha,"channel":"member_profile_v27","version":"v27"}
                   assert "flutter" in index.lower()
                   for slug in ("privacy", "terms"):
                       with open_public("https://my-fitness-date.pages.dev/"+slug+"/?v="+sha) as r:
