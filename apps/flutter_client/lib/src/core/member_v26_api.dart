@@ -5,10 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'activity_repository.dart';
 import 'curator_repository.dart';
+import 'community_repository.dart';
 
 /// Business data travels through our own FastAPI Gateway, not directly
 /// through a privileged database key or user-selected identity.
-class MemberV26Api implements ActivityRepository, CuratorRepository {
+class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
@@ -223,6 +224,110 @@ class MemberV26Api implements ActivityRepository, CuratorRepository {
     }
     return status!;
   }
+  List<Map<String, dynamic>> _items(Map<String, dynamic> response) {
+    final raw = response['items'];
+    if (raw is! List) {
+      throw const MemberApiException('El servicio respondió con datos inválidos.');
+    }
+    return raw.map((value) => Map<String, dynamic>.from(value as Map)).toList();
+  }
+
+  @override
+  Future<String> communityStatus() async =>
+    _decode(await _request('GET','/v1/community/status'))['status'].toString();
+
+  @override
+  Future<List<Map<String, dynamic>>> communityFeed({DateTime? before}) async {
+    final suffix=before==null?'':'?before=${Uri.encodeQueryComponent(
+      before.toUtc().toIso8601String())}';
+    return _items(_decode(await _request(
+      'GET','/v1/community/feed$suffix')));
+  }
+
+  @override
+  Future<String> publishCommunityPost(String topic,String content) async {
+    final result=_decode(await _request('POST','/v1/community/posts',
+      data:{'topic':topic,'content':content}));
+    return result['status'].toString();
+  }
+
+  @override
+  Future<String> removeCommunityPost(String postId) async {
+    if(!_validActivityId(postId)) {
+      throw const MemberApiException('Publicación inválida.');
+    }
+    final result=_decode(await _request(
+      'DELETE','/v1/community/posts/$postId'));
+    return result['status'].toString();
+  }
+
+  @override
+  Future<String> setCommunityBlock(
+      String memberId,{required bool blocked}) async {
+    if(!_validActivityId(memberId)) {
+      throw const MemberApiException('Cuenta inválida.');
+    }
+    final result=_decode(await _request('POST','/v1/community/block',
+      data:{'user_id':memberId,'blocked':blocked}));
+    return result['status'].toString();
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> communityBlocks() async =>
+    _items(_decode(await _request('GET','/v1/community/blocks')));
+
+  @override
+  Future<String> reportCommunity({
+    String? postId,String? userId,
+    required String reason,String detail='',
+  }) async {
+    final validPost=postId==null || _validActivityId(postId);
+    final validUser=userId==null || _validActivityId(userId);
+    if((postId==null)==(userId==null) || !validPost || !validUser) {
+      throw const MemberApiException('Selecciona una publicación o perfil.');
+    }
+    final result=_decode(await _request('POST','/v1/community/report',data:{
+      'post_id':postId,'user_id':userId,'reason':reason,'detail':detail}));
+    return result['status'].toString();
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> myCommunityPosts() async =>
+    _items(_decode(await _request('GET','/v1/me/community/posts')));
+
+  @override
+  Future<String> communityDeletionStatus() async =>
+    _decode(await _request('GET','/v1/me/community/deletion'))
+      ['status'].toString();
+
+  @override
+  Future<String> requestCommunityDeletion() async =>
+    _decode(await _request('POST','/v1/me/community/deletion'))
+      ['status'].toString();
+
+  @override
+  Future<List<Map<String,dynamic>>> moderationReports() async =>
+    _items(_decode(await _request('GET','/v1/admin/community/reports')));
+
+  @override
+  Future<String> resolveModerationReport({
+    required String reportId,
+    required String action,
+    required String note,
+  }) async {
+    if(!_validActivityId(reportId)) {
+      throw const MemberApiException('Reporte inválido.');
+    }
+    final result=_decode(await _request(
+      'POST','/v1/admin/community/resolve',data:{
+        'report_id':reportId,'action':action,'note':note}));
+    return result['status'].toString();
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> moderationDeletionRequests() async =>
+    _items(_decode(await _request('GET','/v1/admin/community/deletions')));
+
   Future<Map<String, dynamic>?> loadProfile() async {
     final value = _decode(await _request('GET', '/v1/me/profile'))['profile'];
     return value is Map<String, dynamic> ? value : null;
