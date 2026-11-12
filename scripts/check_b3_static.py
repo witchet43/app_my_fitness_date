@@ -31,7 +31,6 @@ check('Global brand controller',dart,[
   "rpc('brand_restore_live'",
   "LiveBrandScope",
   "lastError",
-  'Timer',
 ] if False else [
   "from('mfd_brand_live')",
   "rpc('brand_set_live'",
