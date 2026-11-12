@@ -12,10 +12,10 @@ product:
   owner: "PENDIENTE_DESIGNACION"
   repository: "witchet43/app_my_fitness_date"
   website: null
-  audience: ["personas adultas interesadas en comunidad deportiva y actividades", "participantes adultos de FitDating opt-in"]
+  audience: ["adultos mayores de 40 años como público prioritario de posicionamiento", "personas adultas interesadas en estilo de vida activo y relaciones serias; elegibilidad 40+ no definida", "comunidad deportiva adulta y FitDating opt-in"]
   countries: ["MX"]
-  value_proposition: "HIPOTESIS_POR_VALIDAR: comunidad deportiva y citas opcionales seguras con Gym Shield"
-  brand_kit_reference: "PENDIENTE"
+  value_proposition: "DIRECCION_OWNER_2026-11-11: conexiones serias y estables para público 40+, compatibilidad de vida activa y privacidad Gym Shield; valor/mercado aún por validar"
+  brand_kit_reference: "docs/design/SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md (dirección confirmada; HEX, fonts y logo nuevo propuestos para revisión)"
 platforms:
   web:
     enabled: true
