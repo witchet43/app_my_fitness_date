@@ -24,4 +24,22 @@ void main() {
     expect(passwordValidationMessage('a-long-password-123',
       'a-long-password-123'), isNull);
   });
+  test('Supabase same_password is not misreported as an expired link', () {
+    const detail = 'New password should be different from the old password.';
+    expect(passwordAlreadyInUse(detail), isTrue);
+    expect(passwordAlreadyInUse('same_password'), isTrue);
+    expect(safeRecoveryErrorMessage(detail),
+      'Esta contraseña ya es la actual de tu cuenta. '
+      'Utiliza otra diferente o vuelve a iniciar sesión con ella.');
+  });
+
+  test('Expired and weak-password errors remain distinct and safe', () {
+    expect(safeRecoveryErrorMessage('invalid jwt'),
+      contains('caducado'));
+    expect(safeRecoveryErrorMessage('weak_password'),
+      contains('seguridad'));
+    expect(safeRecoveryErrorMessage('Unexpected backend: token abc123'),
+      isNot(contains('abc123')));
+  });
+
 }
