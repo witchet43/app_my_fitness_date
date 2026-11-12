@@ -1,4 +1,7 @@
 # Auditoría de diseño visual — My Fitness Date V25
+
+> **AVISO: REFERENCIA HISTÓRICA / SUPERADA EN DIRECCIÓN DE MARCA (11-nov-2026).** Los tokens coral `#FF617B`, lima `#C8FF6B`, lila `#A995FF`, las motivaciones románticas y el copy «Active Chemistry» aquí descritos **no** son el estilo deseado para futuras pantallas. El propietario pidió explícitamente un producto elegante y formal para **personas mayores de 40 años** que buscan **relaciones serias**, sin corazones ni clichés de citas. Consultar el nuevo [estándar de marca 40+](SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md) antes de diseñar o implementar. Esta auditoría permanece como evidencia de la versión V25; no asegura que la producción ya haya cambiado.
+
 **Sistema:** Flutter Web/Android/iOS · **Dirección:** Active Chemistry
 **Estado:** Diseño implementado en código, validación CI y despliegue pendiente de evidencia; experiencia web pública anónima. No declarar beta real.
 
