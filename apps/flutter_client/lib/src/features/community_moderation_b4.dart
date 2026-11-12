@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/community_repository.dart';
 import '../core/member_v26_api.dart';
 import 'community_b4.dart';
+import 'community_pilot_b4.dart';
 
 /// This page is mounted only from the verified AAL2 owner space.
 /// Each action rechecks owner MFA inside its own database RPC.
@@ -337,6 +338,14 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
           const Text('Solo propietario con MFA. Las decisiones de '
             'moderación se registran con autor, fecha y motivo en '
             'un historial no accesible para los miembros.'),
+          const SizedBox(height:14),
+          OutlinedButton.icon(
+            key:const Key('b4-moderation-pilot'),
+            onPressed:()=>Navigator.of(context).push(
+              MaterialPageRoute<void>(builder:(_)=>
+                CommunityPilotB4(api:widget.api))),
+            icon:const Icon(Icons.lock_person_outlined),
+            label:const Text('Gestionar acceso al piloto cerrado')),
           const SizedBox(height:16),
           Wrap(spacing:10,runSpacing:10,children:[
             ChoiceChip(
