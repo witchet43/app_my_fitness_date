@@ -73,4 +73,23 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('owner can preview the member catalogue without joining',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1100, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final fake = FakeActivities()..approved = true;
+    await tester.pumpWidget(MaterialApp(
+      home: ActivitiesB1(api: fake, readOnly: true),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Vista previa de la experiencia de miembro'),
+      findsOneWidget);
+    expect(find.byKey(const Key('b1-organizer-create')), findsNothing);
+    expect(find.byKey(const Key('b2-open-my-activities')), findsNothing);
+    final button = tester.widget<FilledButton>(
+      find.byKey(const Key('b1-rsvp-$testId')));
+    expect(button.onPressed, isNull);
+    expect(fake.confirmed, 0);
+  });
+
 }
