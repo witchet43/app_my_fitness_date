@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../theme/fitness_date_theme.dart';
 import 'pace_calculator.dart';
 import '../widgets/mfd_branding.dart';
+import '../core/live_brand.dart';
 
 /// Marketing is public; member screens require verified authentication.
 /// Actions require configured production Auth and legal policy URLs.
@@ -34,6 +35,8 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
   }
   @override
   Widget build(BuildContext context) {
+    final brand=LiveBrandScope.of(context);
+    final colors=Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
     // Existing members can sign in without re-declaring age or consent.
     // Registration still requires legal acknowledgement and adult declaration.
@@ -46,25 +49,33 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(colors: [
-          Color(0xFF3C243F), Color(0xFF1A2430), Color(0xFF1C3227),
+        gradient:LinearGradient(colors:[
+          brand.primaryColor,Color.lerp(brand.primaryColor,
+            brand.backgroundColor,.52)!,brand.backgroundColor,
         ]),
+        image: brand.media[width<650?'cover_mobile':'cover_desktop']==null
+          ?null:DecorationImage(
+            image:NetworkImage(brand.media[
+              width<650?'cover_mobile':'cover_desktop']!),
+            fit:BoxFit.cover,
+            colorFilter:ColorFilter.mode(
+              brand.primaryColor.withValues(alpha:.55),BlendMode.darken)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const MfdBranding(full: true, width: 275),
         const SizedBox(height: 18),
-        const Text('ACTIVE CHEMISTRY',
-          style: TextStyle(color: FitDateColors.lime,
-            letterSpacing: 2, fontWeight: FontWeight.w800)),
+        Text(brand.tagline.toUpperCase(),
+          style:TextStyle(color:colors.secondary,
+            letterSpacing:2,fontWeight:FontWeight.w800)),
         const SizedBox(height: 20),
-        const Text('Tu próxima conexión también puede compartir tu ritmo.',
-          key: Key('landing-headline'),
-          style: TextStyle(fontSize: 34, height: 1.12,
-            color: FitDateColors.pearl, fontWeight: FontWeight.w900)),
+        Text(brand.title,
+          key:const Key('landing-headline'),
+          style:const TextStyle(fontSize:34,height:1.12,
+            color:Colors.white,fontWeight:FontWeight.w900)),
         const SizedBox(height: 14),
-        const Text('Muestra quién eres, lo que te apasiona y cómo vives '
-          'el deporte. Comunidad, actividades y citas opcionales con privacidad.',
-          style: TextStyle(color: FitDateColors.muted, height: 1.5)),
+        Text(brand.description,
+          key:const Key('landing-brand-description'),
+          style:const TextStyle(color:Colors.white70,height:1.5)),
         const SizedBox(height: 20),
         const Wrap(spacing: 10, runSpacing: 10, children: [
           Chip(label: Text('Gym & fuerza')),
@@ -77,9 +88,9 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     final access = Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: FitDateColors.surface,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: FitDateColors.outline),
+        color:Theme.of(context).cardColor,
+        borderRadius:BorderRadius.circular(26),
+        border:Border.all(color:colors.primary.withValues(alpha:.22)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(register ? 'Crea tu cuenta' : 'Bienvenido de nuevo',
@@ -160,12 +171,13 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     );
     return Scaffold(
       appBar: AppBar(
-        title: const Row(mainAxisSize: MainAxisSize.min, children: [
-          MfdBranding(full: false, width: 52),
-          SizedBox(width: 8),
-          Flexible(child: Text('My Fitness Date',
-            maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontWeight: FontWeight.w800))),
+        title:Row(mainAxisSize:MainAxisSize.min,children:[
+          const MfdBranding(full:false,width:52),
+          const SizedBox(width:8),
+          Flexible(child:Text(brand.name,
+            key:const Key('landing-global-brand-name'),
+            maxLines:1,overflow:TextOverflow.ellipsis,
+            style:const TextStyle(fontWeight:FontWeight.w800))),
         ]),
       ),
       body: SafeArea(child: Center(child: ConstrainedBox(
