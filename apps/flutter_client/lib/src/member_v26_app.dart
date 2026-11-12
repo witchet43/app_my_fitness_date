@@ -401,6 +401,7 @@ class _MemberV26AppState extends State<MemberV26App> {
           onSignOut:logout,
           curatorApi:widget.api,
           activityPreviewApi:widget.api,
+          communityAdmin:widget.api,
           liveBrand:liveBrand,
         );
       }else{
