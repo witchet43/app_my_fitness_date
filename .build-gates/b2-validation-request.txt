@@ -1,0 +1,6 @@
+B2 single consolidated verification + Cloudflare QA preview
+Budget ledger B1=1 failed, B2=2 planned.
+NO production deployment. Preview uses separate Supabase Edge API.
+Tests: TypeScript + source contracts + full Flutter + release build + exact preview SHA smoke.
+Source branch reviewed before this marker; never retry automatically.
+2026-11-12

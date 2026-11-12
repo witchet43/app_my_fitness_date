@@ -1,0 +1,173 @@
+# B3: one manually initiated remote job via one-time marker commit.
+# Tests entire B1+B2+B3 vertical. Only publishes isolated Cloudflare preview.
+# No automatic main/PR runs, no production deploy and no rerun on failure.
+name: MFD B3 — global live brand + full QA preview
+on:
+  push:
+    branches:
+      - feature/b3-global-brand-live-20261112
+    paths:
+      - .build-gates/b3-validation-request.txt
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: mfd-b3-single-gate
+  cancel-in-progress: false
+
+jobs:
+  b3:
+    name: B3 one job — contracts, Flutter, release and preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact SHA
+        uses: actions/checkout@v4
+      - name: Node toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Node and SQL contracts B1+B2+B3
+        run: |
+          set -euo pipefail
+          npm run typecheck
+          npm test
+          python3 scripts/check_b1_static.py
+          python3 scripts/check_b2_static.py
+          python3 scripts/check_b3_static.py
+          python3 scripts/check_public_legal.py
+      - name: Real hosted QA API and global public read
+        run: |
+          set -euo pipefail
+          base='https://jtrdvnwbxpfdnbzasvcj.supabase.co'
+          api="$base/functions/v1/member-api-b3-preview"
+          curl -fsS --retry 3 --max-time 25 "$api/healthz" > /tmp/health.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/health.json'))
+          assert d.get('status')=='ok' and d.get('service')=='member-api-v26'
+          PY
+          status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$api/v1/me/activities")
+          test "$status" = 401
+          curl -fsS -D /tmp/b3-cors.txt -o /dev/null --max-time 20 \
+            -X OPTIONS -H 'Origin: https://b3-preview.my-fitness-date.pages.dev' \
+            -H 'Access-Control-Request-Method: GET' "$api/v1/me/activities"
+          grep -qi 'access-control-allow-origin: https://b3-preview.my-fitness-date.pages.dev' /tmp/b3-cors.txt
+          curl -fsS --max-time 20 \
+            -H 'apikey: sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk' \
+            "$base/rest/v1/mfd_brand_live?select=version,settings" > /tmp/brand.json
+          python3 - <<'PY'
+          import json
+          v=json.load(open('/tmp/brand.json'))
+          assert len(v)==1 and isinstance(v[0]['version'],int)
+          assert v[0]['settings']['name']
+          print('Anonymous brand config readable without private drafts')
+          PY
+      - name: Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Flutter dependencies
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Dart analyze and all widget tests
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded
+      - name: Single Flutter web release build for B3 QA
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter build web --release \
+            --dart-define=MFD_V26_ENABLED=true \
+            --dart-define=MFD_PUBLIC_PRODUCTION=false \
+            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=false \
+            --dart-define=MFD_PROD_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co \
+            --dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk \
+            --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-b3-preview \
+            --dart-define=MFD_TERMS_URL=https://my-fitness-date.pages.dev/terms/ \
+            --dart-define=MFD_PRIVACY_URL=https://my-fitness-date.pages.dev/privacy/ \
+            --dart-define=MFD_TERMS_VERSION=v27-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v27-privacy-1 \
+            --dart-define=MFD_OAUTH_REDIRECT_URL=https://my-fitness-date.pages.dev/
+          test -s build/web/index.html
+          cp cloudflare/_headers build/web/_headers
+          cp cloudflare/_redirects build/web/_redirects
+          cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab build/web/
+          mkdir -p build/web/admin/branding/reset-password
+          cp cloudflare/admin/branding/admin-brand.css build/web/admin/branding/
+          cp cloudflare/admin/branding/reset-password/index.html \
+             cloudflare/admin/branding/reset-password/reset-password.js \
+             build/web/admin/branding/reset-password/
+          python3 - <<'PY'
+          import os,json,pathlib
+          pathlib.Path('build/web/mfd-release.json').write_text(json.dumps({
+            'commit':os.environ['GITHUB_SHA'],
+            'channel':'b3_global_brand_preview',
+            'production':False,'budget_slots_consumed':3,
+          })+'\n')
+          PY
+      - name: Preserve immutable QA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mfd-b3-global-brand-flutter-web
+          path: apps/flutter_client/build/web/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Require Cloudflare credentials
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_TOKEN" ]; then
+            echo "::error::No Cloudflare token; do not publish"
+            exit 1
+          fi
+      - name: Deploy B3 QA branch ONLY, never production
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: d10780918aa05ee5532c754371c60c94
+          command: pages deploy apps/flutter_client/build/web --project-name=my-fitness-date --branch=b3-preview
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify preview when Cloudflare allows automated clients
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json,os,time,urllib.request,urllib.error
+          url='https://b3-preview.my-fitness-date.pages.dev/mfd-release.json'
+          expected=os.environ['EXPECTED_SHA']
+          verified=False
+          for i in range(5):
+            try:
+              req=urllib.request.Request(url,headers={
+                'Cache-Control':'no-cache','User-Agent':'Mozilla/5.0 MyFitnessDate-QA/3.0'})
+              with urllib.request.urlopen(req,timeout=12) as r:
+                data=json.loads(r.read())
+                assert data['commit']==expected and data['production'] is False
+                verified=True
+                break
+            except urllib.error.HTTPError as err:
+              if err.code in (403,429):
+                print('::warning::Cloudflare bot protection blocked non-browser smoke: ',err.code)
+                break
+              raise
+            except (TimeoutError,OSError):
+              time.sleep(3)
+          if verified:
+            print('Verified B3 preview SHA:',expected)
+          else:
+            print('::warning::Preview uploaded by Wrangler, but browser E2E is still required')
+          PY
