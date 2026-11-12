@@ -104,7 +104,8 @@ class MemberV26Api implements ActivityRepository {
   @override
   Future<String> confirmActivity(String eventId) async {
     final valid = eventId.length == 36 &&
-        RegExp(r'^[0-9a-fA-F-]+').firstMatch(eventId)?.group(0)?.length == 36;
+        RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
+          .firstMatch(eventId)?.group(0)?.length == 36;
     if (!valid) throw const MemberApiException('Actividad inválida.');
     final result = _decode(await _request(
       'POST', '/v1/activities/' + eventId + '/rsvp',
