@@ -19,6 +19,9 @@ abstract class CommunityRepository {
   Future<String> requestCommunityDeletion();
 
   /// Owner AAL2 only. Reporter identities are not returned to the UI.
+  Future<List<Map<String, dynamic>>> adminCommunityAnnouncements();
+  Future<String> adminPublishCommunityAnnouncement(String topic, String content);
+  Future<String> adminRemoveCommunityAnnouncement(String postId);
   Future<List<Map<String, dynamic>>> moderationReports();
   Future<String> resolveModerationReport({
     required String reportId,
