@@ -1,15 +1,8 @@
 name: SaaS heartbeat contract
 
+# FinOps: manually dispatched only; no scheduled or PR/push runner minutes.
 on:
-  pull_request:
-    paths:
-      - 'supabase/functions/heartbeat/**'
-      - 'supabase/tests/saas_heartbeat_test.sql'
-      - 'supabase/migrations/202611090013_saas_heartbeat.sql'
-      - 'supabase/config.toml'
-      - '.github/workflows/heartbeat-contract.yml'
   workflow_dispatch:
-
 permissions:
   contents: read
 
