@@ -56,7 +56,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
     if(sending)return;
     final hasPost=report['post_id']!=null;
     var selectedAction='dismiss';
-    final note=TextEditingController();
+    String noteText='';
     String? validation;
     final result=await showDialog<Map<String,String>>(
       context:context,
@@ -90,7 +90,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                 const SizedBox(height:12),
                 TextField(
                   key:const Key('b4-moderation-note'),
-                  controller:note,maxLength:500,maxLines:3,
+                  onChanged:(value)=>noteText=value,maxLength:500,maxLines:3,
                   decoration:const InputDecoration(
                     labelText:'Justificación (5–500 caracteres)')),
                 if(validation!=null)Text(validation!,
@@ -104,7 +104,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
             FilledButton(
               key:const Key('b4-moderation-submit'),
               onPressed:(){
-                final value=note.text.trim();
+                final value=noteText.trim();
                 if(value.length<5||value.length>500){
                   update(()=>validation='Escribe una justificación '
                     'de al menos cinco caracteres.');
@@ -119,7 +119,6 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
         ),
       ),
     );
-    note.dispose();
     if(result==null||!mounted)return;
     setState(()=>sending=true);
     try{
@@ -210,7 +209,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
 
   Future<void> createAnnouncement() async {
     if(sending)return;
-    final text=TextEditingController();
+    String contentText='';
     var topic='running';
     String? validation;
     final draft=await showDialog<Map<String,String>>(
@@ -239,7 +238,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                 const SizedBox(height:12),
                 TextField(
                   key:const Key('b4-announcement-content'),
-                  controller:text,maxLength:480,minLines:3,maxLines:5,
+                  onChanged:(value)=>contentText=value,maxLength:480,minLines:3,maxLines:5,
                   decoration:const InputDecoration(
                     labelText:'Contenido oficial')),
                 if(validation!=null)Text(validation!,
@@ -253,7 +252,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
             FilledButton(
               key:const Key('b4-announcement-submit'),
               onPressed:(){
-                final value=text.text.trim();
+                final value=contentText.trim();
                 if(value.length<15 || value.length>480 ||
                    RegExp(r'https?://|www\.|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[0-9]{8,}',
                      caseSensitive:false).hasMatch(value)){
@@ -268,7 +267,6 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
         ),
       ),
     );
-    text.dispose();
     if(draft==null||!mounted)return;
     setState(()=>sending=true);
     try{
