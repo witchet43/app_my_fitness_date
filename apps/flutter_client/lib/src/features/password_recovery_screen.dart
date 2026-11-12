@@ -24,6 +24,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
   final confirmation = TextEditingController();
   bool busy = false;
   bool saved = false;
+  bool existingPassword = false;
   String? error;
 
   Future<void> _save() async {
@@ -35,7 +36,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
       setState(() => error = validation);
       return;
     }
-    setState(() { busy = true; error = null; });
+    setState(() { busy = true; error = null; existingPassword = false; });
     try {
       // The Auth server validates the recovery session. No client-side
       // administrator claims, service-role key or custom recovery token.
@@ -45,10 +46,16 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
       password.clear();
       confirmation.clear();
       if (mounted) setState(() => saved = true);
+    } on AuthException catch (authError) {
+      if (mounted) {
+        setState(() {
+          existingPassword = passwordAlreadyInUse(authError.message);
+          error = safeRecoveryErrorMessage(authError.message);
+        });
+      }
     } catch (_) {
       if (mounted) {
-        setState(() => error = 'No se pudo guardar la contraseña. '
-            'Solicita otro enlace si el actual ha caducado.');
+        setState(() => error = safeRecoveryErrorMessage(''));
       }
     } finally {
       if (mounted) setState(() => busy = false);
@@ -111,6 +118,14 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
               onPressed: busy ? null : _save,
               child: Text(busy ? 'Guardando...' : 'Guardar contraseña'),
             ),
+            if (existingPassword) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                key: const Key('recovery-existing-password-login'),
+                onPressed: busy ? null : () => widget.onFinished(),
+                child: const Text('Ya tengo contraseña: iniciar sesión'),
+              ),
+            ],
           ] else ...[
             const SizedBox(height: 20),
             FilledButton(
