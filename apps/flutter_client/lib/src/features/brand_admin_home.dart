@@ -1,9 +1,18 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../core/brand_admin_repository.dart';
+import '../core/live_brand.dart';
+import '../core/curator_repository.dart';
+import '../core/activity_repository.dart';
+import '../core/community_repository.dart';
+import 'community_moderation_b4.dart';
+import 'activities_b1.dart';
+import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
 
 /// Administration lives in the SAME Flutter application / MaterialApp as
@@ -15,10 +24,18 @@ class BrandAdminHome extends StatefulWidget {
     required this.repository,
     required this.email,
     required this.onSignOut,
+    this.curatorApi,
+    this.activityPreviewApi,
+    this.communityAdmin,
+    required this.liveBrand,
   });
   final BrandAdminRepository repository;
   final String email;
   final Future<void> Function() onSignOut;
+  final CuratorRepository? curatorApi;
+  final ActivityRepository? activityPreviewApi;
+  final CommunityRepository? communityAdmin;
+  final LiveBrandController liveBrand;
 
   @override
   State<BrandAdminHome> createState() => _BrandAdminHomeState();
@@ -26,14 +43,14 @@ class BrandAdminHome extends StatefulWidget {
 
 class _BrandAdminHomeState extends State<BrandAdminHome> {
   static const _tabs = <String>[
-    'Resumen', 'Identidad', 'Biblioteca', 'Borradores', 'Publicación'
+    'Resumen', 'Marca en vivo', 'Biblioteca', 'Borradores', 'Historial'
   ];
   static const _icons = <IconData>[
     Icons.space_dashboard_outlined,
     Icons.palette_outlined,
     Icons.collections_outlined,
     Icons.layers_outlined,
-    Icons.fact_check_outlined
+    Icons.history_outlined
   ];
   static const _logoNames = <String>[
     'Monograma', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
@@ -75,11 +92,18 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   bool busy = false;
   bool loading = true;
   String? error;
+  Timer? _brandTimer;
+  bool _brandReady=false;
+  bool _brandHydrating=true;
+  bool _brandSaving=false;
+  bool _brandDirty=false;
+  int _brandHydratedVersion=-1;
+  String? brandStatus;
+  List<Map<String,dynamic>> brandHistory=[];
   Map<String, dynamic>? draft;
   List<Map<String, dynamic>> palettes = [];
   List<Map<String, dynamic>> assets = [];
   List<Map<String, dynamic>> drafts = [];
-  List<Map<String, dynamic>> releases = [];
   List<Map<String, dynamic>> revisions = [];
   final Map<String, String> selectedImages = {};
   final Map<String, Uint8List> downloaded = {};
@@ -91,13 +115,26 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       paletteName,primary,accent,background]) {
       c.addListener(_redraw);
     }
+    widget.liveBrand.addListener(_observeBrand);
+    if(widget.liveBrand.loaded) {
+      WidgetsBinding.instance.addPostFrameCallback((_){
+        if(mounted)_hydrateLiveBrand();
+      });
+    } else {
+      unawaited(widget.liveBrand.refresh());
+    }
     _reload();
   }
 
-  void _redraw() { if (mounted) setState(() {}); }
+  void _redraw() {
+    if(mounted)setState(() {});
+    if(!_brandHydrating)_queueBrandSave();
+  }
 
   @override
   void dispose() {
+    _brandTimer?.cancel();
+    widget.liveBrand.removeListener(_observeBrand);
     for (final c in [name,tagline,headline,description,paletteName,
       primary,accent,background,draftTitle]) {
       c.dispose();
@@ -161,6 +198,131 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     } catch (_) { _notice('No fue posible guardar la paleta. Verifica los colores y MFA.',bad:true); }
   }
 
+
+  void _observeBrand() {
+    if(!mounted || !widget.liveBrand.loaded) return;
+    if(!_brandReady || (!_brandSaving && _brandTimer==null &&
+        widget.liveBrand.version>_brandHydratedVersion)) {
+      _hydrateLiveBrand();
+    }
+  }
+
+  void _hydrateLiveBrand() {
+    if(!mounted) return;
+    _brandHydrating=true;
+    _brandTimer?.cancel();
+    _brandTimer=null;
+    final s=widget.liveBrand.current;
+    setState((){
+      name.text=s.name;
+      tagline.text=s.tagline;
+      headline.text=s.title;
+      description.text=s.description;
+      paletteName.text=s.paletteName;
+      primary.text=s.primary;
+      accent.text=s.accent;
+      background.text=s.background;
+      font=s.font;
+      dark=s.dark;
+      layout=s.layout;
+      if(s.logo.startsWith('catalog:')) {
+        logoIndex=int.tryParse(s.logo.substring(8))??0;
+        selectedLogoAsset=null;
+      } else {
+        selectedLogoAsset=s.logo;
+      }
+      selectedImages
+        ..clear()
+        ..addAll(s.media);
+      _brandHydratedVersion=widget.liveBrand.version;
+      _brandReady=true;
+      brandStatus='Configuración global activa · versión ${widget.liveBrand.version}';
+    });
+    _brandHydrating=false;
+  }
+
+  void _queueBrandSave() {
+    if(!_brandReady || _brandHydrating || !mounted)return;
+    _brandTimer?.cancel();
+    setState(() => brandStatus='Cambios pendientes de guardar…');
+    _brandTimer=Timer(const Duration(milliseconds:850),(){
+      _brandTimer=null;
+      unawaited(_saveBrandGlobally());
+    });
+  }
+
+  Future<void> _saveBrandGlobally() async {
+    if(!_brandReady || !mounted)return;
+    if(_brandSaving){
+      _brandDirty=true;
+      return;
+    }
+    final logo=_settings()['logo'].toString();
+    if(!validPalette ||
+       name.text.trim().length<2 || name.text.trim().length>60 ||
+       tagline.text.trim().length<2 || tagline.text.trim().length>120 ||
+       headline.text.trim().length<8 || headline.text.trim().length>180 ||
+       description.text.trim().length<10 || description.text.trim().length>600 ||
+       paletteName.text.trim().length<2 ||
+       !const ['Georgia','Palatino','Garamond','Arial'].contains(font) ||
+       (selectedLogoAsset!=null &&
+         !LiveBrandSettings.safeAssetUrl(selectedLogoAsset!)) ||
+       (logo.startsWith('https://') &&
+        !LiveBrandSettings.safeAssetUrl(logo)) ||
+       selectedImages.values.any((v)=>!LiveBrandSettings.safeAssetUrl(v))) {
+      setState(()=>brandStatus='Completa campos válidos y usa imágenes públicas.');
+      return;
+    }
+    final proposed=LiveBrandSettings.fromMap(_settings());
+    if(widget.liveBrand.asJson == 
+       const JsonEncoder().convert(proposed.toMap())) {
+      setState(()=>brandStatus='Guardado y visible para todos · versión ${widget.liveBrand.version}');
+      return;
+    }
+    _brandSaving=true;
+    if(mounted)setState(()=>brandStatus='Guardando para todos…');
+    try {
+      await widget.liveBrand.save(proposed);
+      _brandHydratedVersion=widget.liveBrand.version;
+      if(mounted)setState(()=>brandStatus=
+        'Guardado y visible para todos · versión ${widget.liveBrand.version}');
+    } catch (_) {
+      if(!mounted)return;
+      _hydrateLiveBrand();
+      setState(()=>brandStatus=
+        'No se guardó. Se restauró la última versión publicada. Verifica MFA o conexión.');
+    } finally {
+      _brandSaving=false;
+      if(_brandDirty){
+        _brandDirty=false;
+        _queueBrandSave();
+      }
+    }
+  }
+
+  Future<void> _fetchBrandHistory() async {
+    try {
+      final versions=await widget.liveBrand.history();
+      if(mounted)setState(()=>brandHistory=versions);
+    } catch (_) {
+      _notice('No se pudo consultar el historial de marca.',bad:true);
+    }
+  }
+
+  Future<void> _restoreBrandVersion(int version) async {
+    if(_brandSaving)return;
+    try {
+      _brandTimer?.cancel();
+      _brandTimer=null;
+      await widget.liveBrand.restore(version);
+      _hydrateLiveBrand();
+      await _fetchBrandHistory();
+      _notice('Versión restaurada. El cambio es visible en toda la app.');
+    } catch (_) {
+      _notice('No se pudo restaurar. Comprueba tu sesión MFA.',bad:true);
+    }
+  }
+
   Map<String, dynamic> _settings() => {
     'name':name.text.trim(),
     'tagline':tagline.text.trim(),
@@ -169,9 +331,15 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     'paletteName':paletteName.text.trim(),
     'colors':colors,
     'font':font,
-    'logo':selectedLogoAsset == null
-      ? 'catalog:$logoIndex' : 'asset:$selectedLogoAsset',
-    'media':selectedImages,
+    'logo':selectedLogoAsset!=null &&
+        LiveBrandSettings.safeAssetUrl(selectedLogoAsset!)
+      ? selectedLogoAsset! : 'catalog:$logoIndex',
+    'media':{
+      for(final item in selectedImages.entries)
+        if(const ['cover_desktop','cover_mobile','app_image'].contains(item.key)
+          && LiveBrandSettings.safeAssetUrl(item.value))
+          item.key:item.value,
+    },
     'layout':layout,
     'mode':dark ? 'dark' : 'light',
   };
@@ -246,70 +414,79 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     }
   }
 
-  Future<void> _fetchReleases() async {
-    try {
-      final rows=await widget.repository.loadReleaseRequests();
-      if(mounted)setState(()=>releases=rows);
-    } catch (_) {
-      _notice('Las solicitudes están reservadas al propietario.',bad:true);
-    }
-  }
-
-  Future<void> _requestReview() async {
-    if(draft==null){ _notice('Guarda un borrador antes de solicitar revisión.');return; }
-    try {
-      await widget.repository.requestReview(draft!);
-      await _fetchReleases();
-      _notice('Solicitud enviada a revisión. No publica la aplicación.');
-    } catch (_) {
-      _notice('Solo el propietario con MFA puede solicitar revisión.',bad:true);
-    }
-  }
-
   Future<void> _upload() async {
     if(busy)return;
     final kind=selectedUploadKind;
-    if(kind=='font' && !const ['owned','open','licensed'].contains(license)){
-      _notice('Declara primero una licencia de uso.',bad:true);return;
-    }
-    final extensions=kind=='font'
-      ? ['woff2'] : kind=='logo'||kind=='icon'
-      ? ['png','webp'] : ['jpg','jpeg','png','webp'];
+    final extensions=kind=='font' ? ['woff2']
+      :kind=='logo'||kind=='icon' ? ['png','webp']
+      :['jpg','jpeg','png','webp'];
     try {
       final file=await FilePicker.pickFile(
         type:FileType.custom,allowedExtensions:extensions);
       if(file==null)return;
       final bytes=await file.readAsBytes();
+      if(!mounted)return;
       setState(()=>busy=true);
-      final saved=await widget.repository.uploadAsset(
-        kind:kind,name:file.name,bytes:bytes,license:license);
-      if(kind=='logo')selectedLogoAsset=saved['id'] as String;
-      if(kind!='font'&&kind!='logo')selectedImages[kind]=saved['id'] as String;
-      downloaded[saved['id'] as String]=bytes;
-      await _reload();
-      _notice('Recurso privado cargado. No está publicado en la aplicación.');
+      if(const ['logo','cover_desktop','cover_mobile','app_image']
+          .contains(kind)) {
+        // An explicit owner selection creates an immutable public image
+        // in the dedicated bucket. No private draft file is leaked.
+        final url=await widget.repository.uploadPublicBrandAsset(
+          kind:kind,name:file.name,bytes:bytes);
+        downloaded[url]=bytes;
+        if(mounted)setState((){
+          if(kind=='logo')selectedLogoAsset=url;
+          else selectedImages[kind]=url;
+        });
+        _queueBrandSave();
+        _notice('Imagen seleccionada. Guardando para todos los usuarios.');
+      } else {
+        final saved=await widget.repository.uploadAsset(
+          kind:kind,name:file.name,bytes:bytes,license:license);
+        downloaded[saved['id'] as String]=bytes;
+        await _reload();
+        _notice(kind=='font'
+          ?'Fuente conservada en biblioteca. La marca en vivo usa fuentes del catálogo.'
+          :'Recurso guardado en biblioteca privada; no se publica automáticamente.');
+      }
     } catch (_) {
-      _notice('No fue posible subir el archivo. Revisa tamaño, formato, licencia y MFA.',bad:true);
+      _notice('No se pudo subir. Comprueba tipo, tamaño y sesión MFA.',bad:true);
     } finally {
       if(mounted)setState(()=>busy=false);
     }
   }
 
-  Future<void> _loadAsset(Map<String, dynamic> item) async {
+  Future<void> _loadAsset(Map<String,dynamic> item) async {
     final id=item['id'] as String;
+    final kind=item['asset_kind'] as String;
+    if(kind=='font') {
+      _notice('Las fuentes WOFF2 privadas se prepararán para la fase avanzada.');
+      return;
+    }
     try {
-      if(!downloaded.containsKey(id) && item['asset_kind']!='font'){
-        final bytes=await widget.repository.loadPrivateAsset(item);
-        if(mounted)downloaded[id]=bytes;
+      setState(()=>busy=true);
+      final bytes=downloaded[id] ??
+        await widget.repository.loadPrivateAsset(item);
+      if(!mounted)return;
+      downloaded[id]=bytes;
+      if(const ['logo','cover_desktop','cover_mobile','app_image']
+          .contains(kind)) {
+        // Copy once into the public, owner-checked bucket on selection.
+        final url=await widget.repository.uploadPublicBrandAsset(
+          kind:kind,name:item['name'].toString(),bytes:bytes);
+        downloaded[url]=bytes;
+        setState((){
+          if(kind=='logo')selectedLogoAsset=url;
+          else selectedImages[kind]=url;
+        });
+        _queueBrandSave();
+      } else {
+        _notice('Esta clase de recurso todavía permanece privada.');
       }
-      if(mounted)setState(() {
-        final kind=item['asset_kind'] as String;
-        if(kind=='logo')selectedLogoAsset=id;
-        else if(kind=='font')font='asset:$id';
-        else selectedImages[kind]=id;
-      });
     } catch (_) {
-      _notice('El recurso privado no está disponible con esta sesión.',bad:true);
+      _notice('No fue posible usar este recurso públicamente.',bad:true);
+    } finally {
+      if(mounted)setState(()=>busy=false);
     }
   }
 
@@ -331,7 +508,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
 
   Widget _summary() => ListView(padding:const EdgeInsets.all(22),children:[
     _header('Panel de Administración',
-      'Bienvenido a My Fitness Date. Gestiona la identidad desde la misma aplicación.'),
+      'Tu aplicación. Publica actividades y configura el diseño que verán todos.'),
     Wrap(spacing:12,runSpacing:12,children:[
       _stat('Paletas',palettes.length,Icons.palette_outlined),
       _stat('Recursos privados',assets.length,Icons.image_outlined),
@@ -342,21 +519,67 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       crossAxisAlignment:CrossAxisAlignment.start,children:[
         Text('Brand Studio',style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:8),
-        const Text('Puedes probar nombres, colores, tipografías, logos, portadas '
-          'y componentes sin afectar lo que ve el público.'),
+        const Text('Configura nombre, paletas, textos, logotipos y portadas. '
+          'Se guardan globalmente sin revisión ni despliegue adicional.'),
         const SizedBox(height:12),
         FilledButton.icon(
           onPressed:()=>setState(()=>tab=1),
           icon:const Icon(Icons.design_services_outlined),
-          label:const Text('Configurar identidad'),
+          label:const Text('Editar marca en vivo'),
         ),
       ],
     ))),
+    if (widget.curatorApi != null) ...[
+      const SizedBox(height:14),
+      Card(child:Padding(padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Actividades deportivas',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          const Text('Publica actividades verificadas para los miembros y '
+            'mira cómo se ven en la aplicación, sin salir de tu cuenta '
+            'administrativa ni solicitar un nuevo despliegue.'),
+          const SizedBox(height:12),
+          FilledButton.icon(
+            key:const Key('b2-admin-open-curation'),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>AdminCuratedActivitiesB2(api:widget.curatorApi!))),
+            icon:const Icon(Icons.event_available_outlined),
+            label:const Text('Administrar actividades')),
+          if(widget.activityPreviewApi!=null) ...[
+            const SizedBox(height:10),
+            OutlinedButton.icon(
+              key:const Key('b2-admin-member-preview'),
+              onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+                builder:(_)=>ActivitiesB1(
+                  api:widget.activityPreviewApi!,readOnly:true))),
+              icon:const Icon(Icons.visibility_outlined),
+              label:const Text('Ver como miembro (solo lectura)')),
+          ],
+        ]))),
+    ],
+    if(widget.communityAdmin!=null)...[
+      const SizedBox(height:14),
+      Card(child:Padding(padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Seguridad de comunidad',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          const Text('Revisa denuncias, oculta publicaciones, suspende '
+            'participaciones y consulta solicitudes de baja con trazabilidad.'),
+          const SizedBox(height:12),
+          FilledButton.icon(
+            key:const Key('b4-admin-open-moderation'),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>CommunityModerationB4(api:widget.communityAdmin!))),
+            icon:const Icon(Icons.gpp_good_outlined),
+            label:const Text('Moderación y privacidad')),
+        ]))),
+    ],
     const SizedBox(height:14),
     const Card(child:Padding(padding:EdgeInsets.all(18),
-      child:Text('La publicación global sigue protegida: una solicitud '
-        'de revisión no cambia Flutter, los dominios, los logos de tienda '
-        'ni los textos legales.'))),
+      child:Text('Los cambios de apariencia internos se guardan sin otro build. '
+        'El icono instalado, tiendas y permisos móviles continúan requiriendo publicación de software.'))),
   ]);
 
   Widget _stat(String label,int value,IconData icon)=>SizedBox(
@@ -370,8 +593,18 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     ))));
 
   Widget _editor() => ListView(padding:const EdgeInsets.all(18),children:[
-    _header('Identidad de marca',
-      'Configuración integral de propuestas · las vistas son borradores privados.'),
+    _header('Marca global en vivo',
+      'Los cambios se muestran aquí y se guardan automáticamente para todas las personas.'),
+    if(!_brandReady) const LinearProgressIndicator(),
+    if(brandStatus!=null) Padding(
+      padding:const EdgeInsets.only(bottom:12),
+      child:Row(children:[
+        Icon(_brandSaving?Icons.sync:Icons.cloud_done_outlined,size:20),
+        const SizedBox(width:8),
+        Expanded(child:Text(brandStatus!,key:const Key('b3-save-status'))),
+        if(!_brandReady) TextButton(onPressed:()=>widget.liveBrand.refresh(),
+          child:const Text('Sincronizar')),
+      ])),
     LayoutBuilder(builder:(context,box) {
       final wide=box.maxWidth>=950;
       final editor=_identityControls();
@@ -447,7 +680,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 DropdownMenuItem(value:font,
                   child:const Text('Fuente WOFF2 cargada (requiere compilación)')),
             ],
-            onChanged:(v)=>setState(()=>font=v??'Georgia'),
+            onChanged:(v){setState(()=>font=v??'Georgia');_queueBrandSave();},
           ),
           const SizedBox(height:8),
           const Text('Las fuentes WOFF2 se conservan en la biblioteca. '
@@ -466,20 +699,20 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 avatar:Icon(_logoIcons[i],size:19),
                 label:Text(_logoNames[i]),
                 selected:selectedLogoAsset==null&&logoIndex==i,
-                onSelected:(_)=>setState((){
+                onSelected:(_){setState((){
                   selectedLogoAsset=null;logoIndex=i;
-                }),
+                });_queueBrandSave();},
               ),
           ]),
           if(selectedLogoAsset!=null)
             TextButton(
-              onPressed:()=>setState(()=>selectedLogoAsset=null),
+              onPressed:(){setState(()=>selectedLogoAsset=null);_queueBrandSave();},
               child:const Text('Volver a los logos del catálogo')),
           const SizedBox(height:10),
           SwitchListTile(
             title:const Text('Vista oscura'),
             value:dark,
-            onChanged:(v)=>setState(()=>dark=v)),
+            onChanged:(v){setState(()=>dark=v);_queueBrandSave();}),
           DropdownButtonFormField<String>(
             key:ValueKey('layout-$layout'),
             initialValue:layout,
@@ -487,19 +720,16 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               DropdownMenuItem(value:'editorial',child:Text('Editorial')),
               DropdownMenuItem(value:'minimal',child:Text('Minimalista')),
             ],
-            onChanged:(v)=>setState(()=>layout=v??'editorial'),
+            onChanged:(v){setState(()=>layout=v??'editorial');_queueBrandSave();},
             decoration:const InputDecoration(labelText:'Distribución'),
           ),
         ]))),
       const SizedBox(height:12),
-      FilledButton.icon(
-        key:const Key('admin-save-brand-draft'),
-        onPressed:busy?null:(){
-          setState(()=>tab=3);
-          _notice('Revisa el título y guarda el borrador en la sección Borradores.');
-        },
-        icon:const Icon(Icons.save_outlined),
-        label:const Text('Continuar a guardar borrador')),
+      const ListTile(
+        key:Key('b3-auto-publish-label'),
+        leading:Icon(Icons.cloud_done_outlined),
+        title:Text('Guardado automático activo'),
+        subtitle:Text('No hay solicitudes de revisión ni builds por cada cambio.')),
     ]);
 
   Widget _preview(){
@@ -511,6 +741,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     final heroAssetId=selectedImages[mobilePreview?'cover_mobile':'cover_desktop'];
     final heroBytes=heroAssetId==null?null:downloaded[heroAssetId];
     final logoBytes=selectedLogoAsset==null?null:downloaded[selectedLogoAsset];
+    final ImageProvider? heroProvider=heroBytes!=null
+      ? MemoryImage(heroBytes)
+      : heroAssetId!=null && LiveBrandSettings.safeAssetUrl(heroAssetId)
+        ? NetworkImage(heroAssetId) : null;
     return Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Text('Vista previa en vivo',style:Theme.of(context).textTheme.titleLarge),
@@ -535,6 +769,12 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 child:Row(children:[
                   if(logoBytes!=null)
                     Image.memory(logoBytes,width:35,height:35)
+                  else if(selectedLogoAsset!=null &&
+                    LiveBrandSettings.safeAssetUrl(selectedLogoAsset!))
+                    Image.network(selectedLogoAsset!,width:35,height:35)
+                  else if(logoIndex==0)
+                    Image.asset('assets/branding/mfd_icon.webp',
+                      width:35,height:35,fit:BoxFit.contain)
                   else
                     Icon(_logoIcons[logoIndex],color:p,size:32),
                   const SizedBox(width:8),
@@ -549,8 +789,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   constraints:const BoxConstraints(minHeight:280),
                   decoration:BoxDecoration(
                     gradient:LinearGradient(colors:[p,p.withValues(alpha:.65)]),
-                    image:heroBytes==null?null:DecorationImage(
-                      image:MemoryImage(heroBytes),fit:BoxFit.cover,
+                    image:heroProvider==null?null:DecorationImage(
+                      image:heroProvider,fit:BoxFit.cover,
                       colorFilter:ColorFilter.mode(
                         p.withValues(alpha:.40),BlendMode.darken))),
                 ),
@@ -589,8 +829,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           ),
         )),
         const SizedBox(height:12),
-        const Text('Vista ilustrativa. Los cambios y archivos privados no '
-          'están publicados para usuarios.',style:TextStyle(fontSize:12)),
+        Text('El diseño de la portada ya usa esta marca global. '
+          'Versión activa: ${widget.liveBrand.version}.',
+          style:const TextStyle(fontSize:12)),
       ])));
   }
 
@@ -699,40 +940,49 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     if(drafts.isEmpty)const Text('No se han creado borradores.'),
   ]);
 
-  Widget _publication()=>ListView(padding:const EdgeInsets.all(22),children:[
-    _header('Revisión y publicación',
-      'Únicamente el propietario puede pedir revisión. '
-      'Esta pantalla no despliega cambios en producción.'),
-    Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(
-      crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text('Solicitud de revisión',style:Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height:10),
-        Text(draft==null?'Primero selecciona o crea un borrador.':
-          'Borrador: ${draft!['title']} · revisión ${draft!['revision']}'),
-        const SizedBox(height:12),
-        FilledButton.icon(
-          onPressed:draft==null?null:_requestReview,
-          icon:const Icon(Icons.fact_check_outlined),
-          label:const Text('Solicitar revisión (sin publicar)'),
-        ),
-      ],
-    ))),
-    const SizedBox(height:12),
-    OutlinedButton.icon(onPressed:_fetchReleases,
-      icon:const Icon(Icons.refresh),label:const Text('Consultar solicitudes')),
-    for(final req in releases)
-      Card(child:ListTile(
-        leading:const Icon(Icons.rule_outlined),
-        title:Text('Estado: ${req['status']}'),
-        subtitle:Text('Revisión ${req['revision']} · ${req['requested_at']}'),
-      )),
-    const SizedBox(height:20),
-    const Card(child:Padding(padding:EdgeInsets.all(18),
-      child:Text('Para aplicar una marca a Flutter Web/Android/iOS se '
-        'requiere una versión aprobada, validación de recursos, accesibilidad, '
-        'CI/CD y posibilidad de reversión. El motor global de publicación '
-        'continúa siendo una fase separada.'))),
-  ]);
+  Widget _publication() => ListView(
+    key:const Key('b3-brand-history'),
+    padding:const EdgeInsets.all(22),
+    children:[
+      _header('Historial y restaurar marca',
+        'Cada guardado crea una versión. Puedes restaurar cualquier '
+        'identidad anterior sin aprobación ni compilación.'),
+      Card(child:Padding(
+        padding:const EdgeInsets.all(18),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Versión global activa: ${widget.liveBrand.version}',
+            key:const Key('b3-active-version'),
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          Text('Nombre: ${widget.liveBrand.current.name}'),
+          const SizedBox(height:12),
+          OutlinedButton.icon(
+            key:const Key('b3-refresh-history'),
+            onPressed:_fetchBrandHistory,
+            icon:const Icon(Icons.refresh_outlined),
+            label:const Text('Consultar historial')),
+        ]))),
+      const SizedBox(height:12),
+      if(brandHistory.isEmpty)const Text(
+        'Pulsa Consultar historial para ver las versiones guardadas.'),
+      for(final entry in brandHistory)
+        Card(child:ListTile(
+          leading:const Icon(Icons.history),
+          title:Text('Versión ${entry['version']}'),
+          subtitle:Text(entry['restored_from']==null
+            ?'Cambio de identidad · ${entry['changed_at']}'
+            :'Restaurada desde versión ${entry['restored_from']}'),
+          trailing:OutlinedButton(
+            onPressed:widget.liveBrand.saving
+              ?null:()=>_restoreBrandVersion(
+                (entry['version'] as num).toInt()),
+            child:const Text('Restaurar')),
+        )),
+      const SizedBox(height:20),
+      const Text('Las contraseñas, los datos privados y las '
+        'credenciales nunca se incluyen en una versión de marca.'),
+    ],
+  );
 
   Widget _body() {
     if(loading)return const Center(child:CircularProgressIndicator());
