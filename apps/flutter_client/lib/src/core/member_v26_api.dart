@@ -46,20 +46,18 @@ class MemberV26Api implements ActivityRepository {
         return response;
       }
       if (response.statusCode == 409) {
-        final failure = _safeStatus(response.body);
-        throw MemberApiException(failure == 'full'
+        final reason = _safeStatus(response.body);
+        throw MemberApiException(reason == 'full'
           ? 'Los lugares de esta actividad se agotaron.'
           : 'Esta actividad ya no admite nuevas participaciones.');
       }
       if (response.statusCode == 401 || response.statusCode == 403) {
-        final failure = _safeStatus(response.body);
-        if (failure == 'profile_required') {
-          throw const MemberApiException(
-            'Completa tu perfil y confirma tu mayoría de edad antes de participar.');
+        final reason = _safeStatus(response.body);
+        if (reason == 'profile_required') {
+          throw const MemberApiException('Completa tu perfil antes de participar.');
         }
-        if (failure == 'consent_required') {
-          throw const MemberApiException(
-            'Acepta los términos y el aviso de privacidad antes de participar.');
+        if (reason == 'consent_required') {
+          throw const MemberApiException('Acepta los términos y privacidad antes de participar.');
         }
         throw const MemberApiException('Tu sesión no tiene acceso a esta información.');
       }
@@ -93,6 +91,7 @@ class MemberV26Api implements ActivityRepository {
     throw const MemberApiException('Respuesta inesperada del servidor.');
   }
 
+  @override
   Future<List<Map<String, dynamic>>> loadActivities() async {
     final result = _decode(await _request('GET', '/v1/activities'));
     final values = result['items'];
@@ -102,88 +101,13 @@ class MemberV26Api implements ActivityRepository {
     return values.map((v) => Map<String, dynamic>.from(v as Map)).toList();
   }
 
-  Future<String> confirmActivity(String eventId) async {
-    if (!RegExp(r'^[0-9a-fA-F-]{36}
-    final value = _decode(await _request('GET', '/v1/me/profile'))['profile'];
-    return value is Map<String, dynamic> ? value : null;
-  }
-
-  Future<Map<String, dynamic>> saveProfile(Map<String, dynamic> profile) async {
-    final result = _decode(await _request('PUT', '/v1/me/profile', data: profile));
-    return result['profile'] as Map<String, dynamic>;
-  }
-
-  Future<List<Map<String, dynamic>>> loadPlaces() async {
-    final body = _decode(await _request('GET', '/v1/me/places'));
-    return (body['places'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-  }
-
-  Future<void> addPlace(Map<String, dynamic> place) async {
-    await _request('POST', '/v1/me/places', data: place);
-  }
-
-  Future<void> removePlace(String id) async {
-    await _request('DELETE', '/v1/me/places/$id');
-  }
-
-  Future<List<Map<String, dynamic>>> loadConsents() async {
-    final body = _decode(await _request('GET', '/v1/me/consents'));
-    return (body['consents'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-  }
-
-  Future<void> acceptConsent(String kind, String version) async {
-    await _request('POST', '/v1/me/consents',
-        data: {'consent_kind': kind, 'document_version': version});
-  }
-
-  Future<Map<String, dynamic>> datingStatus() async =>
-      _decode(await _request('GET', '/v1/dating/status'));
-
-  Future<void> acceptDating() async {
-    await _request('POST', '/v1/dating/consent',
-        data: {'opt_in': true});
-  }
-
-  Future<List<Map<String, dynamic>>> datingCandidates() async {
-    final response = _decode(await _request('GET', '/v1/dating/candidates'));
-    return (response['items'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-  }
-
-  Future<List<Map<String, dynamic>>> loadPhotos() async {
-    final body = _decode(await _request('GET', '/v1/me/photos'));
-    return (body['photos'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-  }
-
-  Future<void> uploadPhoto(Uint8List bytes, String contentType) async {
-    await _request('POST', '/v1/me/photos',
-        body: bytes, contentType: contentType);
-  }
-
-  Future<Uint8List> photoContent(String id) async {
-    final resp = await _request('GET', '/v1/me/photos/$id/content');
-    return resp.bodyBytes;
-  }
-
-  Future<void> removePhoto(String id) async {
-    await _request('DELETE', '/v1/me/photos/$id');
-  }
-}
-
-class MemberApiException implements Exception {
-  const MemberApiException(this.message);
-  final String message;
   @override
-  String toString() => message;
-}
-).hasMatch(eventId)) {
-      throw const MemberApiException('Actividad inválida.');
-    }
+  Future<String> confirmActivity(String eventId) async {
+    final valid = eventId.length == 36 &&
+        RegExp(r'^[0-9a-fA-F-]+').firstMatch(eventId)?.group(0)?.length == 36;
+    if (!valid) throw const MemberApiException('Actividad inválida.');
     final result = _decode(await _request(
-      'POST', '/v1/activities/$eventId/rsvp',
+      'POST', '/v1/activities/' + eventId + '/rsvp',
     ));
     final status = result['status']?.toString();
     if (status != 'confirmed' && status != 'already_confirmed') {
@@ -192,15 +116,17 @@ class MemberApiException implements Exception {
     return status!;
   }
 
+  @override
   Future<bool> isApprovedActivityOrganizer() async {
     final result = _decode(await _request('GET', '/v1/me/organizer-status'));
     return result['approved'] == true;
   }
 
+  @override
   Future<Map<String, dynamic>> publishActivity(
       Map<String, dynamic> activity) async {
     final result = _decode(await _request(
-      'POST', '/v1/organizer/activities', data:activity,
+      'POST', '/v1/organizer/activities', data: activity,
     ));
     return Map<String, dynamic>.from(result['activity'] as Map);
   }
