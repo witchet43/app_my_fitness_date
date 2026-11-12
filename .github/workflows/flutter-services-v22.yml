@@ -1,20 +1,8 @@
 name: Flutter and microservices V22
 
+# Budget-controlled manual-only workflow; no automatic PR/push builds.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/flutter_client/**"
-      - "services/**"
-      - ".github/workflows/flutter-services-v22.yml"
-      - "cloudbuild.yaml"
-  pull_request:
-    paths:
-      - "services/**"
-      - "apps/flutter_client/**"
-      - ".github/workflows/flutter-services-v22.yml"
   workflow_dispatch:
-
 permissions:
   contents: read
 
