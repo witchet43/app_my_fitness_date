@@ -51,6 +51,9 @@ class _MemberV26AppState extends State<MemberV26App> {
   bool busy=false;
   String? failure;
   Map<String,dynamic>? profile;
+  bool _refreshRunning = false;
+  bool _refreshPending = false;
+  String? _validatedUserId;
 
   @override
   void initState(){
@@ -62,7 +65,15 @@ class _MemberV26AppState extends State<MemberV26App> {
       if(event.event==AuthChangeEvent.passwordRecovery){
         passwordRecoveryRequested=true;
       }
-      if(mounted) unawaited(refresh());
+      // Supabase can emit tokenRefreshed during validation/MFA. Revalidating
+      // on every token refresh repeatedly replaced the MFA enrollment UI.
+      // Challenge verification calls refresh() explicitly after AAL2.
+      if(event.event==AuthChangeEvent.signedIn ||
+         event.event==AuthChangeEvent.signedOut ||
+         event.event==AuthChangeEvent.passwordRecovery ||
+         event.event==AuthChangeEvent.userUpdated){
+        if(mounted) unawaited(refresh());
+      }
     },onError:(Object _, StackTrace __){
       if(mounted)setState((){
         loading=false;verified=false;
@@ -73,10 +84,32 @@ class _MemberV26AppState extends State<MemberV26App> {
   }
 
   Future<void> refresh() async {
-    if(mounted)setState((){loading=true;failure=null;});
+    if (_refreshRunning) {
+      _refreshPending = true;
+      return;
+    }
+    _refreshRunning = true;
+    try {
+      do {
+        _refreshPending = false;
+        await _refreshOnce();
+      } while (_refreshPending && mounted);
+    } finally {
+      _refreshRunning = false;
+    }
+  }
+
+  Future<void> _refreshOnce() async {
+    final session = widget.auth.auth.currentSession;
+    // Do not unmount the MFA widget on refreshes for the same user: its
+    // in-memory TOTP secret must survive until enrollment is verified.
+    // Do block the UI on an actual account switch / first validation.
+    if (mounted && (loading || _validatedUserId != session?.user.id)) {
+      setState(() {loading = true; failure = null;});
+    }
     try{
-      final session=widget.auth.auth.currentSession;
       if(session==null){
+        _validatedUserId = null;
         if(mounted){setState((){
           verified=false; legalAccepted=false;
           brandAdministrator=false;adminMfaVerified=false;
@@ -93,6 +126,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       // Recovery never routes to an administrator panel or member data.
       // Auth enforces the token; this only shows its password form.
       if(passwordRecoveryRequested){
+        _validatedUserId = response.user!.id;
         if(mounted)setState((){
           verified=true;brandAdministrator=false;adminMfaVerified=false;
           legalAccepted=false;profile=null;editing=false;loading=false;
@@ -109,6 +143,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       if(adminResult){
         // AAL2 is verified SERVER-SIDE on each request, not a UI flag.
         final allow=await widget.auth.rpc('brand_admin_session');
+        _validatedUserId = response.user!.id;
         if(mounted){setState((){
           verified=true;brandAdministrator=true;
           adminMfaVerified=allow==true;
@@ -122,6 +157,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       final privacy=records.any((r)=>r['consent_kind']=='privacy' &&
           r['document_version']==widget.privacyVersion);
       final own=terms && privacy ? await widget.api.loadProfile() : null;
+      _validatedUserId = response.user!.id;
       if(mounted){setState((){
         verified=true;brandAdministrator=false;adminMfaVerified=false;
         legalAccepted=terms&&privacy;
@@ -130,6 +166,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       });}
     }catch(_){
       // Fail closed; backend down or unverified means no member app.
+      _validatedUserId = null;
       if(mounted){setState((){
         verified=false;legalAccepted=false;
         brandAdministrator=false;adminMfaVerified=false;
