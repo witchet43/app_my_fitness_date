@@ -1,0 +1,801 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+
+import '../core/brand_admin_repository.dart';
+import '../widgets/mfd_branding.dart';
+
+/// Administration lives in the SAME Flutter application / MaterialApp as
+/// member screens. Only the server-backed role gate may construct this view.
+/// The repository and Supabase RLS require AAL2 for each operation.
+class BrandAdminHome extends StatefulWidget {
+  const BrandAdminHome({
+    super.key,
+    required this.repository,
+    required this.email,
+    required this.onSignOut,
+  });
+  final BrandAdminRepository repository;
+  final String email;
+  final Future<void> Function() onSignOut;
+
+  @override
+  State<BrandAdminHome> createState() => _BrandAdminHomeState();
+}
+
+class _BrandAdminHomeState extends State<BrandAdminHome> {
+  static const _tabs = <String>[
+    'Resumen', 'Identidad', 'Biblioteca', 'Borradores', 'Publicación'
+  ];
+  static const _icons = <IconData>[
+    Icons.space_dashboard_outlined,
+    Icons.palette_outlined,
+    Icons.collections_outlined,
+    Icons.layers_outlined,
+    Icons.fact_check_outlined
+  ];
+  static const _logoNames = <String>[
+    'Monograma', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
+    'Brújula', 'Trayectoria', 'Horizonte', 'Geometría', 'Movimiento',
+  ];
+  static const _logoIcons = <IconData>[
+    Icons.change_history, Icons.graphic_eq, Icons.landscape_outlined,
+    Icons.hub_outlined, Icons.multiline_chart, Icons.explore_outlined,
+    Icons.timeline, Icons.waves_outlined, Icons.diamond_outlined,
+    Icons.auto_graph_outlined,
+  ];
+  static const _paletteSeeds = <Map<String, String>>[
+    {'name':'Bosque', 'primary':'#28463D','accent':'#B49A6A','background':'#F7F5F0'},
+    {'name':'Azul noche', 'primary':'#152D3D','accent':'#859EA3','background':'#F4F5F2'},
+    {'name':'Tierra', 'primary':'#5A4838','accent':'#B2936A','background':'#FAF5EB'},
+    {'name':'Pizarra', 'primary':'#36434A','accent':'#8D9A9D','background':'#F4F5F4'},
+    {'name':'Salvia', 'primary':'#455D4B','accent':'#9AA57D','background':'#F8F7F1'},
+  ];
+
+  final name = TextEditingController(text:'My Fitness Date');
+  final tagline = TextEditingController(text:'Conexiones con intención.');
+  final headline = TextEditingController(text:'Personas afines a tu forma de vivir.');
+  final description = TextEditingController(
+    text:'Una comunidad para personas que valoran la vida activa y las relaciones serias.');
+  final paletteName = TextEditingController(text:'Bosque');
+  final primary = TextEditingController(text:'#28463D');
+  final accent = TextEditingController(text:'#B49A6A');
+  final background = TextEditingController(text:'#F7F5F0');
+  final draftTitle = TextEditingController(text:'Propuesta elegante 40+');
+  int tab = 0;
+  int logoIndex = 0;
+  String? selectedLogoAsset;
+  String font = 'Georgia';
+  String license = 'open';
+  String selectedUploadKind = 'logo';
+  String layout = 'editorial';
+  bool dark = false;
+  bool mobilePreview = false;
+  bool busy = false;
+  bool loading = true;
+  String? error;
+  Map<String, dynamic>? draft;
+  List<Map<String, dynamic>> palettes = [];
+  List<Map<String, dynamic>> assets = [];
+  List<Map<String, dynamic>> drafts = [];
+  List<Map<String, dynamic>> releases = [];
+  List<Map<String, dynamic>> revisions = [];
+  final Map<String, String> selectedImages = {};
+  final Map<String, Uint8List> downloaded = {};
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [name,tagline,headline,description,
+      paletteName,primary,accent,background]) {
+      c.addListener(_redraw);
+    }
+    _reload();
+  }
+
+  void _redraw() { if (mounted) setState(() {}); }
+
+  @override
+  void dispose() {
+    for (final c in [name,tagline,headline,description,paletteName,
+      primary,accent,background,draftTitle]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _notice(String text, {bool bad=false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(text),
+      backgroundColor: bad ? const Color(0xFF8F3434) : null,
+    ));
+  }
+
+  Future<void> _reload() async {
+    if (mounted) setState(() {loading=true;error=null;});
+    try {
+      final result = await Future.wait([
+        widget.repository.loadPalettes(),
+        widget.repository.loadAssets(),
+        widget.repository.loadDrafts(),
+      ]);
+      if (mounted) setState(() {
+        palettes=result[0]; assets=result[1]; drafts=result[2];loading=false;
+      });
+    } catch (_) {
+      if (mounted) setState(() {
+        loading=false;error='No pudimos validar las opciones de marca. '
+          'Comprueba tu sesión MFA e inténtalo de nuevo.';
+      });
+    }
+  }
+
+  Color _color(String value, Color fallback) {
+    if (!BrandAdminRepository.validHex(value)) return fallback;
+    return Color(int.parse(value.substring(1), radix:16)|0xFF000000);
+  }
+
+  Map<String, String> get colors => {
+    'primary': primary.text.trim(),
+    'accent': accent.text.trim(),
+    'background': background.text.trim(),
+  };
+  bool get validPalette => colors.values.every(BrandAdminRepository.validHex);
+
+  void _applyPalette(Map<String, String> data) {
+    setState(() {
+      paletteName.text=data['name'] ?? 'Personalizada';
+      primary.text=data['primary'] ?? '#28463D';
+      accent.text=data['accent'] ?? '#B49A6A';
+      background.text=data['background'] ?? '#F7F5F0';
+    });
+  }
+
+  Future<void> _savePalette() async {
+    try {
+      await widget.repository.createPalette(paletteName.text, colors);
+      await _reload();
+      _notice('Paleta incorporada al catálogo administrativo.');
+    } catch (_) { _notice('No fue posible guardar la paleta. Verifica los colores y MFA.',bad:true); }
+  }
+
+  Map<String, dynamic> _settings() => {
+    'name':name.text.trim(),
+    'tagline':tagline.text.trim(),
+    'title':headline.text.trim(),
+    'description':description.text.trim(),
+    'paletteName':paletteName.text.trim(),
+    'colors':colors,
+    'font':font,
+    'logo':selectedLogoAsset == null
+      ? 'catalog:$logoIndex' : 'asset:$selectedLogoAsset',
+    'media':selectedImages,
+    'layout':layout,
+    'mode':dark ? 'dark' : 'light',
+  };
+
+  Future<void> _saveDraft() async {
+    if (!validPalette || name.text.trim().isEmpty) {
+      _notice('Revisa el nombre y los colores HEX de la identidad.',bad:true);
+      return;
+    }
+    setState(()=>busy=true);
+    try {
+      final updated = await widget.repository.saveDraft(
+        title:draftTitle.text,
+        settings:_settings(),
+        prior:draft,
+      );
+      draft=updated;
+      await _reload();
+      _notice('Borrador guardado en Supabase · revisión ${updated['revision']}. '
+        'No modifica la marca pública.');
+    } catch (_) {
+      _notice('No fue posible guardar. Recarga si otro administrador cambió la versión.',bad:true);
+    } finally {
+      if (mounted) setState(()=>busy=false);
+    }
+  }
+
+  Future<void> _loadDraft(Map<String, dynamic> item) async {
+    try {
+      final settings=Map<String,dynamic>.from(item['settings'] as Map);
+      final c=Map<String,dynamic>.from(settings['colors'] as Map);
+      if (!c.values.every((x)=>x is String &&
+          BrandAdminRepository.validHex(x))) {
+        throw const FormatException('invalid colors');
+      }
+      setState(() {
+        draft=item;
+        draftTitle.text=(item['title']??'Borrador').toString();
+        name.text=(settings['name']??'My Fitness Date').toString();
+        tagline.text=(settings['tagline']??'').toString();
+        headline.text=(settings['title']??'').toString();
+        description.text=(settings['description']??'').toString();
+        paletteName.text=(settings['paletteName']??'Personalizada').toString();
+        primary.text=c['primary'].toString();
+        accent.text=c['accent'].toString();
+        background.text=c['background'].toString();
+        font=(settings['font']??'Georgia').toString();
+        final logo=(settings['logo']??'catalog:0').toString();
+        selectedLogoAsset=logo.startsWith('asset:')?logo.substring(6):null;
+        final parsed=int.tryParse(logo.replaceFirst('catalog:',''));
+        logoIndex=(parsed??0).clamp(0,9);
+        dark=settings['mode']=='dark';
+        layout=(settings['layout']??'editorial').toString();
+        selectedImages
+          ..clear()
+          ..addAll(Map<String,String>.from(settings['media']??{}));
+        tab=1;
+      });
+      _notice('Borrador cargado para edición. No hay cambios publicados.');
+    } catch (_) {
+      _notice('El borrador contiene datos no compatibles.',bad:true);
+    }
+  }
+
+  Future<void> _fetchRevisions() async {
+    if(draft==null)return;
+    try {
+      final rows=await widget.repository.loadRevisions(draft!['id'] as String);
+      if(mounted)setState(()=>revisions=rows);
+    } catch (_) {
+      _notice('No fue posible consultar las revisiones.',bad:true);
+    }
+  }
+
+  Future<void> _fetchReleases() async {
+    try {
+      final rows=await widget.repository.loadReleaseRequests();
+      if(mounted)setState(()=>releases=rows);
+    } catch (_) {
+      _notice('Las solicitudes están reservadas al propietario.',bad:true);
+    }
+  }
+
+  Future<void> _requestReview() async {
+    if(draft==null){ _notice('Guarda un borrador antes de solicitar revisión.');return; }
+    try {
+      await widget.repository.requestReview(draft!);
+      await _fetchReleases();
+      _notice('Solicitud enviada a revisión. No publica la aplicación.');
+    } catch (_) {
+      _notice('Solo el propietario con MFA puede solicitar revisión.',bad:true);
+    }
+  }
+
+  Future<void> _upload() async {
+    if(busy)return;
+    final kind=selectedUploadKind;
+    if(kind=='font' && !const ['owned','open','licensed'].contains(license)){
+      _notice('Declara primero una licencia de uso.',bad:true);return;
+    }
+    final extensions=kind=='font'
+      ? ['woff2'] : kind=='logo'||kind=='icon'
+      ? ['png','webp'] : ['jpg','jpeg','png','webp'];
+    try {
+      final file=await FilePicker.pickFile(
+        type:FileType.custom,allowedExtensions:extensions);
+      if(file==null)return;
+      final bytes=await file.readAsBytes();
+      setState(()=>busy=true);
+      final saved=await widget.repository.uploadAsset(
+        kind:kind,name:file.name,bytes:bytes,license:license);
+      if(kind=='logo')selectedLogoAsset=saved['id'] as String;
+      if(kind!='font'&&kind!='logo')selectedImages[kind]=saved['id'] as String;
+      downloaded[saved['id'] as String]=bytes;
+      await _reload();
+      _notice('Recurso privado cargado. No está publicado en la aplicación.');
+    } catch (_) {
+      _notice('No fue posible subir el archivo. Revisa tamaño, formato, licencia y MFA.',bad:true);
+    } finally {
+      if(mounted)setState(()=>busy=false);
+    }
+  }
+
+  Future<void> _loadAsset(Map<String, dynamic> item) async {
+    final id=item['id'] as String;
+    try {
+      if(!downloaded.containsKey(id) && item['asset_kind']!='font'){
+        final bytes=await widget.repository.loadPrivateAsset(item);
+        if(mounted)downloaded[id]=bytes;
+      }
+      if(mounted)setState(() {
+        final kind=item['asset_kind'] as String;
+        if(kind=='logo')selectedLogoAsset=id;
+        else if(kind=='font')font='asset:$id';
+        else selectedImages[kind]=id;
+      });
+    } catch (_) {
+      _notice('El recurso privado no está disponible con esta sesión.',bad:true);
+    }
+  }
+
+  Widget _header(String title, String subtitle) => Padding(
+    padding:const EdgeInsets.only(bottom:15),
+    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Text(title,style:Theme.of(context).textTheme.headlineMedium),
+      const SizedBox(height:7),
+      Text(subtitle,style:Theme.of(context).textTheme.bodyMedium),
+    ]),
+  );
+
+  Widget _field(TextEditingController ctrl,String label,{int lines=1}) =>
+    Padding(padding:const EdgeInsets.only(bottom:12),
+      child:TextField(
+        controller:ctrl,maxLines:lines,
+        decoration:InputDecoration(labelText:label),
+      ));
+
+  Widget _summary() => ListView(padding:const EdgeInsets.all(22),children:[
+    _header('Panel de Administración',
+      'Bienvenido a My Fitness Date. Gestiona la identidad desde la misma aplicación.'),
+    Wrap(spacing:12,runSpacing:12,children:[
+      _stat('Paletas',palettes.length,Icons.palette_outlined),
+      _stat('Recursos privados',assets.length,Icons.image_outlined),
+      _stat('Borradores',drafts.length,Icons.layers_outlined),
+    ]),
+    const SizedBox(height:24),
+    Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(
+      crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text('Brand Studio',style:Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height:8),
+        const Text('Puedes probar nombres, colores, tipografías, logos, portadas '
+          'y componentes sin afectar lo que ve el público.'),
+        const SizedBox(height:12),
+        FilledButton.icon(
+          onPressed:()=>setState(()=>tab=1),
+          icon:const Icon(Icons.design_services_outlined),
+          label:const Text('Configurar identidad'),
+        ),
+      ],
+    ))),
+    const SizedBox(height:14),
+    const Card(child:Padding(padding:EdgeInsets.all(18),
+      child:Text('La publicación global sigue protegida: una solicitud '
+        'de revisión no cambia Flutter, los dominios, los logos de tienda '
+        'ni los textos legales.'))),
+  ]);
+
+  Widget _stat(String label,int value,IconData icon)=>SizedBox(
+    width:205,child:Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(
+      crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Icon(icon,size:30),
+        const SizedBox(height:14),
+        Text('$value',style:Theme.of(context).textTheme.headlineMedium),
+        Text(label),
+      ],
+    ))));
+
+  Widget _editor() => ListView(padding:const EdgeInsets.all(18),children:[
+    _header('Identidad de marca',
+      'Configuración integral de propuestas · las vistas son borradores privados.'),
+    LayoutBuilder(builder:(context,box) {
+      final wide=box.maxWidth>=950;
+      final editor=_identityControls();
+      final preview=_preview();
+      return wide?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Expanded(flex:5,child:editor),const SizedBox(width:14),
+        Expanded(flex:4,child:preview),
+      ]):Column(children:[editor,const SizedBox(height:14),preview]);
+    }),
+  ]);
+
+  Widget _identityControls()=>Column(
+    crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+      Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
+        crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Nombre y comunicación',style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:12),
+          _field(name,'Nombre de la aplicación'),
+          _field(tagline,'Lema'),
+          _field(headline,'Título de portada'),
+          _field(description,'Presentación',lines:3),
+        ]))),
+      const SizedBox(height:10),
+      Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
+        crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Paletas y colores',style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          Wrap(spacing:7,runSpacing:7,children:[
+            for(final p in _paletteSeeds)
+              ChoiceChip(label:Text(p['name']!),
+                selected:paletteName.text==p['name'],
+                onSelected:(_)=>_applyPalette(p)),
+          ]),
+          if(palettes.isNotEmpty) ...[
+            const SizedBox(height:12),
+            const Text('Mis paletas guardadas'),
+            Wrap(spacing:6,runSpacing:6,children:[
+              for(final p in palettes)
+                ActionChip(label:Text(p['name'].toString()),
+                  onPressed:(){
+                    final c=Map<String,dynamic>.from(p['colors'] as Map);
+                    _applyPalette({'name':p['name'].toString(),
+                      for(final k in ['primary','accent','background'])
+                        k:c[k].toString()});
+                  }),
+            ]),
+          ],
+          const SizedBox(height:13),
+          _field(paletteName,'Nombre de la nueva paleta'),
+          Row(children:[
+            Expanded(child:_field(primary,'Primario HEX')),
+            const SizedBox(width:8),
+            Expanded(child:_field(accent,'Acento HEX')),
+          ]),
+          _field(background,'Fondo HEX'),
+          FilledButton.tonalIcon(
+            onPressed:validPalette?_savePalette:null,
+            icon:const Icon(Icons.add_circle_outline),
+            label:const Text('Crear paleta en catálogo'),
+          ),
+        ]))),
+      const SizedBox(height:10),
+      Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
+        crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Tipografía',style:Theme.of(context).textTheme.titleLarge),
+          DropdownButtonFormField<String>(
+            key:ValueKey('font-$font'),initialValue:font,
+            decoration:const InputDecoration(labelText:'Familia de prueba'),
+            items:[
+              for(final f in ['Georgia','Palatino','Garamond','Arial'])
+                DropdownMenuItem(value:f,child:Text(f)),
+              if(font.startsWith('asset:'))
+                DropdownMenuItem(value:font,
+                  child:const Text('Fuente WOFF2 cargada (requiere compilación)')),
+            ],
+            onChanged:(v)=>setState(()=>font=v??'Georgia'),
+          ),
+          const SizedBox(height:8),
+          const Text('Las fuentes WOFF2 se conservan en la biblioteca. '
+            'Su visualización nativa completa requiere procesarlas para Flutter.',
+            style:TextStyle(fontSize:12)),
+        ]))),
+      const SizedBox(height:10),
+      Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
+        crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Logotipos del catálogo',style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:12),
+          Wrap(spacing:8,runSpacing:8,children:[
+            for(var i=0;i<_logoNames.length;i++)
+              ChoiceChip(
+                key:Key('admin-logo-$i'),
+                avatar:Icon(_logoIcons[i],size:19),
+                label:Text(_logoNames[i]),
+                selected:selectedLogoAsset==null&&logoIndex==i,
+                onSelected:(_)=>setState((){
+                  selectedLogoAsset=null;logoIndex=i;
+                }),
+              ),
+          ]),
+          if(selectedLogoAsset!=null)
+            TextButton(
+              onPressed:()=>setState(()=>selectedLogoAsset=null),
+              child:const Text('Volver a los logos del catálogo')),
+          const SizedBox(height:10),
+          SwitchListTile(
+            title:const Text('Vista oscura'),
+            value:dark,
+            onChanged:(v)=>setState(()=>dark=v)),
+          DropdownButtonFormField<String>(
+            key:ValueKey('layout-$layout'),
+            initialValue:layout,
+            items:const [
+              DropdownMenuItem(value:'editorial',child:Text('Editorial')),
+              DropdownMenuItem(value:'minimal',child:Text('Minimalista')),
+            ],
+            onChanged:(v)=>setState(()=>layout=v??'editorial'),
+            decoration:const InputDecoration(labelText:'Distribución'),
+          ),
+        ]))),
+      const SizedBox(height:12),
+      FilledButton.icon(
+        key:const Key('admin-save-brand-draft'),
+        onPressed:busy?null:(){
+          setState(()=>tab=3);
+          _notice('Revisa el título y guarda el borrador en la sección Borradores.');
+        },
+        icon:const Icon(Icons.save_outlined),
+        label:const Text('Continuar a guardar borrador')),
+    ]);
+
+  Widget _preview(){
+    final p=_color(primary.text,const Color(0xFF28463D));
+    final a=_color(accent.text,const Color(0xFFB49A6A));
+    final bg=_color(background.text,const Color(0xFFF7F5F0));
+    final foreground=dark?Colors.white:const Color(0xFF182923);
+    final bodyColor=dark?const Color(0xFF172621):bg;
+    final heroAssetId=selectedImages[mobilePreview?'cover_mobile':'cover_desktop'];
+    final heroBytes=heroAssetId==null?null:downloaded[heroAssetId];
+    final logoBytes=selectedLogoAsset==null?null:downloaded[selectedLogoAsset];
+    return Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(
+      crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        Text('Vista previa en vivo',style:Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height:8),
+        Wrap(children:[
+          FilterChip(label:const Text('Web'),selected:!mobilePreview,
+            onSelected:(_)=>setState(()=>mobilePreview=false)),
+          const SizedBox(width:8),
+          FilterChip(label:const Text('Móvil'),selected:mobilePreview,
+            onSelected:(_)=>setState(()=>mobilePreview=true)),
+        ]),
+        const SizedBox(height:10),
+        Align(alignment:Alignment.center,child:ConstrainedBox(
+          constraints:BoxConstraints(maxWidth:mobilePreview?340:700),
+          child:Container(
+            decoration:BoxDecoration(color:bodyColor,
+              borderRadius:BorderRadius.circular(mobilePreview?25:13)),
+            clipBehavior:Clip.antiAlias,
+            child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              Container(padding:const EdgeInsets.all(14),
+                color:dark?const Color(0xFF29362E):Colors.white,
+                child:Row(children:[
+                  if(logoBytes!=null)
+                    Image.memory(logoBytes,width:35,height:35)
+                  else
+                    Icon(_logoIcons[logoIndex],color:p,size:32),
+                  const SizedBox(width:8),
+                  Expanded(child:Text(name.text.isEmpty?'Mi marca':name.text,
+                    maxLines:2,overflow:TextOverflow.ellipsis,
+                    style:TextStyle(color:foreground,fontSize:19,
+                      fontWeight:FontWeight.w600,
+                      fontFamily:font.startsWith('asset:')?null:font))),
+                ])),
+              Stack(children:[
+                Container(
+                  constraints:const BoxConstraints(minHeight:280),
+                  decoration:BoxDecoration(
+                    gradient:LinearGradient(colors:[p,p.withValues(alpha:.65)]),
+                    image:heroBytes==null?null:DecorationImage(
+                      image:MemoryImage(heroBytes),fit:BoxFit.cover,
+                      colorFilter:ColorFilter.mode(
+                        p.withValues(alpha:.40),BlendMode.darken))),
+                ),
+                Padding(padding:const EdgeInsets.all(26),
+                  child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    const Text('CONEXIONES CON INTENCIÓN',style:TextStyle(
+                      fontSize:11,color:Colors.white70,letterSpacing:2)),
+                    const SizedBox(height:15),
+                    Text(headline.text,
+                      style:TextStyle(fontFamily:font.startsWith('asset:')?null:font,
+                        fontSize:mobilePreview?28:34,
+                        color:Colors.white,height:1.22)),
+                    const SizedBox(height:16),
+                    Text(description.text,style:const TextStyle(
+                      color:Colors.white,fontSize:15,height:1.5)),
+                    const SizedBox(height:18),
+                    Container(
+                      decoration:BoxDecoration(
+                        color:a,borderRadius:BorderRadius.circular(10)),
+                      padding:const EdgeInsets.all(12),
+                      child:const Text('Conocer nuestra propuesta',
+                        style:TextStyle(color:Colors.black87,fontWeight:FontWeight.w700))),
+                  ])),
+              ]),
+              Container(
+                padding:const EdgeInsets.all(20),
+                child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                  Text(tagline.text,style:TextStyle(
+                    color:foreground,fontWeight:FontWeight.bold,fontSize:18)),
+                  const SizedBox(height:7),
+                  Text('Cómo me muevo · Cómo vivo · Cómo me relaciono',
+                    style:TextStyle(color:foreground)),
+                ]),
+              ),
+            ]),
+          ),
+        )),
+        const SizedBox(height:12),
+        const Text('Vista ilustrativa. Los cambios y archivos privados no '
+          'están publicados para usuarios.',style:TextStyle(fontSize:12)),
+      ])));
+  }
+
+  Widget _library()=>ListView(padding:const EdgeInsets.all(22),children:[
+    _header('Biblioteca de marca',
+      'Sube logos, portadas, imágenes y tipografías. Todos los originales quedan privados.'),
+    Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
+      crossAxisAlignment:CrossAxisAlignment.start,children:[
+        DropdownButtonFormField<String>(
+          key:ValueKey('asset-kind-$selectedUploadKind'),
+          initialValue:selectedUploadKind,
+          decoration:const InputDecoration(labelText:'Tipo de recurso'),
+          items:const [
+            DropdownMenuItem(value:'logo',child:Text('Logo PNG o WebP')),
+            DropdownMenuItem(value:'font',child:Text('Tipografía WOFF2')),
+            DropdownMenuItem(value:'cover_desktop',child:Text('Portada escritorio')),
+            DropdownMenuItem(value:'cover_mobile',child:Text('Portada móvil')),
+            DropdownMenuItem(value:'login_image',child:Text('Imagen de acceso')),
+            DropdownMenuItem(value:'onboarding_image',child:Text('Imagen de onboarding')),
+            DropdownMenuItem(value:'app_image',child:Text('Imagen interior')),
+            DropdownMenuItem(value:'illustration',child:Text('Ilustración')),
+          ],
+          onChanged:(v)=>setState(()=>selectedUploadKind=v??'logo'),
+        ),
+        if(selectedUploadKind=='font') ...[
+          const SizedBox(height:12),
+          DropdownButtonFormField<String>(
+            initialValue:license,
+            decoration:const InputDecoration(labelText:'Licencia de uso declarada'),
+            items:const [
+              DropdownMenuItem(value:'open',child:Text('Licencia abierta compatible')),
+              DropdownMenuItem(value:'owned',child:Text('Soy titular de los derechos')),
+              DropdownMenuItem(value:'licensed',child:Text('Licencia comercial válida')),
+            ],
+            onChanged:(v)=>setState(()=>license=v??'open'),
+          ),
+        ],
+        const SizedBox(height:14),
+        FilledButton.icon(
+          key:const Key('admin-upload-brand-asset'),
+          onPressed:busy?null:_upload,
+          icon:const Icon(Icons.upload_file_outlined),
+          label:Text(busy?'Cargando...':'Seleccionar y subir archivo privado'),
+        ),
+        const SizedBox(height:8),
+        const Text('Imágenes PNG/WebP/JPG hasta 8 MiB; fuentes WOFF2 hasta '
+          '2 MiB. No se admiten SVG externos activos.',style:TextStyle(fontSize:12)),
+      ],
+    ))),
+    const SizedBox(height:16),
+    for(final item in assets)
+      Card(child:ListTile(
+        leading:Icon(item['asset_kind']=='font'?Icons.text_fields:
+          item['asset_kind']=='logo'?Icons.auto_awesome_mosaic:Icons.image_outlined),
+        title:Text(item['name'].toString(),maxLines:1,overflow:TextOverflow.ellipsis),
+        subtitle:Text('${item['asset_kind']} · ${((item['bytes'] as num)/1024).ceil()} KB'),
+        trailing:const Icon(Icons.check_circle_outline),
+        onTap:()async{
+          await _loadAsset(item);
+          if(mounted)setState(()=>tab=1);
+          _notice('Recurso seleccionado para el borrador, no para producción.');
+        },
+      )),
+    if(assets.isEmpty)const Padding(
+      padding:EdgeInsets.all(20),
+      child:Text('Aún no hay recursos privados.')),
+  ]);
+
+  Widget _drafts()=>ListView(padding:const EdgeInsets.all(22),children:[
+    _header('Borradores y versiones',
+      'Guarda, consulta y recupera configuraciones. Ninguna cambia la marca pública.'),
+    _field(draftTitle,'Título del borrador'),
+    FilledButton.icon(
+      onPressed:busy?null:_saveDraft,
+      icon:const Icon(Icons.save_outlined),
+      label:Text(draft==null?'Crear borrador':'Guardar nueva revisión'),
+    ),
+    const SizedBox(height:12),
+    OutlinedButton(
+      onPressed:()=>setState((){
+        draft=null;revisions=[];draftTitle.text='Nueva propuesta';
+      }),
+      child:const Text('Comenzar una propuesta nueva'),
+    ),
+    if(draft!=null) ...[
+      const SizedBox(height:14),
+      OutlinedButton.icon(onPressed:_fetchRevisions,
+        icon:const Icon(Icons.history),
+        label:const Text('Ver historial del borrador')),
+      for(final rev in revisions)
+        ListTile(
+          leading:const Icon(Icons.history_toggle_off),
+          title:Text('Revisión ${rev['revision']}'),
+          subtitle:Text(rev['recorded_at'].toString()),
+        ),
+    ],
+    const SizedBox(height:20),
+    Text('Diseños guardados',style:Theme.of(context).textTheme.titleLarge),
+    for(final item in drafts)
+      Card(child:ListTile(
+        title:Text(item['title'].toString()),
+        subtitle:Text('Revisión ${item['revision']} · ${item['updated_at']}'),
+        trailing:const Icon(Icons.edit_outlined),
+        onTap:()=>_loadDraft(item),
+      )),
+    if(drafts.isEmpty)const Text('No se han creado borradores.'),
+  ]);
+
+  Widget _publication()=>ListView(padding:const EdgeInsets.all(22),children:[
+    _header('Revisión y publicación',
+      'Únicamente el propietario puede pedir revisión. '
+      'Esta pantalla no despliega cambios en producción.'),
+    Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(
+      crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text('Solicitud de revisión',style:Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height:10),
+        Text(draft==null?'Primero selecciona o crea un borrador.':
+          'Borrador: ${draft!['title']} · revisión ${draft!['revision']}'),
+        const SizedBox(height:12),
+        FilledButton.icon(
+          onPressed:draft==null?null:_requestReview,
+          icon:const Icon(Icons.fact_check_outlined),
+          label:const Text('Solicitar revisión (sin publicar)'),
+        ),
+      ],
+    ))),
+    const SizedBox(height:12),
+    OutlinedButton.icon(onPressed:_fetchReleases,
+      icon:const Icon(Icons.refresh),label:const Text('Consultar solicitudes')),
+    for(final req in releases)
+      Card(child:ListTile(
+        leading:const Icon(Icons.rule_outlined),
+        title:Text('Estado: ${req['status']}'),
+        subtitle:Text('Revisión ${req['revision']} · ${req['requested_at']}'),
+      )),
+    const SizedBox(height:20),
+    const Card(child:Padding(padding:EdgeInsets.all(18),
+      child:Text('Para aplicar una marca a Flutter Web/Android/iOS se '
+        'requiere una versión aprobada, validación de recursos, accesibilidad, '
+        'CI/CD y posibilidad de reversión. El motor global de publicación '
+        'continúa siendo una fase separada.'))),
+  ]);
+
+  Widget _body() {
+    if(loading)return const Center(child:CircularProgressIndicator());
+    if(error!=null)return Center(child:Padding(padding:const EdgeInsets.all(24),
+      child:Column(mainAxisSize:MainAxisSize.min,children:[
+        Text(error!,textAlign:TextAlign.center),
+        const SizedBox(height:12),
+        FilledButton(onPressed:_reload,child:const Text('Reintentar')),
+      ])));
+    return switch(tab) {
+      0=>_summary(),1=>_editor(),2=>_library(),3=>_drafts(),_=>_publication(),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context)=>LayoutBuilder(builder:(context,constraints){
+    final wide=constraints.maxWidth>=860;
+    return Scaffold(
+      key:const Key('brand-admin-flutter-shell'),
+      appBar:AppBar(
+        title:const Row(mainAxisSize:MainAxisSize.min,children:[
+          MfdBranding(full:false,width:38),
+          SizedBox(width:10),
+          Flexible(child:Text('My Fitness Date · Administrador',
+            maxLines:1,overflow:TextOverflow.ellipsis)),
+        ]),
+        actions:[
+          if(wide)Padding(padding:const EdgeInsets.only(right:10),
+            child:Center(child:Text(widget.email,style:const TextStyle(fontSize:12)))),
+          IconButton(
+            onPressed:_reload,
+            tooltip:'Actualizar catálogo',
+            icon:const Icon(Icons.refresh)),
+          IconButton(
+            key:const Key('admin-sign-out'),
+            onPressed:()=>widget.onSignOut(),
+            tooltip:'Cerrar sesión',
+            icon:const Icon(Icons.logout)),
+        ],
+      ),
+      body:Row(children:[
+        if(wide)NavigationRail(
+          selectedIndex:tab,
+          extended:constraints.maxWidth>=1130,
+          labelType:constraints.maxWidth>=1130
+            ?NavigationRailLabelType.none:NavigationRailLabelType.all,
+          onDestinationSelected:(v)=>setState(()=>tab=v),
+          destinations:[
+            for(var i=0;i<_tabs.length;i++)
+              NavigationRailDestination(
+                icon:Icon(_icons[i]),label:Text(_tabs[i])),
+          ],
+        ),
+        Expanded(child:_body()),
+      ]),
+      bottomNavigationBar:wide?null:NavigationBar(
+        selectedIndex:tab,
+        onDestinationSelected:(v)=>setState(()=>tab=v),
+        destinations:[
+          for(var i=0;i<_tabs.length;i++)
+            NavigationDestination(icon:Icon(_icons[i]),label:_tabs[i]),
+        ],
+      ),
+    );
+  });
+}
