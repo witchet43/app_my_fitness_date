@@ -486,6 +486,7 @@ begin
       v_subject:=v_report.subject_id;
     end if;
     if v_subject is null then return 'not_found'; end if;
+    if v_subject=(select auth.uid()) then return 'invalid'; end if;
     insert into app_private.community_suspensions_b4(
       user_id,suspended_by,report_id
     ) values(v_subject,(select auth.uid()),p_report_id)
