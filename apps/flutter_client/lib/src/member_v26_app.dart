@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/member_v26_api.dart';
+import 'core/live_brand.dart';
 import 'core/brand_admin_repository.dart';
 import 'core/account_role.dart';
 import 'core/auth_refresh_policy.dart';
@@ -44,6 +45,8 @@ class _MemberV26AppState extends State<MemberV26App> {
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
   late final StreamSubscription<AuthState> sub;
+  late final LiveBrandController liveBrand;
+  Timer? _brandRefreshTimer;
   bool loading=true;
   bool verified=false;
   bool brandAdministrator=false;
@@ -61,6 +64,10 @@ class _MemberV26AppState extends State<MemberV26App> {
   @override
   void initState(){
     super.initState();
+    liveBrand=LiveBrandController(widget.auth);
+    unawaited(liveBrand.refresh());
+    _brandRefreshTimer=Timer.periodic(const Duration(seconds:20),
+      (_)=>unawaited(liveBrand.refresh()));
     // Supabase can handle the PKCE callback before this widget subscribes.
     // Keep an explicit URL marker as well as the passwordRecovery event.
     passwordRecoveryRequested = Uri.base.path == '/recover/';
@@ -337,6 +344,8 @@ class _MemberV26AppState extends State<MemberV26App> {
   @override
   void dispose(){
     sub.cancel();
+    _brandRefreshTimer?.cancel();
+    liveBrand.dispose();
     super.dispose();
   }
 
@@ -392,6 +401,7 @@ class _MemberV26AppState extends State<MemberV26App> {
           onSignOut:logout,
           curatorApi:widget.api,
           activityPreviewApi:widget.api,
+          liveBrand:liveBrand,
         );
       }else{
         body=BrandAdminMfaGate(
@@ -417,12 +427,19 @@ class _MemberV26AppState extends State<MemberV26App> {
         onLogout:logout,
       );
     }
-    return MaterialApp(title:'My Fitness Date',
-      navigatorKey:_navigatorKey,
-      scaffoldMessengerKey:_messengerKey,
-      debugShowCheckedModeBanner:false,
-      theme:FitDateTheme.dark(),
-      home:body);
+    return AnimatedBuilder(
+      animation:liveBrand,
+      builder:(context,_)=>MaterialApp(
+        title:liveBrand.current.name,
+        navigatorKey:_navigatorKey,
+        scaffoldMessengerKey:_messengerKey,
+        debugShowCheckedModeBanner:false,
+        theme:liveBrand.current.toTheme(),
+        builder:(context,child)=>LiveBrandScope(
+          brand:liveBrand.current,child:child??const SizedBox.shrink()),
+        home:body,
+      ),
+    );
   }
 }
 
