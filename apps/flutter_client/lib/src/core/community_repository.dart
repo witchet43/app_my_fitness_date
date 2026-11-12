@@ -23,6 +23,9 @@ abstract class CommunityRepository {
   Future<List<Map<String, dynamic>>> adminCommunityAnnouncements();
   Future<String> adminPublishCommunityAnnouncement(String topic, String content);
   Future<String> adminRemoveCommunityAnnouncement(String postId);
+  Future<List<Map<String, dynamic>>> pilotMembers();
+  Future<String> admitPilotMember(String email);
+  Future<String> revokePilotMember(String userId);
   Future<List<Map<String, dynamic>>> moderationReports();
   Future<String> resolveModerationReport({
     required String reportId,
