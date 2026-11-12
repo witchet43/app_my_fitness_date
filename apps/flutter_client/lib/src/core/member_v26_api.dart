@@ -4,10 +4,11 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'activity_repository.dart';
+import 'curator_repository.dart';
 
 /// Business data travels through our own FastAPI Gateway, not directly
 /// through a privileged database key or user-selected identity.
-class MemberV26Api implements ActivityRepository {
+class MemberV26Api implements ActivityRepository, CuratorRepository {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
@@ -189,6 +190,39 @@ class MemberV26Api implements ActivityRepository {
   bool _validActivityId(String value) =>
     RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
       .hasMatch(value);
+  @override
+  Future<List<Map<String, dynamic>>> adminActivities() async {
+    final result = _decode(await _request('GET', '/v1/admin/activities'));
+    final values = result['items'];
+    if (values is! List) {
+      throw const MemberApiException('No fue posible consultar los eventos.');
+    }
+    return values.map((v) => Map<String, dynamic>.from(v as Map)).toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> adminPublishActivity(
+      Map<String, dynamic> activity) async {
+    final result = _decode(await _request(
+      'POST', '/v1/admin/activities', data: activity,
+    ));
+    return Map<String, dynamic>.from(result['activity'] as Map);
+  }
+
+  @override
+  Future<String> adminCancelActivity(String eventId) async {
+    if (!_validActivityId(eventId)) {
+      throw const MemberApiException('Actividad inválida.');
+    }
+    final result = _decode(await _request(
+      'POST', '/v1/admin/activities/$eventId/cancel',
+    ));
+    final status = result['status']?.toString();
+    if (status != 'cancelled' && status != 'already_cancelled') {
+      throw const MemberApiException('No fue posible cancelar el evento.');
+    }
+    return status!;
+  }
   Future<Map<String, dynamic>?> loadProfile() async {
     final value = _decode(await _request('GET', '/v1/me/profile'))['profile'];
     return value is Map<String, dynamic> ? value : null;
