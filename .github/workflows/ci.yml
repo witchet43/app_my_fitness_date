@@ -1,9 +1,8 @@
 name: CI MVP
 
+# Manual budget-gated CI: no push or PR remote jobs.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
