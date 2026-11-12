@@ -193,7 +193,7 @@ class LiveBrandController extends ChangeNotifier {
         .select('version,settings').eq('id',true).single()
         .timeout(const Duration(seconds: 12));
       final incomingVersion = (value['version'] as num).toInt();
-      if (!loaded || incomingVersion >= version) {
+      if (!loaded || incomingVersion > version) {
         current = LiveBrandSettings.fromMap(value['settings']);
         version = incomingVersion;
         loaded = true;
