@@ -2,7 +2,7 @@
 // RLS is enforced by forwarding the end user's JWT to PostgREST.
 // There is deliberately no service-role key and no public media publishing.
 import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from "./config.ts";
-import { activityRsvpRoute, validateActivityDraft } from "./activity_validation.ts";
+import { activityRsvpRoute, activityCancelRoute, organizerCancelRoute, validateActivityDraft } from "./activity_validation.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
@@ -193,6 +193,51 @@ Deno.serve(async (req) => {
           status === "not_authenticated") {
         return json({ status }, 403);
       }
+      return error(503);
+    }
+    // B2: private RSVP lifecycle via SECURITY DEFINER RPC; no participant IDs.
+    if (route === "/v1/me/activities" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/my_activity_reservations", token, {});
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const items = await response.json();
+      return json({ items: Array.isArray(items) ? items : [] });
+    }
+    const cancelMyEventId = activityCancelRoute(route);
+    if (cancelMyEventId && req.method === "POST") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/cancel_activity_rsvp", token,
+        { p_event_id: cancelMyEventId });
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const status = await response.json();
+      if (status === "cancelled" || status === "already_cancelled") {
+        return json({ status, event_id: cancelMyEventId });
+      }
+      if (status === "already_started") return json({ status }, 409);
+      if (status === "not_confirmed" || status === "not_authenticated") {
+        return json({ status }, 403);
+      }
+      return error(503);
+    }
+    if (route === "/v1/organizer/activities" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/my_organized_activities", token, {});
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const items = await response.json();
+      return json({ items: Array.isArray(items) ? items : [] });
+    }
+    const cancelOrganizedId = organizerCancelRoute(route);
+    if (cancelOrganizedId && req.method === "POST") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/cancel_organized_activity", token,
+        { p_event_id: cancelOrganizedId });
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const status = await response.json();
+      if (status === "cancelled" || status === "already_cancelled") {
+        return json({ status, event_id: cancelOrganizedId });
+      }
+      if (status === "already_started") return json({ status }, 409);
+      if (status === "not_authorized") return json({ status }, 403);
       return error(503);
     }
     if (route === "/v1/me/profile") {
