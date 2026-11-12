@@ -2,7 +2,7 @@
 // RLS is enforced by forwarding the end user's JWT to PostgREST.
 // There is deliberately no service-role key and no public media publishing.
 import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from "./config.ts";
-import { activityRsvpRoute, activityCancelRoute, organizerCancelRoute, validateActivityDraft } from "./activity_validation.ts";
+import { activityRsvpRoute, activityCancelRoute, organizerCancelRoute, adminCancelRoute, validateActivityDraft } from "./activity_validation.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
@@ -238,6 +238,47 @@ Deno.serve(async (req) => {
       }
       if (status === "already_started") return json({ status }, 409);
       if (status === "not_authorized") return json({ status }, 403);
+      return error(503);
+    }
+    // B2: owner MFA/AAL2 can curate genuine activities without assuming a
+    // member identity. Permission is verified in DB on EVERY mutation.
+    if (route === "/v1/admin/activities" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/admin_curated_activities", token, {});
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const items = await response.json();
+      return json({ items: Array.isArray(items) ? items : [] });
+    }
+    if (route === "/v1/admin/activities" && req.method === "POST") {
+      const bodyData = await body(req);
+      const data = bodyData == null ? null : validateActivityDraft(bodyData);
+      if (!data) return error(400);
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/admin_publish_curated_activity", token, {
+          p_title: data.title, p_description: data.description,
+          p_sport: data.sport, p_city: data.city,
+          p_starts_at: data.starts_at, p_capacity: data.capacity,
+        });
+      if (response.status === 401 || response.status === 403) return error(403);
+      if (!response.ok) return error(response.status === 400 ? 400 : 503);
+      const id = await response.json();
+      return json({ activity: { id, ...data } }, 201);
+    }
+    const adminCancelId = adminCancelRoute(route);
+    if (adminCancelId && req.method === "POST") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/admin_cancel_curated_activity", token,
+        { p_event_id: adminCancelId });
+      if (response.status === 401 || response.status === 403) return error(403);
+      if (!response.ok) return error(503);
+      const status = await response.json();
+      if (status === "cancelled" || status === "already_cancelled") {
+        return json({ status, event_id: adminCancelId });
+      }
+      if (status === "already_started") return json({ status }, 409);
+      if (status === "not_authorized" || status === "not_found") {
+        return json({ status }, 403);
+      }
       return error(503);
     }
     if (route === "/v1/me/profile") {
