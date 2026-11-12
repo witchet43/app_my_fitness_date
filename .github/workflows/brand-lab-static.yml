@@ -1,23 +1,8 @@
 name: Brand Lab — static UI checks
 
+# FinOps: manual-only; avoids unbudgeted PR/push jobs.
 on:
-  pull_request:
-    paths:
-      - "apps/flutter_client/cloudflare/brand-lab/**"
-      - "apps/flutter_client/cloudflare/_redirects"
-      - "apps/flutter_client/cloudflare/_headers"
-      - "scripts/test_brand_lab_static.py"
-      - ".github/workflows/brand-lab-static.yml"
-  push:
-    branches: [main]
-    paths:
-      - "apps/flutter_client/cloudflare/brand-lab/**"
-      - "apps/flutter_client/cloudflare/_redirects"
-      - "apps/flutter_client/cloudflare/_headers"
-      - "scripts/test_brand_lab_static.py"
-      - ".github/workflows/brand-lab-static.yml"
   workflow_dispatch:
-
 permissions:
   contents: read
 
