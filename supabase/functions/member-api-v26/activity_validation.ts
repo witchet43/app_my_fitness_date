@@ -42,3 +42,14 @@ export function activityRsvpRoute(path: string): string | null {
   const matched = /^\/v1\/activities\/([0-9a-f-]{36})\/rsvp$/.exec(path);
   return matched && uuidPattern.test(matched[1]) ? matched[1] : null;
 }
+
+/** B2 paths are exact; callers never provide another member identity. */
+export function activityCancelRoute(path: string): string | null {
+  const m = /^\/v1\/activities\/([0-9a-f-]{36})\/cancel$/.exec(path);
+  return m && uuidPattern.test(m[1]) ? m[1] : null;
+}
+
+export function organizerCancelRoute(path: string): string | null {
+  const m = /^\/v1\/organizer\/activities\/([0-9a-f-]{36})\/cancel$/.exec(path);
+  return m && uuidPattern.test(m[1]) ? m[1] : null;
+}
