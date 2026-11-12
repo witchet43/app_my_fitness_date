@@ -199,8 +199,13 @@ class _MemberV26AppState extends State<MemberV26App> {
             child:const Text('Crear o recuperar mi contraseña'),
           ),
           FilledButton(onPressed:submitting?null:()async{
-            if(!email.text.contains('@') || password.text.length<10){
-              setDialog(()=>error='Correo válido y contraseña de 10 caracteres como mínimo.');
+            // Never reject a valid existing password based on the
+            // registration policy. Apply the stronger rule to new accounts.
+            if(!email.text.trim().contains('@') ||
+                (register ? password.text.length<12 : password.text.isEmpty)){
+              setDialog(()=>error=register
+                ? 'Correo válido y contraseña de 12 caracteres como mínimo.'
+                : 'Introduce tu correo y tu contraseña.');
               return;
             }
             setDialog((){submitting=true;error=null;});
