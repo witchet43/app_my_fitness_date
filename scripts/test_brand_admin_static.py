@@ -124,7 +124,7 @@ class BrandAdminSecurityTest(unittest.TestCase):
         self.assertIn("noindex, nofollow",HEADERS)
         self.assertIn("cloudflare/admin build/web/",RELEASE)
         self.assertIn("admin/branding/index.html",RELEASE)
-        self.assertIn("PUBLIC CLOUDFLARE RELEASE + BRAND LAB + ADMIN SHELL VERIFIED",RELEASE)
+        self.assertIn("PUBLIC CLOUDFLARE RELEASE + ADMIN PASSWORD RECOVERY VERIFIED",RELEASE)
         self.assertIn("prefers-reduced-motion",CSS)
 
 if __name__=="__main__":
