@@ -4,6 +4,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../core/brand_admin_repository.dart';
+import '../core/curator_repository.dart';
+import '../core/activity_repository.dart';
+import 'activities_b1.dart';
+import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
 
 /// Administration lives in the SAME Flutter application / MaterialApp as
@@ -15,10 +19,14 @@ class BrandAdminHome extends StatefulWidget {
     required this.repository,
     required this.email,
     required this.onSignOut,
+    this.curatorApi,
+    this.activityPreviewApi,
   });
   final BrandAdminRepository repository;
   final String email;
   final Future<void> Function() onSignOut;
+  final CuratorRepository? curatorApi;
+  final ActivityRepository? activityPreviewApi;
 
   @override
   State<BrandAdminHome> createState() => _BrandAdminHomeState();
@@ -352,6 +360,35 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         ),
       ],
     ))),
+    if (widget.curatorApi != null) ...[
+      const SizedBox(height:14),
+      Card(child:Padding(padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Actividades deportivas',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          const Text('Publica actividades verificadas para los miembros y '
+            'mira cómo se ven en la aplicación, sin salir de tu cuenta '
+            'administrativa ni solicitar un nuevo despliegue.'),
+          const SizedBox(height:12),
+          FilledButton.icon(
+            key:const Key('b2-admin-open-curation'),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>AdminCuratedActivitiesB2(api:widget.curatorApi!))),
+            icon:const Icon(Icons.event_available_outlined),
+            label:const Text('Administrar actividades')),
+          if(widget.activityPreviewApi!=null) ...[
+            const SizedBox(height:10),
+            OutlinedButton.icon(
+              key:const Key('b2-admin-member-preview'),
+              onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+                builder:(_)=>ActivitiesB1(
+                  api:widget.activityPreviewApi!,readOnly:true))),
+              icon:const Icon(Icons.visibility_outlined),
+              label:const Text('Ver como miembro (solo lectura)')),
+          ],
+        ]))),
+    ],
     const SizedBox(height:14),
     const Card(child:Padding(padding:EdgeInsets.all(18),
       child:Text('La publicación global sigue protegida: una solicitud '
