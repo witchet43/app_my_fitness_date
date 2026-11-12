@@ -114,6 +114,20 @@ class _CommunityB4State extends State<CommunityB4> {
     }
   }
 
+  Future<void> rejoin() async {
+    if(sending)return;
+    setState(()=>sending=true);
+    try {
+      final result=await widget.api.setCommunityParticipation(enabled:true);
+      if(result=='enabled')await reload();
+    } catch (_) {
+      if(mounted)setState(()=>
+        error='No se pudo reactivar. Verifica consentimiento y perfil.');
+    } finally {
+      if(mounted)setState(()=>sending=false);
+    }
+  }
+
   Future<void> create() async {
     if (sending || status != 'available') return;
     final content = TextEditingController();
@@ -442,6 +456,7 @@ class _CommunityB4State extends State<CommunityB4> {
       'profile_required'=>'Completa tu perfil deportivo y declara tu mayoría de edad.',
       'legal_required'=>'Acepta los términos y el aviso de privacidad actualizados.',
       'suspended'=>'El acceso a la comunidad está suspendido por moderación.',
+      'opted_out'=>'Saliste de la comunidad. Tus publicaciones anteriores no se restaurarán.',
       'deletion_pending'=>'Solicitaste la baja. La comunidad está deshabilitada.',
       'admin_separate'=>'Tu cuenta administrativa no publica como miembro.',
       'not_authenticated'=>'Debes iniciar sesión para acceder.',
@@ -449,7 +464,19 @@ class _CommunityB4State extends State<CommunityB4> {
     };
     return Padding(
       padding:const EdgeInsets.symmetric(vertical:28),
-      child:Text(label,key:const Key('b4-community-gate')),
+      child:Column(
+        crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text(label,key:const Key('b4-community-gate')),
+          if(status=='opted_out')...[
+            const SizedBox(height:14),
+            FilledButton.icon(
+              key:const Key('b4-community-rejoin'),
+              onPressed:sending?null:rejoin,
+              icon:const Icon(Icons.refresh_outlined),
+              label:const Text('Volver a participar')),
+          ],
+        ],
+      ),
     );
   }
 
@@ -633,6 +660,33 @@ class _CommunityPrivacyB4State extends State<CommunityPrivacyB4> {
     }
   }
 
+  Future<void> leaveCommunity() async {
+    final ok=await showDialog<bool>(
+      context:context,builder:(dialog)=>AlertDialog(
+        title:const Text('Salir de la comunidad'),
+        content:const Text('Tus publicaciones dejarán de mostrarse '
+          'y no se restaurarán si vuelves a entrar. Tu cuenta y tus '
+          'reservas deportivas seguirán existiendo.'),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(dialog,false),
+            child:const Text('Conservar participación')),
+          FilledButton(
+            key:const Key('b4-community-leave-confirm'),
+            onPressed:()=>Navigator.pop(dialog,true),
+            child:const Text('Salir de la comunidad')),
+        ],
+      ),
+    );
+    if(ok!=true||!mounted)return;
+    try {
+      final result=await widget.api.setCommunityParticipation(enabled:false);
+      if(result=='disabled'&&mounted)Navigator.of(context).pop();
+    }catch(_){
+      if(mounted)setState(()=>
+        error='No se pudo desactivar tu participación.');
+    }
+  }
+
   Future<void> requestDeletion() async {
     if(submitting||status!='none')return;
     var confirmed=false;
@@ -697,6 +751,19 @@ class _CommunityPrivacyB4State extends State<CommunityPrivacyB4> {
           title:Text((post['content']??'').toString()),
           subtitle:Text('Estado: ${post['status']??'desconocido'}'),
         )),
+        const SizedBox(height:22),
+        Text('Participación voluntaria',
+          style:Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height:8),
+        const Text('Puedes dejar la comunidad sin eliminar tu cuenta '
+          'ni cancelar tus reservas. Tus publicaciones dejarán de '
+          'estar visibles y no se restaurarán al reingresar.'),
+        const SizedBox(height:10),
+        if(status=='none')OutlinedButton.icon(
+          key:const Key('b4-community-leave'),
+          onPressed:leaveCommunity,
+          icon:const Icon(Icons.logout_outlined),
+          label:const Text('Salir de la comunidad')),
         const SizedBox(height:22),
         Text('Baja de cuenta',
           style:Theme.of(context).textTheme.titleLarge),
