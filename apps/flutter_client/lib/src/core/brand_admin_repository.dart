@@ -169,6 +169,6 @@ class BrandAdminRepository {
       // independently enforced by storage policies.
       if (path is! String || path.isEmpty) throw const FormatException('Ruta inválida');
     }
-    return client.storage.from('mfd-brand-drafts').download(path as String);
+    return client.storage.from('mfd-brand-drafts').download(path);
   }
 }
