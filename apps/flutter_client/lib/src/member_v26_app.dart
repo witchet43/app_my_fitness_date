@@ -6,8 +6,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'core/member_v26_api.dart';
 import 'core/brand_admin_repository.dart';
 import 'core/account_role.dart';
+import 'core/password_recovery.dart';
 import 'features/brand_admin_home.dart';
 import 'features/brand_admin_mfa.dart';
+import 'features/password_recovery_screen.dart';
 import 'features/member_profile_v26.dart';
 import 'features/public_entry_shell.dart';
 import 'theme/fitness_date_theme.dart';
@@ -39,6 +41,7 @@ class _MemberV26AppState extends State<MemberV26App> {
   bool verified=false;
   bool brandAdministrator=false;
   bool adminMfaVerified=false;
+  bool passwordRecoveryRequested=false;
   bool legalAccepted=false;
   bool editing=false;
   bool busy=false;
@@ -48,8 +51,20 @@ class _MemberV26AppState extends State<MemberV26App> {
   @override
   void initState(){
     super.initState();
-    sub=widget.auth.auth.onAuthStateChange.listen((_){
+    // Supabase can handle the PKCE callback before this widget subscribes.
+    // Keep an explicit URL marker as well as the passwordRecovery event.
+    passwordRecoveryRequested =
+        Uri.base.queryParameters['password_reset'] == '1';
+    sub=widget.auth.auth.onAuthStateChange.listen((event){
+      if(event.event==AuthChangeEvent.passwordRecovery){
+        passwordRecoveryRequested=true;
+      }
       if(mounted) unawaited(refresh());
+    },onError:(Object _, StackTrace __){
+      if(mounted)setState((){
+        loading=false;verified=false;
+        failure='No fue posible verificar la sesión. Reintenta.';
+      });
     });
     unawaited(refresh());
   }
@@ -71,6 +86,15 @@ class _MemberV26AppState extends State<MemberV26App> {
       final response=await widget.auth.auth.getUser();
       if(response.user==null || response.user!.emailConfirmedAt==null){
         throw const MemberApiException('Se requiere un correo verificado.');
+      }
+      // Recovery never routes to an administrator panel or member data.
+      // Auth enforces the token; this only shows its password form.
+      if(passwordRecoveryRequested){
+        if(mounted)setState((){
+          verified=true;brandAdministrator=false;adminMfaVerified=false;
+          legalAccepted=false;profile=null;editing=false;loading=false;
+        });
+        return;
       }
       // Resolve privilege before sending anyone into the member onboarding
       // or privacy flow. The database is authoritative, never user metadata
@@ -145,6 +169,35 @@ class _MemberV26AppState extends State<MemberV26App> {
         actions:[
           TextButton(onPressed:submitting?null:()=>Navigator.pop(ctx),
             child:const Text('Cancelar')),
+          if(!register) TextButton(
+            key:const Key('request-password-recovery'),
+            onPressed:submitting?null:()async{
+              final address=email.text.trim();
+              if(!address.contains('@')){
+                setDialog(()=>error='Introduce tu correo para continuar.');
+                return;
+              }
+              setDialog((){submitting=true;error=null;});
+              try{
+                await widget.auth.auth.resetPasswordForEmail(
+                  address,
+                  redirectTo:passwordRecoveryRedirect(widget.redirectUrl),
+                );
+                if(ctx.mounted)Navigator.pop(ctx);
+                if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content:Text(
+                    'Si el correo está registrado, recibirás un enlace '
+                    'para crear una contraseña.')),
+                );
+              }catch(_){
+                if(ctx.mounted)setDialog(()=>error=
+                  'No fue posible enviar el enlace. Reintenta más tarde.');
+              }finally{
+                if(ctx.mounted)setDialog(()=>submitting=false);
+              }
+            },
+            child:const Text('Crear o recuperar mi contraseña'),
+          ),
           FilledButton(onPressed:submitting?null:()async{
             if(!email.text.contains('@') || password.text.length<10){
               setDialog(()=>error='Correo válido y contraseña de 10 caracteres como mínimo.');
@@ -239,6 +292,14 @@ class _MemberV26AppState extends State<MemberV26App> {
           FilledButton(onPressed:refresh,child:const Text('Reintentar')),
           TextButton(onPressed:logout,child:const Text('Cerrar sesión')),
         ]))));
+    }else if(passwordRecoveryRequested){
+      body=PasswordRecoveryScreen(
+        client:widget.auth,
+        onFinished:()async{
+          passwordRecoveryRequested=false;
+          await logout();
+        },
+      );
     }else if(brandAdministrator){
       final destination=resolveAccountSpace(
         hasSession:true,remoteIdentityVerified:verified,
