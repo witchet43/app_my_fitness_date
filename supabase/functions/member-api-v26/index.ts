@@ -8,7 +8,14 @@ const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
   (name) => Deno.env.get(name),
 );
-const origin = "https://my-fitness-date.pages.dev";
+// One exact origin per deployment. QA can use a separate Supabase environment
+// with an explicit staging origin; production defaults to the real application.
+// Never reflect arbitrary Origin headers or use "*".
+const configuredOrigin = Deno.env.get("MFD_ALLOWED_ORIGIN") ??
+  "https://my-fitness-date.pages.dev";
+const origin = /^https:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?$/i.test(configuredOrigin) ||
+  /^http:\/\/localhost:[0-9]{2,5}$/i.test(configuredOrigin)
+    ? configuredOrigin : "https://my-fitness-date.pages.dev";
 const cors = {
   "Access-Control-Allow-Origin": origin,
   "Access-Control-Allow-Headers": memberCorsRequestHeaders,
