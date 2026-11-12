@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -322,9 +323,15 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     'paletteName':paletteName.text.trim(),
     'colors':colors,
     'font':font,
-    'logo':selectedLogoAsset == null
-      ? 'catalog:$logoIndex' : 'asset:$selectedLogoAsset',
-    'media':selectedImages,
+    'logo':selectedLogoAsset!=null &&
+        LiveBrandSettings.safeAssetUrl(selectedLogoAsset!)
+      ? selectedLogoAsset! : 'catalog:$logoIndex',
+    'media':{
+      for(final item in selectedImages.entries)
+        if(const ['cover_desktop','cover_mobile','app_image'].contains(item.key)
+          && LiveBrandSettings.safeAssetUrl(item.value))
+          item.key:item.value,
+    },
     'layout':layout,
     'mode':dark ? 'dark' : 'light',
   };
@@ -484,7 +491,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
 
   Widget _summary() => ListView(padding:const EdgeInsets.all(22),children:[
     _header('Panel de Administración',
-      'Bienvenido a My Fitness Date. Gestiona la identidad desde la misma aplicación.'),
+      'Tu aplicación. Publica actividades y configura el diseño que verán todos.'),
     Wrap(spacing:12,runSpacing:12,children:[
       _stat('Paletas',palettes.length,Icons.palette_outlined),
       _stat('Recursos privados',assets.length,Icons.image_outlined),
@@ -495,13 +502,13 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       crossAxisAlignment:CrossAxisAlignment.start,children:[
         Text('Brand Studio',style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:8),
-        const Text('Puedes probar nombres, colores, tipografías, logos, portadas '
-          'y componentes sin afectar lo que ve el público.'),
+        const Text('Configura nombre, paletas, textos, logotipos y portadas. '
+          'Se guardan globalmente sin revisión ni despliegue adicional.'),
         const SizedBox(height:12),
         FilledButton.icon(
           onPressed:()=>setState(()=>tab=1),
           icon:const Icon(Icons.design_services_outlined),
-          label:const Text('Configurar identidad'),
+          label:const Text('Editar marca en vivo'),
         ),
       ],
     ))),
@@ -536,9 +543,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     ],
     const SizedBox(height:14),
     const Card(child:Padding(padding:EdgeInsets.all(18),
-      child:Text('La publicación global sigue protegida: una solicitud '
-        'de revisión no cambia Flutter, los dominios, los logos de tienda '
-        'ni los textos legales.'))),
+      child:Text('Los cambios de apariencia internos se guardan sin otro build. '
+        'El icono instalado, tiendas y permisos móviles continúan requiriendo publicación de software.'))),
   ]);
 
   Widget _stat(String label,int value,IconData icon)=>SizedBox(
@@ -552,8 +558,18 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     ))));
 
   Widget _editor() => ListView(padding:const EdgeInsets.all(18),children:[
-    _header('Identidad de marca',
-      'Configuración integral de propuestas · las vistas son borradores privados.'),
+    _header('Marca global en vivo',
+      'Los cambios se muestran aquí y se guardan automáticamente para todas las personas.'),
+    if(!_brandReady) const LinearProgressIndicator(),
+    if(brandStatus!=null) Padding(
+      padding:const EdgeInsets.only(bottom:12),
+      child:Row(children:[
+        Icon(_brandSaving?Icons.sync:Icons.cloud_done_outlined,size:20),
+        const SizedBox(width:8),
+        Expanded(child:Text(brandStatus!,key:const Key('b3-save-status'))),
+        if(!_brandReady) TextButton(onPressed:()=>widget.liveBrand.refresh(),
+          child:const Text('Sincronizar')),
+      ])),
     LayoutBuilder(builder:(context,box) {
       final wide=box.maxWidth>=950;
       final editor=_identityControls();
@@ -629,7 +645,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 DropdownMenuItem(value:font,
                   child:const Text('Fuente WOFF2 cargada (requiere compilación)')),
             ],
-            onChanged:(v)=>setState(()=>font=v??'Georgia'),
+            onChanged:(v){setState(()=>font=v??'Georgia');_queueBrandSave();},
           ),
           const SizedBox(height:8),
           const Text('Las fuentes WOFF2 se conservan en la biblioteca. '
@@ -648,20 +664,20 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 avatar:Icon(_logoIcons[i],size:19),
                 label:Text(_logoNames[i]),
                 selected:selectedLogoAsset==null&&logoIndex==i,
-                onSelected:(_)=>setState((){
+                onSelected:(_){setState((){
                   selectedLogoAsset=null;logoIndex=i;
-                }),
+                });_queueBrandSave();},
               ),
           ]),
           if(selectedLogoAsset!=null)
             TextButton(
-              onPressed:()=>setState(()=>selectedLogoAsset=null),
+              onPressed:(){setState(()=>selectedLogoAsset=null);_queueBrandSave();},
               child:const Text('Volver a los logos del catálogo')),
           const SizedBox(height:10),
           SwitchListTile(
             title:const Text('Vista oscura'),
             value:dark,
-            onChanged:(v)=>setState(()=>dark=v)),
+            onChanged:(v){setState(()=>dark=v);_queueBrandSave();}),
           DropdownButtonFormField<String>(
             key:ValueKey('layout-$layout'),
             initialValue:layout,
@@ -669,19 +685,16 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               DropdownMenuItem(value:'editorial',child:Text('Editorial')),
               DropdownMenuItem(value:'minimal',child:Text('Minimalista')),
             ],
-            onChanged:(v)=>setState(()=>layout=v??'editorial'),
+            onChanged:(v){setState(()=>layout=v??'editorial');_queueBrandSave();},
             decoration:const InputDecoration(labelText:'Distribución'),
           ),
         ]))),
       const SizedBox(height:12),
-      FilledButton.icon(
-        key:const Key('admin-save-brand-draft'),
-        onPressed:busy?null:(){
-          setState(()=>tab=3);
-          _notice('Revisa el título y guarda el borrador en la sección Borradores.');
-        },
-        icon:const Icon(Icons.save_outlined),
-        label:const Text('Continuar a guardar borrador')),
+      const ListTile(
+        key:Key('b3-auto-publish-label'),
+        leading:Icon(Icons.cloud_done_outlined),
+        title:Text('Guardado automático activo'),
+        subtitle:Text('No hay solicitudes de revisión ni builds por cada cambio.')),
     ]);
 
   Widget _preview(){
@@ -771,8 +784,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           ),
         )),
         const SizedBox(height:12),
-        const Text('Vista ilustrativa. Los cambios y archivos privados no '
-          'están publicados para usuarios.',style:TextStyle(fontSize:12)),
+        Text('El diseño de la portada ya usa esta marca global. '
+          'Versión activa: ${widget.liveBrand.version}.',
+          style:const TextStyle(fontSize:12)),
       ])));
   }
 
