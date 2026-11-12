@@ -134,12 +134,16 @@ create table public.brand_assets (
     mime_type in ('image/png','image/jpeg','image/webp','font/woff2')
   ),
   bytes bigint not null check (bytes between 1 and 8388608),
+  license_basis text not null default 'not_applicable'
+    check (license_basis in ('not_applicable','owned','open','licensed')),
   created_by uuid not null references auth.users(id),
   created_at timestamptz not null default now(),
   check (split_part(storage_path,'/',1)=created_by::text),
   check (
-    (asset_kind = 'font' and mime_type = 'font/woff2')
-    or (asset_kind <> 'font' and mime_type <> 'font/woff2')
+    (asset_kind = 'font' and mime_type = 'font/woff2'
+      and license_basis in ('owned','open','licensed'))
+    or (asset_kind <> 'font' and mime_type <> 'font/woff2'
+      and license_basis = 'not_applicable')
   )
 );
 alter table public.brand_assets enable row level security;
@@ -152,6 +156,36 @@ create policy brand_asset_admin_insert on public.brand_assets
     (select app_private.is_brand_administrator(true))
     and created_by = (select auth.uid())
   );
+
+-- Immutable revision history: each save retains a rollback snapshot.
+create table public.brand_design_revisions (
+  draft_id uuid not null references public.brand_design_drafts(id) on delete cascade,
+  revision integer not null check(revision > 0),
+  title text not null,
+  settings jsonb not null,
+  recorded_by uuid not null references auth.users(id),
+  recorded_at timestamptz not null default now(),
+  primary key(draft_id,revision)
+);
+alter table public.brand_design_revisions enable row level security;
+revoke all on public.brand_design_revisions from public,anon,authenticated;
+grant select on public.brand_design_revisions to authenticated;
+create policy brand_revision_admin_read on public.brand_design_revisions
+  for select to authenticated using ((select app_private.is_brand_administrator(true)));
+
+create function app_private.record_brand_revision()
+returns trigger language plpgsql security definer set search_path = '' as $
+begin
+  insert into public.brand_design_revisions
+    (draft_id,revision,title,settings,recorded_by)
+  values (new.id,new.revision,new.title,new.settings,new.updated_by);
+  return new;
+end;
+$;
+revoke all on function app_private.record_brand_revision() from public,anon,authenticated;
+create trigger brand_design_revision_log after insert or update
+  on public.brand_design_drafts for each row
+  execute function app_private.record_brand_revision();
 
 -- Release request is not production publication. Requires subsequent
 -- auditable CI/approval and asset processing/safe CDN.
