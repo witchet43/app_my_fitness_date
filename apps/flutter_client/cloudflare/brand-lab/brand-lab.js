@@ -309,11 +309,7 @@
   installGroup("theme-switch", "mode");
   installGroup("device-switch", "device");
   installGroup("view-switch", "view");
-  installGroup("logo-grid", "logo");
-
-  // Logo attribute is an integer; the generic update receives a string.
-  // Rebind it to preserve the selected index and correct pressed state.
-  el("logo-grid").replaceWith(el("logo-grid").cloneNode(true));
+  // The logo index must be numeric, unlike other data-* choices.
   el("logo-grid").addEventListener("click", event => {
     const b = event.target.closest("button[data-logo]");
     if (b) update("logo", Number(b.dataset.logo));
