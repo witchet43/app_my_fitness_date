@@ -592,6 +592,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         const Text('Vista ilustrativa. Los cambios y archivos privados no '
           'están publicados para usuarios.',style:TextStyle(fontSize:12)),
       ])));
+  }
 
   Widget _library()=>ListView(padding:const EdgeInsets.all(22),children:[
     _header('Biblioteca de marca',
