@@ -113,7 +113,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     }
     widget.liveBrand.addListener(_observeBrand);
     if(widget.liveBrand.loaded) {
-      _hydrateLiveBrand();
+      WidgetsBinding.instance.addPostFrameCallback((_){
+        if(mounted)_hydrateLiveBrand();
+      });
     } else {
       unawaited(widget.liveBrand.refresh());
     }
