@@ -190,6 +190,11 @@ jobs:
                       with open_public("https://my-fitness-date.pages.dev/brand-lab/"+asset_name+"?v="+sha) as r:
                           asset=r.read().decode("utf8")
                           assert r.status==200 and len(asset)>1000
+                  # Password recovery is a route of the SAME Flutter app.
+                  with open_public("https://my-fitness-date.pages.dev/recover/?v="+sha) as r:
+                      recovery=r.read().decode("utf8")
+                      assert r.status==200
+                  assert "flutter" in recovery.lower() and "admin-brand.js" not in recovery
                   # The OLD standalone admin page must NOT be served. The
                   # admin must use the SAME Flutter app and shared login.
                   with open_public("https://my-fitness-date.pages.dev/admin/branding/?v="+sha) as r:
