@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
         });
       if (!events.ok) return error(503);
       const own = await endpoint("GET", "/rest/v1/event_rsvps", token,
-        undefined, { user_id: "eq." + identity.id, select: "event_id" });
+        undefined, { user_id: "eq." + identity.id, cancelled_at: "is.null", select: "event_id" });
       if (!own.ok) return error(503);
       const records = await events.json() as Array<Record<string, unknown>>;
       const joined = new Set(
