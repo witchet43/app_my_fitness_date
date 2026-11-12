@@ -285,7 +285,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         kind:kind,name:file.name,bytes:bytes,license:license);
       if(kind=='logo')selectedLogoAsset=saved['id'] as String;
       if(kind!='font'&&kind!='logo')selectedImages[kind]=saved['id'] as String;
-      downloaded[saved['id'] as String]=file.bytes!;
+      downloaded[saved['id'] as String]=bytes;
       await _reload();
       _notice('Recurso privado cargado. No está publicado en la aplicación.');
     } catch (_) {
