@@ -31,12 +31,6 @@ check('Global brand controller',dart,[
   "rpc('brand_restore_live'",
   "LiveBrandScope",
   "lastError",
-] if False else [
-  "from('mfd_brand_live')",
-  "rpc('brand_set_live'",
-  "rpc('brand_restore_live'",
-  "LiveBrandScope",
-  "lastError",
 ])
 rootdart=src('apps/flutter_client/lib/src/member_v26_app.dart')
 check('Real app applies global brand',rootdart,[
