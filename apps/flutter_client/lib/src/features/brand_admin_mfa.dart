@@ -34,7 +34,11 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
   }
 
   Future<void> _prepare() async {
-    setState(() {busy = true; error = null;});
+    if (!mounted) return;
+    setState(() {
+      busy = true; error = null; factorId = null;
+      secret = null; enrollment = false;
+    });
     try {
       final factors = await widget.client.auth.mfa.listFactors();
       final verified = factors.totp.where((f) => f.status == 'verified').toList();
@@ -42,7 +46,14 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
         factorId = verified.first.id;
         enrollment = false;
       } else {
-        // Enrollment secret must stay on this screen, never in logs or app prefs.
+        // A prior unfinished enrollment has no retrievable TOTP secret.
+        // Remove only unverified factors to avoid accumulating unusable
+        // credentials; NEVER remove a verified factor or bypass AAL2.
+        for (final pending in factors.totp.where(
+            (f) => f.status == 'unverified')) {
+          await widget.client.auth.mfa.unenroll(pending.id);
+        }
+        // Keep the new enrollment secret in memory only.
         final result = await widget.client.auth.mfa.enroll(
           factorType: FactorType.totp,
           friendlyName: 'My Fitness Date · Administrador',
