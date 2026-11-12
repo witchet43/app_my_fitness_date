@@ -16,9 +16,11 @@ class CommunityModerationB4 extends StatefulWidget {
 class _CommunityModerationB4State extends State<CommunityModerationB4> {
   List<Map<String,dynamic>> reports=[];
   List<Map<String,dynamic>> deletions=[];
+  List<Map<String,dynamic>> announcements=[];
   bool loading=true;
   bool sending=false;
   bool showDeletion=false;
+  bool showAnnouncements=false;
   String? error;
 
   @override
@@ -33,9 +35,11 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
     try{
       final list=await widget.api.moderationReports();
       final pending=await widget.api.moderationDeletionRequests();
+      final ownAnnouncements=await widget.api.adminCommunityAnnouncements();
       if(mounted)setState((){
         reports=list;
         deletions=pending;
+        announcements=ownAnnouncements;
       });
     } on MemberApiException catch(e){
       if(mounted)setState(()=>error=e.message);
@@ -203,6 +207,113 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
     );
   }
 
+  Future<void> createAnnouncement() async {
+    if(sending)return;
+    final text=TextEditingController();
+    var topic='running';
+    String? validation;
+    final draft=await showDialog<Map<String,String>>(
+      context:context,builder:(dialog)=>StatefulBuilder(
+        builder:(dialog,update)=>AlertDialog(
+          title:const Text('Nuevo comunicado oficial'),
+          content:ConstrainedBox(
+            constraints:const BoxConstraints(maxWidth:480),
+            child:SingleChildScrollView(child:Column(
+              mainAxisSize:MainAxisSize.min,children:[
+                const Text('Tu comunicado será visible a los miembros '
+                  'que hayan aceptado participar en la comunidad. '
+                  'No inventes eventos ni publiques información privada.'),
+                const SizedBox(height:12),
+                DropdownButtonFormField<String>(
+                  initialValue:topic,
+                  decoration:const InputDecoration(labelText:'Tema'),
+                  items:[
+                    for(final entry in communityTopicsB4.entries)
+                      DropdownMenuItem(value:entry.key,
+                        child:Text(entry.value)),
+                  ],
+                  onChanged:(v){
+                    if(v!=null)update(()=>topic=v);
+                  }),
+                const SizedBox(height:12),
+                TextField(
+                  key:const Key('b4-announcement-content'),
+                  controller:text,maxLength:480,minLines:3,maxLines:5,
+                  decoration:const InputDecoration(
+                    labelText:'Contenido oficial')),
+                if(validation!=null)Text(validation!,
+                  style:const TextStyle(color:Colors.redAccent)),
+              ],
+            )),
+          ),
+          actions:[
+            TextButton(onPressed:()=>Navigator.pop(dialog),
+              child:const Text('Cancelar')),
+            FilledButton(
+              key:const Key('b4-announcement-submit'),
+              onPressed:(){
+                final value=text.text.trim();
+                if(value.length<15 || value.length>480 ||
+                   RegExp(r'https?://|www\\.|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|[0-9]{8,}',
+                     caseSensitive:false).hasMatch(value)){
+                  update(()=>validation='Escribe de 15 a 480 caracteres '
+                    'sin enlaces, correos ni teléfonos.');
+                  return;
+                }
+                Navigator.pop(dialog,{'topic':topic,'content':value});
+              },
+              child:const Text('Publicar comunicado')),
+          ],
+        ),
+      ),
+    );
+    text.dispose();
+    if(draft==null||!mounted)return;
+    setState(()=>sending=true);
+    try{
+      final response=await widget.api.adminPublishCommunityAnnouncement(
+        draft['topic']!,draft['content']!);
+      if(response=='published'){
+        await reload();
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content:Text(
+            'Comunicado oficial publicado para miembros de la comunidad.')));
+      }
+    }catch(_){
+      if(mounted)setState(()=>
+        error='No fue posible publicar el comunicado. Verifica MFA.');
+    }finally{
+      if(mounted)setState(()=>sending=false);
+    }
+  }
+
+  Future<void> removeAnnouncement(Map<String,dynamic> item) async {
+    final id=(item['id']??'').toString();
+    final ok=await showDialog<bool>(
+      context:context,builder:(dialog)=>AlertDialog(
+        title:const Text('Retirar comunicado'),
+        content:const Text('Dejará de mostrarse a los miembros. '
+          'Su historial de auditoría se conserva.'),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(dialog,false),
+            child:const Text('Volver')),
+          FilledButton(
+            key:const Key('b4-announcement-remove-confirm'),
+            onPressed:()=>Navigator.pop(dialog,true),
+            child:const Text('Retirar')),
+        ],
+      ),
+    );
+    if(ok!=true||!mounted)return;
+    try{
+      await widget.api.adminRemoveCommunityAnnouncement(id);
+      await reload();
+    }catch(_){
+      if(mounted)setState(()=>
+        error='No se pudo retirar el comunicado.');
+    }
+  }
+
   @override
   Widget build(BuildContext context)=>Scaffold(
     appBar:AppBar(
@@ -232,12 +343,23 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
               key:const Key('b4-moderation-tab-reports'),
               label:Text('Reportes pendientes (${reports.length})'),
               selected:!showDeletion,
-              onSelected:(_)=>setState(()=>showDeletion=false)),
+              onSelected:(_)=>setState((){
+                showDeletion=false;showAnnouncements=false;
+              })), 
             ChoiceChip(
               key:const Key('b4-moderation-tab-deletions'),
               label:Text('Solicitudes de baja (${deletions.length})'),
               selected:showDeletion,
-              onSelected:(_)=>setState(()=>showDeletion=true)),
+              onSelected:(_)=>setState((){
+                showDeletion=true;showAnnouncements=false;
+              })),
+            ChoiceChip(
+              key:const Key('b4-moderation-tab-announcements'),
+              label:Text('Comunicados (${announcements.length})'),
+              selected:showAnnouncements,
+              onSelected:(_)=>setState((){
+                showAnnouncements=true;showDeletion=false;
+              })),
           ]),
           const SizedBox(height:18),
           if(loading)const Center(child:CircularProgressIndicator()),
@@ -246,16 +368,46 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
               style:const TextStyle(color:Colors.redAccent)),
             TextButton(onPressed:reload,child:const Text('Reintentar')),
           ],
-          if(!loading && error==null && !showDeletion)...[
+          if(!loading && error==null && !showDeletion && !showAnnouncements)...[
             if(reports.isEmpty)const Text('No hay reportes pendientes.',
               key:Key('b4-reports-empty')),
             for(final report in reports)reportCard(report),
           ],
-          if(!loading && error==null && showDeletion)...[
+          if(!loading && error==null && showDeletion && !showAnnouncements)...[
             if(deletions.isEmpty)const Text(
               'No hay solicitudes de baja pendientes.',
               key:Key('b4-deletions-empty')),
             for(final request in deletions)deletionCard(request),
+          ],
+          if(!loading && error==null && showAnnouncements)...[
+            FilledButton.icon(
+              key:const Key('b4-admin-new-announcement'),
+              onPressed:sending?null:createAnnouncement,
+              icon:const Icon(Icons.campaign_outlined),
+              label:const Text('Publicar comunicado oficial')),
+            const SizedBox(height:14),
+            if(announcements.isEmpty)
+              const Text('Todavía no hay comunicados oficiales.',
+                key:Key('b4-announcements-empty')),
+            for(final item in announcements)
+              Card(child:Padding(
+                padding:const EdgeInsets.all(18),
+                child:Column(
+                  crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    Text((item['topic']??'Deporte').toString(),
+                      style:Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height:8),
+                    Text((item['content']??'').toString()),
+                    const SizedBox(height:8),
+                    Text('Estado: ${item['status']??'desconocido'}'),
+                    if(item['status']=='visible')OutlinedButton.icon(
+                      key:Key('b4-announcement-remove-${item['id']}'),
+                      onPressed:()=>removeAnnouncement(item),
+                      icon:const Icon(Icons.remove_circle_outline),
+                      label:const Text('Retirar comunicado')),
+                  ],
+                ),
+              )),
           ],
           const SizedBox(height:20),
           const Text('El acceso a una beta social real exige personal '
