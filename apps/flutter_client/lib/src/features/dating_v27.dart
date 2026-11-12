@@ -201,6 +201,7 @@ class _DatingV27State extends State<DatingV27> {
                 style:Theme.of(context).textTheme.titleLarge),
               const SizedBox(height:10),
               DropdownButtonFormField<String>(
+                isExpanded:true,
                 key:ValueKey('b5-intent-$intent'),
                 initialValue:intent,
                 decoration:const InputDecoration(labelText:'¿Qué buscas?'),
@@ -214,6 +215,7 @@ class _DatingV27State extends State<DatingV27> {
               ),
               const SizedBox(height:14),
               DropdownButtonFormField<String>(
+                isExpanded:true,
                 key:ValueKey('b5-frequency-$frequency'),
                 initialValue:frequency,
                 decoration:const InputDecoration(
@@ -245,6 +247,7 @@ class _DatingV27State extends State<DatingV27> {
               ]),
               const SizedBox(height:20),
               DropdownButtonFormField<String>(
+                isExpanded:true,
                 key:ValueKey('b5-privacy-$privacy'),
                 initialValue:privacy,
                 decoration:const InputDecoration(
@@ -253,7 +256,8 @@ class _DatingV27State extends State<DatingV27> {
                   for(final item in datingPrivacyOptionsB5.entries)
                     DropdownMenuItem(
                       value:item.key,
-                      child:Text(item.value,overflow:TextOverflow.ellipsis),
+                      child:Text(item.value,maxLines:1,
+                        overflow:TextOverflow.ellipsis),
                     ),
                 ],
                 onChanged:submitting?null:(v){
