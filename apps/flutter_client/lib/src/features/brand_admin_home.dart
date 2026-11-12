@@ -100,7 +100,6 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   List<Map<String, dynamic>> palettes = [];
   List<Map<String, dynamic>> assets = [];
   List<Map<String, dynamic>> drafts = [];
-  List<Map<String, dynamic>> releases = [];
   List<Map<String, dynamic>> revisions = [];
   final Map<String, String> selectedImages = {};
   final Map<String, Uint8List> downloaded = {};
@@ -403,26 +402,6 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       if(mounted)setState(()=>revisions=rows);
     } catch (_) {
       _notice('No fue posible consultar las revisiones.',bad:true);
-    }
-  }
-
-  Future<void> _fetchReleases() async {
-    try {
-      final rows=await widget.repository.loadReleaseRequests();
-      if(mounted)setState(()=>releases=rows);
-    } catch (_) {
-      _notice('Las solicitudes están reservadas al propietario.',bad:true);
-    }
-  }
-
-  Future<void> _requestReview() async {
-    if(draft==null){ _notice('Guarda un borrador antes de solicitar revisión.');return; }
-    try {
-      await widget.repository.requestReview(draft!);
-      await _fetchReleases();
-      _notice('Solicitud enviada a revisión. No publica la aplicación.');
-    } catch (_) {
-      _notice('Solo el propietario con MFA puede solicitar revisión.',bad:true);
     }
   }
 
@@ -735,6 +714,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     final heroAssetId=selectedImages[mobilePreview?'cover_mobile':'cover_desktop'];
     final heroBytes=heroAssetId==null?null:downloaded[heroAssetId];
     final logoBytes=selectedLogoAsset==null?null:downloaded[selectedLogoAsset];
+    final ImageProvider? heroProvider=heroBytes!=null
+      ? MemoryImage(heroBytes)
+      : heroAssetId!=null && LiveBrandSettings.safeAssetUrl(heroAssetId)
+        ? NetworkImage(heroAssetId) : null;
     return Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Text('Vista previa en vivo',style:Theme.of(context).textTheme.titleLarge),
@@ -759,6 +742,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 child:Row(children:[
                   if(logoBytes!=null)
                     Image.memory(logoBytes,width:35,height:35)
+                  else if(selectedLogoAsset!=null &&
+                    LiveBrandSettings.safeAssetUrl(selectedLogoAsset!))
+                    Image.network(selectedLogoAsset!,width:35,height:35)
                   else
                     Icon(_logoIcons[logoIndex],color:p,size:32),
                   const SizedBox(width:8),
@@ -773,8 +759,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   constraints:const BoxConstraints(minHeight:280),
                   decoration:BoxDecoration(
                     gradient:LinearGradient(colors:[p,p.withValues(alpha:.65)]),
-                    image:heroBytes==null?null:DecorationImage(
-                      image:MemoryImage(heroBytes),fit:BoxFit.cover,
+                    image:heroProvider==null?null:DecorationImage(
+                      image:heroProvider,fit:BoxFit.cover,
                       colorFilter:ColorFilter.mode(
                         p.withValues(alpha:.40),BlendMode.darken))),
                 ),
@@ -924,40 +910,49 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     if(drafts.isEmpty)const Text('No se han creado borradores.'),
   ]);
 
-  Widget _publication()=>ListView(padding:const EdgeInsets.all(22),children:[
-    _header('Revisión y publicación',
-      'Únicamente el propietario puede pedir revisión. '
-      'Esta pantalla no despliega cambios en producción.'),
-    Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(
-      crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text('Solicitud de revisión',style:Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height:10),
-        Text(draft==null?'Primero selecciona o crea un borrador.':
-          'Borrador: ${draft!['title']} · revisión ${draft!['revision']}'),
-        const SizedBox(height:12),
-        FilledButton.icon(
-          onPressed:draft==null?null:_requestReview,
-          icon:const Icon(Icons.fact_check_outlined),
-          label:const Text('Solicitar revisión (sin publicar)'),
-        ),
-      ],
-    ))),
-    const SizedBox(height:12),
-    OutlinedButton.icon(onPressed:_fetchReleases,
-      icon:const Icon(Icons.refresh),label:const Text('Consultar solicitudes')),
-    for(final req in releases)
-      Card(child:ListTile(
-        leading:const Icon(Icons.rule_outlined),
-        title:Text('Estado: ${req['status']}'),
-        subtitle:Text('Revisión ${req['revision']} · ${req['requested_at']}'),
-      )),
-    const SizedBox(height:20),
-    const Card(child:Padding(padding:EdgeInsets.all(18),
-      child:Text('Para aplicar una marca a Flutter Web/Android/iOS se '
-        'requiere una versión aprobada, validación de recursos, accesibilidad, '
-        'CI/CD y posibilidad de reversión. El motor global de publicación '
-        'continúa siendo una fase separada.'))),
-  ]);
+  Widget _publication() => ListView(
+    key:const Key('b3-brand-history'),
+    padding:const EdgeInsets.all(22),
+    children:[
+      _header('Historial y restaurar marca',
+        'Cada guardado crea una versión. Puedes restaurar cualquier '
+        'identidad anterior sin aprobación ni compilación.'),
+      Card(child:Padding(
+        padding:const EdgeInsets.all(18),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Versión global activa: ${widget.liveBrand.version}',
+            key:const Key('b3-active-version'),
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          Text('Nombre: ${widget.liveBrand.current.name}'),
+          const SizedBox(height:12),
+          OutlinedButton.icon(
+            key:const Key('b3-refresh-history'),
+            onPressed:_fetchBrandHistory,
+            icon:const Icon(Icons.refresh_outlined),
+            label:const Text('Consultar historial')),
+        ]))),
+      const SizedBox(height:12),
+      if(brandHistory.isEmpty)const Text(
+        'Pulsa Consultar historial para ver las versiones guardadas.'),
+      for(final entry in brandHistory)
+        Card(child:ListTile(
+          leading:const Icon(Icons.history),
+          title:Text('Versión ${entry['version']}'),
+          subtitle:Text(entry['restored_from']==null
+            ?'Cambio de identidad · ${entry['changed_at']}'
+            :'Restaurada desde versión ${entry['restored_from']}'),
+          trailing:OutlinedButton(
+            onPressed:widget.liveBrand.saving
+              ?null:()=>_restoreBrandVersion(
+                (entry['version'] as num).toInt()),
+            child:const Text('Restaurar')),
+        )),
+      const SizedBox(height:20),
+      const Text('Las contraseñas, los datos privados y las '
+        'credenciales nunca se incluyen en una versión de marca.'),
+    ],
+  );
 
   Widget _body() {
     if(loading)return const Center(child:CircularProgressIndicator());
