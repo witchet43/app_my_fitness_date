@@ -120,7 +120,7 @@ legend{font-size:12px;font-weight:700;margin:0 0 8px}
 .hero-kicker{font:700 9px/1.4 var(--brand-body);letter-spacing:1.8px;color:#E7DEC5}
 .hero h3{font:normal clamp(24px,2.6vw,37px)/1.16 var(--brand-heading);margin:15px 0}
 .hero p{max-width:345px;font-size:13px;line-height:1.65;color:#EDF0E8;margin:0 0 24px}
-.preview-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:calc(var(--brand-radius) * .8);font:700 11px var(--brand-body);background:var(--brand-accent);color:#152D23;max-width:100%}
+.preview-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:calc(var(--brand-radius) * .8);font:700 11px var(--brand-body);background:var(--brand-accent);color:var(--brand-accent-ink,#152D23);max-width:100%}
 .feature-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:20px;background:var(--brand-bg)}
 .feature-row>div{display:flex;flex-direction:column;gap:6px;padding:13px;border-radius:var(--brand-radius);background:var(--brand-paper);border:1px solid var(--brand-line)}
 .feature-row span{font:16px var(--brand-heading);color:var(--brand-primary)}
