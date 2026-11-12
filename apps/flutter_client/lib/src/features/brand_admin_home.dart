@@ -276,15 +276,13 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       ? ['woff2'] : kind=='logo'||kind=='icon'
       ? ['png','webp'] : ['jpg','jpeg','png','webp'];
     try {
-      final result=await FilePicker.platform.pickFiles(
-        type:FileType.custom,allowedExtensions:extensions,
-        allowMultiple:false,withData:true);
-      if(result==null || result.files.isEmpty)return;
-      final file=result.files.single;
-      if(file.bytes==null)throw StateError('Archivo no accesible');
+      final file=await FilePicker.pickFile(
+        type:FileType.custom,allowedExtensions:extensions);
+      if(file==null)return;
+      final bytes=await file.readAsBytes();
       setState(()=>busy=true);
       final saved=await widget.repository.uploadAsset(
-        kind:kind,name:file.name,bytes:file.bytes!,license:license);
+        kind:kind,name:file.name,bytes:bytes,license:license);
       if(kind=='logo')selectedLogoAsset=saved['id'] as String;
       if(kind!='font'&&kind!='logo')selectedImages[kind]=saved['id'] as String;
       downloaded[saved['id'] as String]=file.bytes!;
