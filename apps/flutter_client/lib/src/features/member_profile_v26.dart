@@ -4,6 +4,7 @@ import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
+import 'community_b4.dart';
 import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
 
@@ -367,6 +368,13 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               builder:(_)=>MyActivitiesB2(api:widget.api))),
             icon:const Icon(Icons.calendar_month_outlined),
             label:const Text('Mis actividades y reservas')),
+          const SizedBox(height:10),
+          FilledButton.tonalIcon(
+            key:const Key('b4-member-community'),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>CommunityB4(api:widget.api))),
+            icon:const Icon(Icons.groups_outlined),
+            label:const Text('Comunidad deportiva')),
           const SizedBox(height:10),
           section('Yo como persona',Icons.favorite,FitDateColors.coral,
             Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
