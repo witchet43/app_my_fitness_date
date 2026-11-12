@@ -3,6 +3,7 @@
 abstract class CommunityRepository {
   Future<String> communityStatus();
   Future<void> acceptCommunityConsent();
+  Future<String> setCommunityParticipation({required bool enabled});
   Future<List<Map<String, dynamic>>> communityFeed({DateTime? before});
   Future<String> publishCommunityPost(String topic, String content);
   Future<String> removeCommunityPost(String postId);
