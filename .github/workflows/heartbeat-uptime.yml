@@ -2,11 +2,9 @@ name: SaaS heartbeat monitor — jtrdvnwbxpfdnbzasvcj
 
 # Scheduled events are executed by GitHub only from the default branch.
 # Three small requests/day; monitor GitHub minutes and Supabase quota.
+# FinOps: manually dispatched only; no scheduled or PR/push runner minutes.
 on:
-  schedule:
-    - cron: '11 2,10,18 * * *'
   workflow_dispatch:
-
 permissions:
   contents: read
 
