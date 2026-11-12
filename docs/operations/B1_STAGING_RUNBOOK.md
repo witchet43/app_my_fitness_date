@@ -1,5 +1,5 @@
 # B1 · Runbook seguro de integración, QA y liberación
-**Estado:** SIN EJECUTAR. No aplicar SQL ni desplegar a producción desde este documento.
+**Estado:** QA PARCIAL. B1/10 consumido y fallido. Migración, Edge y E2E no desplegados.
 **Issue maestro:** https://github.com/witchet43/app_my_fitness_date/issues/65
 
 ## 0. No desperdiciar el único build remoto
@@ -39,7 +39,14 @@ Evidencia grabada **sin credenciales, DOB, correo ni códigos MFA**:
 - Logout y regreso a la página sin mostrar datos de otro usuario.
 - Verificar que Admin/MFA sigue protegido, sin regresión del panel por login miembro.
 
-## 5. Única validación alojada, si D0 está gobernado
+## 5. Evidencia real del B1 (sin reintentos)
+- Run: https://github.com/witchet43/app_my_fitness_date/actions/runs/43295667329
+- Una sola ejecución remota: Node, typecheck y contrato estático PASS; Flutter analyze FAIL por wrapper Dart truncado.
+- La compilación Flutter web fue OMITIDA y no hubo despliegue.
+- El wrapper se reconstruyó en commit 54722ef3 y se ajustó UUID en f69151b, SIN repetir las pruebas remotas. Esos cambios siguen no verificados en Flutter.
+- Presupuesto consumido: 1/10. Todo criterio B1 sin aceptar pasa a B2 además del alcance propio de B2. B9/B10 no utilizados.
+
+## 5A. Política de próximas validaciones
 - Solicitar permiso explícito para gastar el cupo **B1/10** y lanzar un **único job remoto controlado** que ejecute todos los test/smoke necesarios. Un job fallido también consume B1, NO repetir automáticamente.
 - Archivar SHA exacto, logs, artefacto, resultados, checklist y deuda pendiente.
 - Si se requiere un segundo intento, necesitará consumir uno de B9/B10 o replanificar un cupo siguiente bajo autorización; **nunca disparar varios workflows** por PR/push.
