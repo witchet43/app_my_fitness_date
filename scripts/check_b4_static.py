@@ -131,4 +131,19 @@ must('B4 pilot management UI', pilotui, [
     'b4-pilot-invite', 'b4-pilot-revoke-confirm',
 ])
 assert 'CommunityPilotB4(api:widget.api)' in moderation
+# A production-impacting Flutter lifecycle regression was caught by B4
+# widget tests: controllers in temporary modal closures were disposed before
+# Navigator's reverse animation detached their TextFields. Keep the stricter
+# value-callback pattern until those fields become owned StatefulWidgets.
+for widget_path in (
+    'apps/flutter_client/lib/src/features/community_b4.dart',
+    'apps/flutter_client/lib/src/features/community_moderation_b4.dart',
+    'apps/flutter_client/lib/src/features/community_pilot_b4.dart',
+):
+    widget = source(widget_path)
+    assert 'TextEditingController()' not in widget, (
+        f'{widget_path}: ephemeral TextEditingController may outlive dialog')
+    assert '.dispose()' not in widget, (
+        f'{widget_path}: transient dialog controller lifecycle needs review')
+
 print('B4 source invariants PASS (runtime and human moderation checks pending)')
