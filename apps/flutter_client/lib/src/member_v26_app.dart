@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'core/member_v26_api.dart';
 import 'core/brand_admin_repository.dart';
 import 'core/account_role.dart';
+import 'core/auth_refresh_policy.dart';
 import 'core/password_recovery.dart';
 import 'features/brand_admin_home.dart';
 import 'features/brand_admin_mfa.dart';
@@ -68,10 +69,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       // Supabase can emit tokenRefreshed during validation/MFA. Revalidating
       // on every token refresh repeatedly replaced the MFA enrollment UI.
       // Challenge verification calls refresh() explicitly after AAL2.
-      if(event.event==AuthChangeEvent.signedIn ||
-         event.event==AuthChangeEvent.signedOut ||
-         event.event==AuthChangeEvent.passwordRecovery ||
-         event.event==AuthChangeEvent.userUpdated){
+      if(shouldRefreshIdentityForAuthEvent(event.event)){
         if(mounted) unawaited(refresh());
       }
     },onError:(Object _, StackTrace __){
