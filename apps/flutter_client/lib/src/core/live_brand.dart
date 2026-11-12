@@ -155,11 +155,7 @@ class LiveBrandSettings {
       textTheme:base.textTheme.apply(
         fontFamily:font,bodyColor:fg,displayColor:fg,
       ),
-      appBarTheme:AppBarTheme(
-        backgroundColor:bg,
-        foregroundColor:fg,
-        elevation:0,
-      ),
+
       filledButtonTheme:FilledButtonThemeData(
         style:FilledButton.styleFrom(
           backgroundColor:p,foregroundColor:onP,
