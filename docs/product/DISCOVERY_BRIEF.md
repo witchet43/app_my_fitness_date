@@ -29,3 +29,24 @@ Comunidades deportivas, grupos de mensajería, redes sociales y aplicaciones de 
 - Definir propietario, ventana, tamaño de muestra y criterio CONTINUAR / ITERAR / PIVOTAR / PAUSAR.
 
 **Entrevistas realizadas y validadas:** SIN_DATOS. **Pruebas de usabilidad con personas reales:** SIN_DATOS.
+
+---
+
+## Complemento exploratorio — FITTED (documento recibido, 11-nov-2026)
+
+Se incorporó un **segundo eje de descubrimiento**: evaluar si el *lifestyle* (rutina de vida, preferencias de tiempo compartido, modo de entrenamiento y expectativas de relación) permite decisiones de compatibilidad más útiles que compartir el mismo deporte. El concepto se titula provisionalmente **FITTED**, pero **la marca actual sigue siendo My Fitness Date** y **FitDating** permanece opcional mientras no exista decisión de negocio.
+
+- [Concepto FITTED — lectura fiel del PDF de 8 páginas](FITTED_EXPLORATORY_CONCEPT_2026.md).
+- [Requisitos y criterios de aceptación candidatos, con trazabilidad](LIFESTYLE_COMPATIBILITY_REQUIREMENTS.md).
+- [Brechas con el producto actual y decisiones D-01..D-14](FITTED_GAP_ANALYSIS_DECISIONS.md).
+- [ADR-0004: hipótesis, no rebranding](../adr/0004-fitted-lifestyle-discovery-proposed.md).
+
+**Hipótesis a comprobar, sin datos reales todavía:**
+- H-FIT-01: conocer Life Rhythm y Relationship Rhythm cambia la intención de match más que el deporte idéntico.
+- H-FIT-02: Gym Shield A/B aumenta sensación de control de privacidad sin revelar gimnasio ni horarios.
+- H-FIT-03: una explicación comprensible de compatibilidad es más útil que un porcentaje misterioso.
+- H-FIT-04: los prompts situacionales proporcionan información relacional que una bio genérica omite.
+
+**Investigación propuesta por la fuente:** 15–20 entrevistas a personas solteras activas de diferentes disciplinas; 2–3 perfiles prototipo; prototipos bilingües, revisión cultural por ciudad/país y estudio de naming/trademark. No iniciar pago, chat, citas, rebranding o nuevas capturas de datos por este documento. **Entrevistas y métricas de FITTED: SIN_DATOS.**
+
+**Tensión deliberadamente abierta:** el PDF propone una app `dating-first` cuyo MVP deja un gran social feed para después, mientras que My Fitness Date fue concebido `community-first` con citas opt-in. Resolver explícitamente antes de reordenar o retirar módulos.

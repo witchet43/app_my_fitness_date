@@ -1,5 +1,10 @@
 # my_fitness_date
 
+> **Nueva documentación de producto (11-nov-2026):** [Índice](docs/product/README.md) · [Concepto exploratorio FITTED (13 secciones)](docs/product/FITTED_EXPLORATORY_CONCEPT_2026.md) · [Matriz de 84 referencias](docs/product/LIFESTYLE_COMPATIBILITY_REQUIREMENTS.md) · [Brechas y decisiones abiertas](docs/product/FITTED_GAP_ANALYSIS_DECISIONS.md) · [ADR-0004 no aprobado](docs/adr/0004-fitted-lifestyle-discovery-proposed.md).
+>
+> **Importante:** FITTED es una **propuesta exploratoria** de marca/producto, **no** sustituye automáticamente **My Fitness Date** ni la experiencia **FitDating**. La documentación de V19/DEV bajo este encabezado es **histórica** y no debe considerarse estado actual de producción; verificar despliegues y `release/readiness.json` por separado.
+
+
 **Red social deportiva con comunidad, actividades y citas opcionales para adultos.**
 
 **Estado (27 oct 2026): candidato de integración V19 exclusivamente de desarrollo. No se ha lanzado una beta, ni se han fusionado los cambios en la rama principal.**
