@@ -79,3 +79,17 @@ Procedimiento de arranque (operador con permisos Supabase, fuera del navegador p
 - [Brand Lab actual](BRAND_LAB_IMPLEMENTATION.md) — experimento público, sólo estado local.
 - [Estándar de diseño 40+](SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md) — PR #47 aún pendiente a fecha de este cambio.
 - [SaaS Factory v1.9](https://docs.google.com/document/d/11hytKADuIUpmWzHEmAfZwcYNJ04M7n1ev4A1fbeZy9Q/edit) — seguridad, arquitectura, DevSecOps, accesibilidad, costos y release.
+
+## Recuperación de contraseña después de una invitación (noviembre 2026)
+
+Supabase puede confirmar una invitación sin pedir al usuario una contraseña. La presencia de un hash de credencial en `auth.users` **no prueba** que el titular haya elegido una contraseña. Para la cuenta administrativa invitada, conservar la identidad y la fila `app_private.brand_administrators` existentes; **no** crear una segunda cuenta, no enviar contraseñas por correo/chat ni cambiar directamente `encrypted_password` desde SQL.
+
+- Acceso desde `/admin/branding/` → **Crear o restablecer mi contraseña**.
+- `/admin/branding/reset-password/` solicita correo mediante Supabase Auth `POST /auth/v1/recover` con `redirect_to` de ruta exacta.
+- El enlace del correo debe redirigir a esta misma página. **Prerequisito de Supabase Auth**: autorizar expresamente `https://my-fitness-date.pages.dev/admin/branding/reset-password/` en **Authentication → URL Configuration → Redirect URLs**. Si no está permitido, Supabase usa la Site URL, y el usuario no verá el formulario.
+- La página lee el fragmento temporal de recuperación, lo elimina de la URL inmediatamente, valida sesión real vía `/auth/v1/user`, comprueba el rol `brand_admin_status` y permite definir una contraseña con `PUT /auth/v1/user`.
+- La sesión se conserva **solamente en memoria** y se revoca al finalizar. No se almacenan tokens en cookies de la aplicación, localStorage o logs. La contraseña nunca se envía al chat.
+- La recuperación **no evita el segundo factor**: tras iniciar sesión, MFA AAL2 es obligatorio para guardar paletas, diseños, logos, fuentes o imágenes.
+- Verificar funcionalmente el recorrido real con el correo administrador, no únicamente CI/HTTP. No documentar «contraseña configurada» hasta que el propietario confirme el resultado del formulario.
+
+Referencias: [Invitación de usuarios](https://supabase.com/docs/guides/auth/users), [Password-based Auth](https://supabase.com/docs/guides/auth/passwords), [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls).
