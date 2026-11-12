@@ -91,6 +91,16 @@ create table app_private.community_deletion_requests_b4 (
 alter table app_private.community_deletion_requests_b4 enable row level security;
 revoke all on app_private.community_deletion_requests_b4 from public,anon,authenticated;
 
+-- A community opt-out is independent of the irreversible account deletion request.
+create table app_private.community_participation_b4 (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  enabled boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+alter table app_private.community_participation_b4 enable row level security;
+revoke all on app_private.community_participation_b4
+  from public,anon,authenticated;
+
 -- Guards include all required consents and self-declared adult status.
 -- These do NOT replace independent age verification required for dating/beta.
 create function app_private.community_actor_b4()
@@ -117,6 +127,10 @@ begin
     select 1 from app_private.community_suspensions_b4 s
       where s.user_id=v_user and s.active=true
   ) then return 'suspended'; end if;
+  if exists (
+    select 1 from app_private.community_participation_b4 x
+      where x.user_id=v_user and x.enabled=false
+  ) then return 'opted_out'; end if;
   if not exists (
     select 1 from public.member_profiles_v26 p
     where p.user_id=v_user and p.onboarding_complete=true
@@ -186,6 +200,10 @@ as $$
     and not exists (
       select 1 from app_private.community_deletion_requests_b4 d
       where d.user_id=p.author_id
+    )
+    and not exists (
+      select 1 from app_private.community_participation_b4 x
+      where x.user_id=p.author_id and x.enabled=false
     )
   order by p.created_at desc,p.id desc
   limit least(greatest(coalesce(p_limit,15),1),20);
@@ -431,6 +449,60 @@ $$;
 revoke all on function public.admin_community_remove_announcement_b4(uuid)
   from public,anon,authenticated;
 grant execute on function public.admin_community_remove_announcement_b4(uuid)
+  to authenticated;
+
+
+-- Withdraw social participation without deleting the entire account.
+-- Older public posts stay removed even if the user opts in again.
+create function public.community_set_participation_b4(p_enabled boolean)
+returns text language plpgsql security definer set search_path=''
+as $$
+declare v_user uuid:=(select auth.uid());
+begin
+  if v_user is null or coalesce(auth.jwt()->>'is_anonymous','false')='true'
+    then return 'not_authenticated'; end if;
+  if p_enabled is null then return 'invalid'; end if;
+  if exists(select 1 from app_private.brand_administrators a
+      where a.user_id=v_user and a.active=true)
+    then return 'forbidden'; end if;
+  if exists(select 1 from app_private.community_deletion_requests_b4 d
+      where d.user_id=v_user)
+    then return 'deletion_pending'; end if;
+  if p_enabled then
+    if not exists (
+      select 1 from public.member_profiles_v26 p
+      where p.user_id=v_user and p.onboarding_complete=true
+        and p.date_of_birth <= (current_date - interval '18 years')::date
+    ) or not exists (
+      select 1 from public.member_consents_v26 c
+      where c.user_id=v_user and c.consent_kind='community'
+        and c.document_version='community-v1'
+    ) or not exists (
+      select 1 from public.member_consents_v26 c
+      where c.user_id=v_user and c.consent_kind='terms'
+        and c.document_version='v27-terms-1'
+    ) or not exists (
+      select 1 from public.member_consents_v26 c
+      where c.user_id=v_user and c.consent_kind='privacy'
+        and c.document_version='v27-privacy-1'
+    ) then return 'consent_required'; end if;
+  end if;
+  insert into app_private.community_participation_b4(
+    user_id,enabled,updated_at
+  ) values(v_user,p_enabled,now())
+    on conflict(user_id) do update
+      set enabled=excluded.enabled,updated_at=excluded.updated_at;
+  if not p_enabled then
+    update public.community_posts_b4 p
+      set status='removed',updated_at=now()
+      where p.author_id=v_user and p.status='visible';
+  end if;
+  return case when p_enabled then 'enabled' else 'disabled' end;
+end;
+$$;
+revoke all on function public.community_set_participation_b4(boolean)
+  from public,anon,authenticated;
+grant execute on function public.community_set_participation_b4(boolean)
   to authenticated;
 
 -- Owner MFA/AAL2 only; reporting identities remain private from members.
