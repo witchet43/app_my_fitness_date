@@ -251,4 +251,28 @@ void main() {
       findsOneWidget);
     expect(tester.takeException(),isNull);
   });
+  testWidgets('owner can publish genuine official sports notices',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1100,900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final fake=FakeCommunityB4();
+    await tester.pumpWidget(
+      MaterialApp(home:CommunityModerationB4(api:fake)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(
+      const Key('b4-moderation-tab-announcements')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('b4-admin-new-announcement')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(
+      const Key('b4-announcement-content')),
+      'Este domingo tendremos una caminata deportiva abierta.');
+    await tester.tap(find.byKey(const Key('b4-announcement-submit')));
+    await tester.pumpAndSettle();
+    expect(fake.officialPublished,1);
+    expect(find.byKey(const Key('b4-announcements-empty')),findsNothing);
+    expect(tester.takeException(),isNull);
+  });
+
+
 }
