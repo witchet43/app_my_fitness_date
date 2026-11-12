@@ -429,47 +429,76 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   Future<void> _upload() async {
     if(busy)return;
     final kind=selectedUploadKind;
-    if(kind=='font' && !const ['owned','open','licensed'].contains(license)){
-      _notice('Declara primero una licencia de uso.',bad:true);return;
-    }
-    final extensions=kind=='font'
-      ? ['woff2'] : kind=='logo'||kind=='icon'
-      ? ['png','webp'] : ['jpg','jpeg','png','webp'];
+    final extensions=kind=='font' ? ['woff2']
+      :kind=='logo'||kind=='icon' ? ['png','webp']
+      :['jpg','jpeg','png','webp'];
     try {
       final file=await FilePicker.pickFile(
         type:FileType.custom,allowedExtensions:extensions);
       if(file==null)return;
       final bytes=await file.readAsBytes();
+      if(!mounted)return;
       setState(()=>busy=true);
-      final saved=await widget.repository.uploadAsset(
-        kind:kind,name:file.name,bytes:bytes,license:license);
-      if(kind=='logo')selectedLogoAsset=saved['id'] as String;
-      if(kind!='font'&&kind!='logo')selectedImages[kind]=saved['id'] as String;
-      downloaded[saved['id'] as String]=bytes;
-      await _reload();
-      _notice('Recurso privado cargado. No está publicado en la aplicación.');
+      if(const ['logo','cover_desktop','cover_mobile','app_image']
+          .contains(kind)) {
+        // An explicit owner selection creates an immutable public image
+        // in the dedicated bucket. No private draft file is leaked.
+        final url=await widget.repository.uploadPublicBrandAsset(
+          kind:kind,name:file.name,bytes:bytes);
+        downloaded[url]=bytes;
+        if(mounted)setState((){
+          if(kind=='logo')selectedLogoAsset=url;
+          else selectedImages[kind]=url;
+        });
+        _queueBrandSave();
+        _notice('Imagen seleccionada. Guardando para todos los usuarios.');
+      } else {
+        final saved=await widget.repository.uploadAsset(
+          kind:kind,name:file.name,bytes:bytes,license:license);
+        downloaded[saved['id'] as String]=bytes;
+        await _reload();
+        _notice(kind=='font'
+          ?'Fuente conservada en biblioteca. La marca en vivo usa fuentes del catálogo.'
+          :'Recurso guardado en biblioteca privada; no se publica automáticamente.');
+      }
     } catch (_) {
-      _notice('No fue posible subir el archivo. Revisa tamaño, formato, licencia y MFA.',bad:true);
+      _notice('No se pudo subir. Comprueba tipo, tamaño y sesión MFA.',bad:true);
     } finally {
       if(mounted)setState(()=>busy=false);
     }
   }
 
-  Future<void> _loadAsset(Map<String, dynamic> item) async {
+  Future<void> _loadAsset(Map<String,dynamic> item) async {
     final id=item['id'] as String;
+    final kind=item['asset_kind'] as String;
+    if(kind=='font') {
+      _notice('Las fuentes WOFF2 privadas se prepararán para la fase avanzada.');
+      return;
+    }
     try {
-      if(!downloaded.containsKey(id) && item['asset_kind']!='font'){
-        final bytes=await widget.repository.loadPrivateAsset(item);
-        if(mounted)downloaded[id]=bytes;
+      setState(()=>busy=true);
+      final bytes=downloaded[id] ??
+        await widget.repository.loadPrivateAsset(item);
+      if(!mounted)return;
+      downloaded[id]=bytes;
+      if(const ['logo','cover_desktop','cover_mobile','app_image']
+          .contains(kind)) {
+        // Copy once into the public, owner-checked bucket on selection.
+        final url=await widget.repository.uploadPublicBrandAsset(
+          kind:kind,name:item['name'].toString(),bytes:bytes);
+        downloaded[url]=bytes;
+        setState((){
+          if(kind=='logo')selectedLogoAsset=url;
+          else selectedImages[kind]=url;
+        });
+        _queueBrandSave();
+      } else {
+        _notice('Esta clase de recurso todavía permanece privada.');
       }
-      if(mounted)setState(() {
-        final kind=item['asset_kind'] as String;
-        if(kind=='logo')selectedLogoAsset=id;
-        else if(kind=='font')font='asset:$id';
-        else selectedImages[kind]=id;
-      });
     } catch (_) {
-      _notice('El recurso privado no está disponible con esta sesión.',bad:true);
+      _notice('No fue posible usar este recurso públicamente.',bad:true);
+    } finally {
+      if(mounted)setState(()=>busy=false);
     }
   }
 
