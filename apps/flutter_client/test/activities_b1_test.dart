@@ -29,6 +29,14 @@ class FakeActivities implements ActivityRepository {
     return 'confirmed';
   }
   @override
+  Future<List<Map<String, dynamic>>> loadMyActivities() async => [];
+  @override
+  Future<String> cancelActivity(String eventId) async => 'cancelled';
+  @override
+  Future<List<Map<String, dynamic>>> loadOrganizedActivities() async => [];
+  @override
+  Future<String> cancelOrganizedActivity(String eventId) async => 'cancelled';
+  @override
   Future<bool> isApprovedActivityOrganizer() async => approved;
   @override
   Future<Map<String,dynamic>> publishActivity(Map<String,dynamic> data) async =>
