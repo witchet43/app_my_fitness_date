@@ -1,0 +1,74 @@
+# B1: ONE REMOTE JOB. A push to the isolated feature branch does NOT run it
+# unless the exact approval-marker path changes. This workflow never deploys.
+# Each triggering run (success/fail/cancel) consumes one B1 budget unit.
+name: MFD B1 — single consolidated QA gate
+on:
+  push:
+    branches:
+      - feature/b1-member-activities-rsvp-20261112
+    paths:
+      - .build-gates/b1-validation-request.txt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mfd-b1-single-qa
+  cancel-in-progress: false
+
+jobs:
+  b1:
+    name: B1 one-job Node, SQL contract, Flutter, web compile
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact SHA
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Node dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Test API and domain
+        run: |
+          npm run typecheck
+          npm test
+          python3 scripts/check_b1_static.py
+      - name: Flutter 3.47.9
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Flutter local project
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Flutter static analysis and widget tests
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded
+      - name: Compile real member app without sending traffic or publishing
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release \
+            --dart-define=MFD_V26_ENABLED=true \
+            --dart-define=MFD_PROD_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co \
+            --dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_build_placeholder_not_a_live_key \
+            --dart-define=MFD_API_BASE_URL=https://example.invalid/functions/v1/member-api-v26 \
+            --dart-define=MFD_TERMS_URL=https://example.invalid/terms/ \
+            --dart-define=MFD_PRIVACY_URL=https://example.invalid/privacy/ \
+            --dart-define=MFD_TERMS_VERSION=v27-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v27-privacy-1 \
+            --dart-define=MFD_OAUTH_REDIRECT_URL=https://example.invalid/ \
+            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=false
+          test -s build/web/index.html
+          echo "B1 web compiled. QA-only artifact; fake public key, NOT deployable."
+      - name: Record B1 source checksum
+        run: |
+          git rev-parse HEAD
+          git status --short
