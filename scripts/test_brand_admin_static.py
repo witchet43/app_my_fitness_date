@@ -115,14 +115,23 @@ class BrandAdminSecurityTest(unittest.TestCase):
         self.assertIn("admin/branding/reset-password/reset-password.js", RELEASE)
 
     def test_cloudflare_route_and_content_policy(self):
-        self.assertIn("/admin/branding/ /admin/branding/index.html 200",REDIRECTS)
-        self.assertLess(REDIRECTS.index("/admin/branding/ /admin/branding/index.html"),
+        self.assertIn("/admin/branding/ / 302",REDIRECTS)
+        self.assertLess(REDIRECTS.index("/admin/branding/ / 302"),
                         REDIRECTS.index("/* /index.html"))
+        app = (ROOT/"apps/flutter_client/lib/src/member_v26_app.dart").read_text()
+        self.assertIn("brand_admin_status", app)
+        self.assertIn("brand_admin_session", app)
+        self.assertIn("BrandAdminHome", app)
+        self.assertIn("BrandAdminMfaGate", app)
+        self.assertLess(app.index("brand_admin_status"),
+                        app.index("widget.api.loadConsents()"))
+        self.assertIn("BrandAdminRepository(widget.auth)", app)
         self.assertIn("/admin/branding/*",HEADERS)
         self.assertIn("script-src 'self'",HEADERS)
         self.assertIn("frame-ancestors 'none'",HEADERS)
         self.assertIn("noindex, nofollow",HEADERS)
-        self.assertIn("cloudflare/admin build/web/",RELEASE)
+        self.assertIn("build/web/admin/branding/reset-password",RELEASE)
+        self.assertIn("test ! -e build/web/admin/branding/index.html",RELEASE)
         self.assertIn("admin/branding/index.html",RELEASE)
         self.assertIn("PUBLIC CLOUDFLARE RELEASE + ADMIN PASSWORD RECOVERY VERIFIED",RELEASE)
         self.assertIn("prefers-reduced-motion",CSS)
