@@ -53,8 +53,7 @@ class _MemberV26AppState extends State<MemberV26App> {
     super.initState();
     // Supabase can handle the PKCE callback before this widget subscribes.
     // Keep an explicit URL marker as well as the passwordRecovery event.
-    passwordRecoveryRequested =
-        Uri.base.queryParameters['password_reset'] == '1';
+    passwordRecoveryRequested = Uri.base.path == '/recover/';
     sub=widget.auth.auth.onAuthStateChange.listen((event){
       if(event.event==AuthChangeEvent.passwordRecovery){
         passwordRecoveryRequested=true;
