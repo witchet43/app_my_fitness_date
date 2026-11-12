@@ -3,7 +3,7 @@
 // There is deliberately no service-role key and no public media publishing.
 import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from "./config.ts";
 import { activityRsvpRoute, activityCancelRoute, organizerCancelRoute, adminCancelRoute, validateActivityDraft } from "./activity_validation.ts";
-import { communityUuid, validateCommunityPost, validateCommunityReport, validateModeration, communityRemovePostId, communityFeedCursor } from "./community_validation.ts";
+import { communityUuid, validateCommunityPost, validateCommunityReport, validateModeration, communityRemovePostId, communityFeedCursor, adminAnnouncementId } from "./community_validation.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
@@ -389,6 +389,37 @@ async function handleRequest(req: Request): Promise<Response> {
     }
     // Moderator is an independent owner with verified MFA (AAL2).
     // No reporter ID is included in the moderation queue payload.
+    if (route === "/v1/admin/community/announcements" &&
+        req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/admin_community_announcements_b4",token,{});
+      if (!response.ok) return error(503);
+      const items=await response.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+    if (route === "/v1/admin/community/announcements" &&
+        req.method === "POST") {
+      const data=await body(req);
+      const values=data && validateCommunityPost(data);
+      if (!values) return error(400);
+      const response=await endpoint("POST",
+        "/rest/v1/rpc/admin_community_publish_b4",token,values);
+      if (!response.ok) return error(503);
+      const item=await response.json() as {status?:string;id?:string};
+      if (item.status==="published") return json(item,201);
+      if (item.status==="rate_limited") return json(item,429);
+      if (item.status==="invalid") return json(item,400);
+      return json(item,403);
+    }
+    const announcementId=adminAnnouncementId(route);
+    if (announcementId && req.method==="DELETE") {
+      const response=await endpoint("POST",
+        "/rest/v1/rpc/admin_community_remove_announcement_b4",
+        token,{p_post_id:announcementId});
+      if (!response.ok) return error(503);
+      const status=await response.json();
+      return status==="removed" ? json({status}) : json({status},403);
+    }
     if (route === "/v1/admin/community/reports" && req.method === "GET") {
       const response = await endpoint("POST",
         "/rest/v1/rpc/admin_community_queue_b4",token,{});
