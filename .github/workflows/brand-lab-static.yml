@@ -1,0 +1,45 @@
+name: Brand Lab — static UI checks
+
+on:
+  pull_request:
+    paths:
+      - "apps/flutter_client/cloudflare/brand-lab/**"
+      - "apps/flutter_client/cloudflare/_redirects"
+      - "apps/flutter_client/cloudflare/_headers"
+      - "scripts/test_brand_lab_static.py"
+      - ".github/workflows/brand-lab-static.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/flutter_client/cloudflare/brand-lab/**"
+      - "apps/flutter_client/cloudflare/_redirects"
+      - "apps/flutter_client/cloudflare/_headers"
+      - "scripts/test_brand_lab_static.py"
+      - ".github/workflows/brand-lab-static.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Ten logos, no data transfers, secure Cloudflare paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate content, security and routing
+        run: python3 scripts/test_brand_lab_static.py
+      - name: Check browser JavaScript syntax
+        run: node --check apps/flutter_client/cloudflare/brand-lab/brand-lab.js
+      - name: Exercise live preview, exports and draft controls
+        run: node scripts/test_brand_lab_runtime.cjs
+      - name: Check HTML/CSS/JS packaged
+        run: |
+          test -s apps/flutter_client/cloudflare/brand-lab/index.html
+          test -s apps/flutter_client/cloudflare/brand-lab/brand-lab.css
+          test -s apps/flutter_client/cloudflare/brand-lab/brand-lab.js
+          echo "Brand Lab static checks passed"

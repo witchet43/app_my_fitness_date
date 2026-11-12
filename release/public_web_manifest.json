@@ -33,5 +33,12 @@
   "beta_and_real_user_gates": "release/readiness.json: comprehensive real-user beta pending (dating candidate discovery independently gated by verified age)",
   "brand": "Active Chemistry",
   "design_revision": "v27",
-  "brand_tagline": "Encuentra tu ritmo. Conecta de verdad."
+  "brand_tagline": "Encuentra tu ritmo. Conecta de verdad.",
+  "brand_lab": {
+    "path": "/brand-lab/",
+    "mode": "client_side_visual_preview_only",
+    "persists_to": "browser_localStorage_only",
+    "can_change_production_identity": false,
+    "logos": 10
+  }
 }

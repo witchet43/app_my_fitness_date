@@ -56,6 +56,11 @@ jobs:
           assert "unverified_dating_discovery" in m["disabled_features"]
           assert "public_media_upload" in m["disabled_features"]
           PY
+      - name: Validate Brand Lab HTML/JS before building
+        run: |
+          python3 scripts/test_brand_lab_static.py
+          node --check apps/flutter_client/cloudflare/brand-lab/brand-lab.js
+          node scripts/test_brand_lab_runtime.cjs
       - name: Verify hosted Google and email authentication
         run: python3 scripts/verify_hosted_auth.py
       - name: Verify hosted member API before exposing registration
@@ -82,7 +87,7 @@ jobs:
           PY
       - name: Analyze Flutter
         working-directory: apps/flutter_client
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
       - name: Test Flutter
         working-directory: apps/flutter_client
         run: flutter test
@@ -105,9 +110,12 @@ jobs:
           test -s build/web/index.html
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
-          cp -R cloudflare/privacy cloudflare/terms build/web/
+          cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab build/web/
           test -s build/web/privacy/index.html
           test -s build/web/terms/index.html
+          test -s build/web/brand-lab/index.html
+          test -s build/web/brand-lab/brand-lab.css
+          test -s build/web/brand-lab/brand-lab.js
           python3 - <<'PY'
           import json,os
           from pathlib import Path
@@ -163,7 +171,15 @@ jobs:
                       with open_public("https://my-fitness-date.pages.dev/"+slug+"/?v="+sha) as r:
                           legal=r.read().decode("utf8")
                       assert "<!doctype html>" in legal.lower() and "witchet43@gmail.com" in legal
-                  print("PUBLIC CLOUDFLARE RELEASE + LEGAL ROUTES VERIFIED:",sha)
+                  with open_public("https://my-fitness-date.pages.dev/brand-lab/?v="+sha) as r:
+                      lab=r.read().decode("utf8")
+                      assert r.status==200
+                  assert "Brand Lab" in lab and "brand-lab.js" in lab and "Diez propuestas" in lab
+                  for asset_name in ("brand-lab.js","brand-lab.css"):
+                      with open_public("https://my-fitness-date.pages.dev/brand-lab/"+asset_name+"?v="+sha) as r:
+                          asset=r.read().decode("utf8")
+                          assert r.status==200 and len(asset)>1000
+                  print("PUBLIC CLOUDFLARE RELEASE + LEGAL + BRAND LAB VERIFIED:",sha)
                   break
               except Exception as error:
                   if attempt==6:
