@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import '../core/activity_repository.dart';
+import 'my_activities_b2.dart';
 
 /// B1 value journey: browse real, curated activities and confirm a private RSVP.
 /// No fake events, attendee list, gym, exact routes or training schedules.
@@ -210,6 +211,20 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
     }
   }
 
+  Future<void> showMyActivities() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => MyActivitiesB2(api: widget.api),
+    ));
+    if (mounted) await load();
+  }
+
+  Future<void> showOrganizedActivities() async {
+    if (!organizer) return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => OrganizedActivitiesB2(api: widget.api),
+    ));
+    if (mounted) await load();
+  }
   Widget activityCard(Map<String, dynamic> item) {
     final joined = item['joined'] == true;
     final id = (item['id'] ?? '').toString();
@@ -251,6 +266,12 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
       title: const Text('Explorar actividades'),
       actions: [
         IconButton(
+          key: const Key('b2-open-my-activities'),
+          tooltip: 'Mis actividades',
+          onPressed: showMyActivities,
+          icon: const Icon(Icons.event_note_outlined),
+        ),
+        IconButton(
           key: const Key('b1-reload'),
           tooltip: 'Actualizar actividades',
           onPressed: loading ? null : load,
@@ -272,8 +293,22 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
               const SizedBox(height: 8),
               const Text('Actividades publicadas por organizadores autorizados. '
                 'No compartimos tu gimnasio, ubicación exacta ni rutina.'),
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                key: const Key('b2-my-activities-button'),
+                onPressed: showMyActivities,
+                icon: const Icon(Icons.calendar_month_outlined),
+                label: const Text('Mis actividades y reservas'),
+              ),
               if (organizer) ...[
                 const SizedBox(height: 14),
+                OutlinedButton.icon(
+                  key: const Key('b2-organizer-list-button'),
+                  onPressed: showOrganizedActivities,
+                  icon: const Icon(Icons.manage_accounts_outlined),
+                  label: const Text('Administrar mis eventos'),
+                ),
+                const SizedBox(height: 8),
                 OutlinedButton.icon(
                   key: const Key('b1-organizer-create'),
                   onPressed: publishing ? null : createActivity,
