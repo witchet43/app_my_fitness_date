@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/password_recovery.dart';
 
 /// Native Flutter password recovery, shared by member and administrator.
 /// A valid Supabase recovery session is required; this screen never confers
@@ -28,12 +29,10 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
   Future<void> _save() async {
     if (busy) return;
     final newPassword = password.text;
-    if (newPassword.length < 12 || newPassword.length > 128) {
-      setState(() => error = 'Utiliza entre 12 y 128 caracteres.');
-      return;
-    }
-    if (newPassword != confirmation.text) {
-      setState(() => error = 'Las contraseñas no coinciden.');
+    final validation = passwordValidationMessage(
+      newPassword, confirmation.text);
+    if (validation != null) {
+      setState(() => error = validation);
       return;
     }
     setState(() { busy = true; error = null; });
