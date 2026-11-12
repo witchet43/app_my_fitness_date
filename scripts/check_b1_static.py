@@ -18,8 +18,6 @@ def require(name: str, text: str, expected: list[str]) -> None:
 
 sql = read("supabase/migrations/202611120016_activity_rsvp_b1.sql")
 require("B1 SQL", sql, [
-    "enable row level security",  # RLS policy already exists in historic migration
-] if False else [
     "for update", "capacity between 1 and 200",
     "drop policy if exists event_rsvps_join_future_event",
     "revoke insert (event_id, user_id)", "on conflict (event_id, user_id)",
