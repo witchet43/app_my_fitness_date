@@ -168,7 +168,7 @@ class _CommunityB4State extends State<CommunityB4> {
               onPressed: () {
                 final text = content.text.trim();
                 final containsPrivateData = RegExp(
-                  r'(https?://|www\\.|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|[0-9]{8,})',
+                  r'(https?://|www\.|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[0-9]{8,})',
                   caseSensitive:false,
                 ).hasMatch(text);
                 if (text.length < 15 || text.length > 480 ||
