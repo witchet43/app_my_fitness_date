@@ -6,10 +6,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'activity_repository.dart';
 import 'curator_repository.dart';
 import 'community_repository.dart';
+import 'dating_repository_b5.dart';
 
 /// Business data travels through our own FastAPI Gateway, not directly
 /// through a privileged database key or user-selected identity.
-class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository {
+class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB5 {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
@@ -423,6 +424,29 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
         data: {'opt_in': true});
   }
 
+  @override
+  Future<String> saveDatingPreferences(Map<String,dynamic> draft) async {
+    final response = _decode(await _request(
+      'POST','/v1/dating/preferences',data:draft,
+    ));
+    if (response['status'] != 'saved') {
+      throw const MemberApiException('No fue posible guardar tus preferencias.');
+    }
+    return 'saved';
+  }
+
+  @override
+  Future<String> disableDating() async {
+    final response = _decode(await _request(
+      'POST','/v1/dating/disable',
+    ));
+    if (response['status'] != 'disabled') {
+      throw const MemberApiException('No pudimos desactivar FitDating.');
+    }
+    return 'disabled';
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> datingCandidates() async {
     final response = _decode(await _request('GET', '/v1/dating/candidates'));
     return (response['items'] as List<dynamic>? ?? [])
