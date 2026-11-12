@@ -258,6 +258,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
        headline.text.trim().length<8 || headline.text.trim().length>180 ||
        description.text.trim().length<10 || description.text.trim().length>600 ||
        paletteName.text.trim().length<2 ||
+       !const ['Georgia','Palatino','Garamond','Arial'].contains(font) ||
+       (selectedLogoAsset!=null &&
+         !LiveBrandSettings.safeAssetUrl(selectedLogoAsset!)) ||
        (logo.startsWith('https://') &&
         !LiveBrandSettings.safeAssetUrl(logo)) ||
        selectedImages.values.any((v)=>!LiveBrandSettings.safeAssetUrl(v))) {
