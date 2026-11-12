@@ -339,6 +339,25 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   @override
+  Future<List<Map<String,dynamic>>> pilotMembers() async =>
+    _items(_decode(await _request('GET','/v1/admin/community/pilot')));
+
+  @override
+  Future<String> admitPilotMember(String email) async =>
+    _decode(await _request('POST','/v1/admin/community/pilot',
+      data:{'email':email.trim()}))['status'].toString();
+
+  @override
+  Future<String> revokePilotMember(String userId) async {
+    if(!_validActivityId(userId)) {
+      throw const MemberApiException('Identificador inválido.');
+    }
+    return _decode(await _request(
+      'POST','/v1/admin/community/pilot/revoke',
+      data:{'user_id':userId}))['status'].toString();
+  }
+
+  @override
   Future<List<Map<String,dynamic>>> moderationReports() async =>
     _items(_decode(await _request('GET','/v1/admin/community/reports')));
 
