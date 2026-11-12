@@ -1,21 +1,7 @@
 name: Brand Admin — security and configuration contracts
+# FinOps: manual-only; avoids unbudgeted PR/push jobs.
 on:
-  pull_request:
-    paths:
-      - "apps/flutter_client/cloudflare/admin/**"
-      - "apps/flutter_client/cloudflare/_redirects"
-      - "apps/flutter_client/cloudflare/_headers"
-      - "supabase/migrations/202611110015_brand_admin_foundation.sql"
-      - "scripts/test_brand_admin_static.py"
-      - ".github/workflows/brand-admin-security.yml"
-  push:
-    branches: [main]
-    paths:
-      - "apps/flutter_client/cloudflare/admin/**"
-      - "supabase/migrations/202611110015_brand_admin_foundation.sql"
-      - "scripts/test_brand_admin_static.py"
   workflow_dispatch:
-
 permissions:
   contents: read
 
