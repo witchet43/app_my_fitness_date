@@ -4,6 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/member_v26_api.dart';
+import 'core/brand_admin_repository.dart';
+import 'core/account_role.dart';
+import 'features/brand_admin_home.dart';
+import 'features/brand_admin_mfa.dart';
 import 'features/member_profile_v26.dart';
 import 'features/public_entry_shell.dart';
 import 'theme/fitness_date_theme.dart';
@@ -33,6 +37,8 @@ class _MemberV26AppState extends State<MemberV26App> {
   late final StreamSubscription<AuthState> sub;
   bool loading=true;
   bool verified=false;
+  bool brandAdministrator=false;
+  bool adminMfaVerified=false;
   bool legalAccepted=false;
   bool editing=false;
   bool busy=false;
@@ -55,6 +61,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       if(session==null){
         if(mounted){setState((){
           verified=false; legalAccepted=false;
+          brandAdministrator=false;adminMfaVerified=false;
           profile=null;editing=false;loading=false;
         });}
         return;
@@ -65,6 +72,23 @@ class _MemberV26AppState extends State<MemberV26App> {
       if(response.user==null || response.user!.emailConfirmedAt==null){
         throw const MemberApiException('Se requiere un correo verificado.');
       }
+      // Resolve privilege before sending anyone into the member onboarding
+      // or privacy flow. The database is authoritative, never user metadata
+      // or an email match. A failed role check blocks access altogether.
+      final adminResult=await widget.auth.rpc('brand_admin_status');
+      if(adminResult is! bool){
+        throw const MemberApiException('No fue posible verificar el rol.');
+      }
+      if(adminResult){
+        // AAL2 is verified SERVER-SIDE on each request, not a UI flag.
+        final allow=await widget.auth.rpc('brand_admin_session');
+        if(mounted){setState((){
+          verified=true;brandAdministrator=true;
+          adminMfaVerified=allow==true;
+          legalAccepted=false;profile=null;editing=false;loading=false;
+        });}
+        return;
+      }
       final records=await widget.api.loadConsents();
       final terms=records.any((r)=>r['consent_kind']=='terms' &&
           r['document_version']==widget.termsVersion);
@@ -72,7 +96,8 @@ class _MemberV26AppState extends State<MemberV26App> {
           r['document_version']==widget.privacyVersion);
       final own=terms && privacy ? await widget.api.loadProfile() : null;
       if(mounted){setState((){
-        verified=true;legalAccepted=terms&&privacy;
+        verified=true;brandAdministrator=false;adminMfaVerified=false;
+        legalAccepted=terms&&privacy;
         profile=own;
         loading=false;
       });}
@@ -80,6 +105,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       // Fail closed; backend down or unverified means no member app.
       if(mounted){setState((){
         verified=false;legalAccepted=false;
+        brandAdministrator=false;adminMfaVerified=false;
         profile=null;loading=false;
         failure='No fue posible validar tu sesión de manera segura.';
       });}
@@ -213,6 +239,21 @@ class _MemberV26AppState extends State<MemberV26App> {
           FilledButton(onPressed:refresh,child:const Text('Reintentar')),
           TextButton(onPressed:logout,child:const Text('Cerrar sesión')),
         ]))));
+    }else if(brandAdministrator){
+      final destination=resolveAccountSpace(
+        hasSession:true,remoteIdentityVerified:verified,
+        roleCheckSucceeded:true,brandAdministrator:true,
+        mfaAal2:adminMfaVerified);
+      if(destination==AccountSpace.administrator){
+        body=BrandAdminHome(
+          repository:BrandAdminRepository(widget.auth),
+          email:widget.auth.auth.currentUser?.email??'',
+          onSignOut:logout,
+        );
+      }else{
+        body=BrandAdminMfaGate(
+          client:widget.auth,onVerified:refresh,onSignOut:logout);
+      }
     }else if(!legalAccepted){
       body=_legal();
     }else if(profile==null || profile!['onboarding_complete']!=true || editing){
