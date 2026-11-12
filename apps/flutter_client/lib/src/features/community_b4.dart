@@ -353,6 +353,7 @@ class _CommunityB4State extends State<CommunityB4> {
 
   Widget itemCard(Map<String, dynamic> item) {
     final mine = item['is_mine'] == true;
+    final official = item['is_official'] == true;
     final id = (item['id'] ?? '').toString();
     final createdAt = DateTime.tryParse(
       (item['created_at'] ?? '').toString())?.toLocal();
@@ -391,7 +392,10 @@ class _CommunityB4State extends State<CommunityB4> {
                 itemBuilder:(_)=>mine
                   ? [const PopupMenuItem(
                     value:'remove',child:Text('Retirar mi publicación'))]
-                  : [
+                  : official ? [
+                    const PopupMenuItem(
+                      value:'report_post',child:Text('Reportar comunicado')),
+                  ] : [
                     const PopupMenuItem(
                       value:'report_post',child:Text('Reportar publicación')),
                     const PopupMenuItem(
