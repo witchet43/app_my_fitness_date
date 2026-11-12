@@ -49,6 +49,26 @@ assert sql.count('security definer') >= 12
 assert 'grant select on public.community_reports_b4 to' not in sql
 assert 'grant insert on public.community_posts_b4 to' not in sql
 
+optout = source('supabase/migrations/202611120020_community_optout_b4.sql')
+must('B4 separate community opt-out', optout, [
+    'app_private.community_participation_b4',
+    'community_set_participation_b4',
+    "if not p_enabled then",
+    "status='removed'",
+])
+pilot = source('supabase/migrations/202611120021_community_closed_pilot_b4.sql')
+must('B4 closed pilot', pilot, [
+    'app_private.community_pilot_b4',
+    'app_private.community_pilot_audit_b4',
+    "then return 'pilot_closed'",
+    "allowed.user_id=p.author_id and allowed.active=true",
+    'admin_community_admit_pilot_b4',
+    'admin_community_revoke_pilot_b4',
+    'app_private.is_brand_owner()',
+])
+assert pilot.rstrip().endswith('commit;')
+
+
 api = source('supabase/functions/member-api-v26/index.ts')
 must('B4 Edge API', api, [
     'validateCommunityPost',
@@ -65,6 +85,9 @@ must('B4 Edge API', api, [
     '"/v1/admin/community/deletions"',
     '"/v1/admin/community/announcements"',
     '"/v1/admin/community/resolve"',
+    '"/v1/admin/community/pilot"',
+    '"/v1/admin/community/pilot/revoke"',
+    '"/v1/me/community/participation"',
     'https://b4-preview.my-fitness-date.pages.dev',
 ])
 assert 'service_role' not in api.lower()
@@ -78,6 +101,9 @@ must('B4 member UI', flutter, [
     'removeCommunityPost(',
     'requestCommunityDeletion()',
     'b4-consent-submit',
+    'b4-community-leave',
+    'b4-community-rejoin',
+    'pilot_closed',
     'b4-block-confirm',
     'b4-report-submit',
     'b4-delete-request-confirm',
@@ -99,4 +125,10 @@ assert 'brand_admin_session' in root
 profile = source('apps/flutter_client/lib/src/features/member_profile_v26.dart')
 assert 'CommunityB4(api:widget.api)' in profile
 assert 'Comunidad deportiva' in profile
+pilotui = source('apps/flutter_client/lib/src/features/community_pilot_b4.dart')
+must('B4 pilot management UI', pilotui, [
+    'pilotMembers()', 'admitPilotMember(', 'revokePilotMember(',
+    'b4-pilot-invite', 'b4-pilot-revoke-confirm',
+])
+assert 'CommunityPilotB4(api:widget.api)' in moderation
 print('B4 source invariants PASS (runtime and human moderation checks pending)')
