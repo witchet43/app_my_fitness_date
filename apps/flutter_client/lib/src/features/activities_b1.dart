@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import '../core/activity_repository.dart';
 import 'my_activities_b2.dart';
+import '../core/community_repository.dart';
+import 'community_b4.dart';
 
 /// B1 value journey: browse real, curated activities and confirm a private RSVP.
 /// No fake events, attendee list, gym, exact routes or training schedules.
@@ -312,6 +314,16 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                 icon: const Icon(Icons.calendar_month_outlined),
                 label: const Text('Mis actividades y reservas'),
               ),
+              if (!widget.readOnly && widget.api is CommunityRepository) ...[
+                const SizedBox(height:10),
+                OutlinedButton.icon(
+                  key:const Key('b4-activities-community'),
+                  onPressed:()=>Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder:(_)=>CommunityB4(
+                      api:widget.api as CommunityRepository))),
+                  icon:const Icon(Icons.groups_outlined),
+                  label:const Text('Entrar a la comunidad deportiva')),
+              ],
               if (organizer) ...[
                 const SizedBox(height: 14),
                 OutlinedButton.icon(
