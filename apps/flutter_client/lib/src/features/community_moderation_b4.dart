@@ -254,7 +254,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
               onPressed:(){
                 final value=text.text.trim();
                 if(value.length<15 || value.length>480 ||
-                   RegExp(r'https?://|www\\.|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|[0-9]{8,}',
+                   RegExp(r'https?://|www\.|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[0-9]{8,}',
                      caseSensitive:false).hasMatch(value)){
                   update(()=>validation='Escribe de 15 a 480 caracteres '
                     'sin enlaces, correos ni teléfonos.');
