@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'activities_b1.dart';
+import 'my_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
 
@@ -359,6 +360,13 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               builder:(_)=>ActivitiesB1(api:widget.api))),
             icon:const Icon(Icons.event_available_outlined),
             label:const Text('Explorar actividades deportivas')),
+          const SizedBox(height:10),
+          OutlinedButton.icon(
+            key:const Key('b2-member-my-activities'),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>MyActivitiesB2(api:widget.api))),
+            icon:const Icon(Icons.calendar_month_outlined),
+            label:const Text('Mis actividades y reservas')),
           const SizedBox(height:10),
           section('Yo como persona',Icons.favorite,FitDateColors.coral,
             Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
