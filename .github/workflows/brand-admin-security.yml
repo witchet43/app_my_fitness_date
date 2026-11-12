@@ -1,0 +1,41 @@
+name: Brand Admin — security and configuration contracts
+on:
+  pull_request:
+    paths:
+      - "apps/flutter_client/cloudflare/admin/**"
+      - "apps/flutter_client/cloudflare/_redirects"
+      - "apps/flutter_client/cloudflare/_headers"
+      - "supabase/migrations/202611110015_brand_admin_foundation.sql"
+      - "scripts/test_brand_admin_static.py"
+      - ".github/workflows/brand-admin-security.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/flutter_client/cloudflare/admin/**"
+      - "supabase/migrations/202611110015_brand_admin_foundation.sql"
+      - "scripts/test_brand_admin_static.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Admin 2FA, RLS, uploads and route contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Admin security contract tests
+        run: python3 scripts/test_brand_admin_static.py
+      - name: JavaScript parser
+        run: node --check apps/flutter_client/cloudflare/admin/branding/admin-brand.js
+      - name: No unprotected admin UI asset
+        run: |
+          test -s apps/flutter_client/cloudflare/admin/branding/index.html
+          test -s apps/flutter_client/cloudflare/admin/branding/admin-brand.css
+          test -s apps/flutter_client/cloudflare/admin/branding/admin-brand.js
+          echo "Admin UI and deny-by-default migration contracts passed"
