@@ -367,6 +367,19 @@ async function handleRequest(req: Request): Promise<Response> {
       if (status === "rate_limited") return json({status},429);
       return json({status},403);
     }
+    if (route === "/v1/me/community/participation" &&
+        req.method === "POST") {
+      const data=await body(req);
+      if (!data || typeof data.enabled!=="boolean") return error(400);
+      const response=await endpoint("POST",
+        "/rest/v1/rpc/community_set_participation_b4",
+        token,{p_enabled:data.enabled});
+      if (!response.ok) return error(503);
+      const status=await response.json();
+      if (status==="enabled" || status==="disabled") return json({status});
+      if (status==="consent_required") return json({status},403);
+      return json({status},403);
+    }
     if (route === "/v1/me/community/posts" && req.method === "GET") {
       const response = await endpoint("POST",
         "/rest/v1/rpc/community_my_post_history_b4",token,{});
