@@ -1,7 +1,7 @@
 (() => {
   "use strict";
-  // Public publishable key only. No service-role key, admin secret, cookies,
-  // localStorage identity, user_metadata authorization or implicit sign-up.
+  // Public publishable key only. Credentials and privileged role decisions
+  // are never stored in the browser or inferred from editable user claims.
   const base = "https://jtrdvnwbxpfdnbzasvcj.supabase.co";
   const key = "sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk";
   const el = id => document.getElementById(id);
