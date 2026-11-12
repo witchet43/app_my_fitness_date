@@ -48,6 +48,17 @@
 | `danger` | `#A1423C` | Errores/alertas únicamente; **no** amor ni CTA |
 | `success` | `#37674B` | Confirmaciones; acompañar con texto e icono |
 
+**Comprobación sRGB de contraste teórico para pares candidatos** (medida por fórmula WCAG; no sustituye pruebas de toda la UI):
+
+| Texto/fondo | Ratio | Interpretación |
+| --- | --- | --- |
+| `ink` sobre `alabaster` | **15.21:1** | Supera AA de texto normal |
+| `forest` sobre `paper` | **10.24:1** | Supera AA de texto normal |
+| `ivoryText` sobre `forest` | **9.34:1** | Supera AA de texto normal |
+| `slate` sobre `paper` | **6.39:1** | Supera AA de texto normal |
+| `mutedDark` sobre `midnight` | **10.89:1** | Supera AA de texto normal |
+| `bronze` sobre `paper` | **2.68:1** | **No** usar para texto normal; solo ornamento no textual, con revisión específica |
+
 **Reglas:**
 1. Priorizar `paper/alabaster + ink/forest`; el modo oscuro combina `midnight/darkSurface + ivoryText`.
 2. `bronze` es un **acento muy pequeño**, no texto sobre blanco de tamaño normal ni botones de bajo contraste.
