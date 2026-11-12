@@ -70,6 +70,13 @@ class _MemberV26AppState extends State<MemberV26App> {
       // on every token refresh repeatedly replaced the MFA enrollment UI.
       // Challenge verification calls refresh() explicitly after AAL2.
       if(shouldRefreshIdentityForAuthEvent(event.event)){
+        final currentId = widget.auth.auth.currentSession?.user.id;
+        // Supabase may re-emit signedIn for an existing session on page
+        // focus. Do not recreate MFA enrollment for that same identity.
+        if(event.event == AuthChangeEvent.signedIn &&
+           currentId != null && currentId == _validatedUserId && verified){
+          return;
+        }
         if(mounted) unawaited(refresh());
       }
     },onError:(Object _, StackTrace __){
