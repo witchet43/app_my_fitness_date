@@ -458,6 +458,8 @@ class _CommunityB4State extends State<CommunityB4> {
       'suspended'=>'El acceso a la comunidad está suspendido por moderación.',
       'opted_out'=>'Saliste de la comunidad. Tus publicaciones anteriores no se restaurarán.',
       'deletion_pending'=>'Solicitaste la baja. La comunidad está deshabilitada.',
+      'pilot_closed'=>'Piloto cerrado: el propietario debe autorizar tu cuenta '
+        'antes de activar la comunidad.',
       'admin_separate'=>'Tu cuenta administrativa no publica como miembro.',
       'not_authenticated'=>'Debes iniciar sesión para acceder.',
       _=>'La comunidad no está disponible para esta cuenta.',
