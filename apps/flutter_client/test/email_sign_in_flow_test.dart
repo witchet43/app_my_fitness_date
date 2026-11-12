@@ -27,13 +27,16 @@ void main() {
       termsVersion: 'test-terms',
       privacyVersion: 'test-privacy',
     ));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
 
     await tester.ensureVisible(
         find.byKey(const Key('switch-entry-mode')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.tap(find.byKey(const Key('switch-entry-mode')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
     expect(find.text('Bienvenido de nuevo'), findsOneWidget);
 
     final signInButton = tester.widget<OutlinedButton>(
@@ -42,7 +45,8 @@ void main() {
 
     await tester.ensureVisible(find.byKey(const Key('email-entry')));
     await tester.tap(find.byKey(const Key('email-entry')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byType(AlertDialog), findsOneWidget);
     expect(find.text('Iniciar sesión'), findsOneWidget);
@@ -51,7 +55,8 @@ void main() {
     expect(find.text('Correo electrónico'), findsOneWidget);
 
     await tester.tap(find.text('Cancelar'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
     expect(find.byType(AlertDialog), findsNothing);
     expect(tester.takeException(), isNull);
   });
