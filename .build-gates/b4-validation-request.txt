@@ -1,0 +1,6 @@
+B4 consolidated QA request, 12 November 2026.
+Budget unit 5 of 10. Previous consumed B1, B2, B3, contingency B9.
+One single remote job: B1+B2+B3+B4 Node/typecheck/static contracts,
+actual hosted QA API, Flutter analyze/all widgets/web build, Cloudflare preview branch.
+NEVER deploy to main production; no automatic retries and no more CI for this build.
+Database B4 migrations are additive and applied; community pilot CLOSED by default.
