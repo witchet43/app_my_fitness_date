@@ -35,6 +35,8 @@ jobs:
         run: python3 scripts/test_brand_lab_static.py
       - name: Check browser JavaScript syntax
         run: node --check apps/flutter_client/cloudflare/brand-lab/brand-lab.js
+      - name: Exercise live preview, exports and draft controls
+        run: node scripts/test_brand_lab_runtime.cjs
       - name: Check HTML/CSS/JS packaged
         run: |
           test -s apps/flutter_client/cloudflare/brand-lab/index.html
