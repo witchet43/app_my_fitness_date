@@ -2,6 +2,7 @@
 /// Implementations use the member JWT; SQL rechecks auth, consent and ownership.
 abstract class CommunityRepository {
   Future<String> communityStatus();
+  Future<void> acceptCommunityConsent();
   Future<List<Map<String, dynamic>>> communityFeed({DateTime? before});
   Future<String> publishCommunityPost(String topic, String content);
   Future<String> removeCommunityPost(String postId);
