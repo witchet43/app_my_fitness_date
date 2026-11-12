@@ -20,3 +20,34 @@ String? passwordValidationMessage(String password, String confirmation) {
   }
   return null;
 }
+
+bool passwordAlreadyInUse(String serverMessage) {
+  final detail = serverMessage.toLowerCase();
+  return detail.contains('same_password') ||
+      detail.contains('new password should be different from the old password');
+}
+
+/// Never display raw Auth server messages, tokens or account identifiers.
+String safeRecoveryErrorMessage(String serverMessage) {
+  final detail = serverMessage.toLowerCase();
+  if (passwordAlreadyInUse(detail)) {
+    return 'Esta contraseña ya es la actual de tu cuenta. '
+        'Utiliza otra diferente o vuelve a iniciar sesión con ella.';
+  }
+  if (detail.contains('expired') ||
+      detail.contains('invalid token') ||
+      detail.contains('invalid jwt') ||
+      detail.contains('session_not_found') ||
+      detail.contains('session not found')) {
+    return 'El enlace ya no es válido o ha caducado. '
+        'Solicita uno nuevo desde el inicio de sesión.';
+  }
+  if (detail.contains('weak_password') ||
+      detail.contains('password should contain') ||
+      detail.contains('password should be at least')) {
+    return 'La contraseña no cumple los requisitos de seguridad. '
+        'Elige otra contraseña más segura.';
+  }
+  return 'No se pudo actualizar la contraseña. '
+      'Comprueba tu conexión y reintenta. Si persiste, solicita otro enlace.';
+}
