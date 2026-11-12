@@ -362,6 +362,7 @@
       await rest("brand_assets",{method:"POST",body:{
         asset_kind:kind,name:file.name.slice(0,100),
         storage_path:path,mime_type:mime,bytes:file.size,
+        license_basis:kind==="font"?el("font-license").value:"not_applicable",
         created_by:currentAdmin.id
       }});
       await loadCatalogs();
