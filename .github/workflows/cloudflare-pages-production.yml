@@ -170,7 +170,15 @@ jobs:
                       with open_public("https://my-fitness-date.pages.dev/"+slug+"/?v="+sha) as r:
                           legal=r.read().decode("utf8")
                       assert "<!doctype html>" in legal.lower() and "witchet43@gmail.com" in legal
-                  print("PUBLIC CLOUDFLARE RELEASE + LEGAL ROUTES VERIFIED:",sha)
+                  with open_public("https://my-fitness-date.pages.dev/brand-lab/?v="+sha) as r:
+                      lab=r.read().decode("utf8")
+                      assert r.status==200
+                  assert "Brand Lab" in lab and "brand-lab.js" in lab and "Diez propuestas" in lab
+                  for asset_name in ("brand-lab.js","brand-lab.css"):
+                      with open_public("https://my-fitness-date.pages.dev/brand-lab/"+asset_name+"?v="+sha) as r:
+                          asset=r.read().decode("utf8")
+                          assert r.status==200 and len(asset)>1000
+                  print("PUBLIC CLOUDFLARE RELEASE + LEGAL + BRAND LAB VERIFIED:",sha)
                   break
               except Exception as error:
                   if attempt==6:
