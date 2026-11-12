@@ -266,4 +266,118 @@ comment on function public.my_activity_reservations() is
 comment on function public.cancel_organized_activity(uuid) is
   'B2: owner-approved organizer can cancel its event; retains member history.';
 
+-- The existing owner is an INDEPENDENT administrative persona, never a
+-- member RSVP identity. This allows the owner to curate genuine events and
+-- inspect their public appearance without forging a member profile.
+create or replace function public.admin_publish_curated_activity(
+  p_title text,
+  p_description text,
+  p_sport text,
+  p_city text,
+  p_starts_at timestamptz,
+  p_capacity integer
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_id uuid;
+begin
+  if not app_private.is_brand_owner() then
+    raise exception 'not authorized' using errcode = '42501';
+  end if;
+  if char_length(btrim(coalesce(p_title, ''))) not between 4 and 100 or
+     char_length(btrim(coalesce(p_description, ''))) not between 10 and 500 or
+     char_length(btrim(coalesce(p_sport, ''))) not between 2 and 40 or
+     char_length(btrim(coalesce(p_city, ''))) not between 2 and 100 or
+     p_capacity not between 1 and 200 or
+     p_starts_at is null or
+     p_starts_at <= now() + interval '10 minutes' or
+     p_starts_at > now() + interval '180 days' then
+    raise exception 'invalid activity' using errcode = '22023';
+  end if;
+  insert into public.sport_events (
+    organizer_id, title, description, sport, city,
+    starts_at, capacity, is_published
+  ) values (
+    (select auth.uid()), btrim(p_title), btrim(p_description),
+    btrim(p_sport), btrim(p_city), p_starts_at, p_capacity, true
+  ) returning id into v_id;
+  return v_id;
+end;
+$$;
+revoke all on function public.admin_publish_curated_activity(
+  text, text, text, text, timestamptz, integer
+) from public, anon, authenticated;
+grant execute on function public.admin_publish_curated_activity(
+  text, text, text, text, timestamptz, integer
+) to authenticated;
+
+create or replace function public.admin_curated_activities()
+returns table (
+  id uuid,
+  title text,
+  description text,
+  sport text,
+  city text,
+  starts_at timestamptz,
+  capacity integer,
+  active_reservations bigint,
+  event_cancelled boolean
+)
+language sql stable security definer
+set search_path = ''
+as $$
+  select e.id, e.title, e.description, e.sport, e.city,
+    e.starts_at, e.capacity,
+    (select count(*) from public.event_rsvps r
+      where r.event_id = e.id and r.cancelled_at is null),
+    (e.cancelled_at is not null)
+  from public.sport_events e
+  where app_private.is_brand_owner()
+  order by e.starts_at desc
+  limit 100;
+$$;
+revoke all on function public.admin_curated_activities()
+  from public, anon, authenticated;
+grant execute on function public.admin_curated_activities()
+  to authenticated;
+
+create or replace function public.admin_cancel_curated_activity(p_event_id uuid)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_event public.sport_events%rowtype;
+begin
+  if not app_private.is_brand_owner() then
+    return 'not_authorized';
+  end if;
+  select e.* into v_event from public.sport_events e
+  where e.id = p_event_id for update;
+  if not found then
+    return 'not_found';
+  end if;
+  if v_event.cancelled_at is not null then
+    return 'already_cancelled';
+  end if;
+  if v_event.starts_at <= now() then
+    return 'already_started';
+  end if;
+  update public.sport_events e
+  set cancelled_at = now(), is_published = false
+  where e.id = p_event_id;
+  return 'cancelled';
+end;
+$$;
+revoke all on function public.admin_cancel_curated_activity(uuid)
+  from public, anon, authenticated;
+grant execute on function public.admin_cancel_curated_activity(uuid)
+  to authenticated;
+
+
 commit;
