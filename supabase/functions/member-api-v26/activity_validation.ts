@@ -26,8 +26,8 @@ export function validateActivityDraft(
   const capacity = value.capacity;
   const rawDate = value.starts_at;
   if (!title || !description || !sport || !city ||
-      !Number.isInteger(capacity) || (capacity as number) < 1 ||
-      (capacity as number) > 200 || typeof rawDate !== "string" ||
+      typeof capacity !== "number" || !Number.isInteger(capacity) ||
+      capacity < 1 || capacity > 200 || typeof rawDate !== "string" ||
       !/^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d)?(?:\.\d{1,3})?(Z|[+-]\d\d:\d\d)$/.test(rawDate)) {
     return null;
   }
