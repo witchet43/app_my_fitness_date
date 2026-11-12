@@ -53,3 +53,9 @@ export function organizerCancelRoute(path: string): string | null {
   const m = /^\/v1\/organizer\/activities\/([0-9a-f-]{36})\/cancel$/.exec(path);
   return m && uuidPattern.test(m[1]) ? m[1] : null;
 }
+
+/** The owner admin can curate but cannot act as a member RSVP. */
+export function adminCancelRoute(path: string): string | null {
+  const m = /^\/v1\/admin\/activities\/([0-9a-f-]{36})\/cancel$/.exec(path);
+  return m && uuidPattern.test(m[1]) ? m[1] : null;
+}
