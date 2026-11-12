@@ -67,3 +67,8 @@ export function communityFeedCursor(raw: string | null): string | null | false {
       !Number.isFinite(Date.parse(raw))) return false;
   return raw;
 }
+
+export function adminAnnouncementId(path: string): string | null {
+  const match = /^\/v1\/admin\/community\/announcements\/([0-9a-f-]{36})$/i.exec(path);
+  return match && communityUuid.test(match[1]) ? match[1] : null;
+}
