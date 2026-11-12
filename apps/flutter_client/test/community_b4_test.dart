@@ -23,6 +23,8 @@ class FakeCommunityB4 implements CommunityRepository {
   int officialPublished = 0;
   int submittedReports = 0;
   String? lastModerationAction;
+  bool pilotAdmitted=false;
+  bool pilotRevoked=false;
 
   @override
   Future<String> communityStatus() async =>
@@ -120,6 +122,31 @@ class FakeCommunityB4 implements CommunityRepository {
   Future<String> requestCommunityDeletion() async {
     deletion=true;
     return 'pending';
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> pilotMembers() async =>
+    pilotAdmitted ? [{
+      'user_id':memberId,
+      'email':'qa-member@example.invalid',
+      'display_name':'Deportista QA',
+      'active':!pilotRevoked,
+      'admitted_at':'2026-11-12T20:00:00Z',
+    }] : [];
+
+  @override
+  Future<String> admitPilotMember(String email) async {
+    expect(email,'qa-member@example.invalid');
+    pilotAdmitted=true;
+    pilotRevoked=false;
+    return 'admitted';
+  }
+
+  @override
+  Future<String> revokePilotMember(String userId) async {
+    expect(userId,memberId);
+    pilotRevoked=true;
+    return 'revoked';
   }
 
   @override
@@ -305,6 +332,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(fake.optedOut,isFalse);
     expect(find.byKey(const Key('b4-create-post')),findsOneWidget);
+    expect(tester.takeException(),isNull);
+  });
+
+
+  testWidgets('owner can authorize and revoke closed-pilot member',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1080,900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final fake=FakeCommunityB4();
+    await tester.pumpWidget(MaterialApp(home:CommunityPilotB4(api:fake)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('b4-pilot-empty')),findsOneWidget);
+    await tester.tap(find.byKey(const Key('b4-pilot-invite')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('b4-pilot-email')),
+      'qa-member@example.invalid');
+    await tester.tap(find.byKey(const Key('b4-pilot-submit')));
+    await tester.pumpAndSettle();
+    expect(fake.pilotAdmitted,isTrue);
+    await tester.ensureVisible(find.byKey(
+      const Key('b4-pilot-revoke-$memberId')));
+    await tester.tap(find.byKey(const Key('b4-pilot-revoke-$memberId')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('b4-pilot-revoke-confirm')));
+    await tester.pumpAndSettle();
+    expect(fake.pilotRevoked,isTrue);
     expect(tester.takeException(),isNull);
   });
 
