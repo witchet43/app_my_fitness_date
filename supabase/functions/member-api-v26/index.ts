@@ -2,6 +2,7 @@
 // RLS is enforced by forwarding the end user's JWT to PostgREST.
 // There is deliberately no service-role key and no public media publishing.
 import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from "./config.ts";
+import { activityRsvpRoute, validateActivityDraft } from "./activity_validation.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
@@ -22,7 +23,7 @@ function json(value: unknown, status = 200): Response {
 function error(status: number): Response {
   const descriptions: Record<number, string> = {
     400: "Solicitud inválida", 401: "Autenticación requerida",
-    403: "No autorizado", 404: "Recurso no disponible",
+    403: "No autorizado", 404: "Recurso no disponible", 409: "Conflicto de estado",
     405: "Método no permitido", 413: "Datos demasiado extensos",
     429: "Demasiadas solicitudes", 503: "Servicio no disponible",
   };
@@ -122,6 +123,71 @@ Deno.serve(async (req) => {
   const route = extractApiRoute(path);
   if (!route) return error(404);
   try {
+    // B1 · Curated catalogue; no users, gyms, private training slots,
+    // attendance or organizer emails are returned. RLS also filters events.
+    if (route === "/v1/activities" && req.method === "GET") {
+      const events = await endpoint("GET", "/rest/v1/sport_events", token,
+        undefined, {
+          select: "id,title,description,sport,city,starts_at,capacity",
+          is_published: "eq.true",
+          starts_at: "gt." + new Date().toISOString(),
+          order: "starts_at.asc", limit: "25",
+        });
+      if (!events.ok) return error(503);
+      const own = await endpoint("GET", "/rest/v1/event_rsvps", token,
+        undefined, { user_id: "eq." + identity.id, select: "event_id" });
+      if (!own.ok) return error(503);
+      const records = await events.json() as Array<Record<string, unknown>>;
+      const joined = new Set(
+        (await own.json() as Array<{event_id:string}>).map((r)=>r.event_id));
+      return json({ items: records.map((r)=>({ ...r,
+        joined: joined.has(String(r.id)) })) });
+    }
+    if (route === "/v1/me/organizer-status" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/my_activity_organizer_status", token, {});
+      if (!response.ok) return error(503);
+      return json({ approved: await response.json() === true });
+    }
+    if (route === "/v1/organizer/activities" && req.method === "POST") {
+      const payload = await body(req);
+      const data = payload == null ? null : validateActivityDraft(payload);
+      if (!data) return error(400);
+      // Row creation is subject to the organizer approval RLS policy.
+      const response = await endpoint("POST", "/rest/v1/sport_events",
+        token, { ...data, organizer_id: identity.id, is_published: true },
+        {}, "return=representation");
+      if (response.status === 401 || response.status === 403) return error(403);
+      if (!response.ok) return error(response.status === 400 ? 400 : 503);
+      const rows = await response.json() as Array<Record<string, unknown>>;
+      if (rows.length !== 1) return error(503);
+      const item = rows[0];
+      return json({ activity: {
+        id:item.id, title:item.title, description:item.description,
+        sport:item.sport, city:item.city, starts_at:item.starts_at,
+        capacity:item.capacity, joined:false,
+      } }, 201);
+    }
+    const eventId = activityRsvpRoute(route);
+    if (eventId && req.method === "POST") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/confirm_activity_rsvp", token,
+        { p_event_id: eventId });
+      if (response.status === 401 || response.status === 403) return error(403);
+      if (!response.ok) return error(503);
+      const status = await response.json();
+      if (status === "confirmed" || status === "already_confirmed") {
+        return json({ status, event_id: eventId });
+      }
+      if (status === "full" || status === "not_open") {
+        return json({ status }, 409);
+      }
+      if (status === "profile_required" || status === "consent_required" ||
+          status === "not_authenticated") {
+        return json({ status }, 403);
+      }
+      return error(503);
+    }
     if (route === "/v1/me/profile") {
       if (req.method === "GET") {
         const r = await endpoint("GET", "/rest/v1/member_profiles_v26", token, undefined,
