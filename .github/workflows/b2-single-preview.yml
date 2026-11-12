@@ -153,7 +153,7 @@ jobs:
           last=None
           for attempt in range(12):
             try:
-              request=urllib.request.Request(url,headers={'Cache-Control':'no-cache'})
+              request=urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'MyFitnessDate-ReleaseSmoke/2.0'})
               with urllib.request.urlopen(request,timeout=12) as response:
                 body=json.loads(response.read())
                 if body.get('commit')==expected and body.get('production') is False:
