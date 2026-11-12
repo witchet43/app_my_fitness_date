@@ -311,6 +311,28 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       ['status'].toString();
 
   @override
+  Future<List<Map<String,dynamic>>> adminCommunityAnnouncements() async =>
+    _items(_decode(await _request(
+      'GET','/v1/admin/community/announcements')));
+
+  @override
+  Future<String> adminPublishCommunityAnnouncement(
+      String topic,String content) async =>
+    _decode(await _request(
+      'POST','/v1/admin/community/announcements',
+      data:{'topic':topic,'content':content}))['status'].toString();
+
+  @override
+  Future<String> adminRemoveCommunityAnnouncement(String postId) async {
+    if(!_validActivityId(postId)) {
+      throw const MemberApiException('Comunicado inválido.');
+    }
+    return _decode(await _request(
+      'DELETE','/v1/admin/community/announcements/$postId'))
+      ['status'].toString();
+  }
+
+  @override
   Future<List<Map<String,dynamic>>> moderationReports() async =>
     _items(_decode(await _request('GET','/v1/admin/community/reports')));
 
