@@ -21,6 +21,7 @@ const origin = /^https:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?$/i.test(configuredOrigin)
 const allowedOrigins = new Set([
   origin,
   "https://b2-preview.my-fitness-date.pages.dev",
+  "https://b3-preview.my-fitness-date.pages.dev",
 ]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
