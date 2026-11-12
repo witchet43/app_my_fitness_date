@@ -1,18 +1,8 @@
 name: My Fitness Date — hosted member API smoke
 
+# FinOps: manual-only; avoids unbudgeted PR/push jobs.
 on:
-  pull_request:
-    paths:
-      - "supabase/functions/member-api-v26/**"
-      - "scripts/member-api-config.test.ts"
-      - ".github/workflows/member-api-live-smoke.yml"
-  push:
-    branches: [main]
-    paths:
-      - "supabase/functions/member-api-v26/**"
-      - ".github/workflows/member-api-live-smoke.yml"
   workflow_dispatch:
-
 permissions:
   contents: read
 
