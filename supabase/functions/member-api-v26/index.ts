@@ -3,6 +3,7 @@
 // There is deliberately no service-role key and no public media publishing.
 import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from "./config.ts";
 import { activityRsvpRoute, activityCancelRoute, organizerCancelRoute, adminCancelRoute, validateActivityDraft } from "./activity_validation.ts";
+import { communityUuid, validateCommunityPost, validateCommunityReport, validateModeration, communityRemovePostId, communityFeedCursor } from "./community_validation.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
@@ -22,6 +23,7 @@ const allowedOrigins = new Set([
   origin,
   "https://b2-preview.my-fitness-date.pages.dev",
   "https://b3-preview.my-fitness-date.pages.dev",
+  "https://b4-preview.my-fitness-date.pages.dev",
 ]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
@@ -288,6 +290,132 @@ async function handleRequest(req: Request): Promise<Response> {
       }
       return error(503);
     }
+    // B4: authenticated, separately consented member community. Every RPC
+    // rechecks actor, age, consent, content visibility and block relationships.
+    if (route === "/v1/community/status" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_status_b4", token, {});
+      if (!response.ok) return error(503);
+      return json({ status: await response.json() });
+    }
+    if (route === "/v1/community/feed" && req.method === "GET") {
+      const before = communityFeedCursor(new URL(req.url).searchParams.get("before"));
+      if (before === false) return error(400);
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_feed_b4", token,
+        { p_before: before, p_limit: 15 });
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const items = await response.json();
+      return json({ items: Array.isArray(items) ? items : [] });
+    }
+    if (route === "/v1/community/posts" && req.method === "POST") {
+      const data = await body(req);
+      const values = data && validateCommunityPost(data);
+      if (!values) return error(400);
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_publish_b4", token, values);
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const item = await response.json() as {status?: string; id?: string};
+      if (item.status === "published") {
+        return json({ status: "published", id: item.id }, 201);
+      }
+      if (item.status === "rate_limited") return json({status:item.status},429);
+      if (item.status === "invalid") return json({status:item.status},400);
+      return json({status:item.status??"forbidden"},403);
+    }
+    const removeId = communityRemovePostId(route);
+    if (removeId && req.method === "DELETE") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_remove_post_b4", token,
+        {p_post_id:removeId});
+      if (!response.ok) return error(503);
+      const status = await response.json();
+      return status === "removed" ? json({status}) : json({status},403);
+    }
+    if (route === "/v1/community/blocks" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_my_blocks_b4", token, {});
+      if (!response.ok) return error(503);
+      const items = await response.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+    if (route === "/v1/community/block" && req.method === "POST") {
+      const data = await body(req);
+      if (!data || typeof data.user_id !== "string" ||
+          !communityUuid.test(data.user_id) ||
+          typeof data.blocked !== "boolean") return error(400);
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_block_b4",token,
+        {p_user_id:data.user_id,p_block:data.blocked});
+      if (!response.ok) return error(503);
+      const status = await response.json();
+      if (status === "blocked" || status === "unblocked") return json({status});
+      if (status === "rate_limited") return json({status},429);
+      return json({status},403);
+    }
+    if (route === "/v1/community/report" && req.method === "POST") {
+      const data = await body(req);
+      const values = data && validateCommunityReport(data);
+      if (!values) return error(400);
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_report_b4",token,values);
+      if (!response.ok) return error(503);
+      const status = await response.json();
+      if (status === "reported" || status === "already_reported") {
+        return json({status},status === "reported" ? 201 : 200);
+      }
+      if (status === "rate_limited") return json({status},429);
+      return json({status},403);
+    }
+    if (route === "/v1/me/community/posts" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_my_post_history_b4",token,{});
+      if (!response.ok) return error(503);
+      const items = await response.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+    if (route === "/v1/me/community/deletion" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_deletion_status_b4",token,{});
+      if (!response.ok) return error(503);
+      return json({status:await response.json()});
+    }
+    if (route === "/v1/me/community/deletion" && req.method === "POST") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/community_request_deletion_b4",token,{});
+      if (!response.ok) return error(503);
+      const status = await response.json();
+      return status === "pending" ? json({status}) : json({status},403);
+    }
+    // Moderator is an independent owner with verified MFA (AAL2).
+    // No reporter ID is included in the moderation queue payload.
+    if (route === "/v1/admin/community/reports" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/admin_community_queue_b4",token,{});
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const items = await response.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+    if (route === "/v1/admin/community/resolve" && req.method === "POST") {
+      const data = await body(req);
+      const values = data && validateModeration(data);
+      if (!values) return error(400);
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/admin_community_resolve_b4",token,values);
+      if (!response.ok) return error(503);
+      const status = await response.json();
+      if (status === "resolved") return json({status});
+      if (status === "already_reviewed") return json({status},409);
+      return json({status},403);
+    }
+    if (route === "/v1/admin/community/deletions" && req.method === "GET") {
+      const response = await endpoint("POST",
+        "/rest/v1/rpc/admin_community_deletion_queue_b4",token,{});
+      if (!response.ok) return error(response.status === 403 ? 403 : 503);
+      const items = await response.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+
     if (route === "/v1/me/profile") {
       if (req.method === "GET") {
         const r = await endpoint("GET", "/rest/v1/member_profiles_v26", token, undefined,
