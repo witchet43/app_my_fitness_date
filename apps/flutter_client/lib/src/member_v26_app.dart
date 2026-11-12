@@ -36,6 +36,10 @@ class MemberV26App extends StatefulWidget {
 }
 
 class _MemberV26AppState extends State<MemberV26App> {
+  // The root State builds MaterialApp and is NOT itself beneath a Navigator.
+  // Its dialogs and notifications must use the material app's own keys.
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
   late final StreamSubscription<AuthState> sub;
   bool loading=true;
   bool verified=false;
@@ -151,7 +155,15 @@ class _MemberV26AppState extends State<MemberV26App> {
     final password=TextEditingController();
     String? error;
     bool submitting=false;
-    await showDialog<void>(context:context,builder:(ctx)=>
+    // showDialog needs a descendant of MaterialApp. Passing this State's
+    // context (above MaterialApp) made 'Acceso con correo' appear inert.
+    final dialogContext = _navigatorKey.currentContext;
+    if (dialogContext == null) {
+      email.dispose();
+      password.dispose();
+      return;
+    }
+    await showDialog<void>(context:dialogContext,builder:(ctx)=>
       StatefulBuilder(builder:(ctx,setDialog)=>AlertDialog(
         title:Text(register?'Crear cuenta con correo':'Iniciar sesión'),
         content:SingleChildScrollView(child:Column(
@@ -183,7 +195,7 @@ class _MemberV26AppState extends State<MemberV26App> {
                   redirectTo:passwordRecoveryRedirect(widget.redirectUrl),
                 );
                 if(ctx.mounted)Navigator.pop(ctx);
-                if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+                if(mounted) _messengerKey.currentState?.showSnackBar(
                   const SnackBar(content:Text(
                     'Si el correo está registrado, recibirás un enlace '
                     'para crear una contraseña.')),
@@ -219,7 +231,7 @@ class _MemberV26AppState extends State<MemberV26App> {
               }
               if(ctx.mounted)Navigator.pop(ctx);
               if(mounted && register) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                _messengerKey.currentState?.showSnackBar(const SnackBar(
                   content:Text('Revisa tu correo y confirma la cuenta para continuar.')));
               }
               await refresh();
@@ -340,6 +352,8 @@ class _MemberV26AppState extends State<MemberV26App> {
       );
     }
     return MaterialApp(title:'My Fitness Date',
+      navigatorKey:_navigatorKey,
+      scaffoldMessengerKey:_messengerKey,
       debugShowCheckedModeBanner:false,
       theme:FitDateTheme.dark(),
       home:body);
