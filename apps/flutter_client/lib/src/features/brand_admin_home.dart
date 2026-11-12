@@ -748,6 +748,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   else if(selectedLogoAsset!=null &&
                     LiveBrandSettings.safeAssetUrl(selectedLogoAsset!))
                     Image.network(selectedLogoAsset!,width:35,height:35)
+                  else if(logoIndex==0)
+                    Image.asset('assets/branding/mfd_icon.webp',
+                      width:35,height:35,fit:BoxFit.contain)
                   else
                     Icon(_logoIcons[logoIndex],color:p,size:32),
                   const SizedBox(width:8),
