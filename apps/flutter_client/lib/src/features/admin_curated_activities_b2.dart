@@ -58,8 +58,8 @@ class _AdminCuratedActivitiesB2State
       builder: (dialog) => StatefulBuilder(
         builder: (dialog, update) => AlertDialog(
           title: const Text('Publicar actividad curada'),
-          content: SizedBox(
-            width: 500,
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
             child: SingleChildScrollView(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(controller: name,
