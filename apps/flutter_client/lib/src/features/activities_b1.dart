@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
+import '../core/activity_repository.dart';
 
 /// B1 value journey: browse real, curated activities and confirm a private RSVP.
 /// No fake events, attendee list, gym, exact routes or training schedules.
 class ActivitiesB1 extends StatefulWidget {
   const ActivitiesB1({super.key, required this.api});
-  final MemberV26Api api;
+  final ActivityRepository api;
 
   @override
   State<ActivitiesB1> createState() => _ActivitiesB1State();
