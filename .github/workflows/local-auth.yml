@@ -1,9 +1,8 @@
 name: Local Auth E2E
 
+# Budget-controlled manual-only workflow; no automatic PR/push builds.
 on:
-  pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
 
