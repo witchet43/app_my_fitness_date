@@ -46,7 +46,9 @@ create table public.community_reports_b4 (
   reviewed_at timestamptz,
   reviewed_by uuid references auth.users(id),
   resolution text,
-  check ((post_id is not null) <> (subject_id is not null))
+  -- An object deleted later may null the corresponding FK. New reports
+  -- still require exactly one target through the RPC transaction.
+  check (post_id is null or subject_id is null)
 );
 -- Idempotency is per active target, with separate indexes for profiles/posts.
 create unique index community_report_b4_post_unique
