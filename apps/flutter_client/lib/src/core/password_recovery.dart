@@ -6,8 +6,7 @@ String passwordRecoveryRedirect(String redirectUrl) {
       uri.userInfo.isNotEmpty) {
     throw const FormatException('URL de recuperación insegura');
   }
-  return uri.replace(queryParameters: {
-    ...uri.queryParameters,
-    'password_reset': '1',
-  }).toString();
+  // A dedicated SPA route avoids relying on recovery events emitted
+  // before Flutter's root widget subscribes to the auth stream.
+  return '${uri.origin}/recover/';
 }
