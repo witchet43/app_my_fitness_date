@@ -6,7 +6,10 @@ import 'package:my_fitness_date/src/features/brand_admin_home.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FakeBrandRepository extends BrandAdminRepository {
-  FakeBrandRepository() : super(SupabaseClient('https://example.supabase.co','anon-test'));
+  FakeBrandRepository() : super(SupabaseClient('https://example.supabase.co','anon-test')) {
+    // Disable GoTrue's periodic 10-second refresh timer in fake-async tests.
+    client.auth.stopAutoRefresh();
+  }
   @override
   Future<List<Map<String, dynamic>>> loadPalettes() async => [
     {'id':'palette1','name':'Bosque','colors':{
