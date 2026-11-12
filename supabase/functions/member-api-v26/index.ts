@@ -4,6 +4,7 @@
 import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from "./config.ts";
 import { activityRsvpRoute, activityCancelRoute, organizerCancelRoute, adminCancelRoute, validateActivityDraft } from "./activity_validation.ts";
 import { communityUuid, validateCommunityPost, validateCommunityReport, validateModeration, communityRemovePostId, communityFeedCursor, adminAnnouncementId } from "./community_validation.ts";
+import { validateDatingPreferencesB5 } from "./dating_validation.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
@@ -24,6 +25,7 @@ const allowedOrigins = new Set([
   "https://b2-preview.my-fitness-date.pages.dev",
   "https://b3-preview.my-fitness-date.pages.dev",
   "https://b4-preview.my-fitness-date.pages.dev",
+  "https://b5-preview.my-fitness-date.pages.dev",
 ]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
@@ -93,15 +95,17 @@ async function consents(token: string, id: string): Promise<Array<Record<string,
   if (!r.ok) throw new Error("consent unavailable");
   return await r.json();
 }
-async function datingStatus(token: string, id: string) {
-  const r = await endpoint("POST", "/rest/v1/rpc/my_adult_eligibility", token, {});
-  if (!r.ok) throw new Error("eligibility unavailable");
-  const age = await r.json() as { approved?: boolean; expires_at?: string };
-  const legal = await consents(token, id);
-  const opted = legal.some((x) => x.consent_kind === "dating" && x.document_version === "dating-v1");
-  return { age_verified: age.approved === true, dating_consent: opted,
-    enabled: age.approved === true && opted,
-    age_expires_at: age.approved === true ? age.expires_at : null };
+async function datingStatus(token: string, _id: string) {
+  // B5 is the server-authoritative gate. Client consent alone can NEVER enable
+  // matchmaking: independent age verification and moderation remain NO-GO.
+  const r = await endpoint("POST",
+    "/rest/v1/rpc/fitdating_status_b5", token, {});
+  if (!r.ok) throw new Error("dating status unavailable");
+  const value = await r.json();
+  if (value == null || typeof value !== "object") {
+    throw new Error("invalid dating status");
+  }
+  return value as Record<string, unknown>;
 }
 const editable = new Set([
   "display_name", "date_of_birth", "city", "about_me", "headline", "occupation",
@@ -570,6 +574,29 @@ async function handleRequest(req: Request): Promise<Response> {
         {}, "return=representation");
       if (!r.ok) return error(503);
       return json({ recorded: true }, 201);
+    }
+    if (route === "/v1/dating/preferences" && req.method === "POST") {
+      const raw = await body(req);
+      const draft = validateDatingPreferencesB5(raw);
+      if (!draft) return error(400);
+      const result = await endpoint("POST",
+        "/rest/v1/rpc/fitdating_save_preferences_b5", token, draft);
+      if (result.status === 401 || result.status === 403) return error(403);
+      if (!result.ok) return error(503);
+      const status = await result.json();
+      if (status === "saved") return json({ status: "saved" });
+      if (status === "consent_required") return json({ status }, 403);
+      if (status === "invalid") return json({ status }, 400);
+      return error(403);
+    }
+    if (route === "/v1/dating/disable" && req.method === "POST") {
+      const result = await endpoint("POST",
+        "/rest/v1/rpc/fitdating_disable_b5", token, {});
+      if (result.status === 401 || result.status === 403) return error(403);
+      if (!result.ok) return error(503);
+      const status = await result.json();
+      return status === "disabled"
+        ? json({ status: "disabled" }) : error(403);
     }
     if (route === "/v1/dating/candidates" && req.method === "GET") {
       const state = await datingStatus(token, identity.id);
