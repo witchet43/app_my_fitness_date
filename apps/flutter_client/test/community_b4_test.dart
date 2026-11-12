@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:my_fitness_date/src/core/community_repository.dart';
 import 'package:my_fitness_date/src/features/community_b4.dart';
 import 'package:my_fitness_date/src/features/community_moderation_b4.dart';
+import 'package:my_fitness_date/src/features/community_pilot_b4.dart';
 
 const memberId='bc8e3ef2-a487-46da-b3d1-d0747607a4bc';
 const postId='2cb72a93-ef0c-4a91-ac22-675ee019d8c0';
