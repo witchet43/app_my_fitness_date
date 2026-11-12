@@ -1,14 +1,7 @@
 name: My Fitness Date — Cloudflare Pages production
+# Budget-controlled manual-only workflow; no automatic PR/push builds.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/flutter_client/**"
-      - "release/public_web_manifest.json"
-      - ".github/workflows/cloudflare-pages-production.yml"
-      - "cloudbuild.yaml"
   workflow_dispatch:
-
 permissions:
   contents: read
   deployments: write
