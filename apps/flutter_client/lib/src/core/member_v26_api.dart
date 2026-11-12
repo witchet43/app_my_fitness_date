@@ -49,7 +49,9 @@ class MemberV26Api implements ActivityRepository {
         final reason = _safeStatus(response.body);
         throw MemberApiException(reason == 'full'
           ? 'Los lugares de esta actividad se agotaron.'
-          : 'Esta actividad ya no admite nuevas participaciones.');
+          : reason == 'already_started'
+            ? 'La actividad ya empezó y no admite cambios.'
+            : 'Esta actividad ya no admite nuevas participaciones.');
       }
       if (response.statusCode == 401 || response.statusCode == 403) {
         final reason = _safeStatus(response.body);
@@ -132,6 +134,61 @@ class MemberV26Api implements ActivityRepository {
     return Map<String, dynamic>.from(result['activity'] as Map);
   }
 
+  @override
+  Future<List<Map<String, dynamic>>> loadMyActivities() async {
+    final response = _decode(await _request('GET', '/v1/me/activities'));
+    final values = response['items'];
+    if (values is! List) {
+      throw const MemberApiException('No se pudo consultar tu historial.');
+    }
+    return values.map((v) => Map<String, dynamic>.from(v as Map)).toList();
+  }
+
+  @override
+  Future<String> cancelActivity(String eventId) async {
+    if (!_validActivityId(eventId)) {
+      throw const MemberApiException('Actividad inválida.');
+    }
+    final response = _decode(await _request(
+      'POST', '/v1/activities/$eventId/cancel',
+    ));
+    final status = response['status']?.toString();
+    if (status != 'cancelled' && status != 'already_cancelled') {
+      throw const MemberApiException('No fue posible cancelar tu participación.');
+    }
+    return status!;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> loadOrganizedActivities() async {
+    final response = _decode(await _request(
+      'GET', '/v1/organizer/activities',
+    ));
+    final values = response['items'];
+    if (values is! List) {
+      throw const MemberApiException('No se pudieron consultar tus eventos.');
+    }
+    return values.map((v) => Map<String, dynamic>.from(v as Map)).toList();
+  }
+
+  @override
+  Future<String> cancelOrganizedActivity(String eventId) async {
+    if (!_validActivityId(eventId)) {
+      throw const MemberApiException('Actividad inválida.');
+    }
+    final response = _decode(await _request(
+      'POST', '/v1/organizer/activities/$eventId/cancel',
+    ));
+    final status = response['status']?.toString();
+    if (status != 'cancelled' && status != 'already_cancelled') {
+      throw const MemberApiException('No fue posible cancelar el evento.');
+    }
+    return status!;
+  }
+
+  bool _validActivityId(String value) =>
+    RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
+      .hasMatch(value);
   Future<Map<String, dynamic>?> loadProfile() async {
     final value = _decode(await _request('GET', '/v1/me/profile'))['profile'];
     return value is Map<String, dynamic> ? value : null;
