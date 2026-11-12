@@ -3,10 +3,11 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'activity_repository.dart';
 
 /// Business data travels through our own FastAPI Gateway, not directly
 /// through a privileged database key or user-selected identity.
-class MemberV26Api {
+class MemberV26Api implements ActivityRepository {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
