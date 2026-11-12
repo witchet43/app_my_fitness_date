@@ -130,7 +130,7 @@ class _CommunityB4State extends State<CommunityB4> {
 
   Future<void> create() async {
     if (sending || status != 'available') return;
-    final content = TextEditingController();
+    String contentText = '';
     var selectedTopic = 'running';
     String? validation;
     final draft = await showDialog<Map<String, String>>(
@@ -162,7 +162,7 @@ class _CommunityB4State extends State<CommunityB4> {
                 const SizedBox(height: 12),
                 TextField(
                   key: const Key('b4-post-content'),
-                  controller: content,
+                  onChanged:(value)=>contentText=value,
                   maxLines: 5,
                   minLines: 3,
                   maxLength: 480,
@@ -180,7 +180,7 @@ class _CommunityB4State extends State<CommunityB4> {
             FilledButton(
               key: const Key('b4-post-submit'),
               onPressed: () {
-                final text = content.text.trim();
+                final text = contentText.trim();
                 final containsPrivateData = RegExp(
                   r'(https?://|www\.|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[0-9]{8,})',
                   caseSensitive:false,
@@ -201,7 +201,6 @@ class _CommunityB4State extends State<CommunityB4> {
         ),
       ),
     );
-    content.dispose();
     if (draft == null || !mounted) return;
     setState(() => sending = true);
     try {
@@ -291,7 +290,7 @@ class _CommunityB4State extends State<CommunityB4> {
   Future<void> report(Map<String, dynamic> item,
       {required bool profile}) async {
     var reason = 'harassment';
-    final detail = TextEditingController();
+    String detailText = '';
     final data = await showDialog<Map<String, String>>(
       context: context,
       builder: (dialog) => StatefulBuilder(
@@ -321,7 +320,7 @@ class _CommunityB4State extends State<CommunityB4> {
                 const SizedBox(height: 12),
                 TextField(
                   key: const Key('b4-report-detail'),
-                  controller: detail, maxLength: 300,maxLines:3,
+                  onChanged:(value)=>detailText=value, maxLength: 300,maxLines:3,
                   decoration: const InputDecoration(
                     labelText: 'Contexto adicional (opcional)'),
                 ),
@@ -334,14 +333,13 @@ class _CommunityB4State extends State<CommunityB4> {
             FilledButton(
               key: const Key('b4-report-submit'),
               onPressed: () => Navigator.pop(dialog,{
-                'reason':reason,'detail':detail.text.trim(),
+                'reason':reason,'detail':detailText.trim(),
               }),
               child: const Text('Enviar reporte')),
           ],
         ),
       ),
     );
-    detail.dispose();
     if (data == null || !mounted) return;
     try {
       final outcome = await widget.api.reportCommunity(
