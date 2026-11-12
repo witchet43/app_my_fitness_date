@@ -72,10 +72,10 @@
   }
   async function signIn(event) {
     event.preventDefault();
+    const email=el("admin-email").value.trim();
+    const password=el("admin-password").value;
     identityReset();
     try{
-      const email=el("admin-email").value.trim();
-      const password=el("admin-password").value;
       const result=await request("/auth/v1/token?grant_type=password",{
         method:"POST",body:{email,password}
       });
