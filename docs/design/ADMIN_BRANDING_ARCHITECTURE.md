@@ -93,3 +93,41 @@ Supabase puede confirmar una invitación sin pedir al usuario una contraseña. L
 - Verificar funcionalmente el recorrido real con el correo administrador, no únicamente CI/HTTP. No documentar «contraseña configurada» hasta que el propietario confirme el resultado del formulario.
 
 Referencias: [Invitación de usuarios](https://supabase.com/docs/guides/auth/users), [Password-based Auth](https://supabase.com/docs/guides/auth/passwords), [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls).
+
+---
+
+## Corrección de producto posterior: una sola aplicación, rol Administrador (12-nov-2026)
+
+**Esta sección sustituye expresamente el modelo anterior de "otra página web para el admin".** El propietario pidió una sola aplicación **My Fitness Date** con entrada común, donde el rol real determine las pantallas a las que se accede.
+
+**Navegación correcta:**
+
+```text
+https://my-fitness-date.pages.dev/ (Flutter Web; Android e iOS usan el mismo árbol)
+  └── Login existente (Google o correo y contraseña)
+       └── Supabase Auth verifica sesión y correo
+            └── RPC public.brand_admin_status() desde servidor
+                 ├── true  → Administrador (no crea perfil ni pide consentimiento de miembro)
+                 │           └── MFA TOTP AAL2 obligatorio y validado por RLS
+                 │                └── Panel Flutter: Resumen, Identidad,
+                 │                    Biblioteca, Borradores, Publicación
+                 └── false → Flujo normal de miembro (consentimientos, perfil)
+```
+
+**Reglas:**
+- Una sola aplicación, un solo acceso y un mismo `MaterialApp`, tema e identidad visual. La identidad administrativa conserva su **cuenta Auth separada de los perfiles de miembros**, pero no necesita un sitio web ni un mecanismo de login diferente.
+- La consulta de rol ocurre **antes** de `loadConsents()` y `loadProfile()`; un administrador jamás es obligado a convertirse en miembro para administrar.
+- La cuenta no gana rol por coincidencia de correo o `user_metadata`. La tabla `app_private.brand_administrators` y las funciones RLS siguen siendo fuente autoritativa.
+- Si falla la verificación de identidad o del rol, **denegar todo**, no redirigir arbitrariamente a miembro.
+- Si rol admin y AAL1: únicamente ver y superar MFA en la misma Flutter app; **no** presentar datos del panel ni acceso a assets.
+- Si rol admin y AAL2: panel nativo Flutter con las opciones de marca, paletas, biblioteca privada, borradores versionados y solicitudes de revisión (no publicación efectiva).
+- La antigua `/admin/branding/` **redirige al login principal**. La página independiente HTML no se incluye en nuevos bundles. Se mantiene `/admin/branding/reset-password/` como utilidad de recuperación, no como segundo producto.
+- El repositorio conserva los archivos legacy del antiguo prototipo admin para auditoría histórica, pero **no** los empaca para producción.
+- El rol administrativo no concede permiso de despliegue global por defecto. La identidad visual efectiva seguirá requiriendo motor de tokens, revisión/CI, auditoría y rollback (issue #56).
+- El editor Flutter usa Supabase con sesión de usuario y RLS estricto para estas entidades de marca. **No** usa credenciales `service_role` ni una excepción de privilegios; los recursos de producto ajenos a branding continúan en Gateway/BFF.
+- Para iconos, fuentes y media personalizada, la biblioteca Flutter conserva los archivos originales privados y ofrece previsualización de imágenes. WOFF2 permanece en catálogo **sin previsualización tipográfica plena** hasta conversión/build cross-platform; nunca se debe afirmar una cobertura «100% de visualización/aplicación» antes de implementar esa última parte.
+- Compilación Flutter 3.47.9 y `supabase_flutter` 2.18.3. **No migrar al SDK 3.0** por esta corrección.
+
+**Relación con #55:** el administrador previamente invitado conserva su UUID, rol propietario y segundo factor; no requiere nueva invitación. Si quedó un TOTP sin completar en la página HTML antigua, la nueva pantalla Flutter puede registrar uno nuevo sin reutilizar ni exponer el secreto anterior.
+
+**Rutas productivas tras este cambio:** `/` es la única app. `/admin/branding/` responde con redirección al acceso único; `/admin/branding/reset-password/` sigue siendo un flujo utilitario de recuperación de credenciales.
