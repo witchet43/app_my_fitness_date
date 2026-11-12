@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Crear contraseña · Brand Studio</title>
+  <link rel="stylesheet" href="../admin-brand.css">
+  <script defer src="./reset-password.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Saltar al contenido</a>
+  <header class="mast"><div class="mast-brand"><span class="symbol">M</span><span>My Fitness Date <small>ADMINISTRACIÓN DE MARCA</small></span></div><span class="secure">Establecer contraseña · Cuenta independiente</span></header>
+  <main id="content" class="container">
+    <section class="login" aria-labelledby="page-title">
+      <span class="eyebrow">ACCESO PROTEGIDO · BRAND STUDIO</span>
+      <h1 id="page-title">Crear tu contraseña</h1>
+      <p>Si aceptaste la invitación sin crear una contraseña, solicita un enlace de recuperación y elige una nueva. Tu rol administrativo permanece intacto.</p>
+      <form id="request-form">
+        <label for="recovery-email">Correo administrativo
+          <input id="recovery-email" type="email" autocomplete="email" required maxlength="254" placeholder="correo@ejemplo.com">
+        </label>
+        <button type="submit" class="primary">Enviar enlace para crear contraseña</button>
+      </form>
+      <form id="password-form" hidden>
+        <p><strong>Enlace validado.</strong> Elige una contraseña nueva que no utilices en otros servicios.</p>
+        <label for="new-password">Contraseña nueva
+          <input id="new-password" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+        </label>
+        <label for="confirm-password">Confirmar contraseña
+          <input id="confirm-password" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+        </label>
+        <button class="primary" type="submit">Establecer contraseña y cerrar sesión</button>
+      </form>
+      <p id="reset-feedback" role="status" aria-live="polite" class="hint"></p>
+      <p class="hint">No compartas tu contraseña ni el enlace recibido. Después de crearla, inicia sesión y configura la verificación en dos pasos (MFA).</p>
+      <p><a href="/admin/branding/">Volver al inicio de sesión de Brand Studio</a></p>
+    </section>
+  </main>
+  <footer>My Fitness Date · Acceso administrativo independiente · Sin cuentas de usuario FitDating</footer>
+</body>
+</html>
