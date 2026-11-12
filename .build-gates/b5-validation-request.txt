@@ -1,0 +1,7 @@
+B5 single controlled consolidated validation.
+Plan budget: B1=1, B2=1, B3=2 (including B9 contingency), B4=1, B5=1 => 6/10.
+B4's previous six widget failures must be retested in this single job.
+B5 adds private FitDating preferences, consent withdrawal and fail-closed
+independent-age and moderation gates, plus Gym Shield tests.
+NO production deploy, NO automatic retry, QA preview branch only.
+2026-11-12.
