@@ -390,6 +390,8 @@ class _MemberV26AppState extends State<MemberV26App> {
           repository:BrandAdminRepository(widget.auth),
           email:widget.auth.auth.currentUser?.email??'',
           onSignOut:logout,
+          curatorApi:widget.api,
+          activityPreviewApi:widget.api,
         );
       }else{
         body=BrandAdminMfaGate(
