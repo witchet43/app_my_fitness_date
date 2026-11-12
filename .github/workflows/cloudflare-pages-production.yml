@@ -105,7 +105,7 @@ jobs:
           test -s build/web/index.html
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
-          cp -R cloudflare/privacy cloudflare/terms build/web/
+          cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab build/web/
           test -s build/web/privacy/index.html
           test -s build/web/terms/index.html
           python3 - <<'PY'
