@@ -174,14 +174,14 @@ create policy brand_revision_admin_read on public.brand_design_revisions
   for select to authenticated using ((select app_private.is_brand_administrator(true)));
 
 create function app_private.record_brand_revision()
-returns trigger language plpgsql security definer set search_path = '' as $
+returns trigger language plpgsql security definer set search_path = '' as $brand_revision$
 begin
   insert into public.brand_design_revisions
     (draft_id,revision,title,settings,recorded_by)
   values (new.id,new.revision,new.title,new.settings,new.updated_by);
   return new;
 end;
-$;
+$brand_revision$;
 revoke all on function app_private.record_brand_revision() from public,anon,authenticated;
 create trigger brand_design_revision_log after insert or update
   on public.brand_design_drafts for each row
