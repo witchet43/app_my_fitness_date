@@ -10,3 +10,13 @@ String passwordRecoveryRedirect(String redirectUrl) {
   // before Flutter's root widget subscribes to the auth stream.
   return '${uri.origin}/recover/';
 }
+
+String? passwordValidationMessage(String password, String confirmation) {
+  if (password.length < 12 || password.length > 128) {
+    return 'Utiliza entre 12 y 128 caracteres.';
+  }
+  if (password != confirmation) {
+    return 'Las contraseñas no coinciden.';
+  }
+  return null;
+}
