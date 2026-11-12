@@ -73,9 +73,9 @@ const document = {
   getElementById: elem,
   createElement: tag => new StubElement(tag),
   querySelectorAll: selector => {
+    if (selector === "[data-screen]") return screens;
     const found = selector.match(/^\[data-(\w+)\]$/);
     if (found) return selectorButtons[found[1]] || [];
-    if (selector === "[data-screen]") return screens;
     if (selector === ".current-name") return brandNames;
     if (selector === ".current-logo") return marks;
     return [];
