@@ -27,6 +27,16 @@ check('SQL gate',sql,[
     "dating_enabled=false",
 ])
 assert sql.strip().endswith('commit;')
+consent=read('supabase/migrations/202611120023_fitdating_consent_withdrawal_b5.sql')
+check('Revocation',consent,[
+    'delete from public.member_consents_v26',
+    "consent_kind='dating'",
+    'app_private.fitdating_consent_withdrawals_b5',
+    'participation_requested=false',
+    'dating_enabled=false',
+    'grant execute on function public.fitdating_disable_b5()',
+])
+assert consent.strip().endswith('commit;')
 assert "grant update on app_private.fitdating_gate_b5" not in sql.lower()
 api=read('supabase/functions/member-api-v26/index.ts')
 check('Gateway',api,[
