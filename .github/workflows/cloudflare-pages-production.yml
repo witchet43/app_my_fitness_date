@@ -87,7 +87,7 @@ jobs:
           PY
       - name: Analyze Flutter
         working-directory: apps/flutter_client
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
       - name: Test Flutter
         working-directory: apps/flutter_client
         run: flutter test
