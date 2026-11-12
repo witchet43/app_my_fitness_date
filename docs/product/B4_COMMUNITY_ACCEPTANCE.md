@@ -1,6 +1,6 @@
 # Build 4 — Comunidad deportiva segura · My Fitness Date
 
-**Estado:** Desarrollo aislado · validación pendiente. **No es una autorización de beta pública.**
+**Estado:** Desarrollo aislado · validación pendiente. Piloto cerrado por defecto. **No es una autorización de beta pública.**
 **Base acumulada:** B1 actividades/RSVP, B2 historial/cancelaciones, B3 marca global.
 **Rama:** `feature/b4-community-safety-20261112`. **Presupuesto planeado:** B4 será el quinto job consumido en el plan 10/10; B9 ya se utilizó; B10 permanece reservado.
 
@@ -42,3 +42,10 @@ Un miembro adulto y con correo confirmado, que acepte expresamente la comunidad,
 
 ## Criterio de salida de B4
 Se exige compilación/test automatizados y, para considerar valor aceptado, demostración de post genuino, bloqueo real, reporte y acción moderadora con MFA con cuentas separadas. Si un criterio no pasa, se traslada a B5 **más** el alcance propio B5 sin gastar un nuevo build individual para arreglarlo. Detener nuevas ejecuciones en 10/10.
+
+## Adiciones de privacidad B4 verificables
+- `020_community_optout_b4.sql`: revocar consentimiento con salida voluntaria independiente de baja de cuenta. Al salir, se retiran las publicaciones y no se restauran al volver; se preservan reservas.
+- `021_community_closed_pilot_b4.sql`: `community_pilot_b4` vacía por defecto y auditada. Sin invitación verificada por owner con MFA el backend devuelve `pilot_closed`, aunque la cuenta tenga perfil y consentimiento.
+- El propietario puede autorizar o revocar **solo cuentas existentes con correo confirmado**, desde el panel de Moderación → Gestionar acceso al piloto cerrado. Revocación suprime al autor de la comunidad, sin eliminar otros datos.
+- No existen cuentas QA creadas artificialmente ni publicaciones ficticias.
+- La matriz B4 debe incluir prueba de cuenta no invitada, acceso invitado, revocación y reingreso; son pruebas **pendientes** con dos cuentas reales y MFA.
