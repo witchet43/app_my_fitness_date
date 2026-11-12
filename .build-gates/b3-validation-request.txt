@@ -3,3 +3,6 @@ Budget ledger: B1 consumed 1, B2 consumed 1. B3 consumes exactly slot 3/10.
 Includes B1/B2 carryover tests + B3 WYSIWYG global brand + Cloudflare branch preview.
 No production deploy, no automatic retries, all main workflows manual-only.
 2026-11-12.
+Contingency B9 utilized: single recovery build to restore missing FitDateColors import
+and align admin widget tests with LiveBrandController. B1/B2 carryover + B3
+requirements remain; branch QA only. Total new plan budget at 4/10.
