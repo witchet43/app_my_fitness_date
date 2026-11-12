@@ -342,7 +342,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
             ChoiceChip(
               key:const Key('b4-moderation-tab-reports'),
               label:Text('Reportes pendientes (${reports.length})'),
-              selected:!showDeletion,
+              selected:!showDeletion && !showAnnouncements,
               onSelected:(_)=>setState((){
                 showDeletion=false;showAnnouncements=false;
               })), 
