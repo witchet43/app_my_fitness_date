@@ -2,6 +2,12 @@
 
 **Fuente de verdad para requisitos de producto versionados dentro del repositorio.** El estándar transversal de ingeniería continúa siendo [SaaS Factory v1.9](https://docs.google.com/document/d/11hytKADuIUpmWzHEmAfZwcYNJ04M7n1ev4A1fbeZy9Q/edit). Los archivos aquí describen hipótesis, decisiones y planes: no prueban que una funcionalidad exista en producción.
 
+## Dirección confirmada del propietario — relaciones serias y 40+
+
+**Lectura prioritaria para todos los nuevos diseños:** [Estándar de marca y experiencia 40+](../design/SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md). My Fitness Date debe resultar **elegante, adulta, discreta y formal**, para personas principalmente **mayores de 40 años** que buscan **relaciones estables, no citas casuales**. No usar iconografía romántica típica, corazones, fucsia, gamificación superficial o estética vulgar. El nuevo rumbo supera el copy tentativo del concepto FITTED sin modificar su PDF histórico.
+
+**Aclaración:** la audiencia 40+ es una directriz de posicionamiento, no una barrera automática de acceso: esa decisión jurídica/técnica continúa abierta.
+
 ## Producto existente y nueva exploración
 
 - **Marca actual:** **My Fitness Date**. La experiencia romántica es **FitDating** (opt-in y exclusivamente para adultos autorizados).
