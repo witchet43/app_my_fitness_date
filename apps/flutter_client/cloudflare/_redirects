@@ -6,4 +6,6 @@
 /brand-lab/ /brand-lab/index.html 200
 /admin/branding /admin/branding/ 301
 /admin/branding/ /admin/branding/index.html 200
+/admin/branding/reset-password /admin/branding/reset-password/ 301
+/admin/branding/reset-password/ /admin/branding/reset-password/index.html 200
 /* /index.html 200

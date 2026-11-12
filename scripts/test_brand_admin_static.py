@@ -90,6 +90,30 @@ class BrandAdminSecurityTest(unittest.TestCase):
         self.assertNotIn("image/svg+xml",SQL)
         self.assertIn("SVG externo no se admite",HTML)
 
+    def test_admin_password_recovery_flow(self):
+        reset = ADMIN/"reset-password"
+        page = (reset/"index.html").read_text()
+        js = (reset/"reset-password.js").read_text()
+        html = Checker()
+        html.feed(page)
+        self.assertEqual(html.scripts, ["./reset-password.js"])
+        self.assertEqual(html.links, ["../admin-brand.css"])
+        for name in ("request-form", "recovery-email", "password-form",
+                     "new-password", "confirm-password", "reset-feedback"):
+            self.assertIn(name, html.ids)
+        self.assertIn("/admin/branding/reset-password/", HTML)
+        for required in ('/auth/v1/recover?redirect_to=', '/auth/v1/user',
+                         '/rest/v1/rpc/brand_admin_status', 'method:"PUT"',
+                         'window.history.replaceState', 'temporaryToken = ""',
+                         'window.location.origin + callbackPath'):
+            self.assertIn(required, js)
+        for forbidden in ("service_role", "sb_secret_", "localStorage", "eval(",
+                          "new Function", "console.log(", "user_metadata"):
+            self.assertNotIn(forbidden, js)
+        self.assertIn('/admin/branding/reset-password/ /admin/branding/reset-password/index.html 200', REDIRECTS)
+        self.assertIn("admin/branding/reset-password/index.html", RELEASE)
+        self.assertIn("admin/branding/reset-password/reset-password.js", RELEASE)
+
     def test_cloudflare_route_and_content_policy(self):
         self.assertIn("/admin/branding/ /admin/branding/index.html 200",REDIRECTS)
         self.assertLess(REDIRECTS.index("/admin/branding/ /admin/branding/index.html"),
@@ -100,7 +124,7 @@ class BrandAdminSecurityTest(unittest.TestCase):
         self.assertIn("noindex, nofollow",HEADERS)
         self.assertIn("cloudflare/admin build/web/",RELEASE)
         self.assertIn("admin/branding/index.html",RELEASE)
-        self.assertIn("PUBLIC CLOUDFLARE RELEASE + BRAND LAB + ADMIN SHELL VERIFIED",RELEASE)
+        self.assertIn("PUBLIC CLOUDFLARE RELEASE + ADMIN PASSWORD RECOVERY VERIFIED",RELEASE)
         self.assertIn("prefers-reduced-motion",CSS)
 
 if __name__=="__main__":

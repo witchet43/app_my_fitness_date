@@ -32,10 +32,14 @@ jobs:
       - name: Admin security contract tests
         run: python3 scripts/test_brand_admin_static.py
       - name: JavaScript parser
-        run: node --check apps/flutter_client/cloudflare/admin/branding/admin-brand.js
+        run: |
+          node --check apps/flutter_client/cloudflare/admin/branding/admin-brand.js
+          node --check apps/flutter_client/cloudflare/admin/branding/reset-password/reset-password.js
       - name: No unprotected admin UI asset
         run: |
           test -s apps/flutter_client/cloudflare/admin/branding/index.html
           test -s apps/flutter_client/cloudflare/admin/branding/admin-brand.css
           test -s apps/flutter_client/cloudflare/admin/branding/admin-brand.js
+          test -s apps/flutter_client/cloudflare/admin/branding/reset-password/index.html
+          test -s apps/flutter_client/cloudflare/admin/branding/reset-password/reset-password.js
           echo "Admin UI and deny-by-default migration contracts passed"

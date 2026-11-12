@@ -63,6 +63,7 @@ jobs:
           node scripts/test_brand_lab_runtime.cjs
           python3 scripts/test_brand_admin_static.py
           node --check apps/flutter_client/cloudflare/admin/branding/admin-brand.js
+          node --check apps/flutter_client/cloudflare/admin/branding/reset-password/reset-password.js
       - name: Verify hosted Google and email authentication
         run: python3 scripts/verify_hosted_auth.py
       - name: Verify hosted member API before exposing registration
@@ -121,6 +122,8 @@ jobs:
           test -s build/web/admin/branding/index.html
           test -s build/web/admin/branding/admin-brand.css
           test -s build/web/admin/branding/admin-brand.js
+          test -s build/web/admin/branding/reset-password/index.html
+          test -s build/web/admin/branding/reset-password/reset-password.js
           python3 - <<'PY'
           import json,os
           from pathlib import Path
@@ -192,7 +195,14 @@ jobs:
                       with open_public("https://my-fitness-date.pages.dev/admin/branding/"+asset_name+"?v="+sha) as r:
                           asset=r.read().decode("utf8")
                           assert r.status==200 and len(asset)>1000
-                  print("PUBLIC CLOUDFLARE RELEASE + BRAND LAB + ADMIN SHELL VERIFIED:",sha)
+                  with open_public("https://my-fitness-date.pages.dev/admin/branding/reset-password/?v="+sha) as r:
+                      reset=r.read().decode("utf8")
+                      assert r.status==200
+                  assert "Crear tu contraseña" in reset and "reset-password.js" in reset
+                  with open_public("https://my-fitness-date.pages.dev/admin/branding/reset-password/reset-password.js?v="+sha) as r:
+                      reset_js=r.read().decode("utf8")
+                      assert r.status==200 and "brand_admin_status" in reset_js and "history.replaceState" in reset_js
+                  print("PUBLIC CLOUDFLARE RELEASE + ADMIN PASSWORD RECOVERY VERIFIED:",sha)
                   break
               except Exception as error:
                   if attempt==6:
