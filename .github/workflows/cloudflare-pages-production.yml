@@ -110,12 +110,15 @@ jobs:
           test -s build/web/index.html
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
-          cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab build/web/
+          cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab cloudflare/admin build/web/
           test -s build/web/privacy/index.html
           test -s build/web/terms/index.html
           test -s build/web/brand-lab/index.html
           test -s build/web/brand-lab/brand-lab.css
           test -s build/web/brand-lab/brand-lab.js
+          test -s build/web/admin/branding/index.html
+          test -s build/web/admin/branding/admin-brand.css
+          test -s build/web/admin/branding/admin-brand.js
           python3 - <<'PY'
           import json,os
           from pathlib import Path
@@ -179,7 +182,15 @@ jobs:
                       with open_public("https://my-fitness-date.pages.dev/brand-lab/"+asset_name+"?v="+sha) as r:
                           asset=r.read().decode("utf8")
                           assert r.status==200 and len(asset)>1000
-                  print("PUBLIC CLOUDFLARE RELEASE + LEGAL + BRAND LAB VERIFIED:",sha)
+                  with open_public("https://my-fitness-date.pages.dev/admin/branding/?v="+sha) as r:
+                      admin=r.read().decode("utf8")
+                      assert r.status==200
+                  assert "Brand Studio" in admin and "admin-brand.js" in admin and "MFA obligatorio" in admin
+                  for asset_name in ("admin-brand.js","admin-brand.css"):
+                      with open_public("https://my-fitness-date.pages.dev/admin/branding/"+asset_name+"?v="+sha) as r:
+                          asset=r.read().decode("utf8")
+                          assert r.status==200 and len(asset)>1000
+                  print("PUBLIC CLOUDFLARE RELEASE + BRAND LAB + ADMIN SHELL VERIFIED:",sha)
                   break
               except Exception as error:
                   if attempt==6:
