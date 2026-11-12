@@ -7,9 +7,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() {
   test('password recovery returns to the same Flutter app', () {
     expect(passwordRecoveryRedirect('https://my-fitness-date.pages.dev/'),
-      'https://my-fitness-date.pages.dev/?password_reset=1');
+      'https://my-fitness-date.pages.dev/recover/');
     expect(passwordRecoveryRedirect('https://example.test/?a=1'),
-      'https://example.test/?a=1&password_reset=1');
+      'https://example.test/recover/');
   });
 
   test('only HTTPS callback URLs are accepted', () {
