@@ -13,6 +13,7 @@ const reportId='e8d92d40-b105-43b8-a966-e84dbd0c9b6f';
 
 class FakeCommunityB4 implements CommunityRepository {
   bool consented = false;
+  bool pilotAllowed = true;
   bool optedOut = false;
   bool blocked = false;
   bool deletion = false;
@@ -29,6 +30,7 @@ class FakeCommunityB4 implements CommunityRepository {
   @override
   Future<String> communityStatus() async =>
     deletion ? 'deletion_pending'
+      : !pilotAllowed ? 'pilot_closed'
       : optedOut ? 'opted_out'
       : consented ? 'available' : 'consent_required';
 
@@ -358,6 +360,22 @@ void main() {
     await tester.tap(find.byKey(const Key('b4-pilot-revoke-confirm')));
     await tester.pumpAndSettle();
     expect(fake.pilotRevoked,isTrue);
+    expect(tester.takeException(),isNull);
+  });
+
+
+  testWidgets('uninvited closed-pilot account cannot view or post',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1050,840));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final fake=FakeCommunityB4()
+      ..consented=true
+      ..pilotAllowed=false;
+    await tester.pumpWidget(MaterialApp(home:CommunityB4(api:fake)));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Piloto cerrado'),findsOneWidget);
+    expect(find.byKey(const Key('b4-create-post')),findsNothing);
+    expect(find.byKey(const Key('b4-post-$postId')),findsNothing);
     expect(tester.takeException(),isNull);
   });
 
