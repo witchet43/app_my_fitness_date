@@ -83,6 +83,11 @@ void main(){
     expect(find.text('Preparación privada · descubrimiento deshabilitado'),
       findsOneWidget);
     expect(fake.candidateCalls,0);
+    // ListView lazily builds off-screen controls; scroll before finding.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('b5-save-preferences')),300,
+      scrollable:find.byType(Scrollable).first,
+    );
     expect(find.byKey(const Key('b5-save-preferences')),findsOneWidget);
     expect(tester.takeException(),isNull);
   });
@@ -94,7 +99,10 @@ void main(){
     final fake=FakeDatingB5();
     await tester.pumpWidget(MaterialApp(home:DatingV27(api:fake)));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('b5-separate-consent')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('b5-separate-consent')),300,
+      scrollable:find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const Key('b5-separate-consent')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('b5-request-participation')));
