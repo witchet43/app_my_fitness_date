@@ -61,6 +61,8 @@ jobs:
           python3 scripts/test_brand_lab_static.py
           node --check apps/flutter_client/cloudflare/brand-lab/brand-lab.js
           node scripts/test_brand_lab_runtime.cjs
+          python3 scripts/test_brand_admin_static.py
+          node --check apps/flutter_client/cloudflare/admin/branding/admin-brand.js
       - name: Verify hosted Google and email authentication
         run: python3 scripts/verify_hosted_auth.py
       - name: Verify hosted member API before exposing registration
