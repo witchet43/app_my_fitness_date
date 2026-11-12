@@ -16,6 +16,12 @@ const configuredOrigin = Deno.env.get("MFD_ALLOWED_ORIGIN") ??
 const origin = /^https:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?$/i.test(configuredOrigin) ||
   /^http:\/\/localhost:[0-9]{2,5}$/i.test(configuredOrigin)
     ? configuredOrigin : "https://my-fitness-date.pages.dev";
+// Explicit preview origin is trusted for the isolated B2 QA site only.
+// Browser Authorization headers remain required and roles enforced in SQL.
+const allowedOrigins = new Set([
+  origin,
+  "https://b2-preview.my-fitness-date.pages.dev",
+]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
   "Access-Control-Allow-Headers": memberCorsRequestHeaders,
@@ -100,10 +106,10 @@ const editable = new Set([
   "achievements", "training_frequency", "dating_intent", "social_visibility",
   "onboarding_complete",
 ]);
-Deno.serve(async (req) => {
+async function handleRequest(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   const requestedOrigin = req.headers.get("origin");
-  if (requestedOrigin && requestedOrigin !== origin) return error(403);
+  if (requestedOrigin && !allowedOrigins.has(requestedOrigin)) return error(403);
   if (!publishable?.startsWith("sb_publishable_") || !SUPABASE_URL.startsWith("https://")) {
     return error(503);
   }
@@ -373,4 +379,15 @@ Deno.serve(async (req) => {
     console.error("member-api-v26 internal error", exception instanceof Error ? exception.name : "unknown");
     return error(503);
   }
+}
+
+Deno.serve(async (req: Request): Promise<Response> => {
+  const response = await handleRequest(req);
+  const requestingOrigin = req.headers.get("origin");
+  if (!requestingOrigin || !allowedOrigins.has(requestingOrigin)) {
+    return response;
+  }
+  const headers = new Headers(response.headers);
+  headers.set("Access-Control-Allow-Origin", requestingOrigin);
+  return new Response(response.body, { status: response.status, headers });
 });
