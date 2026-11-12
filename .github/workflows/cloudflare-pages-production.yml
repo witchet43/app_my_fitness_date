@@ -113,15 +113,18 @@ jobs:
           test -s build/web/index.html
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
-          cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab cloudflare/admin build/web/
+          cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab build/web/
+          mkdir -p build/web/admin/branding/reset-password
+          cp cloudflare/admin/branding/admin-brand.css build/web/admin/branding/
+          cp cloudflare/admin/branding/reset-password/index.html cloudflare/admin/branding/reset-password/reset-password.js build/web/admin/branding/reset-password/
           test -s build/web/privacy/index.html
           test -s build/web/terms/index.html
           test -s build/web/brand-lab/index.html
           test -s build/web/brand-lab/brand-lab.css
           test -s build/web/brand-lab/brand-lab.js
-          test -s build/web/admin/branding/index.html
           test -s build/web/admin/branding/admin-brand.css
-          test -s build/web/admin/branding/admin-brand.js
+          test ! -e build/web/admin/branding/index.html
+          test ! -e build/web/admin/branding/admin-brand.js
           test -s build/web/admin/branding/reset-password/index.html
           test -s build/web/admin/branding/reset-password/reset-password.js
           python3 - <<'PY'
@@ -187,14 +190,15 @@ jobs:
                       with open_public("https://my-fitness-date.pages.dev/brand-lab/"+asset_name+"?v="+sha) as r:
                           asset=r.read().decode("utf8")
                           assert r.status==200 and len(asset)>1000
+                  # The OLD standalone admin page must NOT be served. The
+                  # admin must use the SAME Flutter app and shared login.
                   with open_public("https://my-fitness-date.pages.dev/admin/branding/?v="+sha) as r:
-                      admin=r.read().decode("utf8")
+                      integrated=r.read().decode("utf8")
                       assert r.status==200
-                  assert "Brand Studio" in admin and "admin-brand.js" in admin and "MFA obligatorio" in admin
-                  for asset_name in ("admin-brand.js","admin-brand.css"):
-                      with open_public("https://my-fitness-date.pages.dev/admin/branding/"+asset_name+"?v="+sha) as r:
-                          asset=r.read().decode("utf8")
-                          assert r.status==200 and len(asset)>1000
+                  assert "flutter" in integrated.lower() and "admin-brand.js" not in integrated
+                  with open_public("https://my-fitness-date.pages.dev/admin/branding/admin-brand.css?v="+sha) as r:
+                      legacy_reset_css=r.read().decode("utf8")
+                      assert r.status==200 and len(legacy_reset_css)>1000
                   with open_public("https://my-fitness-date.pages.dev/admin/branding/reset-password/?v="+sha) as r:
                       reset=r.read().decode("utf8")
                       assert r.status==200
