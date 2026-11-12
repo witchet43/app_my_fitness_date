@@ -12,6 +12,7 @@ const reportId='e8d92d40-b105-43b8-a966-e84dbd0c9b6f';
 
 class FakeCommunityB4 implements CommunityRepository {
   bool consented = false;
+  bool optedOut = false;
   bool blocked = false;
   bool deletion = false;
   bool removed = false;
@@ -25,6 +26,7 @@ class FakeCommunityB4 implements CommunityRepository {
   @override
   Future<String> communityStatus() async =>
     deletion ? 'deletion_pending'
+      : optedOut ? 'opted_out'
       : consented ? 'available' : 'consent_required';
 
   @override
@@ -33,10 +35,16 @@ class FakeCommunityB4 implements CommunityRepository {
   }
 
   @override
+  Future<String> setCommunityParticipation({required bool enabled}) async {
+    optedOut=!enabled;
+    return enabled?'enabled':'disabled';
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> communityFeed({
     DateTime? before,
   }) async {
-    if(!consented || before != null) return [];
+    if(!consented || optedOut || before != null) return [];
     return [
       {
         'id':adminPostId,'author_id':'0be1d558-b761-4efc-9763-d9d6a36b76d4',
@@ -271,6 +279,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(fake.officialPublished,1);
     expect(find.byKey(const Key('b4-announcements-empty')),findsNothing);
+    expect(tester.takeException(),isNull);
+  });
+
+
+  testWidgets('member can leave and rejoin separately from account deletion',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1080,900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final fake=FakeCommunityB4()..consented=true;
+    await tester.pumpWidget(MaterialApp(home:CommunityB4(api:fake)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('b4-privacy-open')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('b4-community-leave')));
+    await tester.tap(find.byKey(const Key('b4-community-leave')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('b4-community-leave-confirm')));
+    await tester.pumpAndSettle();
+    expect(fake.optedOut,isTrue);
+    expect(fake.deletion,isFalse);
+    expect(find.byKey(const Key('b4-community-rejoin')),findsOneWidget);
+    await tester.tap(find.byKey(const Key('b4-community-rejoin')));
+    await tester.pumpAndSettle();
+    expect(fake.optedOut,isFalse);
+    expect(find.byKey(const Key('b4-create-post')),findsOneWidget);
     expect(tester.takeException(),isNull);
   });
 
