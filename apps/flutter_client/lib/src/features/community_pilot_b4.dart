@@ -39,7 +39,7 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
 
   Future<void> invite() async {
     if(busy)return;
-    final email=TextEditingController();
+    String emailText='';
     String? validation;
     final selected=await showDialog<String>(
       context:context,builder:(dialog)=>StatefulBuilder(
@@ -54,7 +54,7 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
               const SizedBox(height:12),
               TextField(
                 key:const Key('b4-pilot-email'),
-                controller:email,
+                onChanged:(value)=>emailText=value,
                 keyboardType:TextInputType.emailAddress,
                 decoration:const InputDecoration(
                   labelText:'Correo de la cuenta registrada')),
@@ -68,7 +68,7 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
             FilledButton(
               key:const Key('b4-pilot-submit'),
               onPressed:(){
-                final value=email.text.trim();
+                final value=emailText.trim();
                 if(value.length<5||value.length>254||
                     !RegExp(
                       r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
@@ -83,7 +83,6 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
         ),
       ),
     );
-    email.dispose();
     if(selected==null||!mounted)return;
     setState(()=>busy=true);
     try{
