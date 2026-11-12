@@ -39,8 +39,15 @@ create policy sport_events_approved_organizer_b1
   with check (
     (select auth.uid()) = organizer_id
     and app_private.is_event_organizer()
-    and starts_at > now()
+    and starts_at > now() + interval '10 minutes'
+    and starts_at <= now() + interval '180 days'
     and is_published = true
+    and exists (
+      select 1 from public.member_profiles_v26 p
+      where p.user_id = (select auth.uid())
+        and p.onboarding_complete = true
+        and p.date_of_birth <= (current_date - interval '18 years')::date
+    )
   );
 
 -- Do not permit a direct Data API INSERT that would bypass a capacity check.
@@ -49,7 +56,7 @@ revoke insert on public.event_rsvps from authenticated;
 revoke insert (event_id, user_id) on public.event_rsvps
   from authenticated;
 
--- Explicitly granted owner-only RPC. SECURITY DEFINER is necessary for
+-- Consent versions follow the currently deployed v27 legal documents.\n-- Updating legal versions requires a reviewed DB/API change: fail closed.\n\n-- Explicitly granted owner-only RPC. SECURITY DEFINER is necessary for
 -- counting participants across RLS rows, and is tightly limited by auth.uid,
 -- a verified non-anonymous user, membership eligibility and one event lock.
 create or replace function public.confirm_activity_rsvp(p_event_id uuid)
@@ -83,9 +90,11 @@ begin
   if not exists (
     select 1 from public.member_consents_v26 c
     where c.user_id = v_user and c.consent_kind = 'terms'
+      and c.document_version = 'v27-terms-1'
   ) or not exists (
     select 1 from public.member_consents_v26 c
     where c.user_id = v_user and c.consent_kind = 'privacy'
+      and c.document_version = 'v27-privacy-1'
   ) then
     return 'consent_required';
   end if;
