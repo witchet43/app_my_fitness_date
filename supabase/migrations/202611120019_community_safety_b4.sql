@@ -158,15 +158,20 @@ create function public.community_feed_b4(
 )
 returns table (
   id uuid,author_id uuid,author_name text,topic text,
-  content text,created_at timestamptz,is_mine boolean
+  content text,created_at timestamptz,is_mine boolean,is_official boolean
 )
 language sql stable security definer set search_path=''
 as $$
-  select p.id,p.author_id,m.display_name,p.topic,p.content,p.created_at,
-    (p.author_id=(select auth.uid())) as is_mine
+  select p.id,p.author_id,
+    coalesce(m.display_name,'Equipo My Fitness Date'),p.topic,p.content,
+    p.created_at,(p.author_id=(select auth.uid())) as is_mine,
+    (a.user_id is not null) as is_official
   from public.community_posts_b4 p
-    join public.member_profiles_v26 m on m.user_id=p.author_id
+    left join public.member_profiles_v26 m on m.user_id=p.author_id
+    left join app_private.brand_administrators a
+      on a.user_id=p.author_id and a.active=true
   where app_private.community_actor_b4()='available'
+    and (m.user_id is not null or a.user_id is not null)
     and p.status='visible'
     and (p_before is null or p.created_at<p_before)
     and not exists (
@@ -343,6 +348,89 @@ $$;
 revoke all on function public.community_my_post_history_b4()
   from public,anon,authenticated;
 grant execute on function public.community_my_post_history_b4()
+  to authenticated;
+
+
+-- Owner may create GENUINE official notices without adopting a member persona.
+-- Published notices are real content entered by the proprietor, not fixtures.
+create table app_private.community_announcement_audit_b4 (
+  id bigint generated always as identity primary key,
+  owner_id uuid not null references auth.users(id),
+  post_id uuid not null references public.community_posts_b4(id),
+  action text not null check(action in ('publish','remove')),
+  created_at timestamptz not null default now()
+);
+alter table app_private.community_announcement_audit_b4 enable row level security;
+revoke all on app_private.community_announcement_audit_b4
+  from public,anon,authenticated;
+
+create function public.admin_community_publish_b4(
+  p_topic text,p_content text
+)
+returns jsonb language plpgsql security definer set search_path=''
+as $$
+declare v_user uuid:=(select auth.uid());v_id uuid;
+begin
+  if not app_private.is_brand_owner() then
+    return jsonb_build_object('status','forbidden'); end if;
+  if p_topic is null or p_topic<>all(array[
+    'running','cycling','hiking','gym','wellness','other'
+  ]) or p_content is null or char_length(btrim(p_content)) not between 15 and 480
+     or p_content ~* '(https?://|www\.|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|[[:digit:]]{8,})'
+    then return jsonb_build_object('status','invalid'); end if;
+  perform pg_advisory_xact_lock(hashtextextended(v_user::text,408));
+  if (select count(*) from public.community_posts_b4 p
+    where p.author_id=v_user and p.created_at>now()-interval '1 day')>=5
+    then return jsonb_build_object('status','rate_limited'); end if;
+  insert into public.community_posts_b4(author_id,topic,content)
+    values(v_user,p_topic,btrim(p_content)) returning id into v_id;
+  insert into app_private.community_announcement_audit_b4(
+    owner_id,post_id,action
+  ) values(v_user,v_id,'publish');
+  return jsonb_build_object('status','published','id',v_id);
+end;
+$$;
+revoke all on function public.admin_community_publish_b4(text,text)
+  from public,anon,authenticated;
+grant execute on function public.admin_community_publish_b4(text,text)
+  to authenticated;
+
+create function public.admin_community_announcements_b4()
+returns table (
+  id uuid,topic text,content text,status text,created_at timestamptz
+)
+language sql stable security definer set search_path=''
+as $$
+  select p.id,p.topic,p.content,p.status,p.created_at
+  from public.community_posts_b4 p
+  where app_private.is_brand_owner()
+    and p.author_id=(select auth.uid())
+  order by p.created_at desc limit 50;
+$$;
+revoke all on function public.admin_community_announcements_b4()
+  from public,anon,authenticated;
+grant execute on function public.admin_community_announcements_b4()
+  to authenticated;
+
+create function public.admin_community_remove_announcement_b4(p_post_id uuid)
+returns text language plpgsql security definer set search_path=''
+as $$
+begin
+  if not app_private.is_brand_owner() then return 'forbidden'; end if;
+  update public.community_posts_b4 p
+    set status='removed',updated_at=now()
+    where p.id=p_post_id and p.author_id=(select auth.uid())
+      and p.status='visible';
+  if not found then return 'not_found'; end if;
+  insert into app_private.community_announcement_audit_b4(
+    owner_id,post_id,action
+  ) values((select auth.uid()),p_post_id,'remove');
+  return 'removed';
+end;
+$$;
+revoke all on function public.admin_community_remove_announcement_b4(uuid)
+  from public,anon,authenticated;
+grant execute on function public.admin_community_remove_announcement_b4(uuid)
   to authenticated;
 
 -- Owner MFA/AAL2 only; reporting identities remain private from members.
