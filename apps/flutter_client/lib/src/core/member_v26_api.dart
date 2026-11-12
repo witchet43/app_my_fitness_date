@@ -237,6 +237,11 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
     _decode(await _request('GET','/v1/community/status'))['status'].toString();
 
   @override
+  Future<void> acceptCommunityConsent() async {
+    await acceptConsent('community','community-v1');
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> communityFeed({DateTime? before}) async {
     final suffix=before==null?'':'?before=${Uri.encodeQueryComponent(
       before.toUtc().toIso8601String())}';
