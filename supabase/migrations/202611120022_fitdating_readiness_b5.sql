@@ -32,6 +32,10 @@ as $$
 $$;
 revoke all on function app_private.b5_discovery_open()
   from public,anon,authenticated;
+-- The public invoker wrapper may read only this fail-closed boolean; the
+-- private schema is not exposed as a REST resource.
+grant execute on function app_private.b5_discovery_open()
+  to authenticated;
 
 create table app_private.fitdating_preferences_b5(
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -144,8 +148,8 @@ begin
   then
     return jsonb_build_object('status','not_available','enabled',false);
   end if;
-  select coalesce(e.approved,false) into v_review
-    from public.my_adult_eligibility() e limit 1;
+  select coalesce((public.my_adult_eligibility()->>'approved')::boolean,false)
+    into v_review;
   select exists(
     select 1 from public.member_consents_v26 c
     where c.user_id=v_user and c.consent_kind='dating'
