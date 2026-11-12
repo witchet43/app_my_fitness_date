@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+const brandAdminFactorName = 'My Fitness Date · Administrador';
+
+/// Include unverified factors returned by listFactors().all (not .totp,
+/// which only returns verified factors in the Supabase 2.x client).
+Iterable<Factor> verifiedAdminTotpFactors(Iterable<Factor> factors) =>
+    factors.where((f) =>
+        f.factorType == FactorType.totp &&
+        f.status == FactorStatus.verified);
+
+Iterable<Factor> staleBrandAdminTotpFactors(Iterable<Factor> factors) =>
+    factors.where((f) =>
+        f.factorType == FactorType.totp &&
+        f.status == FactorStatus.unverified &&
+        f.friendlyName == brandAdminFactorName);
+
 /// This widget is shown INSIDE the same My Fitness Date app after the database
 /// recognizes a Brand Administrator. It grants no data permissions itself.
 /// PostgreSQL RLS still checks the refreshed AAL2 JWT on every operation.
@@ -20,7 +35,6 @@ class BrandAdminMfaGate extends StatefulWidget {
 }
 
 class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
-  static const factorName = 'My Fitness Date · Administrador';
   final code = TextEditingController();
   bool _preparing = false;
   bool busy = true;
@@ -49,25 +63,20 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
       // an enum, not the strings 'verified'/'unverified'. .all contains
       // incomplete enrollments too. Comparing to strings incorrectly caused
       // a new factor to be enrolled on each rebuild until Auth returned 422.
-      final verified = factors.all.where(
-          (f) => f.factorType == FactorType.totp &&
-                 f.status == FactorStatus.verified).toList();
+      final verified = verifiedAdminTotpFactors(factors.all).toList();
       if (verified.isNotEmpty) {
         factorId = verified.first.id;
         enrollment = false;
       } else {
         // Clear ONLY our own incomplete enrollment. The secret cannot be
         // retrieved again after reload. Never touch verified or foreign factors.
-        final pending = factors.all.where(
-            (f) => f.factorType == FactorType.totp &&
-                   f.status == FactorStatus.unverified &&
-                   f.friendlyName == factorName);
+        final pending = staleBrandAdminTotpFactors(factors.all);
         for (final factor in pending) {
           await widget.client.auth.mfa.unenroll(factor.id);
         }
         final result = await widget.client.auth.mfa.enroll(
           factorType: FactorType.totp,
-          friendlyName: factorName,
+          friendlyName: brandAdminFactorName,
         );
         factorId = result.id;
         secret = result.totp?.secret;
