@@ -8,3 +8,8 @@
 /brand-lab/*
   Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none'
   X-Robots-Tag: noindex, nofollow
+
+/admin/branding/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob:; connect-src https://jtrdvnwbxpfdnbzasvcj.supabase.co; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Robots-Tag: noindex, nofollow
