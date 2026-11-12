@@ -6,8 +6,9 @@ import 'my_activities_b2.dart';
 /// B1 value journey: browse real, curated activities and confirm a private RSVP.
 /// No fake events, attendee list, gym, exact routes or training schedules.
 class ActivitiesB1 extends StatefulWidget {
-  const ActivitiesB1({super.key, required this.api});
+  const ActivitiesB1({super.key, required this.api, this.readOnly = false});
   final ActivityRepository api;
+  final bool readOnly;
 
   @override
   State<ActivitiesB1> createState() => _ActivitiesB1State();
@@ -36,7 +37,9 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
       // catalogue or accidentally grant elevated access.
       bool isOrganizer = false;
       try {
-        isOrganizer = await widget.api.isApprovedActivityOrganizer();
+        if (!widget.readOnly) {
+          isOrganizer = await widget.api.isApprovedActivityOrganizer();
+        }
       } catch (_) {}
       if (mounted) {
         setState(() {
@@ -64,7 +67,8 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
 
   Future<void> confirm(Map<String, dynamic> item) async {
     final id = (item['id'] ?? '').toString();
-    if (activeRsvp != null || id.isEmpty || item['joined'] == true) return;
+    if (widget.readOnly || activeRsvp != null || id.isEmpty ||
+        item['joined'] == true) return;
     setState(() { activeRsvp = id; error = null; });
     try {
       await widget.api.confirmActivity(id);
@@ -88,7 +92,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
   }
 
   Future<void> createActivity() async {
-    if (!organizer || publishing) return;
+    if (widget.readOnly || !organizer || publishing) return;
     final title = TextEditingController();
     final description = TextEditingController();
     final sport = TextEditingController();
@@ -250,10 +254,13 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
           const SizedBox(height: 12),
           FilledButton.icon(
             key: Key('b1-rsvp-$id'),
-            onPressed: joined || busy ? null : () => confirm(item),
+            onPressed: widget.readOnly || joined || busy
+                ? null : () => confirm(item),
             icon: Icon(joined ? Icons.check_circle : Icons.event_available),
-            label: Text(joined ? 'Participación confirmada' :
-              activeRsvp == id ? 'Confirmando…' : 'Confirmar participación'),
+            label: Text(widget.readOnly
+              ? 'Vista de administrador: sin reservaciones'
+              : joined ? 'Participación confirmada' :
+                activeRsvp == id ? 'Confirmando…' : 'Confirmar participación'),
           ),
         ]),
       ),
@@ -265,7 +272,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
     appBar: AppBar(
       title: const Text('Explorar actividades'),
       actions: [
-        IconButton(
+        if (!widget.readOnly) IconButton(
           key: const Key('b2-open-my-activities'),
           tooltip: 'Mis actividades',
           onPressed: showMyActivities,
@@ -288,13 +295,18 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
             key: const Key('b1-activities-list'),
             padding: const EdgeInsets.all(18),
             children: [
-              Text('Muévete en buena compañía',
+              Text(widget.readOnly
+                ? 'Vista previa de la experiencia de miembro'
+                : 'Muévete en buena compañía',
                 style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 8),
-              const Text('Actividades publicadas por organizadores autorizados. '
-                'No compartimos tu gimnasio, ubicación exacta ni rutina.'),
+              Text(widget.readOnly
+                ? 'Estás viendo la experiencia pública como administrador. '
+                  'Para confirmar una participación utiliza otra cuenta de miembro.'
+                : 'Actividades publicadas por organizadores autorizados. '
+                  'No compartimos tu gimnasio, ubicación exacta ni rutina.'),
               const SizedBox(height: 14),
-              OutlinedButton.icon(
+              if (!widget.readOnly) OutlinedButton.icon(
                 key: const Key('b2-my-activities-button'),
                 onPressed: showMyActivities,
                 icon: const Icon(Icons.calendar_month_outlined),
