@@ -16,7 +16,6 @@ import 'features/member_profile_v26.dart';
 import 'features/member_onboarding_b1.dart';
 import 'features/activities_b1.dart';
 import 'features/public_entry_shell.dart';
-import 'theme/fitness_date_theme.dart';
 import 'widgets/mfd_branding.dart';
 
 /// V26 sign-in gate: no member screen is reachable without remote validation
