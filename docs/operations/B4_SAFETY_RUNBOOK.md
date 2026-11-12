@@ -1,6 +1,6 @@
 # B4 · QA de comunidad y moderación
 
-**NO se habilita beta pública con este runbook.** Todas las operaciones privadas deben preservar la separación de administrador/member.
+**NO se habilita beta pública con este runbook.** El B4 está cerrado por defecto a cuentas no admitidas; conceder acceso requiere cuenta confirmada, MFA del propietario y auditoría. Todas las operaciones privadas deben preservar la separación de administrador/member.
 
 ## Despliegue seguro
 1. Ejecutar preflight local de TypeScript y `python3 scripts/check_b1_static.py`, `check_b2_static.py`, `check_b3_static.py`, `check_b4_static.py`. Revisar Flutter analyze/tests antes de activar el único job B4. No llamar jobs por cada modificación.
@@ -25,3 +25,9 @@ No abrir a público sin verificación externa de edad, staffing/moderación huma
 
 ## FinOps
 El contador de partida de B4 es 4/10 ejecuciones remotas ya consumidas. B4 corresponde a la quinta (5/10); B10 es contingencia, B9 ya se utilizó. Si B4 falla, corregir localmente y arrastrar a B5, sin reruns automáticos.
+
+## Controles adicionales antes del piloto
+- Aplicar migraciones aditivas en orden: `019_community_safety_b4.sql`, `020_community_optout_b4.sql`, `021_community_closed_pilot_b4.sql`. La 019 ya aplicada NO se reescribe.
+- Verificar que `community_status_b4` devuelva `pilot_closed` para miembros confirmados no autorizados, y que ningún usuario pueda saltarse `community_pilot_b4.active` llamando directamente un RPC.
+- Desde el administrador MFA: Moderación → acceso a piloto → invitar por correo existente, revocar; revisar registros `app_private.community_pilot_audit_b4`. Ningún acceso a beta pública.
+- El usuario puede retirar la autorización de comunidad sin borrar su cuenta, reservaciones ni historial.
