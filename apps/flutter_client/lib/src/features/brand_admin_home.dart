@@ -9,6 +9,8 @@ import '../core/brand_admin_repository.dart';
 import '../core/live_brand.dart';
 import '../core/curator_repository.dart';
 import '../core/activity_repository.dart';
+import '../core/community_repository.dart';
+import 'community_moderation_b4.dart';
 import 'activities_b1.dart';
 import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
@@ -24,6 +26,7 @@ class BrandAdminHome extends StatefulWidget {
     required this.onSignOut,
     this.curatorApi,
     this.activityPreviewApi,
+    this.communityAdmin,
     required this.liveBrand,
   });
   final BrandAdminRepository repository;
@@ -31,6 +34,7 @@ class BrandAdminHome extends StatefulWidget {
   final Future<void> Function() onSignOut;
   final CuratorRepository? curatorApi;
   final ActivityRepository? activityPreviewApi;
+  final CommunityRepository? communityAdmin;
   final LiveBrandController liveBrand;
 
   @override
@@ -552,6 +556,24 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               icon:const Icon(Icons.visibility_outlined),
               label:const Text('Ver como miembro (solo lectura)')),
           ],
+        ]))),
+    ],
+    if(widget.communityAdmin!=null)...[
+      const SizedBox(height:14),
+      Card(child:Padding(padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text('Seguridad de comunidad',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          const Text('Revisa denuncias, oculta publicaciones, suspende '
+            'participaciones y consulta solicitudes de baja con trazabilidad.'),
+          const SizedBox(height:12),
+          FilledButton.icon(
+            key:const Key('b4-admin-open-moderation'),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>CommunityModerationB4(api:widget.communityAdmin!))),
+            icon:const Icon(Icons.gpp_good_outlined),
+            label:const Text('Moderación y privacidad')),
         ]))),
     ],
     const SizedBox(height:14),
