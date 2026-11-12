@@ -112,6 +112,9 @@ jobs:
           cp -R cloudflare/privacy cloudflare/terms cloudflare/brand-lab build/web/
           test -s build/web/privacy/index.html
           test -s build/web/terms/index.html
+          test -s build/web/brand-lab/index.html
+          test -s build/web/brand-lab/brand-lab.css
+          test -s build/web/brand-lab/brand-lab.js
           python3 - <<'PY'
           import json,os
           from pathlib import Path
