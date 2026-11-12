@@ -12,6 +12,8 @@ import 'features/brand_admin_home.dart';
 import 'features/brand_admin_mfa.dart';
 import 'features/password_recovery_screen.dart';
 import 'features/member_profile_v26.dart';
+import 'features/member_onboarding_b1.dart';
+import 'features/activities_b1.dart';
 import 'features/public_entry_shell.dart';
 import 'theme/fitness_date_theme.dart';
 import 'widgets/mfd_branding.dart';
@@ -90,7 +92,10 @@ class _MemberV26AppState extends State<MemberV26App> {
 
   Future<void> refresh() async {
     if (_refreshRunning) {
-      _refreshPending = true;
+      // An Auth event for the same identity during remote validation must
+      // not restart the full login process indefinitely.
+      final nextId = widget.auth.auth.currentSession?.user.id;
+      _refreshPending = nextId == null || nextId != _validatedUserId;
       return;
     }
     _refreshRunning = true;
@@ -124,7 +129,8 @@ class _MemberV26AppState extends State<MemberV26App> {
       }
       // Do not trust a locally stored session as identity until remote Auth
       // verifies it. Provider account is not independently age-verified.
-      final response=await widget.auth.auth.getUser();
+      final response=await widget.auth.auth.getUser()
+        .timeout(const Duration(seconds: 12));
       if(response.user==null || response.user!.emailConfirmedAt==null){
         throw const MemberApiException('Se requiere un correo verificado.');
       }
@@ -141,13 +147,15 @@ class _MemberV26AppState extends State<MemberV26App> {
       // Resolve privilege before sending anyone into the member onboarding
       // or privacy flow. The database is authoritative, never user metadata
       // or an email match. A failed role check blocks access altogether.
-      final adminResult=await widget.auth.rpc('brand_admin_status');
+      final adminResult=await widget.auth.rpc('brand_admin_status')
+        .timeout(const Duration(seconds: 12));
       if(adminResult is! bool){
         throw const MemberApiException('No fue posible verificar el rol.');
       }
       if(adminResult){
         // AAL2 is verified SERVER-SIDE on each request, not a UI flag.
-        final allow=await widget.auth.rpc('brand_admin_session');
+        final allow=await widget.auth.rpc('brand_admin_session')
+          .timeout(const Duration(seconds: 12));
         _validatedUserId = response.user!.id;
         if(mounted){setState((){
           verified=true;brandAdministrator=true;
@@ -156,12 +164,15 @@ class _MemberV26AppState extends State<MemberV26App> {
         });}
         return;
       }
-      final records=await widget.api.loadConsents();
+      final records=await widget.api.loadConsents()
+        .timeout(const Duration(seconds: 24));
       final terms=records.any((r)=>r['consent_kind']=='terms' &&
           r['document_version']==widget.termsVersion);
       final privacy=records.any((r)=>r['consent_kind']=='privacy' &&
           r['document_version']==widget.privacyVersion);
-      final own=terms && privacy ? await widget.api.loadProfile() : null;
+      final own=terms && privacy
+        ? await widget.api.loadProfile().timeout(const Duration(seconds: 24))
+        : null;
       _validatedUserId = response.user!.id;
       if(mounted){setState((){
         verified=true;brandAdministrator=false;adminMfaVerified=false;
@@ -304,7 +315,18 @@ class _MemberV26AppState extends State<MemberV26App> {
 
   Future<void> saveProfile(Map<String,dynamic> data) async {
     final next=await widget.api.saveProfile(data);
-    if(mounted)setState((){profile=next;editing=false;failure=null;});
+    if(mounted){
+      setState((){profile=next;editing=false;failure=null;});
+      // After the member's first successful save, take them directly to
+      // the useful activity catalogue, not to a long static profile.
+      WidgetsBinding.instance.addPostFrameCallback((_){
+        final state = _navigatorKey.currentState;
+        if(mounted && state != null) {
+          state.push(MaterialPageRoute<void>(
+            builder:(_)=>ActivitiesB1(api:widget.api)));
+        }
+      });
+    }
   }
 
   Future<void> logout() async {
@@ -382,7 +404,7 @@ class _MemberV26AppState extends State<MemberV26App> {
             IconButton(onPressed:logout,tooltip:'Cerrar sesión',
               icon:const Icon(Icons.logout)),
           ]),
-        body:ProfileEditorV26(
+        body:MemberOnboardingB1(
           initial:profile,onSave:saveProfile,
           onCancel:profile==null?null:()=>setState(()=>editing=false)),
       );
