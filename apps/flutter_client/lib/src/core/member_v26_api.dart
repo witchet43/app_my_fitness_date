@@ -242,6 +242,12 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   @override
+  Future<String> setCommunityParticipation({required bool enabled}) async =>
+    _decode(await _request(
+      'POST','/v1/me/community/participation',
+      data:{'enabled':enabled}))['status'].toString();
+
+  @override
   Future<List<Map<String, dynamic>>> communityFeed({DateTime? before}) async {
     final suffix=before==null?'':'?before=${Uri.encodeQueryComponent(
       before.toUtc().toIso8601String())}';
