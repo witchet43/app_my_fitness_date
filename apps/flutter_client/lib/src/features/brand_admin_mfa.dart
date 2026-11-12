@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+const brandAdminFactorName = 'My Fitness Date · Administrador';
+
+/// Include unverified factors returned by listFactors().all (not .totp,
+/// which only returns verified factors in the Supabase 2.x client).
+Iterable<Factor> verifiedAdminTotpFactors(Iterable<Factor> factors) =>
+    factors.where((f) =>
+        f.factorType == FactorType.totp &&
+        f.status == FactorStatus.verified);
+
+Iterable<Factor> staleBrandAdminTotpFactors(Iterable<Factor> factors) =>
+    factors.where((f) =>
+        f.factorType == FactorType.totp &&
+        f.status == FactorStatus.unverified &&
+        f.friendlyName == brandAdminFactorName);
+
 /// This widget is shown INSIDE the same My Fitness Date app after the database
 /// recognizes a Brand Administrator. It grants no data permissions itself.
 /// PostgreSQL RLS still checks the refreshed AAL2 JWT on every operation.
@@ -21,6 +36,7 @@ class BrandAdminMfaGate extends StatefulWidget {
 
 class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
   final code = TextEditingController();
+  bool _preparing = false;
   bool busy = true;
   bool enrollment = false;
   String? factorId;
@@ -34,29 +50,33 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
   }
 
   Future<void> _prepare() async {
-    if (!mounted) return;
+    // Concurrent enrollment attempts create duplicate-name conflicts.
+    if (!mounted || _preparing) return;
+    _preparing = true;
     setState(() {
       busy = true; error = null; factorId = null;
       secret = null; enrollment = false;
     });
     try {
       final factors = await widget.client.auth.mfa.listFactors();
-      final verified = factors.totp.where((f) => f.status == 'verified').toList();
+      // In Supabase 2.x, .totp only contains VERIFIED factors and status is
+      // an enum, not the strings 'verified'/'unverified'. .all contains
+      // incomplete enrollments too. Comparing to strings incorrectly caused
+      // a new factor to be enrolled on each rebuild until Auth returned 422.
+      final verified = verifiedAdminTotpFactors(factors.all).toList();
       if (verified.isNotEmpty) {
         factorId = verified.first.id;
         enrollment = false;
       } else {
-        // A prior unfinished enrollment has no retrievable TOTP secret.
-        // Remove only unverified factors to avoid accumulating unusable
-        // credentials; NEVER remove a verified factor or bypass AAL2.
-        for (final pending in factors.totp.where(
-            (f) => f.status == 'unverified')) {
-          await widget.client.auth.mfa.unenroll(pending.id);
+        // Clear ONLY our own incomplete enrollment. The secret cannot be
+        // retrieved again after reload. Never touch verified or foreign factors.
+        final pending = staleBrandAdminTotpFactors(factors.all);
+        for (final factor in pending) {
+          await widget.client.auth.mfa.unenroll(factor.id);
         }
-        // Keep the new enrollment secret in memory only.
         final result = await widget.client.auth.mfa.enroll(
           factorType: FactorType.totp,
-          friendlyName: 'My Fitness Date · Administrador',
+          friendlyName: brandAdminFactorName,
         );
         factorId = result.id;
         secret = result.totp?.secret;
@@ -68,6 +88,7 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
     } catch (_) {
       error = 'No fue posible preparar la verificación. Puedes reintentar.';
     } finally {
+      _preparing = false;
       if (mounted) setState(() => busy = false);
     }
   }
