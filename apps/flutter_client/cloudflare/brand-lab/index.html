@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Laboratorio visual privado al navegador para explorar nombres, logotipos, colores y tipografías de My Fitness Date.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Brand Lab · My Fitness Date</title>
+  <link rel="stylesheet" href="./brand-lab.css">
+  <script defer src="./brand-lab.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Saltar al contenido</a>
+  <div class="shell">
+    <aside class="rail" aria-label="Navegación del laboratorio">
+      <div class="rail-brand"><span class="brand-symbol" aria-hidden="true">⌁</span><div><strong>Brand Lab</strong><small>IDENTIDAD & MARCA</small></div></div>
+      <nav class="rail-nav" aria-label="Secciones">
+        <a href="#name-panel"><span aria-hidden="true">Aa</span> Nombre</a>
+        <a href="#logo-panel"><span aria-hidden="true">◇</span> Logotipos</a>
+        <a href="#palette-panel"><span aria-hidden="true">◐</span> Paleta</a>
+        <a href="#type-panel"><span aria-hidden="true">T</span> Tipografía</a>
+        <a href="#details-panel"><span aria-hidden="true">☷</span> Detalles</a>
+        <a href="#preview-panel"><span aria-hidden="true">▣</span> Vista previa</a>
+      </nav>
+      <div class="rail-note"><span class="rail-line" aria-hidden="true"></span><p>Una identidad para personas maduras que valoran la conexión auténtica, la privacidad y una vida activa.</p><span>Diseño para relaciones con intención · 40+</span></div>
+      <p class="rail-foot">Espacio de exploración<br>Sin modificar producción</p>
+    </aside>
+
+    <main id="main" class="main">
+      <header class="topbar">
+        <div><div class="eyebrow">MY FITNESS DATE · DISEÑO DE PRODUCTO</div><h1>Brand Lab <span>/ Configuración de Marca</span></h1><p>Prueba una nueva identidad y observa cómo se ve en cada pantalla.</p></div>
+        <div class="top-actions">
+          <span id="save-status" class="status" role="status" aria-live="polite">Borrador de este navegador</span>
+          <button id="save-draft" class="btn btn-muted" type="button">Guardar borrador</button>
+          <button id="export-config" class="btn btn-primary" type="button">Exportar identidad <span aria-hidden="true">↗</span></button>
+        </div>
+      </header>
+
+      <p class="notice" role="note"><strong>Laboratorio visual:</strong> los cambios afectan únicamente estas vistas previas. Guardar no cambia el nombre, logotipo, colores ni textos de la aplicación pública; no se envían datos al servidor.</p>
+
+      <div class="workspace">
+        <div class="controls">
+          <section id="name-panel" class="panel" aria-labelledby="name-title">
+            <div class="panel-heading"><h2 id="name-title">Nombre de la marca</h2><p>Explora cómo suena y cómo luce un nombre en tu producto.</p></div>
+            <label for="brand-name" class="field-label">Nombre de trabajo</label>
+            <input id="brand-name" class="text-input" type="text" maxlength="35" autocomplete="off" value="My Fitness Date" placeholder="Escribe un nombre de marca">
+            <div id="name-presets" class="name-presets" role="group" aria-label="Nombres sugeridos">
+              <button type="button" data-name="My Fitness Date">My Fitness Date</button>
+              <button type="button" data-name="FITTED">FITTED</button>
+              <button type="button" data-name="Cadence">Cadence</button>
+              <button type="button" data-name="Pace">Pace</button>
+              <button type="button" data-name="Sync">Sync</button>
+              <button type="button" data-name="MFD">MFD</button>
+              <button type="button" data-name="Ritmo">Ritmo</button>
+              <button type="button" data-name="Concordia">Concordia</button>
+            </div>
+            <label for="brand-tagline" class="field-label space-top">Frase de marca</label>
+            <input id="brand-tagline" class="text-input" type="text" maxlength="95" value="Conexiones con intención." placeholder="Tu promesa, sin clichés románticos">
+          </section>
+
+          <section id="palette-panel" class="panel" aria-labelledby="palette-title">
+            <div class="panel-heading"><h2 id="palette-title">Paleta de color</h2><p>Combinaciones sobrias, cálidas y de alto contraste.</p></div>
+            <div class="palette-grid" id="palette-grid" role="group" aria-label="Paletas de marca">
+              <button type="button" class="palette-option" data-palette="forest"><span class="palette-mini"><i style="--swatch:#28463D"></i><i style="--swatch:#F7F5F0"></i><i style="--swatch:#B49A6A"></i></span><strong>Bosque</strong><small>Marfil · Bronce</small></button>
+              <button type="button" class="palette-option" data-palette="night"><span class="palette-mini"><i style="--swatch:#152D3D"></i><i style="--swatch:#F4F5F2"></i><i style="--swatch:#859EA3"></i></span><strong>Azul noche</strong><small>Plata · Hielo</small></button>
+              <button type="button" class="palette-option" data-palette="earth"><span class="palette-mini"><i style="--swatch:#5A4838"></i><i style="--swatch:#FAF5EB"></i><i style="--swatch:#B2936A"></i></span><strong>Tierra</strong><small>Arena · Cobre</small></button>
+              <button type="button" class="palette-option" data-palette="slate"><span class="palette-mini"><i style="--swatch:#36434A"></i><i style="--swatch:#F4F5F4"></i><i style="--swatch:#8D9A9D"></i></span><strong>Pizarra</strong><small>Niebla · Grafito</small></button>
+              <button type="button" class="palette-option" data-palette="sage"><span class="palette-mini"><i style="--swatch:#455D4B"></i><i style="--swatch:#F8F7F1"></i><i style="--swatch:#9AA57D"></i></span><strong>Salvia</strong><small>Oliva · Crema</small></button>
+            </div>
+            <div class="color-custom">
+              <label>Principal <input id="custom-primary" type="color" value="#28463D" aria-label="Color principal personalizado"></label>
+              <label>Acento <input id="custom-accent" type="color" value="#B49A6A" aria-label="Color de acento personalizado"></label>
+              <label>Fondo <input id="custom-background" type="color" value="#F7F5F0" aria-label="Color de fondo personalizado"></label>
+            </div>
+            <p class="hint" id="palette-hint">Puedes ajustar los tonos; los cambios se reflejan en las dos vistas.</p>
+          </section>
+
+          <section id="type-panel" class="panel" aria-labelledby="type-title">
+            <div class="panel-heading"><h2 id="type-title">Tipografía</h2><p>Compara títulos editoriales y textos de interfaz legibles.</p></div>
+            <div id="font-grid" class="font-grid" role="group" aria-label="Combinaciones tipográficas">
+              <button type="button" data-font="editorial"><span class="font-sample font-editorial">Aa</span><span><strong>Georgia + sistema</strong><small>Clásica y equilibrada</small></span></button>
+              <button type="button" data-font="heritage"><span class="font-sample font-heritage">Aa</span><span><strong>Palatino + Helvetica</strong><small>Cálida y distinguida</small></span></button>
+              <button type="button" data-font="formal"><span class="font-sample font-formal">Aa</span><span><strong>Garamond + sistema</strong><small>Editorial y sofisticada</small></span></button>
+              <button type="button" data-font="modern"><span class="font-sample font-modern">Aa</span><span><strong>Sans contemporánea</strong><small>Clara y minimalista</small></span></button>
+            </div>
+            <p class="hint">Fuentes de sistema, sin cargar tipografías desde terceros. El aspecto exacto depende del dispositivo.</p>
+          </section>
+
+          <section id="details-panel" class="panel" aria-labelledby="details-title">
+            <div class="panel-heading"><h2 id="details-title">Personalidad y detalles</h2><p>Pequeñas decisiones que hacen coherente una identidad.</p></div>
+            <fieldset><legend>Estilo de comunicación</legend><div class="segmented" id="tone-switch"><button type="button" data-tone="serene">Sereno</button><button type="button" data-tone="editorial">Editorial</button><button type="button" data-tone="direct">Directo</button></div></fieldset>
+            <fieldset><legend>Forma de los componentes</legend><div class="segmented" id="shape-switch"><button type="button" data-shape="soft">Suave</button><button type="button" data-shape="sharp">Geométrico</button></div></fieldset>
+            <fieldset><legend>Tema y dispositivo</legend><div class="toggle-row"><div class="segmented" id="theme-switch"><button type="button" data-mode="light">☀ Claro</button><button type="button" data-mode="dark">◕ Oscuro</button></div><div class="segmented" id="device-switch"><button type="button" data-device="desktop">▣ Web</button><button type="button" data-device="mobile">▯ Móvil</button></div></div></fieldset>
+          </section>
+        </div>
+
+        <section id="preview-panel" class="panel preview-panel" aria-labelledby="preview-title">
+          <div class="preview-top">
+            <div class="panel-heading"><h2 id="preview-title">Vista previa en vivo</h2><p>La misma identidad aplicada a distintas experiencias.</p></div>
+            <div class="segmented" id="view-switch" role="group" aria-label="Pantalla de ejemplo">
+              <button type="button" data-view="landing">Landing</button>
+              <button type="button" data-view="app">App</button>
+              <button type="button" data-view="onboarding">Onboarding</button>
+            </div>
+          </div>
+          <div id="preview-canvas" class="preview-canvas" aria-live="polite">
+            <div class="browser-frame">
+              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>Vista ilustrativa</em></div>
+              <div class="preview-site">
+                <div class="site-nav">
+                  <span class="site-brand"><span class="current-logo" aria-hidden="true"></span><span class="current-name">My Fitness Date</span></span>
+                  <span class="desktop-nav">Nuestro propósito　 Cómo funciona　 Privacidad</span>
+                  <span class="site-access">Acceder</span>
+                </div>
+                <div class="sample-screen" data-screen="landing">
+                  <div class="hero">
+                    <div class="landscape" aria-hidden="true">
+                      <svg viewBox="0 0 800 380" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CAFA3"/><stop offset="1" stop-color="#D6DCCB"/></linearGradient></defs><rect width="800" height="380" fill="url(#sky)"/><path d="M0 245 L100 140 175 204 278 83 370 205 477 118 592 223 680 145 800 239 V380 H0Z" fill="#829A8B"/><path d="M0 260 L160 205 240 240 355 167 450 254 605 195 800 285 V380H0Z" fill="#486F62" opacity=".92"/><path d="M0 312 Q170 232 320 313 T800 283V380H0Z" fill="#244A3E"/><path d="M396 380 Q465 316 560 303 Q495 336 488 380Z" fill="#D4C6A1" opacity=".7"/></svg>
+                    </div>
+                    <div class="hero-content"><span class="hero-kicker">ESTILO DE VIDA · CONFIANZA · AFINIDAD</span><h3 id="hero-title">Conoce personas afines a tu forma de vivir.</h3><p id="hero-description">Un espacio para personas maduras que valoran las relaciones estables, la vida activa y las conversaciones con intención.</p><div class="preview-button">Descubrir nuestra propuesta <span aria-hidden="true">↗</span></div></div>
+                  </div>
+                  <div class="feature-row"><div><span>01</span><strong>Cómo me muevo</strong><small>Mi estilo de vida activo</small></div><div><span>02</span><strong>Cómo vivo</strong><small>Ritmos y valores</small></div><div><span>03</span><strong>Cómo me relaciono</strong><small>Un proyecto compartido</small></div></div>
+                </div>
+                <div class="sample-screen screen-app" data-screen="app" hidden>
+                  <div class="app-intro"><div><span class="eyebrow">PERSONAS COMPATIBLES</span><h3>Conexiones con propósito</h3><p>Descubre afinidades reales antes de iniciar una conversación.</p></div><span class="preview-counter">Espacio 40+</span></div>
+                  <div class="profile-example"><div class="profile-art" aria-hidden="true"><div class="profile-sun"></div><div class="profile-person"></div></div><div class="profile-info"><span>PERFIL ILUSTRATIVO</span><h4>Claudia · 52</h4><p>Senderismo · Lectura · Viajes</p><div><strong>Afinidades</strong><small>Ritmo tranquilo, actividad al aire libre y tiempo para compartir.</small></div><span class="preview-button">Conocer mejor ↗</span></div></div>
+                </div>
+                <div class="sample-screen screen-onboarding" data-screen="onboarding" hidden>
+                  <div class="steps"><span class="current">01</span><span>02</span><span>03</span></div>
+                  <div class="onboarding-card"><span class="eyebrow">TUS PREFERENCIAS</span><h3>Comencemos por lo importante.</h3><p>Lo que valoras y cómo eliges compartir tu tiempo son tan importantes como tus intereses.</p><div class="fake-label">¿Cómo imaginas una buena conversación?</div><div class="fake-input">Con calma y autenticidad</div><div class="fake-label">¿Qué buscas construir?</div><div class="fake-input">Una relación estable</div><span class="preview-button">Continuar ↗</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="phone-frame"><div class="phone-screen"><div class="phone-status">9:41 <span>●● ▰</span></div><div class="phone-header"><span class="current-logo" aria-hidden="true"></span><strong class="current-name">My Fitness Date</strong><span>☰</span></div><div class="phone-hero"><div class="phone-art" aria-hidden="true"><span class="phone-mountain one"></span><span class="phone-mountain two"></span><span class="phone-path"></span></div><div class="phone-copy"><span>UNA NUEVA ETAPA</span><h4 id="phone-title">Personas afines. Conexiones auténticas.</h4><p id="phone-tagline">Conexiones con intención.</p></div></div><div class="phone-card"><span>01</span><div><strong>Valores que compartimos</strong><small>Respeto, calma y una vida activa.</small></div></div><div class="phone-tabs"><span>⌕ <small>Descubrir</small></span><span>▤ <small>Afinidades</small></span><span>♧ <small>Mi perfil</small></span></div></div></div>
+          </div>
+          <div class="preview-meta"><span><span class="dot" aria-hidden="true"></span> Vista ilustrativa, sin perfiles reales</span><span id="preview-summary">Bosque · Georgia · Logotipo 01</span></div>
+        </section>
+      </div>
+
+      <section id="logo-panel" class="panel logos-panel" aria-labelledby="logos-title">
+        <div class="logo-heading"><div class="panel-heading"><h2 id="logos-title">Diez propuestas de logotipo</h2><p>Monogramas, movimiento y ritmo; sin corazones ni clichés románticos.</p></div><button id="download-logo" type="button" class="btn btn-muted">Descargar SVG seleccionado ↓</button></div>
+        <div id="logo-grid" class="logo-grid" role="group" aria-label="Diez opciones de logotipo"></div>
+      </section>
+
+      <footer class="footer">
+        <div><strong>Laboratorio, no panel de publicación.</strong><p>Guardar usa almacenamiento local de este navegador. Exportar entrega un archivo para revisión; no modifica el producto que usan tus clientes.</p></div>
+        <button id="reset-draft" class="text-button" type="button">Restablecer propuesta</button>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
