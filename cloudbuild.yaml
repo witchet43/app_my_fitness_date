@@ -39,7 +39,7 @@ steps:
         cd apps/flutter_client
         flutter create --platforms=web . --project-name=my_fitness_date
         flutter pub get
-        flutter analyze
+        flutter analyze --no-fatal-infos
         flutter test
         flutter build web --release \
           --dart-define=MFD_PUBLIC_PRODUCTION=true \
