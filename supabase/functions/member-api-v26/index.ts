@@ -433,6 +433,39 @@ async function handleRequest(req: Request): Promise<Response> {
       const status=await response.json();
       return status==="removed" ? json({status}) : json({status},403);
     }
+    if (route === "/v1/admin/community/pilot" && req.method === "GET") {
+      const response=await endpoint("POST",
+        "/rest/v1/rpc/admin_community_pilot_members_b4",token,{});
+      if (!response.ok) return error(503);
+      const items=await response.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+    if (route === "/v1/admin/community/pilot" && req.method === "POST") {
+      const data=await body(req);
+      if (!data || typeof data.email!=="string" ||
+          data.email.length<5 || data.email.length>254 ||
+          !/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(data.email.trim())) {
+        return error(400);
+      }
+      const response=await endpoint("POST",
+        "/rest/v1/rpc/admin_community_admit_pilot_b4",token,
+        {p_email:data.email.trim()});
+      if (!response.ok) return error(503);
+      const status=await response.json();
+      return status==="admitted" ? json({status}) : json({status},403);
+    }
+    if (route === "/v1/admin/community/pilot/revoke" &&
+        req.method === "POST") {
+      const data=await body(req);
+      if (!data || typeof data.user_id!=="string" ||
+          !communityUuid.test(data.user_id)) return error(400);
+      const response=await endpoint("POST",
+        "/rest/v1/rpc/admin_community_revoke_pilot_b4",token,
+        {p_user_id:data.user_id});
+      if (!response.ok) return error(503);
+      const status=await response.json();
+      return status==="revoked" ? json({status}) : json({status},403);
+    }
     if (route === "/v1/admin/community/reports" && req.method === "GET") {
       const response = await endpoint("POST",
         "/rest/v1/rpc/admin_community_queue_b4",token,{});
