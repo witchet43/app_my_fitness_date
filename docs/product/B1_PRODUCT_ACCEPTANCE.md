@@ -1,7 +1,7 @@
 # B1 · Primera entrega de valor — My Fitness Date
-**Estado:** IMPLEMENTADO EN RAMA · SIN QA E2E/RELEASE APROBADO · NO DESPLEGADO.
+**Estado:** CÓDIGO EN RAMA · 1 EJECUCIÓN REMOTA FALLIDA · CORRECCIÓN POSTERIOR SIN RE-TEST · E2E/RELEASE PENDIENTES · NO DESPLEGADO.
 **Rama:** `feature/b1-member-activities-rsvp-20261112`
-**Budget:** B1 utiliza como máximo una unidad remota una vez D0 controle todos los triggers. Los ensayos locales no consumen cupo remoto.
+**Budget:** B1 consumió 1/10 unidades en [run #43295667329](https://github.com/witchet43/app_my_fitness_date/actions/runs/43295667329). Node/typecheck/contrato PASS; Flutter analyze FAIL por wrapper Dart truncado. Corregido después del run en commit `54722ef3` y reforzado en `f69151b`, **sin re-ejecutar Flutter**. El código corregido NO está validado. Todo lo no aceptado de B1 pasa a B2, sumado a B2.
 **Relaciones:** backlog #65 · acceso/perfil #3 · actividades #5 · retención posterior #66.
 
 ## Problema y oportunidad
