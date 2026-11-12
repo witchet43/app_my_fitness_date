@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../core/brand_admin_repository.dart';
+import '../core/live_brand.dart';
 import '../core/curator_repository.dart';
 import '../core/activity_repository.dart';
 import 'activities_b1.dart';
@@ -21,12 +23,14 @@ class BrandAdminHome extends StatefulWidget {
     required this.onSignOut,
     this.curatorApi,
     this.activityPreviewApi,
+    required this.liveBrand,
   });
   final BrandAdminRepository repository;
   final String email;
   final Future<void> Function() onSignOut;
   final CuratorRepository? curatorApi;
   final ActivityRepository? activityPreviewApi;
+  final LiveBrandController liveBrand;
 
   @override
   State<BrandAdminHome> createState() => _BrandAdminHomeState();
@@ -34,14 +38,14 @@ class BrandAdminHome extends StatefulWidget {
 
 class _BrandAdminHomeState extends State<BrandAdminHome> {
   static const _tabs = <String>[
-    'Resumen', 'Identidad', 'Biblioteca', 'Borradores', 'Publicación'
+    'Resumen', 'Marca en vivo', 'Biblioteca', 'Borradores', 'Historial'
   ];
   static const _icons = <IconData>[
     Icons.space_dashboard_outlined,
     Icons.palette_outlined,
     Icons.collections_outlined,
     Icons.layers_outlined,
-    Icons.fact_check_outlined
+    Icons.history_outlined
   ];
   static const _logoNames = <String>[
     'Monograma', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
@@ -83,6 +87,14 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   bool busy = false;
   bool loading = true;
   String? error;
+  Timer? _brandTimer;
+  bool _brandReady=false;
+  bool _brandHydrating=true;
+  bool _brandSaving=false;
+  bool _brandDirty=false;
+  int _brandHydratedVersion=-1;
+  String? brandStatus;
+  List<Map<String,dynamic>> brandHistory=[];
   Map<String, dynamic>? draft;
   List<Map<String, dynamic>> palettes = [];
   List<Map<String, dynamic>> assets = [];
@@ -99,13 +111,24 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       paletteName,primary,accent,background]) {
       c.addListener(_redraw);
     }
+    widget.liveBrand.addListener(_observeBrand);
+    if(widget.liveBrand.loaded) {
+      _hydrateLiveBrand();
+    } else {
+      unawaited(widget.liveBrand.refresh());
+    }
     _reload();
   }
 
-  void _redraw() { if (mounted) setState(() {}); }
+  void _redraw() {
+    if(mounted)setState(() {});
+    if(!_brandHydrating)_queueBrandSave();
+  }
 
   @override
   void dispose() {
+    _brandTimer?.cancel();
+    widget.liveBrand.removeListener(_observeBrand);
     for (final c in [name,tagline,headline,description,paletteName,
       primary,accent,background,draftTitle]) {
       c.dispose();
@@ -167,6 +190,128 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       await _reload();
       _notice('Paleta incorporada al catálogo administrativo.');
     } catch (_) { _notice('No fue posible guardar la paleta. Verifica los colores y MFA.',bad:true); }
+  }
+
+
+  void _observeBrand() {
+    if(!mounted || !widget.liveBrand.loaded) return;
+    if(!_brandReady || (!_brandSaving && _brandTimer==null &&
+        widget.liveBrand.version>_brandHydratedVersion)) {
+      _hydrateLiveBrand();
+    }
+  }
+
+  void _hydrateLiveBrand() {
+    if(!mounted) return;
+    _brandHydrating=true;
+    _brandTimer?.cancel();
+    _brandTimer=null;
+    final s=widget.liveBrand.current;
+    setState((){
+      name.text=s.name;
+      tagline.text=s.tagline;
+      headline.text=s.title;
+      description.text=s.description;
+      paletteName.text=s.paletteName;
+      primary.text=s.primary;
+      accent.text=s.accent;
+      background.text=s.background;
+      font=s.font;
+      dark=s.dark;
+      layout=s.layout;
+      if(s.logo.startsWith('catalog:')) {
+        logoIndex=int.tryParse(s.logo.substring(8))??0;
+        selectedLogoAsset=null;
+      } else {
+        selectedLogoAsset=s.logo;
+      }
+      selectedImages
+        ..clear()
+        ..addAll(s.media);
+      _brandHydratedVersion=widget.liveBrand.version;
+      _brandReady=true;
+      brandStatus='Configuración global activa · versión ${widget.liveBrand.version}';
+    });
+    _brandHydrating=false;
+  }
+
+  void _queueBrandSave() {
+    if(!_brandReady || _brandHydrating || !mounted)return;
+    _brandTimer?.cancel();
+    setState(() => brandStatus='Cambios pendientes de guardar…');
+    _brandTimer=Timer(const Duration(milliseconds:850),(){
+      _brandTimer=null;
+      unawaited(_saveBrandGlobally());
+    });
+  }
+
+  Future<void> _saveBrandGlobally() async {
+    if(!_brandReady || !mounted)return;
+    if(_brandSaving){
+      _brandDirty=true;
+      return;
+    }
+    final logo=_settings()['logo'].toString();
+    if(!validPalette ||
+       name.text.trim().length<2 || name.text.trim().length>60 ||
+       tagline.text.trim().length<2 || tagline.text.trim().length>120 ||
+       headline.text.trim().length<8 || headline.text.trim().length>180 ||
+       description.text.trim().length<10 || description.text.trim().length>600 ||
+       paletteName.text.trim().length<2 ||
+       (logo.startsWith('https://') &&
+        !LiveBrandSettings.safeAssetUrl(logo)) ||
+       selectedImages.values.any((v)=>!LiveBrandSettings.safeAssetUrl(v))) {
+      setState(()=>brandStatus='Completa campos válidos y usa imágenes públicas.');
+      return;
+    }
+    final proposed=LiveBrandSettings.fromMap(_settings());
+    if(widget.liveBrand.asJson == 
+       const JsonEncoder().convert(proposed.toMap())) {
+      setState(()=>brandStatus='Guardado y visible para todos · versión ${widget.liveBrand.version}');
+      return;
+    }
+    _brandSaving=true;
+    if(mounted)setState(()=>brandStatus='Guardando para todos…');
+    try {
+      await widget.liveBrand.save(proposed);
+      _brandHydratedVersion=widget.liveBrand.version;
+      if(mounted)setState(()=>brandStatus=
+        'Guardado y visible para todos · versión ${widget.liveBrand.version}');
+    } catch (_) {
+      if(!mounted)return;
+      _hydrateLiveBrand();
+      setState(()=>brandStatus=
+        'No se guardó. Se restauró la última versión publicada. Verifica MFA o conexión.');
+    } finally {
+      _brandSaving=false;
+      if(_brandDirty){
+        _brandDirty=false;
+        _queueBrandSave();
+      }
+    }
+  }
+
+  Future<void> _fetchBrandHistory() async {
+    try {
+      final versions=await widget.liveBrand.history();
+      if(mounted)setState(()=>brandHistory=versions);
+    } catch (_) {
+      _notice('No se pudo consultar el historial de marca.',bad:true);
+    }
+  }
+
+  Future<void> _restoreBrandVersion(int version) async {
+    if(_brandSaving)return;
+    try {
+      _brandTimer?.cancel();
+      _brandTimer=null;
+      await widget.liveBrand.restore(version);
+      _hydrateLiveBrand();
+      await _fetchBrandHistory();
+      _notice('Versión restaurada. El cambio es visible en toda la app.');
+    } catch (_) {
+      _notice('No se pudo restaurar. Comprueba tu sesión MFA.',bad:true);
+    }
   }
 
   Map<String, dynamic> _settings() => {
