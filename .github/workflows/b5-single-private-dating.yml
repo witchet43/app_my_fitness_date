@@ -1,7 +1,7 @@
 # B5: one remotely executed QA job only after all local/source checks.
-# Tests entire B1+B2+B3 vertical. Only publishes isolated Cloudflare preview.
+# Tests B1-B5, including the six B4 widget regressions and Gym Shield. Only publishes isolated Cloudflare preview.
 # No automatic main/PR runs, no production deploy and no rerun on failure.
-name: MFD B5 — community safety, moderation and full QA preview
+name: MFD B5 — private FitDating + Gym Shield and B4 carryover
 on:
   push:
     branches:
