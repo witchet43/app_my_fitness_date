@@ -1,0 +1,1 @@
+One GitHub Actions LOCAL AUTH QA of persisted owner lifestyle B11. Two GoTrue JWT accounts, separate consent, write/read/re-login, deny BOLA, revoke consent clears stored profile. Supabase local stack only. NO Google Cloud Build, no Cloudflare, no production, no remote Supabase data change.
