@@ -27,6 +27,14 @@ begin
  if has_function_privilege('anon','public.fitdating_candidates_b11(integer)','EXECUTE')
     or has_function_privilege('anon','public.fitdating_send_b11(uuid,text)','EXECUTE')
  then raise exception 'Anonymous RPC callable'; end if;
+ if has_function_privilege('anon','public.fitdating_activate_b11(uuid,jsonb)','EXECUTE')
+    or has_function_privilege('anon','public.admin_b11_register_gym(text,text)','EXECUTE') then
+   raise exception 'Anonymous activation or gym curation exposed';
+ end if;
+ if has_function_privilege('authenticated','app_private.b11_pair_epoch(uuid,uuid)','EXECUTE')
+ then raise exception 'Private consent epoch helper exposed'; end if;
+ if (select app_private.b11_activation_ready(null::uuid)) then
+   raise exception 'Null session should never be activation eligible'; end if;
  if has_function_privilege('authenticated','app_private.b11_pair_allowed(uuid,uuid)','EXECUTE')
  then raise exception 'Internal eligibility helper callable by clients'; end if;
  if (select app_private.b5_discovery_open()) then
