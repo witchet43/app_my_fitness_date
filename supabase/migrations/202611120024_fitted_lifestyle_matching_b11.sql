@@ -128,6 +128,73 @@ revoke all on app_private.fitdating_likes_b11,
 
 -- Both sides need an independently vetted adult attestation, explicit dating
 -- consent, closed-pilot admission and no pending deletion/suspension.
+-- Saving B5 preferences leaves discovery OFF. This private transition is
+-- the ONLY B11 way to activate, once ALL independent release gates are true.
+create function app_private.b11_activation_ready(p_id uuid)
+returns boolean language sql stable security definer set search_path=''
+as $$
+ select p_id is not null and app_private.b5_discovery_open()
+   and app_private.adult_eligible(p_id)
+   and app_private.account_is_active(p_id)
+   and exists(select 1 from auth.users u
+     where u.id=p_id and u.email_confirmed_at is not null)
+   and not exists(select 1 from app_private.brand_administrators a
+     where a.user_id=p_id and a.active)
+   and exists(select 1 from app_private.community_pilot_b4 m
+     where m.user_id=p_id and m.active)
+   and exists(select 1 from app_private.fitdating_preferences_b5 p
+     where p.user_id=p_id and p.participation_requested)
+   and exists(select 1 from public.member_consents_v26 c
+     where c.user_id=p_id and c.consent_kind='dating'
+       and c.document_version='dating-v1')
+   and exists(select 1 from public.member_profiles_v26 m
+     where m.user_id=p_id and m.onboarding_complete
+       and m.date_of_birth<=(current_date-interval '18 years')::date)
+   and exists(select 1 from public.member_rhythm_b11 r where r.user_id=p_id)
+   and not exists(select 1 from app_private.community_suspensions_b4 s
+     where s.user_id=p_id and s.active)
+   and not exists(select 1 from app_private.community_deletion_requests_b4 d
+     where d.user_id=p_id);
+$$;
+
+create function app_private.b11_activate(p_gym_id uuid,p_weekly_slots jsonb default '[]'::jsonb)
+returns text language plpgsql security definer set search_path=''
+as $$
+declare me uuid:=(select auth.uid());
+ mode_value text; sport_values text[];
+ name_value text; city_value text; dob_value date;
+begin
+ if me is null or coalesce(auth.jwt()->>'is_anonymous','false')='true'
+   or not app_private.b11_activation_ready(me)
+ then return 'not_eligible'; end if;
+ -- Legacy gym fixtures were created for SQL tests, not real people.
+ if p_gym_id is null or not exists (
+   select 1 from public.gyms g where g.id=p_gym_id
+     and g.name !~* '^[[:space:]]*Gym Demo'
+ ) then return 'gym_unavailable'; end if;
+ select p.gym_privacy_mode,p.sports into mode_value,sport_values
+ from app_private.fitdating_preferences_b5 p where p.user_id=me;
+ select p.display_name,p.city,p.date_of_birth
+ into name_value,city_value,dob_value from public.member_profiles_v26 p
+ where p.user_id=me;
+ if mode_value is null or name_value is null or city_value is null
+   or dob_value is null or sport_values is null
+ then return 'profile_required'; end if;
+ if p_weekly_slots is null or jsonb_typeof(p_weekly_slots)<>'array'
+   or jsonb_array_length(p_weekly_slots)>14
+ then return 'invalid_schedule'; end if;
+ if mode_value='same_gym_other_time'
+    and jsonb_array_length(p_weekly_slots)=0
+ then return 'schedule_required'; end if;
+ if mode_value='other_gyms' and jsonb_array_length(p_weekly_slots)<>0
+ then return 'invalid_schedule'; end if;
+ perform app_private.save_dating_setup(
+   name_value,city_value,sport_values,dob_value,
+   p_gym_id,mode_value,p_weekly_slots,true);
+ return 'activated';
+end;
+$$;
+
 create function app_private.b11_member_eligible(p_id uuid)
 returns boolean language sql stable security definer set search_path=''
 as $$
@@ -142,6 +209,7 @@ as $$
    where p.user_id=p_id and p.participation_requested)
  and exists(select 1 from app_private.dating_profiles p
    where p.user_id=p_id and p.dating_enabled)
+ and exists(select 1 from public.member_rhythm_b11 r where r.user_id=p_id)
  and exists(select 1 from public.member_consents_v26 c
    where c.user_id=p_id and c.consent_kind='dating'
      and c.document_version='dating-v1')
