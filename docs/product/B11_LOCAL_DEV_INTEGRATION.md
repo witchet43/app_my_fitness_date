@@ -30,6 +30,8 @@ bash scripts/run_b11_local_preview.sh
 
 El comando inicia un **Supabase local desechable** (Auth/PostgREST/PostgreSQL/Mailpit), sirve la función `member-api-v26` en modo exclusivamente loopback y ejecuta Flutter en `http://127.0.0.1:5173/`. Mailpit local se consulta en `http://127.0.0.1:54324/`.
 
+El script también crea una red Docker con los puertos vinculados exclusivamente a 127.0.0.1, tal como recomienda Supabase para no exponer Auth/Postgres a redes públicas. Si Docker no admite esa red, el script falla en lugar de abrir el stack en la LAN.
+
 Los valores locales de compilación y la función Edge únicamente permiten HTTP cuando `MFD_LOCAL_QA=true`, `Uri.base.host=127.0.0.1` y el API también es `127.0.0.1:54321`. Los documentos legales se leen desde las URLs públicas HTTPS. El cliente no recibe credenciales privadas. El servicio alojado conserva HTTPS obligatorio, URL PROD fijada y los flags de lanzamiento originales.
 
 **Aviso:** se destruyen los datos de QA local al cerrar el script (`stop --no-backup`). No usar cuentas reales. No constituye una vista previa remota accesible desde otra computadora.
