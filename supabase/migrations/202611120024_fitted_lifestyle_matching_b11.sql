@@ -235,6 +235,21 @@ as $$
          or (b.blocker_id=p_b and b.blocked_id=p_a));
 $$;
 
+-- Previously withdrawn consent invalidates earlier likes and conversations.
+-- Evidence remains held for safety/retention, but is never shown on reconsent.
+create function app_private.b11_pair_epoch(p_a uuid,p_b uuid)
+returns timestamptz language sql stable security definer set search_path=''
+as $$
+ select greatest(
+   coalesce((select max(w.withdrawn_at)
+     from app_private.fitdating_consent_withdrawals_b5 w
+     where w.user_id=p_a),'-infinity'::timestamptz),
+   coalesce((select max(w.withdrawn_at)
+     from app_private.fitdating_consent_withdrawals_b5 w
+     where w.user_id=p_b),'-infinity'::timestamptz)
+ );
+$$;
+
 -- Only opaque, explainable reason codes leave private preferences; no
 -- percentages, gym IDs, coordinates, schedules, DOB or full lifestyle answers.
 create function app_private.b11_reasons(p_viewer uuid,p_subject uuid)
@@ -285,19 +300,21 @@ declare me uuid:=(select auth.uid()); is_match boolean;
 begin
  if me is null or not app_private.b11_pair_allowed(me,p_user_id) then
    return 'not_available'; end if;
- if not exists(select 1 from app_private.discover_dating_candidates(10) c
+ if not exists(select 1 from app_private.discover_dating_candidates(30) c
                where c.user_id=p_user_id) then return 'not_available'; end if;
  if (select count(*) from app_private.fitdating_likes_b11
      where liker_id=me and created_at>now()-interval '24 hours')>=20 then
    return 'rate_limited'; end if;
  insert into app_private.fitdating_likes_b11(liker_id,liked_id)
- values(me,p_user_id) on conflict do nothing;
+ values(me,p_user_id)
+ on conflict(liker_id,liked_id) do update set created_at=now();
  select exists(select 1 from app_private.fitdating_likes_b11 l
-   where l.liker_id=p_user_id and l.liked_id=me) into is_match;
+   where l.liker_id=p_user_id and l.liked_id=me
+     and l.created_at>app_private.b11_pair_epoch(me,p_user_id)) into is_match;
  if is_match then
    insert into app_private.fitdating_matches_b11(low_user,high_user)
    values(least(me,p_user_id),greatest(me,p_user_id))
-   on conflict(low_user,high_user) do nothing;
+   on conflict(low_user,high_user) do update set created_at=now();
  end if;
  return case when is_match then 'matched' else 'liked' end;
 end;
@@ -315,6 +332,7 @@ as $$
    case when m.low_user=(select auth.uid()) then m.high_user else m.low_user end
  where ((select auth.uid())=m.low_user or (select auth.uid())=m.high_user)
    and app_private.b11_pair_allowed(m.low_user,m.high_user)
+   and m.created_at>app_private.b11_pair_epoch(m.low_user,m.high_user)
  order by m.created_at desc
  limit 50
 $$;
@@ -329,6 +347,8 @@ as $$
  where m.id=p_match
    and ((select auth.uid())=m.low_user or (select auth.uid())=m.high_user)
    and app_private.b11_pair_allowed(m.low_user,m.high_user)
+   and m.created_at>app_private.b11_pair_epoch(m.low_user,m.high_user)
+   and msg.created_at>=m.created_at
  order by msg.created_at desc
  limit 100
 $$;
@@ -336,13 +356,14 @@ $$;
 create function app_private.b11_send(p_match uuid,p_body text)
 returns text language plpgsql security definer set search_path=''
 as $$
-declare me uuid:=(select auth.uid()); a uuid; b uuid;
+declare me uuid:=(select auth.uid()); a uuid; b uuid; match_created timestamptz;
 begin
  if me is null or p_body is null or char_length(btrim(p_body)) not between 1 and 1200
    or p_match is null then return 'invalid'; end if;
- select low_user,high_user into a,b
+ select low_user,high_user,created_at into a,b,match_created
  from app_private.fitdating_matches_b11 where id=p_match;
  if a is null or (me<>a and me<>b) or not app_private.b11_pair_allowed(a,b)
+   or match_created<=app_private.b11_pair_epoch(a,b)
  then return 'not_available'; end if;
  if (select count(*) from app_private.fitdating_messages_b11
      where sender_id=me and created_at>now()-interval '1 hour')>=30
@@ -390,12 +411,15 @@ $$;
 create function app_private.b11_date_ideas(p_match uuid)
 returns text[] language plpgsql stable security definer set search_path=''
 as $$
-declare me uuid:=(select auth.uid()); a uuid; b uuid; active_sports text[];
+declare me uuid:=(select auth.uid()); a uuid; b uuid;
+ match_created timestamptz; active_sports text[];
 begin
- select low_user,high_user into a,b from app_private.fitdating_matches_b11
+ select low_user,high_user,created_at into a,b,match_created
+ from app_private.fitdating_matches_b11
  where id=p_match;
  if me is null or a is null or (me<>a and me<>b)
    or not app_private.b11_pair_allowed(a,b)
+   or match_created<=app_private.b11_pair_epoch(a,b)
  then return '{}'::text[]; end if;
  select array_agg(distinct x) into active_sports
  from public.member_rhythm_b11 r,
@@ -610,7 +634,8 @@ grant execute on function public.fitdating_disable_b5()
   to authenticated;
 
 revoke all on function app_private.b11_member_eligible(uuid),
- app_private.b11_pair_allowed(uuid,uuid),app_private.b11_reasons(uuid,uuid)
+ app_private.b11_pair_allowed(uuid,uuid),app_private.b11_reasons(uuid,uuid),
+ app_private.b11_pair_epoch(uuid,uuid)
  from public,anon,authenticated;
 revoke all on function app_private.b11_candidates(integer),
  app_private.b11_like(uuid),app_private.b11_my_matches(),
