@@ -1,0 +1,1 @@
+QA source validation R3: verify corrected Flutter State.activate collision. GitHub Actions only: npm/static, disposable PostgreSQL + B11 E2E, Gym Shield pytest, Flutter analyze + widget tests. NO release build; NO Cloudflare; NO Google Cloud Build; NO production.
