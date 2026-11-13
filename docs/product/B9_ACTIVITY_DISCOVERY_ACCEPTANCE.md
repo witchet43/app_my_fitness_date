@@ -32,7 +32,7 @@ Se implementaron:
 - UI: `apps/flutter_client/lib/src/features/activities_b1.dart`
 - Tests: `apps/flutter_client/test/activity_discovery_b9_test.dart`
 - Static: `scripts/check_b9_static.py`
-- Presupuesto antes B9: **8/10**; una ejecución consume B9 y queda 1.
+- Presupuesto: primera ejecución B9 #43337039505 consumió 9/10 y falló exclusivamente en interacción de widget móvil fuera del viewport (Dart analyze, Node, Gym Shield y API PASS). Corrección de prueba en rama; queda **1 ejecución remota máxima**, destinada a la validación consolidada de B9. No se declara preview publicada hasta comprobarla.
 
 ## Brechas que no se cierran por una CI verde
 - B6: aceptación interactiva del cambio de branding por administrador MFA y dos cuentas.
