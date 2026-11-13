@@ -2,7 +2,7 @@
 name: MFD B11 — Static API + Flutter QA (no Docker)
 on:
   push:
-    branches: [qa/b11-static-api-flutter-20261112]
+    branches: [qa/b11-static-api-flutter-20261112, qa/b11-static-api-flutter-r2-20261112]
     paths: [.build-gates/b11-static-qa-request.txt]
 
 permissions:
