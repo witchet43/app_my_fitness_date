@@ -26,7 +26,11 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       throw const MemberApiException('Debes iniciar sesión.');
     }
     final uri = Uri.parse('$gatewayUrl$path');
-    if (uri.scheme != 'https') {
+    const localQa=bool.fromEnvironment('MFD_LOCAL_QA',defaultValue:false);
+    final loopbackAllowed=localQa &&
+        Uri.base.scheme=='http' && Uri.base.host=='127.0.0.1' &&
+        uri.scheme=='http' && uri.host=='127.0.0.1' && uri.port==54321;
+    if(uri.scheme!='https'&&!loopbackAllowed){
       throw const MemberApiException('La conexión segura no está disponible.');
     }
     final headers = <String, String>{
