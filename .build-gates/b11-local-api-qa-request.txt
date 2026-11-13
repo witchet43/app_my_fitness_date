@@ -1,0 +1,1 @@
+R2 of isolated GitHub Local API runtime QA. CORS is successful for HTTP 200 or 204 with exact origin, then verify JWT -> Edge HTTP -> RLS persistence, consent and optout, Flutter analyzer/widget tests. NO Google Cloud Build; no Flutter release build; no hosted writes.
