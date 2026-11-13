@@ -443,6 +443,89 @@ returns text[] language sql security invoker set search_path='' as $$
  select app_private.b11_date_ideas(p_match)
 $$;
 
+-- Do not lie about discovery: all release controls plus the REAL private
+-- gym activation and persisted rhythm must be satisfied, not just a toggle.
+create or replace function public.fitdating_status_b5()
+returns jsonb
+language plpgsql stable security definer set search_path=''
+as $$
+declare
+  v_user uuid := (select auth.uid());
+  v_review boolean := false;
+  v_consented boolean := false;
+  v_member boolean := false;
+  v_requested boolean := false;
+  v_enabled boolean := false;
+  v_intent text := 'serious';
+  v_sports text[] := '{}'::text[];
+  v_frequency text := 'flexible';
+  v_mode text := 'other_gyms';
+begin
+  if v_user is null or coalesce(auth.jwt()->>'is_anonymous','false')='true'
+     or not exists(select 1 from auth.users u where u.id=v_user
+                   and u.email_confirmed_at is not null)
+     or exists(select 1 from app_private.brand_administrators a
+               where a.user_id=v_user and a.active)
+  then
+    return jsonb_build_object('status','not_available','enabled',false);
+  end if;
+  select coalesce((public.my_adult_eligibility()->>'approved')::boolean,false)
+    into v_review;
+  select exists(
+    select 1 from public.member_consents_v26 c
+    where c.user_id=v_user and c.consent_kind='dating'
+      and c.document_version='dating-v1'
+  ) into v_consented;
+  select exists(
+    select 1 from app_private.community_pilot_b4 m
+    where m.user_id=v_user and m.active
+  ) into v_member;
+  select p.relationship_intent,p.sports,p.lifestyle_frequency,
+         p.gym_privacy_mode,p.participation_requested
+  into v_intent,v_sports,v_frequency,v_mode,v_requested
+  from app_private.fitdating_preferences_b5 p
+  where p.user_id=v_user;
+  v_intent:=coalesce(v_intent,'serious');
+  v_sports:=coalesce(v_sports,'{}'::text[]);
+  v_frequency:=coalesce(v_frequency,'flexible');
+  v_mode:=coalesce(v_mode,'other_gyms');
+  v_requested:=coalesce(v_requested,false);
+  v_enabled := app_private.b11_member_eligible(v_user);
+  return jsonb_build_object(
+    'status','available','enabled',v_enabled,
+    'age_verified',v_review,'dating_consent',v_consented,
+    'pilot_member',v_member,
+    'independent_provider_ready',coalesce((select
+      g.independently_verified_provider_live and
+      g.independent_verification_audit_approved
+    from app_private.fitdating_gate_b5 g where g.id),false),
+    'discovery_release_ready',app_private.b5_discovery_open(),
+    'gym_setup_required',app_private.b11_activation_ready(v_user) and not v_enabled,
+    'participation_requested',v_requested,
+    'relationship_intent',v_intent,
+    'sports',to_jsonb(v_sports),
+    'lifestyle_frequency',v_frequency,
+    'gym_privacy_mode',v_mode);
+end;
+$$;
+
+-- Authenticated entrypoint to activate a REAL, independently approved member.
+-- The invoker wrapper cannot bypass private security/eligibility checks.
+create function public.fitdating_activate_b11(
+  p_gym_id uuid,p_weekly_slots jsonb default '[]'::jsonb)
+returns text language sql security invoker set search_path=''
+as $$
+ select app_private.b11_activate(p_gym_id,p_weekly_slots)
+$$;
+revoke all on function app_private.b11_activation_ready(uuid),
+ app_private.b11_activate(uuid,jsonb) from public,anon,authenticated;
+grant execute on function app_private.b11_activate(uuid,jsonb)
+ to authenticated;
+revoke all on function public.fitdating_activate_b11(uuid,jsonb)
+ from public,anon,authenticated;
+grant execute on function public.fitdating_activate_b11(uuid,jsonb)
+ to authenticated;
+
 -- Explicit withdrawal clears the newly persisted lifestyle fields.
 -- Match/chat evidence is retained under existing policy/erasure review until
 -- legal retention is approved; no former participant remains discoverable.
