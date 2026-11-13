@@ -158,16 +158,34 @@ try{
  assert.equal(gyms.data?.length,2);
  const gymA=required(gyms.data?.[0]?.id,'gym A');
  const gymB=required(gyms.data?.[1]?.id,'gym B');
+ // Even if an old authenticated RPC still saves an enabled dating profile,
+ // the independently audited B5 gate MUST keep all candidates private.
  await saveDating(a,'QA Runner A',gymA,'same_gym_other_time',420,510);
- await saveDating(b,'QA Runner B',gymA,'same_gym_other_time',539,620);
- assert.equal((await candidateIds(a)).includes(uidB),false,'29-min gap prohibited');
- await saveDating(b,'QA Runner B',gymA,'same_gym_other_time',540,620);
- assert.equal((await candidateIds(a)).includes(uidB),true,'30-min gap permitted');
- await saveDating(b,'QA Runner B',gymA,'other_gyms',0,0);
- assert.equal((await candidateIds(a)).includes(uidB),false,'reciprocal consent required');
  await saveDating(b,'QA Runner B',gymB,'other_gyms',0,0);
- assert.equal((await candidateIds(a)).includes(uidB),true,'different gym candidate allowed');
- checks.push('real JWT Gym Shield same-gym 29/30m, reciprocity, different gym');
+ assert.deepEqual(await candidateIds(a),[],
+   'Legacy dating_enabled cannot bypass independent release approval');
+ assert.deepEqual(await candidateIds(b),[],
+   'No real candidate should appear to the second account');
+ const state=await rpc(a,'fitdating_status_b5') as {
+   enabled:boolean;discovery_release_ready:boolean;
+ };
+ assert.equal(state.enabled,false);
+ assert.equal(state.discovery_release_ready,false);
+ const attempt=await a.rpc('fitdating_activate_b11',{
+   p_gym_id:gymA,p_weekly_slots:[],
+ });
+ assert.ifError(attempt.error);
+ assert.equal(attempt.data,'not_eligible');
+ const anonymous=await anon.rpc('fitdating_activate_b11',{
+   p_gym_id:gymA,p_weekly_slots:[],
+ });
+ assert.ok(anonymous.error,'Anon must not have activation access');
+ const crossRead=await a.from('member_rhythm_b11').select('user_id')
+   .eq('user_id',uidB);
+ assert.ifError(crossRead.error);
+ assert.deepEqual(crossRead.data,[],
+   'Another member lifestyle record is never readable');
+ checks.push('legacy JWT profile bypass denied; B11 activation gated; lifestyle RLS private');
 
  await rpc(b,'request_account_deletion');
  assert.equal(readPendingFlag(await rpc(b,'my_account_status')),true);
