@@ -11,6 +11,6 @@ abstract class DatingRepositoryB11 implements DatingRepositoryB5 {
   Future<List<Map<String,dynamic>>> matchesB11();
   Future<List<Map<String,dynamic>>> messagesB11(String matchId);
   Future<String> sendB11(String matchId,String message);
-  Future<String> reportB11(String matchId,String reason,{String detail});
+  Future<String> reportB11(String matchId,String reason,{String detail=''});
   Future<List<String>> ideasB11(String matchId);
 }
