@@ -38,7 +38,7 @@ begin
  if public.fitdating_like_b11('00000000-0000-0000-0000-000000000001'::uuid)
     <> 'not_available' then raise exception 'Unauthenticated like should fail closed'; end if;
  if public.fitdating_send_b11('00000000-0000-0000-0000-000000000001'::uuid,'x')
-    <> 'not_available' then raise exception 'Unauthenticated send should fail closed'; end if;
+    <> 'invalid' then raise exception 'Unauthenticated send should fail closed'; end if;
  raise notice 'B11 owner-only profile, closed gate, no cross-user reads, no anon chat: PASS';
 end;
 $audit$;
