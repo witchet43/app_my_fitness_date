@@ -136,9 +136,16 @@ async function handleRequest(req: Request): Promise<Response> {
   }
   const requestedOrigin = req.headers.get("origin");
   if (requestedOrigin && !allowedOrigins.has(requestedOrigin)) return error(403);
-  if (!publishable?.startsWith("sb_publishable_") || !SUPABASE_URL.startsWith("https://")) {
-    return error(503);
-  }
+  // Public remote API requires HTTPS and a publishable key. The one
+  // exception is our self-contained LOCAL QA stack (never a hosted URL),
+  // which only accepts an ANON/PUBLISHABLE key and strict known Docker hosts.
+  const secureRemote = SUPABASE_URL.startsWith("https://") &&
+    publishable?.startsWith("sb_publishable_");
+  const safeLocal = localQa && (
+    publishable?.startsWith("sb_publishable_") ||
+    (publishable === qaAnon && qaAnon?.startsWith("eyJ"))
+  );
+  if (!secureRemote && !safeLocal) return error(503);
   if (req.method === "GET" && new URL(req.url).pathname.endsWith("/healthz")) {
     // Verify the actual backend connection and public API key before claiming
     // health; the old health check passed even when every login failed.
