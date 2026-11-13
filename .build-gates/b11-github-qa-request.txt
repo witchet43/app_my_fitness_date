@@ -1,0 +1,1 @@
+QA pass R2: source now extends B5 contract. Execute ONLY Node + PostgreSQL + Flutter analysis/widget + Gym Shield on GitHub Actions in isolated QA branch. No Google Cloud Build, no Cloudflare, no production, no release build.
