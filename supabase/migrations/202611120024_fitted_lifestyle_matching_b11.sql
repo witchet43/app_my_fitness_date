@@ -201,12 +201,14 @@ begin
  return query
  select c.user_id,c.display_name,c.city,c.sports,
    coalesce(app_private.b11_reasons(me,c.user_id),'[]'::jsonb)
- from app_private.discover_dating_candidates(p_limit) c
+ from app_private.discover_dating_candidates(30) c
  where app_private.b11_pair_allowed(me,c.user_id)
    and exists(select 1 from public.member_rhythm_b11 r where r.user_id=c.user_id)
-   and exists(select 1 from public.member_rhythm_b11 r where r.user_id=me);
+   and exists(select 1 from public.member_rhythm_b11 r where r.user_id=me)
+ order by c.user_id
+ limit p_limit;
 end;
-$$;
+$;
 
 create function app_private.b11_like(p_user_id uuid)
 returns text language plpgsql security definer set search_path=''
