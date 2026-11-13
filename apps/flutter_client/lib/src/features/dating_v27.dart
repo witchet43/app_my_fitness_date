@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/dating_preferences_b5.dart';
+import 'rhythm_concept_lab_b10.dart';
 import '../core/dating_repository_b5.dart';
 
 /// B5 — Private readiness and preferences, NOT an unrestricted dating launch.
@@ -177,6 +178,21 @@ class _DatingV27State extends State<DatingV27> {
               padding:const EdgeInsets.symmetric(vertical:12),
               child:Text(note!,key:const Key('b5-saved-status')),
             ),
+            Card(
+              child:ListTile(
+                key:const Key('b10-enter-rhythm-lab'),
+                leading:const Icon(Icons.auto_awesome_outlined),
+                title:const Text('How I Move · How I Live · How I Relate'),
+                subtitle:const Text(
+                  'Explora el concepto FITTED en español e inglés. '
+                  'Simulación local sin perfiles reales ni datos guardados.'),
+                trailing:const Icon(Icons.chevron_right),
+                onTap:()=>Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder:(_)=>const RhythmConceptLabB10())),
+              ),
+            ),
+            const SizedBox(height:12),
             if(!loading && !available)
               const Card(child:Padding(
                 padding:EdgeInsets.all(20),
