@@ -150,7 +150,7 @@ as $$
  and not exists(select 1 from app_private.community_deletion_requests_b4 d
    where d.user_id=p_id)
  and not exists(select 1 from app_private.account_deletion_requests d
-   where d.user_id=p_id and d.status='pending');
+   where d.user_id=p_id);
 $$;
 
 create function app_private.b11_pair_allowed(p_a uuid,p_b uuid)
