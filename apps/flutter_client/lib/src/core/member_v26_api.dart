@@ -7,10 +7,11 @@ import 'activity_repository.dart';
 import 'curator_repository.dart';
 import 'community_repository.dart';
 import 'dating_repository_b5.dart';
+import 'dating_repository_b11.dart';
 
 /// Business data travels through our own FastAPI Gateway, not directly
 /// through a privileged database key or user-selected identity.
-class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB5 {
+class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11 {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
@@ -416,6 +417,82 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
         data: {'consent_kind': kind, 'document_version': version});
   }
 
+
+  @override
+  Future<Map<String,dynamic>?> loadRhythmB11() async {
+    final data=_decode(await _request('GET','/v1/dating/rhythm'));
+    final profile=data['profile'];
+    return profile is Map ? Map<String,dynamic>.from(profile) : null;
+  }
+
+  @override
+  Future<void> saveRhythmB11(Map<String,dynamic> draft) async {
+    _decode(await _request('PUT','/v1/dating/rhythm',data:draft));
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> discoverB11() async =>
+    _items(_decode(await _request('GET','/v1/dating/b11/candidates')));
+
+  @override
+  Future<String> likeB11(String userId) async {
+    if (!_validActivityId(userId)) {
+      throw const MemberApiException('Perfil inválido.');
+    }
+    return _decode(await _request('POST','/v1/dating/b11/like',
+      data:{'user_id':userId}))['status'].toString();
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> matchesB11() async =>
+    _items(_decode(await _request('GET','/v1/dating/b11/matches')));
+
+  @override
+  Future<List<Map<String,dynamic>>> messagesB11(String matchId) async {
+    if(!_validActivityId(matchId)) {
+      throw const MemberApiException('Match inválido.');
+    }
+    return _items(_decode(await _request('GET',
+      '/v1/dating/b11/matches/$matchId/messages')));
+  }
+
+  @override
+  Future<String> sendB11(String matchId,String message) async {
+    if(!_validActivityId(matchId)||message.trim().isEmpty||
+       message.length>1200) {
+      throw const MemberApiException('Revisa el mensaje.');
+    }
+    return _decode(await _request('POST',
+      '/v1/dating/b11/matches/$matchId/messages',
+      data:{'body':message.trim()}))['status'].toString();
+  }
+
+  @override
+  Future<String> reportB11(String matchId,String reason,
+      {String detail=''}) async {
+    if(!_validActivityId(matchId)||detail.length>500) {
+      throw const MemberApiException('Reporte inválido.');
+    }
+    return _decode(await _request('POST',
+      '/v1/dating/b11/matches/$matchId/report',
+      data:{'reason':reason,'detail':detail}))['status'].toString();
+  }
+
+  @override
+  Future<List<String>> ideasB11(String matchId) async {
+    if(!_validActivityId(matchId)) {
+      throw const MemberApiException('Match inválido.');
+    }
+    final result=_decode(await _request('GET',
+      '/v1/dating/b11/matches/$matchId/ideas'));
+    final values=result['items'];
+    if(values is! List) {
+      throw const MemberApiException('Sugerencias no disponibles.');
+    }
+    return values.map((x)=>x.toString()).toList();
+  }
+
+  @override
   Future<Map<String, dynamic>> datingStatus() async =>
       _decode(await _request('GET', '/v1/dating/status'));
 
