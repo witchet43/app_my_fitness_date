@@ -22,6 +22,36 @@ class BrandAdminRepository {
   Future<bool> hasVerifiedMfa() async =>
       await client.rpc('brand_admin_session') == true;
 
+  /// Gym Shield catalog curation: same authenticated AAL2 role as branding.
+  /// The SQL RPC checks is_brand_owner() again and records an audit entry.
+  Future<List<Map<String,dynamic>>> loadCuratedGymsB11() async {
+    final rows=await client.from('gyms').select('id,name,city')
+      .order('name',ascending:true).limit(200);
+    return List<Map<String,dynamic>>.from(rows)
+      .where((gym)=>!gym['name'].toString()
+        .toLowerCase().startsWith('gym demo'))
+      .toList();
+  }
+
+  Future<String> registerGymB11(String name,String city) async {
+    final cleanName=name.trim();
+    final cleanCity=city.trim();
+    if(cleanName.length<3||cleanName.length>120||
+        cleanCity.length<2||cleanCity.length>100){
+      throw const FormatException('Nombre o ciudad inválidos.');
+    }
+    if(!await hasVerifiedMfa()){
+      throw StateError('Se requiere MFA del administrador.');
+    }
+    final result=await client.rpc('admin_b11_register_gym',params:{
+      'p_name':cleanName,'p_city':cleanCity,
+    });
+    if(result is! String || result.isEmpty){
+      throw StateError('El registro no fue confirmado.');
+    }
+    return result;
+  }
+
   Future<List<Map<String, dynamic>>> loadPalettes() async =>
       List<Map<String, dynamic>>.from(
           await client.from('brand_palettes').select().order('created_at', ascending: false));
