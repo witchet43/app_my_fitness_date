@@ -26,6 +26,7 @@ const allowedOrigins = new Set([
   "https://b3-preview.my-fitness-date.pages.dev",
   "https://b4-preview.my-fitness-date.pages.dev",
   "https://b5-preview.my-fitness-date.pages.dev",
+  "https://b8-preview.my-fitness-date.pages.dev",
 ]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
@@ -114,7 +115,17 @@ const editable = new Set([
   "onboarding_complete",
 ]);
 async function handleRequest(req: Request): Promise<Response> {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+  if (req.method === "OPTIONS") {
+    const requestedOrigin = req.headers.get("origin");
+    // QA previews must pass their own exact allowlisted origin; never use *.
+    if (requestedOrigin && !allowedOrigins.has(requestedOrigin)) return error(403);
+    return new Response(null, {
+      status: 204,
+      headers: requestedOrigin
+        ? { ...cors, "Access-Control-Allow-Origin": requestedOrigin }
+        : cors,
+    });
+  }
   const requestedOrigin = req.headers.get("origin");
   if (requestedOrigin && !allowedOrigins.has(requestedOrigin)) return error(403);
   if (!publishable?.startsWith("sb_publishable_") || !SUPABASE_URL.startsWith("https://")) {
