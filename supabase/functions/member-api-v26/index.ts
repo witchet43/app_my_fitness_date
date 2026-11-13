@@ -145,7 +145,7 @@ async function handleRequest(req: Request): Promise<Response> {
     publishable?.startsWith("sb_publishable_") ||
     (publishable === qaAnon && qaAnon?.startsWith("eyJ"))
   );
-  if (!secureRemote && !safeLocal) return error(503);
+  if (typeof publishable !== "string" || (!secureRemote && !safeLocal)) return error(503);
   if (req.method === "GET" && new URL(req.url).pathname.endsWith("/healthz")) {
     // Verify the actual backend connection and public API key before claiming
     // health; the old health check passed even when every login failed.
