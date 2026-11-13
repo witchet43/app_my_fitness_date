@@ -601,6 +601,51 @@ async function handleRequest(req: Request): Promise<Response> {
     }
     // All live candidate, matching and chat RPCs check the independent
     // external age review, staffed moderation and release flag IN DATABASE.
+    // Catalog contains only names published by the operator. Never surface
+    // the three synthetic Gym Demo fixtures from old local integration tests.
+    if (route === "/v1/dating/b11/gyms" && req.method === "GET") {
+      const state = await datingStatus(token,identity.id);
+      if (state.discovery_release_ready !== true) return error(403);
+      const r = await endpoint("GET","/rest/v1/gyms",token,undefined,
+        {select:"id,name,city",order:"name.asc",limit:"100"});
+      if(!r.ok)return error(503);
+      const values=await r.json() as Array<Record<string,unknown>>;
+      const verified=values.filter(x=>
+        typeof x.id==="string" && typeof x.name==="string" &&
+        typeof x.city==="string" &&
+        !/^\s*gym demo/i.test(x.name));
+      return json({items:verified});
+    }
+    if (route === "/v1/dating/b11/activate" && req.method === "POST") {
+      const data=await body(req);
+      const gymId=data?.gym_id;
+      const slots=data?.weekly_slots;
+      if(typeof gymId!=="string" ||
+         !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gymId) ||
+         !Array.isArray(slots) || slots.length>14 ||
+         slots.some(x=>{
+           if(!x||typeof x!=="object"||Array.isArray(x))return true;
+           const item=x as Record<string,unknown>;
+           if(Object.keys(item).some(k=>
+             !["day","startMinutes","endMinutes"].includes(k)))return true;
+           const day=item.day,start=item.startMinutes,end=item.endMinutes;
+           return !Number.isInteger(day)||!Number.isInteger(start)||
+             !Number.isInteger(end)||
+             (day as number)<0||(day as number)>6||
+             (start as number)<0||(end as number)>1440||
+             (start as number)>=(end as number);
+         }))return error(400);
+      const r=await endpoint("POST","/rest/v1/rpc/fitdating_activate_b11",
+        token,{p_gym_id:gymId,p_weekly_slots:slots});
+      if(!r.ok)return error(r.status===401||r.status===403?403:503);
+      const value=await r.json();
+      if(value==="activated")return json({status:"activated"});
+      if(value==="not_eligible")return error(403);
+      if(["gym_unavailable","profile_required","schedule_required",
+          "invalid_schedule"].includes(String(value)))
+        return json({status:value},409);
+      return error(403);
+    }
     if (route === "/v1/dating/b11/candidates" && req.method === "GET") {
       const state = await datingStatus(token, identity.id);
       if(state.enabled !== true) return error(403);
