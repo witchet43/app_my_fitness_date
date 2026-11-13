@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import '../core/activity_repository.dart';
+import '../core/activity_discovery_b9.dart';
 import 'my_activities_b2.dart';
 import '../core/community_repository.dart';
 import 'community_b4.dart';
@@ -23,11 +24,151 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
   String? activeRsvp;
   bool publishing = false;
   String? error;
+  // Presentation-only filters; API authorization and RSVP remain server-side.
+  final searchController = TextEditingController();
+  String searchTerm = '';
+  String sportFilter = '';
+  String cityFilter = '';
+  bool upcomingOnly = true;
 
   @override
   void initState() {
     super.initState();
     load();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void clearDiscoveryB9() {
+    searchController.clear();
+    setState(() {
+      searchTerm = '';
+      sportFilter = '';
+      cityFilter = '';
+      upcomingOnly = true;
+    });
+  }
+
+  Widget discoveryControlsB9(int visibleCount) {
+    final sports = activityFilterOptionsB9(activities, 'sport');
+    final cities = activityFilterOptionsB9(activities, 'city');
+    return Column(
+      key: const Key('b9-discovery-controls'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          key: const Key('b9-search'),
+          controller: searchController,
+          maxLength: 80,
+          decoration: InputDecoration(
+            labelText: 'Buscar actividad, deporte o ciudad',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: searchTerm.isNotEmpty
+                ? IconButton(
+                    tooltip: 'Borrar búsqueda',
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      searchController.clear();
+                      setState(() => searchTerm = '');
+                    },
+                  )
+                : null,
+          ),
+          onChanged: (value) => setState(() => searchTerm = value),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: 238,
+              child: InputDecorator(
+                decoration: const InputDecoration(labelText: 'Deporte'),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    key: const Key('b9-sport-filter'),
+                    isExpanded: true,
+                    value: sportFilter,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: '',
+                        child: Text('Todos los deportes'),
+                      ),
+                      for (final sport in sports)
+                        DropdownMenuItem<String>(
+                          value: sport,
+                          child: Text(sport,
+                            overflow: TextOverflow.ellipsis),
+                        ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => sportFilter = value ?? ''),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 238,
+              child: InputDecorator(
+                decoration: const InputDecoration(labelText: 'Ciudad'),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    key: const Key('b9-city-filter'),
+                    isExpanded: true,
+                    value: cityFilter,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: '',
+                        child: Text('Todas las ciudades'),
+                      ),
+                      for (final city in cities)
+                        DropdownMenuItem<String>(
+                          value: city,
+                          child: Text(city,
+                            overflow: TextOverflow.ellipsis),
+                        ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => cityFilter = value ?? ''),
+                  ),
+                ),
+              ),
+            ),
+            FilterChip(
+              key: const Key('b9-only-upcoming'),
+              label: const Text('Sólo próximas'),
+              selected: upcomingOnly,
+              onSelected: (value) =>
+                  setState(() => upcomingOnly = value),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$visibleCount ${visibleCount == 1 ? 'actividad encontrada' : 'actividades encontradas'}',
+                key: const Key('b9-results-count'),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            TextButton.icon(
+              key: const Key('b9-reset'),
+              onPressed: clearDiscoveryB9,
+              icon: const Icon(Icons.restart_alt),
+              label: const Text('Limpiar filtros'),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Future<void> load() async {
@@ -47,6 +188,12 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
         setState(() {
           activities = result;
           organizer = isOrganizer;
+          if (!activityFilterOptionsB9(result, 'sport').contains(sportFilter)) {
+            sportFilter = '';
+          }
+          if (!activityFilterOptionsB9(result, 'city').contains(cityFilter)) {
+            cityFilter = '';
+          }
         });
       }
     } on MemberApiException catch (e) {
@@ -270,7 +417,16 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    final visible = discoverActivitiesB9(
+      activities: activities,
+      now: DateTime.now(),
+      query: searchTerm,
+      sport: sportFilter,
+      city: cityFilter,
+      upcomingOnly: upcomingOnly,
+    );
+    return Scaffold(
     appBar: AppBar(
       title: const Text('Explorar actividades'),
       actions: [
@@ -340,6 +496,10 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                   label: Text(publishing ? 'Publicando…' : 'Crear actividad'),
                 ),
               ],
+              if (!loading && error == null && activities.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                discoveryControlsB9(visible.length),
+              ],
               if (loading) const Padding(
                 padding: EdgeInsets.all(24),
                 child: Center(child: CircularProgressIndicator()),
@@ -360,8 +520,19 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                     key: Key('b1-activities-empty'),
                   ),
                 ),
+              if (!loading && error == null &&
+                  activities.isNotEmpty && visible.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    'No encontramos actividades con esos filtros. '
+                    'Prueba otra disciplina o muestra todas las fechas.',
+                    key: Key('b9-no-results'),
+                  ),
+                ),
               const SizedBox(height: 18),
-              if (!loading) for (final item in activities) activityCard(item),
+              if (!loading && error == null)
+                for (final item in visible) activityCard(item),
               const SizedBox(height: 24),
               const Text('La participación es voluntaria. '
                 'La confirmación no publica tus horarios privados.'),
@@ -370,5 +541,6 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
         ),
       ),
     ),
-  );
+    );
+  }
 }
