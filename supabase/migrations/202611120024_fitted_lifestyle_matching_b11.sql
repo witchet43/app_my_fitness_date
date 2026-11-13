@@ -443,6 +443,57 @@ returns text[] language sql security invoker set search_path='' as $$
  select app_private.b11_date_ideas(p_match)
 $$;
 
+-- Catalog curation is ONLY for a verified AAL2 brand owner. The gym
+-- name/city are public catalog values, never a user's private association.
+create table app_private.b11_gym_catalog_audit(
+ id bigint generated always as identity primary key,
+ admin_id uuid not null references auth.users(id),
+ gym_id uuid not null references public.gyms(id),
+ created_at timestamptz not null default now()
+);
+alter table app_private.b11_gym_catalog_audit enable row level security;
+revoke all on app_private.b11_gym_catalog_audit
+ from public,anon,authenticated;
+
+create function app_private.b11_admin_register_gym(p_name text,p_city text)
+returns uuid language plpgsql security definer set search_path=''
+as $$
+declare
+ actor uuid := (select auth.uid());
+ found uuid;
+ name_value text := btrim(coalesce(p_name,''));
+ city_value text := btrim(coalesce(p_city,''));
+begin
+ if actor is null or not app_private.is_brand_owner()
+ then raise exception 'MFA administrator required' using errcode='42501'; end if;
+ if char_length(name_value) not between 3 and 120
+   or char_length(city_value) not between 2 and 100
+   or name_value ~* '^[[:space:]]*(Gym Demo|Test|Prueba|Ficticio)'
+ then raise exception 'Invalid curated venue'; end if;
+ perform pg_advisory_xact_lock(
+   hashtext('mfd-gym-catalog'),
+   hashtext(lower(name_value)||'|'||lower(city_value)));
+ select g.id into found from public.gyms g
+ where lower(btrim(g.name))=lower(name_value)
+   and lower(btrim(g.city))=lower(city_value);
+ if found is not null then return found; end if;
+ insert into public.gyms(name,city) values(name_value,city_value)
+ returning id into found;
+ insert into app_private.b11_gym_catalog_audit(admin_id,gym_id)
+ values(actor,found);
+ return found;
+end;
+$$;
+create function public.admin_b11_register_gym(p_name text,p_city text)
+returns uuid language sql security invoker set search_path=''
+as $$
+ select app_private.b11_admin_register_gym(p_name,p_city)
+$$;
+revoke all on function app_private.b11_admin_register_gym(text,text),
+ public.admin_b11_register_gym(text,text) from public,anon,authenticated;
+grant execute on function app_private.b11_admin_register_gym(text,text),
+ public.admin_b11_register_gym(text,text) to authenticated;
+
 -- Do not lie about discovery: all release controls plus the REAL private
 -- gym activation and persisted rhythm must be satisfied, not just a toggle.
 create or replace function public.fitdating_status_b5()
