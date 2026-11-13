@@ -1,0 +1,1 @@
+R4 GitHub QA only: verified nonprivileged local API exception for the formerly unconditional HTTPS check; remote HTTPS still required. Test real Edge HTTP, GoTrue, PostgREST, RLS, Flutter analyzer/widget. Local diagnostics captured on failure. NEVER Google Cloud Build, hosting deploy, remote Supabase writes.
