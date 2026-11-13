@@ -187,6 +187,76 @@ try{
    'Another member lifestyle record is never readable');
  checks.push('legacy JWT profile bypass denied; B11 activation gated; lifestyle RLS private');
 
+ // Owner-only profile lifecycle, using real JWTs issued by local GoTrue.
+ // Dating lifestyle can be PREPARED with consent before external release,
+ // but is NEVER discoverable until independent approvals and Gym Shield.
+ const lifestyle={
+   answers:{
+     sport:'running',frequency:'two_three',sleep:'early_bird',
+     weekday:'home',intent:'long_term',together:'balanced',
+   },
+   additional_sports:['yoga'],weekends:['brunch','recovery'],
+   interests:['books','music'],challenge:'Train my first 21K',
+   weeknight:'Quiet dinner',support:'Respect for recovery days',
+ };
+ const premature=await a.from('member_rhythm_b11').upsert(
+   {user_id:uidA,...lifestyle},{onConflict:'user_id'});
+ assert.ok(premature.error,
+   'A dating rhythm must not persist without separate dating consent');
+ const consentA=await a.from('member_consents_v26').insert({
+   user_id:uidA,consent_kind:'dating',
+   document_version:'dating-v1',source:'profile_settings',
+ });
+ assert.ifError(consentA.error);
+ const consentB=await b.from('member_consents_v26').insert({
+   user_id:uidB,consent_kind:'dating',
+   document_version:'dating-v1',source:'profile_settings',
+ });
+ assert.ifError(consentB.error);
+ const saved=await a.from('member_rhythm_b11').upsert(
+   {user_id:uidA,...lifestyle},{onConflict:'user_id'})
+   .select('answers,additional_sports,weekends,interests,challenge,weeknight,support')
+   .single();
+ assert.ifError(saved.error);
+ assert.deepEqual(saved.data?.answers,lifestyle.answers);
+ const blockedRead=await b.from('member_rhythm_b11')
+   .select('user_id,answers').eq('user_id',uidA);
+ assert.ifError(blockedRead.error);
+ assert.deepEqual(blockedRead.data,[],
+   'B with consent must never see A lifestyle data');
+ const blockedWrite=await b.from('member_rhythm_b11').upsert({
+   user_id:uidA,...lifestyle,
+ },{onConflict:'user_id'});
+ assert.ok(blockedWrite.error,
+   'B cannot overwrite A lifestyle profile even with its own consent');
+ const blockedAnon=await anon.from('member_rhythm_b11').select('user_id');
+ assert.ok(blockedAnon.error,
+   'Anonymous access to lifestyle table must be forbidden');
+ await a.auth.signOut({scope:'local'});
+ assert.equal(await login(a,addr('a')),uidA);
+ const restoredRhythm=await a.from('member_rhythm_b11')
+   .select('answers,weekends,support').eq('user_id',uidA).single();
+ assert.ifError(restoredRhythm.error);
+ assert.deepEqual(restoredRhythm.data?.answers,lifestyle.answers,
+   'Lifestyle preferences must survive a real logout and login');
+ assert.deepEqual(restoredRhythm.data?.weekends,lifestyle.weekends);
+ const withdrawn=await a.rpc('fitdating_disable_b5');
+ assert.ifError(withdrawn.error);
+ assert.equal(withdrawn.data,'disabled');
+ const goneRhythm=await a.from('member_rhythm_b11')
+   .select('user_id').eq('user_id',uidA);
+ assert.ifError(goneRhythm.error);
+ assert.deepEqual(goneRhythm.data,[],
+   'Separate consent withdrawal must remove persisted lifestyle immediately');
+ const oldConsent=await a.from('member_consents_v26').select('id')
+   .eq('user_id',uidA).eq('consent_kind','dating');
+ assert.ifError(oldConsent.error);
+ assert.deepEqual(oldConsent.data,[],
+   'Withdrawal must remove the active dating consent event');
+ checks.push('real JWT profile consent, durable save and reload, BOLA read/write denied, optout purges rhythm');
+
+
+
  await rpc(b,'request_account_deletion');
  assert.equal(readPendingFlag(await rpc(b,'my_account_status')),true);
  const hidden=await a.from('social_profiles').select('user_id').eq('user_id',uidB);
