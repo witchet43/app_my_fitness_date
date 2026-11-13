@@ -94,7 +94,7 @@ jobs:
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611120022_fitdating_readiness_b5.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611120023_fitdating_consent_withdrawal_b5.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611120024_fitted_lifestyle_matching_b11.sql
-          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_lifestyle_b11_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/brand_admin_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/saas_heartbeat_test.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/member_profile_v26_integration.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_lifestyle_b11_integration.sql
