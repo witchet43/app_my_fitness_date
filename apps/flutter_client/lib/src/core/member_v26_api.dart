@@ -430,6 +430,35 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   @override
+  Future<List<Map<String,dynamic>>> gymCatalogB11() async =>
+    _items(_decode(await _request('GET','/v1/dating/b11/gyms')));
+
+  @override
+  Future<String> activateB11(
+      String gymId,List<Map<String,int>> weeklySlots) async {
+    if(!_validActivityId(gymId) || weeklySlots.length>14) {
+      throw const MemberApiException('Selecciona un gimnasio válido.');
+    }
+    for(final slot in weeklySlots){
+      final day=slot['day'];
+      final start=slot['startMinutes'];
+      final end=slot['endMinutes'];
+      if(day==null||day<0||day>6||start==null||start<0||
+         end==null||end>1440||start>=end){
+        throw const MemberApiException('Revisa tus horarios privados.');
+      }
+    }
+    final value=_decode(await _request(
+      'POST','/v1/dating/b11/activate',
+      data:{'gym_id':gymId,'weekly_slots':weeklySlots}));
+    if(value['status']!='activated'){
+      throw const MemberApiException(
+        'No fue posible activar el descubrimiento.');
+    }
+    return 'activated';
+  }
+
+  @override
   Future<List<Map<String,dynamic>>> discoverB11() async =>
     _items(_decode(await _request('GET','/v1/dating/b11/candidates')));
 
