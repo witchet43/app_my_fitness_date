@@ -1,0 +1,1 @@
+One GitHub Actions source-only QA: Python Supabase environment target block, bash syntax, Node tests, Deno Edge typecheck, Flutter analyze and widget tests. Zero Docker pulls, zero Google Cloud Build, no remote API, no migrations, no deployment.
