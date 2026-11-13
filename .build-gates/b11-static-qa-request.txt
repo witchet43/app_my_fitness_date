@@ -1,0 +1,1 @@
+B11 no-Docker QA: TypeScript Deno Edge type safety fixed. Node tests, exact PROD/DEV target guard, bash static, Flutter analyze + widgets. GitHub Actions only; ZERO Cloud Build; no distribution compile/deploy; no hosted Supabase writes.
