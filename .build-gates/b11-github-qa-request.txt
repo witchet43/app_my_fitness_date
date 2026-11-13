@@ -1,0 +1,1 @@
+ONE SOURCE VALIDATION ONLY — B11 recovery. GitHub Actions Ubuntu runner, ephemeral PostgreSQL, 24 SQL migrations + 21 SQL tests, Node contracts, Gym Shield, Flutter static analyze + widget tests. NO Flutter release compile, NO Cloudflare, NO Google Cloud Build, NO production. QA branch has NO open pull request, so ordinary PR workflows are not triggered by this commit.
