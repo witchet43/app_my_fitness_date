@@ -2,3 +2,5 @@ My Fitness Date — B9 one-shot validation
 Build budget: exactly 9/10 remote executions (one slot remaining)
 Cumulative scope: B1 B2 B3 B4 B5 B8 B9, hosted API, Gym Shield, Flutter analyze/widgets/release, SHA-verified Cloudflare QA preview
 Never deploy to main / production or open user discovery. No automatic retry.
+
+Corrective one-shot QA: final remote slot 10/10. Fix: widget tap after proper mobile viewport scroll and frame settle. Previous B9 run #43337039505 failed one widget test only; no artifact was published. Do not rerun after this attempt. 
