@@ -14,7 +14,7 @@ class FakeActivities implements ActivityRepository {
     'description':'Una caminata segura en un grupo pequeño.',
     'sport':'Senderismo',
     'city':'Querétaro',
-    'starts_at':'2026-11-15T15:00:00Z',
+    'starts_at':'2035-11-15T15:00:00Z',
     'capacity':20,
     'joined':false,
   }];
