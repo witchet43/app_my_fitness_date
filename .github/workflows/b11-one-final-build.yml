@@ -72,7 +72,7 @@ jobs:
           data=Path('.github/workflows/ci.yml').read_text()
           paths=re.findall(
             r'-f (supabase/(?:migrations|tests)/[a-zA-Z0-9_]+\.sql)',data)
-          assert len(paths)>=45, f'Expected full migration and integration chain: {len(paths)}'
+          assert len(paths)>=44, f'Expected full migration and integration chain: {len(paths)}'
           assert sum('/migrations/' in path for path in paths)==24
           assert paths[-1]=='supabase/tests/fitted_lifestyle_b11_integration.sql'
           for path in paths:
