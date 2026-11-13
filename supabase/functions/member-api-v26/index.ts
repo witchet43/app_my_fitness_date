@@ -7,10 +7,13 @@ import { communityUuid, validateCommunityPost, validateCommunityReport, validate
 import { validateDatingPreferencesB5 } from "./dating_validation.ts";
 import { validateRhythmB11 } from "./rhythm_validation_b11.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const localQa = Deno.env.get("MFD_LOCAL_QA") === "true" &&
+  /^http:\/\/(?:kong|127\.0\.0\.1|localhost|host\.docker\.internal)(?::[0-9]+)?\/?/i.test(SUPABASE_URL);
+const qaAnon = localQa ? Deno.env.get("SUPABASE_ANON_KEY") : undefined;
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
   (name) => Deno.env.get(name),
-);
+) ?? (localQa && qaAnon?.startsWith("eyJ") ? qaAnon : undefined);
 // One exact origin per deployment. QA can use a separate Supabase environment
 // with an explicit staging origin; production defaults to the real application.
 // Never reflect arbitrary Origin headers or use "*".
@@ -31,7 +34,7 @@ const allowedOrigins = new Set([
   "https://b9-preview.my-fitness-date.pages.dev",
   "https://b10-preview.my-fitness-date.pages.dev",
   "https://b11-preview.my-fitness-date.pages.dev",
-  "https://b11-preview.my-fitness-date.pages.dev",
+  ...(localQa ? ["http://127.0.0.1:5173"] : []),
 ]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
