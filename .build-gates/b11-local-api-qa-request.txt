@@ -1,0 +1,1 @@
+R3 single GitHub local stack QA: tolerate Supabase Kong 200/* OPTIONS preflight in local only, verify actual member Edge HTTPS-like auth behavior, owner-only HTTP rhythm persistence, re-login and withdrawal, Flutter static/widget tests. Never deploy, never call Google Cloud Build, never touch Supabase PROD.
