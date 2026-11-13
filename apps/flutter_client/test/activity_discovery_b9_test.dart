@@ -114,14 +114,19 @@ void main() {
       home:ActivitiesB1(api:FakeDiscoveryB9()),
     ));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('b9-only-upcoming')));
-    await tester.tap(find.byKey(const Key('b9-only-upcoming')));
-    await tester.pumpAndSettle();
-    expect(find.text('3 actividades encontradas'), findsOneWidget);
+    // On a short mobile screen, select the sport first while its field is
+    // in view. Scrolling down to the later chip first had moved the dropdown
+    // above the viewport, so a test tap did not hit the actual control.
     await tester.ensureVisible(find.byKey(const Key('b9-sport-filter')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('b9-sport-filter')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Running').last);
+    await tester.pumpAndSettle();
+    expect(find.text('1 actividad encontrada'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('b9-only-upcoming')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('b9-only-upcoming')));
     await tester.pumpAndSettle();
     expect(find.text('2 actividades encontradas'), findsOneWidget);
     expect(tester.takeException(), isNull);
