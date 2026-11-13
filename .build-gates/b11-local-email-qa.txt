@@ -1,0 +1,1 @@
+ONLY test GoTrue local email confirmation + recovery via local Supabase/Mailpit. GitHub Actions isolated branch, no Build, no Cloudflare, no Google Cloud Build, no hosted DB changes.
