@@ -3,7 +3,7 @@ import 'dating_repository_b5.dart';
 /// Business operations use the authenticated member API. Every candidate,
 /// message and mutual match is rechecked server-side; this interface must
 /// never be implemented with local synthetic candidates in production.
-abstract class DatingRepositoryB11 implements DatingRepositoryB5 {
+abstract class DatingRepositoryB11 extends DatingRepositoryB5 {
   Future<Map<String,dynamic>?> loadRhythmB11();
   Future<void> saveRhythmB11(Map<String,dynamic> draft);
   /// Released catalog only; returned venue selection is always private.
