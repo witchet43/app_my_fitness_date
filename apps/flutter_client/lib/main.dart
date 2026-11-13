@@ -54,8 +54,7 @@ Future<void> main() async {
       Uri.base.host == '127.0.0.1' &&
       supabaseUrl == 'http://127.0.0.1:54321' &&
       apiUrl == 'http://127.0.0.1:54321/functions/v1/member-api-v26' &&
-      (publishableKey.startsWith('sb_publishable_') ||
-        publishableKey.startsWith('eyJ')) &&
+      publishableKey.startsWith('sb_publishable_') &&
       termsUrl == 'https://my-fitness-date.pages.dev/terms/' &&
       privacyUrl == 'https://my-fitness-date.pages.dev/privacy/' &&
       redirectUrl == 'http://127.0.0.1:5173/';
