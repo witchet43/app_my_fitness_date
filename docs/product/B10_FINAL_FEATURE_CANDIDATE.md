@@ -30,7 +30,7 @@ This is **not** persistence or production compatibility. Treat it as the interac
 
 ## Validation status at delivery
 - B9 preview `https://b9-preview.my-fitness-date.pages.dev/` passed 64/64 Flutter tests on run #43337598923 **for B9**, not B10. **Do not imply B10 passed those tests or is available on that URL.**
-- The user capped integrated remote build executions at 10; the B9 corrective QA consumed slot 10/10. Thus B10 source is published **only in a draft PR**, not compiled into an additional Cloudflare preview or production.
+- Las 10 ejecuciones remotas iniciales se consumieron en B9; por solicitud explícita de finalizar el **build funcional #10**, se autoriza **una ejecución adicional y única** de QA B10, sin reintentos. Su éxito y vista previa deben comprobarse; nunca es un despliegue de producción.
 - New B10 unit/widget tests and static preflight exist but require execution in a subsequent authorized QA environment; none are marked PASS in this document without tool evidence.
 - Existing B8/B9 unrelated CI failures: candidate SQL migration sequence and local Mailpit OTP; unresolved unless new evidence appears.
 
