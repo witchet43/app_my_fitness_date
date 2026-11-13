@@ -7,7 +7,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "test": "tsx --test src/domain/*.test.ts scripts/member-api-config.test.ts scripts/activity-b1.test.ts scripts/activity-b2.test.ts scripts/community-b4.test.ts scripts/dating-b5.test.ts",
+    "test": "tsx --test src/domain/*.test.ts scripts/member-api-config.test.ts scripts/activity-b1.test.ts scripts/activity-b2.test.ts scripts/community-b4.test.ts scripts/dating-b5.test.ts scripts/dating-b11.test.ts",
     "typecheck": "tsc --noEmit",
     "smoke:dev": "tsx scripts/smoke-dev.mts",
     "test:auth:local": "tsx scripts/local-auth-e2e.mts",
@@ -17,7 +17,8 @@
     "candidate:audit": "tsx scripts/candidate-audit.mts",
     "candidate:require-beta": "tsx scripts/candidate-audit.mts --require-beta",
     "release:preflight:demo": "tsx scripts/release-preflight.mts demo",
-    "release:preflight:beta": "tsx scripts/release-preflight.mts beta"
+    "release:preflight:beta": "tsx scripts/release-preflight.mts beta",
+    "test:edge:b11:local": "tsx scripts/local-edge-profile-b11.mts"
   },
   "dependencies": {
     "expo": "~57.0.31",

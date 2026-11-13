@@ -6,11 +6,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'activity_repository.dart';
 import 'curator_repository.dart';
 import 'community_repository.dart';
-import 'dating_repository_b5.dart';
+import 'dating_repository_b11.dart';
 
-/// Business data travels through our own FastAPI Gateway, not directly
-/// through a privileged database key or user-selected identity.
-class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB5 {
+/// Business data travels through our authenticated Supabase Edge gateway,
+/// using the member JWT and RLS, never a privileged database key.
+class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11 {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
@@ -26,7 +26,11 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       throw const MemberApiException('Debes iniciar sesión.');
     }
     final uri = Uri.parse('$gatewayUrl$path');
-    if (uri.scheme != 'https') {
+    const localQa=bool.fromEnvironment('MFD_LOCAL_QA',defaultValue:false);
+    final loopbackAllowed=localQa &&
+        Uri.base.scheme=='http' && Uri.base.host=='127.0.0.1' &&
+        uri.scheme=='http' && uri.host=='127.0.0.1' && uri.port==54321;
+    if(uri.scheme!='https'&&!loopbackAllowed){
       throw const MemberApiException('La conexión segura no está disponible.');
     }
     final headers = <String, String>{
@@ -416,6 +420,111 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
         data: {'consent_kind': kind, 'document_version': version});
   }
 
+
+  @override
+  Future<Map<String,dynamic>?> loadRhythmB11() async {
+    final data=_decode(await _request('GET','/v1/dating/rhythm'));
+    final profile=data['profile'];
+    return profile is Map ? Map<String,dynamic>.from(profile) : null;
+  }
+
+  @override
+  Future<void> saveRhythmB11(Map<String,dynamic> draft) async {
+    _decode(await _request('PUT','/v1/dating/rhythm',data:draft));
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> gymCatalogB11() async =>
+    _items(_decode(await _request('GET','/v1/dating/b11/gyms')));
+
+  @override
+  Future<String> activateB11(
+      String gymId,List<Map<String,int>> weeklySlots) async {
+    if(!_validActivityId(gymId) || weeklySlots.length>14) {
+      throw const MemberApiException('Selecciona un gimnasio válido.');
+    }
+    for(final slot in weeklySlots){
+      final day=slot['day'];
+      final start=slot['startMinutes'];
+      final end=slot['endMinutes'];
+      if(day==null||day<0||day>6||start==null||start<0||
+         end==null||end>1440||start>=end){
+        throw const MemberApiException('Revisa tus horarios privados.');
+      }
+    }
+    final value=_decode(await _request(
+      'POST','/v1/dating/b11/activate',
+      data:{'gym_id':gymId,'weekly_slots':weeklySlots}));
+    if(value['status']!='activated'){
+      throw const MemberApiException(
+        'No fue posible activar el descubrimiento.');
+    }
+    return 'activated';
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> discoverB11() async =>
+    _items(_decode(await _request('GET','/v1/dating/b11/candidates')));
+
+  @override
+  Future<String> likeB11(String userId) async {
+    if (!_validActivityId(userId)) {
+      throw const MemberApiException('Perfil inválido.');
+    }
+    return _decode(await _request('POST','/v1/dating/b11/like',
+      data:{'user_id':userId}))['status'].toString();
+  }
+
+  @override
+  Future<List<Map<String,dynamic>>> matchesB11() async =>
+    _items(_decode(await _request('GET','/v1/dating/b11/matches')));
+
+  @override
+  Future<List<Map<String,dynamic>>> messagesB11(String matchId) async {
+    if(!_validActivityId(matchId)) {
+      throw const MemberApiException('Match inválido.');
+    }
+    return _items(_decode(await _request('GET',
+      '/v1/dating/b11/matches/$matchId/messages')));
+  }
+
+  @override
+  Future<String> sendB11(String matchId,String message) async {
+    if(!_validActivityId(matchId)||message.trim().isEmpty||
+       message.length>1200) {
+      throw const MemberApiException('Revisa el mensaje.');
+    }
+    return _decode(await _request('POST',
+      '/v1/dating/b11/matches/$matchId/messages',
+      data:{'body':message.trim()}))['status'].toString();
+  }
+
+  @override
+  Future<String> reportB11(String matchId,String reason,
+      {String detail=''}) async {
+    if(!_validActivityId(matchId)||detail.length>500) {
+      throw const MemberApiException('Reporte inválido.');
+    }
+    return _decode(await _request('POST',
+      '/v1/dating/b11/matches/$matchId/report',
+      data:{'reason':reason,'detail':detail}))['status'].toString();
+  }
+
+  @override
+  Future<List<String>> ideasB11(String matchId) async {
+    if(!_validActivityId(matchId)) {
+      throw const MemberApiException('Match inválido.');
+    }
+    final result=_decode(await _request('GET',
+      '/v1/dating/b11/matches/$matchId/ideas'));
+    final values=result['items'];
+    if(values is! List) {
+      throw const MemberApiException('Sugerencias no disponibles.');
+    }
+    return values.map((x)=>x.toString()).toList();
+  }
+
+  @override
   Future<Map<String, dynamic>> datingStatus() async =>
       _decode(await _request('GET', '/v1/dating/status'));
 

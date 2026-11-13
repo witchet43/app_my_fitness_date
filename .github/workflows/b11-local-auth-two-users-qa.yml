@@ -1,0 +1,55 @@
+# Isolated real JWT/Auth PostgREST/RLS check. Never builds an app or calls GCP.
+name: MFD B11 — two-account local Auth QA (no builds)
+on:
+  push:
+    branches: [qa/b11-local-auth-two-users-20261112, qa/b11-owner-profile-persistence-20261112]
+    paths: [.build-gates/b11-local-two-users-qa.txt]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b11-two-account-auth-only
+  cancel-in-progress: false
+
+jobs:
+  verify-two-account-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install lockfile dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Start disposable local Auth, SQL and Mailpit
+        run: |
+          set -euo pipefail
+          npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler
+          python3 - <<'PY'
+          import time, urllib.request
+          for _ in range(30):
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:54324/api/v1/messages',timeout=3) as response:
+                      if response.status==200:
+                          print('Mailpit ready')
+                          break
+              except Exception:
+                  time.sleep(.5)
+          else:
+              raise RuntimeError('Local Auth email capture unavailable')
+          PY
+      - name: Real two-account JWT, B5 gate, B11 activation, PostgREST RLS
+        env:
+          MFD_LOCAL_AUTH_E2E: LOCAL_ONLY
+        run: |
+          set -euo pipefail
+          set -a
+          eval "$(npx --yes supabase@latest status -o env)"
+          set +a
+          npm run test:auth:local
+      - name: Stop disposable local Auth
+        if: always()
+        run: npx --yes supabase@latest stop --no-backup || true

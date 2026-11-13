@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../core/rhythm_concept_b10.dart';
+import '../core/dating_repository_b11.dart';
 
 /// B10 concept-only study. All values stay in this widget state until close.
 /// Never treated as onboarding, a saved lifestyle profile or a real match.
 class RhythmConceptLabB10 extends StatefulWidget {
-  const RhythmConceptLabB10({super.key});
+  const RhythmConceptLabB10({super.key,this.repository,this.canSave=false});
+  final DatingRepositoryB11? repository;
+  final bool canSave;
 
   @override
   State<RhythmConceptLabB10> createState() => _RhythmConceptLabB10State();
@@ -95,6 +98,10 @@ const rhythmLabelsB10 = <String,Map<String,String>>{
 class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   bool english = false;
   bool showIdeas = false;
+  bool loading = false;
+  bool saving = false;
+  String? saveNotice;
+  String? saveError;
   String scenario = 'cross_sport';
   final answers = emptyRhythmB10();
   final additionalSports = <String>{};
@@ -102,7 +109,100 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   final interests = <String>{};
   final challenge = TextEditingController();
   final weeknight = TextEditingController();
+
   final support = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if(widget.repository!=null && widget.canSave) loadSaved();
+  }
+
+  Future<void> loadSaved() async {
+    if(widget.repository==null || !widget.canSave)return;
+    setState(()=>loading=true);
+    try {
+      final doc=await widget.repository!.loadRhythmB11();
+      if(!mounted)return;
+      if(doc!=null){
+        setState((){
+          final values=doc['answers'];
+          if(values is Map){
+            for(final item in values.entries){
+              final key=item.key.toString();
+              final candidate=item.value.toString();
+              if(key!='privacy' &&
+                  rhythmOptionsB10[key]?.contains(candidate)==true){
+                answers[key]=candidate;
+              }
+            }
+          }
+          void restore(String key,Set<String> selected) {
+            final raw=doc[key];
+            if(raw is! List)return;
+            final source=key=='additional_sports'?'sport':
+              key=='weekends'?'weekend':'interests';
+            selected.clear();
+            for(final value in raw){
+              if(value is String &&
+                  rhythmOptionsB10[source]?.contains(value)==true){
+                selected.add(value);
+              }
+            }
+          }
+          restore('additional_sports',additionalSports);
+          restore('weekends',weekends);
+          restore('interests',interests);
+          challenge.text=(doc['challenge']??'').toString();
+          weeknight.text=(doc['weeknight']??'').toString();
+          support.text=(doc['support']??'').toString();
+        });
+      }
+    }catch(_){
+      if(mounted)setState(()=>saveError=
+        'No se pudieron leer tus ritmos privados.');
+    }finally{
+      if(mounted)setState(()=>loading=false);
+    }
+  }
+
+  Future<void> saveRhythms() async {
+    if(saving||!widget.canSave||widget.repository==null)return;
+    final issue=validateRhythmB10(answers,
+      additionalSports:additionalSports,weekends:weekends,
+      interests:interests,challenge:challenge.text,
+      weeknight:weeknight.text,support:support.text);
+    if(issue!=null){
+      setState(()=>saveError='Revisa los campos seleccionados.');
+      return;
+    }
+    final draft=<String,dynamic>{
+      'answers':{
+        for(final entry in answers.entries)
+          if(entry.key!='privacy')entry.key:entry.value,
+      },
+      'additional_sports':additionalSports.toList()..sort(),
+      'weekends':weekends.toList()..sort(),
+      'interests':interests.toList()..sort(),
+      'challenge':challenge.text.trim(),
+      'weeknight':weeknight.text.trim(),
+      'support':support.text.trim(),
+    };
+    setState((){
+      saving=true;saveError=null;saveNotice=null;
+    });
+    try{
+      await widget.repository!.saveRhythmB11(draft);
+      if(mounted)setState(()=>saveNotice=
+        'Tus tres ritmos quedaron guardados de forma privada. '
+        'Esto NO activa discovery ni mensajes.');
+    }catch(_){
+      if(mounted)setState(()=>saveError=
+        'No fue posible guardar. Revisa el consentimiento o la conexión.');
+    }finally{
+      if(mounted)setState(()=>saving=false);
+    }
+  }
 
   String tr(String es,String en) => english ? en : es;
   String label(String code) =>
@@ -129,7 +229,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   Widget select(String field,String es,String en) => Padding(
     padding:const EdgeInsets.only(bottom:14),
     child:DropdownButtonFormField<String>(
-      key:Key('b10-$field'),
+      key:ValueKey('b10-$field-${answers[field]}'),
       isExpanded:true,
       initialValue:answers[field],
       decoration:InputDecoration(labelText:tr(es,en)),
@@ -245,6 +345,17 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                   ],
                 ),
               )),
+              if(loading)const LinearProgressIndicator(),
+              if(widget.canSave&&widget.repository!=null)
+                Card(child:Padding(
+                  padding:const EdgeInsets.all(12),
+                  child:Text(tr(
+                    'Tus ritmos pueden guardarse con consentimiento separado. '
+                    'No se muestran perfiles sin edad verificada.',
+                    'Your rhythms can be saved with separate consent. '
+                    'No profiles appear without independent age verification.',
+                  ),key:const Key('b11-private-persistence')),
+                )),
               heading('1. How I Move · Training DNA',
                 '1. How I Move · Training DNA',Icons.directions_run_outlined),
               select('sport','Actividad principal','Primary activity'),
@@ -400,6 +511,24 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                     }),
                   ),
               ],
+              if(widget.canSave&&widget.repository!=null)...[
+                const SizedBox(height:18),
+                FilledButton.icon(
+                  key:const Key('b11-save-rhythm'),
+                  onPressed:saving||loading?null:saveRhythms,
+                  icon:const Icon(Icons.lock_outline),
+                  label:Text(tr('Guardar mis tres ritmos privados',
+                    'Save my three private rhythms')),
+                ),
+                if(saveNotice!=null)
+                  Text(saveNotice!,key:const Key('b11-save-success')),
+                if(saveError!=null)
+                  Text(saveError!,key:const Key('b11-save-error')),
+              ]else
+                Text(tr('Para guardar, acepta primero el consentimiento '
+                    'separado de FitDating.',
+                  'To save, first accept the separate FitDating consent.'),
+                  key:const Key('b11-consent-before-save')),
               const SizedBox(height:18),
               Text(tr(
                 'Estado: propuesta no validada. '

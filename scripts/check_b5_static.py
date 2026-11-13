@@ -54,8 +54,21 @@ check('Flutter',widget,[
     'No se activó la búsqueda',
 ])
 client=read('apps/flutter_client/lib/src/core/member_v26_api.dart')
+legacy_interface=(
+    "implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB5"
+)
+extended_interface=(
+    "implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11"
+)
+if extended_interface in client:
+    b11=read('apps/flutter_client/lib/src/core/dating_repository_b11.dart')
+    check('B11 extends B5',b11,[
+        'abstract class DatingRepositoryB11 extends DatingRepositoryB5',
+        'Future<Map<String,dynamic>?> loadRhythmB11()',
+    ])
+else:
+    assert legacy_interface in client, 'Missing B5 or B11-compatible member client'
 check('client',client,[
-    "implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB5",
     "Future<String> saveDatingPreferences", "Future<String> disableDating",
 ])
 print('B5 fail-closed static contract PASS (runtime and E2E pending)')

@@ -11,6 +11,7 @@ import '../core/curator_repository.dart';
 import '../core/activity_repository.dart';
 import '../core/community_repository.dart';
 import 'community_moderation_b4.dart';
+import 'gym_catalog_admin_b11.dart';
 import 'activities_b1.dart';
 import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
@@ -558,6 +559,26 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           ],
         ]))),
     ],
+    const SizedBox(height:14),
+    Card(child:Padding(padding:const EdgeInsets.all(20),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text('Gimnasios para Gym Shield',
+          style:Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height:8),
+        const Text('Catálogo de gimnasios reales para proteger '
+          'los lugares y horarios privados de los miembros. '
+          'Registro administrativo con MFA y auditoría.'),
+        const SizedBox(height:12),
+        FilledButton.icon(
+          key:const Key('b11-admin-open-gym-catalog'),
+          onPressed:()=>Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder:(_)=>GymCatalogueAdminB11(
+                repository:widget.repository))),
+          icon:const Icon(Icons.fitness_center_outlined),
+          label:const Text('Administrar gimnasios'),
+        ),
+      ]))),
     if(widget.communityAdmin!=null)...[
       const SizedBox(height:14),
       Card(child:Padding(padding:const EdgeInsets.all(20),

@@ -1,7 +1,7 @@
 name: my_fitness_date
 description: Flutter client for the my_fitness_date API platform
 publish_to: none
-version: 0.27.0+27
+version: 0.28.0+28
 
 environment:
   sdk: '>=3.9.0 <4.0.0'

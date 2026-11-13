@@ -5,11 +5,15 @@ import { resolvePublishableKey, extractApiRoute, memberCorsRequestHeaders } from
 import { activityRsvpRoute, activityCancelRoute, organizerCancelRoute, adminCancelRoute, validateActivityDraft } from "./activity_validation.ts";
 import { communityUuid, validateCommunityPost, validateCommunityReport, validateModeration, communityRemovePostId, communityFeedCursor, adminAnnouncementId } from "./community_validation.ts";
 import { validateDatingPreferencesB5 } from "./dating_validation.ts";
+import { validateRhythmB11 } from "./rhythm_validation_b11.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const localQa = Deno.env.get("MFD_LOCAL_QA") === "true" &&
+  /^http:\/\/(?:kong|127\.0\.0\.1|localhost|host\.docker\.internal)(?::[0-9]+)?\/?/i.test(SUPABASE_URL);
+const qaAnon = localQa ? Deno.env.get("SUPABASE_ANON_KEY") : undefined;
 const publishable = resolvePublishableKey(
   Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
   (name) => Deno.env.get(name),
-);
+) ?? (localQa && qaAnon?.startsWith("eyJ") ? qaAnon : undefined);
 // One exact origin per deployment. QA can use a separate Supabase environment
 // with an explicit staging origin; production defaults to the real application.
 // Never reflect arbitrary Origin headers or use "*".
@@ -29,6 +33,8 @@ const allowedOrigins = new Set([
   "https://b8-preview.my-fitness-date.pages.dev",
   "https://b9-preview.my-fitness-date.pages.dev",
   "https://b10-preview.my-fitness-date.pages.dev",
+  "https://b11-preview.my-fitness-date.pages.dev",
+  ...(localQa ? ["http://127.0.0.1:5173"] : []),
 ]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
@@ -130,9 +136,16 @@ async function handleRequest(req: Request): Promise<Response> {
   }
   const requestedOrigin = req.headers.get("origin");
   if (requestedOrigin && !allowedOrigins.has(requestedOrigin)) return error(403);
-  if (!publishable?.startsWith("sb_publishable_") || !SUPABASE_URL.startsWith("https://")) {
-    return error(503);
-  }
+  // Public remote API requires HTTPS and a publishable key. The one
+  // exception is our self-contained LOCAL QA stack (never a hosted URL),
+  // which only accepts an ANON/PUBLISHABLE key and strict known Docker hosts.
+  const secureRemote = SUPABASE_URL.startsWith("https://") &&
+    publishable?.startsWith("sb_publishable_");
+  const safeLocal = localQa && (
+    publishable?.startsWith("sb_publishable_") ||
+    (publishable === qaAnon && qaAnon?.startsWith("eyJ"))
+  );
+  if (typeof publishable !== "string" || (!secureRemote && !safeLocal)) return error(503);
   if (req.method === "GET" && new URL(req.url).pathname.endsWith("/healthz")) {
     // Verify the actual backend connection and public API key before claiming
     // health; the old health check passed even when every login failed.
@@ -575,6 +588,151 @@ async function handleRequest(req: Request): Promise<Response> {
     // Media cannot be published until sanitization, moderation and owner-only
     // preview are deployed. A zero-result list keeps the profile functional.
     if (route === "/v1/me/photos" && req.method === "GET") return json({ photos: [] });
+    // B11 real owner-only lifestyle persistence. A private profile requires
+    // separate dating consent and is never discoverable merely by saving it.
+    if (route === "/v1/dating/rhythm" && req.method === "GET") {
+      const r = await endpoint("GET", "/rest/v1/member_rhythm_b11", token,
+        undefined, { user_id: "eq." + identity.id,
+          select: "answers,additional_sports,weekends,interests,challenge,weeknight,support,updated_at" });
+      if (!r.ok) return error(r.status === 403 ? 403 : 503);
+      const rows = await r.json() as Array<Record<string,unknown>>;
+      return json({ profile: rows[0] ?? null });
+    }
+    if (route === "/v1/dating/rhythm" && req.method === "PUT") {
+      const input = await body(req);
+      const draft = validateRhythmB11(input);
+      if (!draft) return error(400);
+      const r = await endpoint("POST", "/rest/v1/member_rhythm_b11",
+        token, {user_id:identity.id,...draft},
+        {on_conflict:"user_id"}, "resolution=merge-duplicates,return=representation");
+      if (!r.ok) return error(r.status === 400 ? 400 : 403);
+      const rows = await r.json() as Array<Record<string,unknown>>;
+      return json({profile:rows[0] ?? null});
+    }
+    // All live candidate, matching and chat RPCs check the independent
+    // external age review, staffed moderation and release flag IN DATABASE.
+    // Catalog contains only names published by the operator. Never surface
+    // the three synthetic Gym Demo fixtures from old local integration tests.
+    if (route === "/v1/dating/b11/gyms" && req.method === "GET") {
+      const state = await datingStatus(token,identity.id);
+      if (state.discovery_release_ready !== true) return error(403);
+      const r = await endpoint("GET","/rest/v1/gyms",token,undefined,
+        {select:"id,name,city",order:"name.asc",limit:"100"});
+      if(!r.ok)return error(503);
+      const values=await r.json() as Array<Record<string,unknown>>;
+      const verified=values.filter(x=>
+        typeof x.id==="string" && typeof x.name==="string" &&
+        typeof x.city==="string" &&
+        !/^\s*gym demo/i.test(x.name));
+      return json({items:verified});
+    }
+    if (route === "/v1/dating/b11/activate" && req.method === "POST") {
+      const data=await body(req);
+      const gymId=data?.gym_id;
+      const slots=data?.weekly_slots;
+      if(typeof gymId!=="string" ||
+         !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gymId) ||
+         !Array.isArray(slots) || slots.length>14 ||
+         slots.some(x=>{
+           if(!x||typeof x!=="object"||Array.isArray(x))return true;
+           const item=x as Record<string,unknown>;
+           if(Object.keys(item).some(k=>
+             !["day","startMinutes","endMinutes"].includes(k)))return true;
+           const day=item.day,start=item.startMinutes,end=item.endMinutes;
+           return !Number.isInteger(day)||!Number.isInteger(start)||
+             !Number.isInteger(end)||
+             (day as number)<0||(day as number)>6||
+             (start as number)<0||(end as number)>1440||
+             (start as number)>=(end as number);
+         }))return error(400);
+      const r=await endpoint("POST","/rest/v1/rpc/fitdating_activate_b11",
+        token,{p_gym_id:gymId,p_weekly_slots:slots});
+      if(!r.ok)return error(r.status===401||r.status===403?403:503);
+      const value=await r.json();
+      if(value==="activated")return json({status:"activated"});
+      if(value==="not_eligible")return error(403);
+      if(["gym_unavailable","profile_required","schedule_required",
+          "invalid_schedule"].includes(String(value)))
+        return json({status:value},409);
+      return error(403);
+    }
+    if (route === "/v1/dating/b11/candidates" && req.method === "GET") {
+      const state = await datingStatus(token, identity.id);
+      if(state.enabled !== true) return error(403);
+      const r = await endpoint("POST",
+        "/rest/v1/rpc/fitdating_candidates_b11",token,{p_limit:10});
+      if(!r.ok) return error(r.status===403 ? 403 : 503);
+      const values = await r.json() as unknown[];
+      return json({items:values,count:values.length});
+    }
+    if (route === "/v1/dating/b11/like" && req.method === "POST") {
+      const input=await body(req);
+      const id=String(input?.user_id??"");
+      if(!/^[a-f0-9-]{36}$/i.test(id))return error(400);
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitdating_like_b11",token,{p_user_id:id});
+      if(!r.ok)return error(403);
+      const status=await r.json();
+      return status==="matched"||status==="liked"
+        ? json({status})
+        : error(status==="rate_limited"?429:403);
+    }
+    if (route === "/v1/dating/b11/matches" && req.method === "GET") {
+      const state=await datingStatus(token,identity.id);
+      if(state.enabled!==true)return error(403);
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitdating_my_matches_b11",token,{});
+      if(!r.ok)return error(403);
+      return json({items:await r.json()});
+    }
+    // Scope every chat access to a UUID match. Ownership, mutual consent,
+    // blocking and moderation are rechecked inside each SECURITY DEFINER.
+    const b11Match=/^\/v1\/dating\/b11\/matches\/([0-9a-f-]{36})\/(messages|report|ideas)$/i.exec(route);
+    if(b11Match){
+      const matchId=b11Match[1];
+      const kind=b11Match[2];
+      if(kind==="messages"&&req.method==="GET"){
+        const r=await endpoint("POST",
+          "/rest/v1/rpc/fitdating_my_messages_b11",token,{p_match:matchId});
+        if(!r.ok)return error(403);
+        return json({items:await r.json()});
+      }
+      if(kind==="messages"&&req.method==="POST"){
+        const payload=await body(req);
+        if(typeof payload?.body!=="string" || payload.body.trim().length<1 ||
+          payload.body.length>1200)return error(400);
+        const r=await endpoint("POST",
+          "/rest/v1/rpc/fitdating_send_b11",token,
+          {p_match:matchId,p_body:payload.body.trim()});
+        if(!r.ok)return error(403);
+        const status=await r.json();
+        return status==="sent"?json({status})
+          :error(status==="rate_limited"?429:403);
+      }
+      if(kind==="report"&&req.method==="POST"){
+        const payload=await body(req);
+        const reason=payload?.reason;
+        const detail=payload?.detail??"";
+        if(typeof reason!=="string" ||
+          !["harassment","spam","impersonation","unsafe","other"].includes(reason)
+          ||typeof detail!=="string"||detail.length>500)return error(400);
+        const r=await endpoint("POST",
+          "/rest/v1/rpc/fitdating_report_b11",token,
+          {p_match:matchId,p_reason:reason,p_detail:detail});
+        if(!r.ok)return error(403);
+        const status=await r.json();
+        return status==="reported_and_blocked"?json({status})
+          :error(status==="rate_limited"?429:403);
+      }
+      if(kind==="ideas"&&req.method==="GET"){
+        const r=await endpoint("POST",
+          "/rest/v1/rpc/fitdating_date_ideas_b11",token,{p_match:matchId});
+        if(!r.ok)return error(403);
+        const codes=await r.json();
+        return json({items:Array.isArray(codes)?codes:[]});
+      }
+      return error(405);
+    }
     if (route === "/v1/dating/status" && req.method === "GET") {
       return json(await datingStatus(token, identity.id));
     }
