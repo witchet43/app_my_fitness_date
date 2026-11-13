@@ -72,7 +72,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
     });
   }
 
-  Future<void> activate() async {
+  Future<void> submitGymActivation() async {
     final selected=gymId;
     if(selected==null)return;
     if(widget.mode=='same_gym_other_time'&&slots.isEmpty){
@@ -218,7 +218,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
             FilledButton.icon(
               key:const Key('b11-activate-confirm'),
               onPressed:loading||submitting||gymId==null
-                ?null:activate,
+                ?null:submitGymActivation,
               icon:const Icon(Icons.verified_user_outlined),
               label:Text(submitting
                 ?'Verificando…'
