@@ -20,7 +20,25 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Start isolated local Supabase Auth and REST
         run: |
+          # Clean up any partial local containers before the only QA execution.
+          npx --yes supabase@latest stop --no-backup || true
           npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler
+          # Auth OTP is a real local email. Mailpit must be available; never
+          # fall back to auto-confirm, service key impersonation or user bypass.
+          python3 - <<'PY'
+          import time,urllib.request
+          url='http://127.0.0.1:54324/api/v1/messages'
+          for i in range(25):
+              try:
+                  with urllib.request.urlopen(url,timeout=3) as r:
+                      if r.status==200:
+                          print('Local Mailpit inbox ready')
+                          break
+              except Exception:
+                  time.sleep(.5)
+          else:
+              raise RuntimeError('Local Mailpit was not reachable for OTP test')
+          PY
       - name: Test real Auth JWT and PostgREST row security
         env:
           MFD_LOCAL_AUTH_E2E: LOCAL_ONLY
