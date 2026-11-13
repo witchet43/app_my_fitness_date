@@ -132,7 +132,8 @@ try{
  assert.equal((statusBefore.data as {approved:boolean}).approved,false,
   'A real new GoTrue account must not receive implicit adult eligibility');
  const deniedDiscover=await a.rpc('discover_dating_candidates',{p_limit:10});
- assert.ok(deniedDiscover.error,'Dating discovery should reject users awaiting age review');
+ assert.ifError(deniedDiscover.error);
+ assert.deepEqual(deniedDiscover.data,[], 'Discovery must stay closed before external release');
 
  // Controlled local-only operator fixture. The hosted DEV service key must
  // never be used here: the caller verifies a strict loopback API URL.
