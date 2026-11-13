@@ -9,7 +9,17 @@ if [ "${SUPABASE_ACCESS_TOKEN:-}" != "" ]; then
   echo "Refusing local QA with a hosted Supabase access token."
   exit 1
 fi
-npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler
+# Supabase CLI otherwise binds its Docker ports to 0.0.0.0. Pin them
+# to loopback so the local anonymous/auth services are not on the LAN.
+QA_NET="mfd-b11-loopback-$"
+docker network create -o 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1' "$QA_NET" >/dev/null
+cleanup() {
+  if [ -n "${EDGE_PID:-}" ]; then kill "$EDGE_PID" 2>/dev/null || true; fi
+  npx --yes supabase@latest stop --no-backup || true
+  docker network rm "$QA_NET" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT INT TERM
+npx --yes supabase@latest start --network-id "$QA_NET" --exclude studio,realtime,storage,functions,analytics,pooler
 set -a
 eval "$(npx --yes supabase@latest status -o env)"
 set +a
@@ -23,11 +33,6 @@ if [[ "$PUBLIC_KEY" != sb_publishable_* ]]; then
   exit 1
 fi
 unset SERVICE_ROLE_KEY SECRET_KEY SUPABASE_SERVICE_ROLE_KEY DATABASE_URL DB_URL
-cleanup() {
-  if [ -n "${EDGE_PID:-}" ]; then kill "$EDGE_PID" 2>/dev/null || true; fi
-  npx --yes supabase@latest stop --no-backup || true
-}
-trap cleanup EXIT INT TERM
 npx --yes supabase@latest functions serve member-api-v26 --no-verify-jwt --env-file supabase/local-preview.env > /tmp/mfd-b11-local-edge.log 2>&1 &
 EDGE_PID=$!
 for attempt in $(seq 1 70); do
