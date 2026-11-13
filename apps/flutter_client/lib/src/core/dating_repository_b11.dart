@@ -6,6 +6,9 @@ import 'dating_repository_b5.dart';
 abstract class DatingRepositoryB11 implements DatingRepositoryB5 {
   Future<Map<String,dynamic>?> loadRhythmB11();
   Future<void> saveRhythmB11(Map<String,dynamic> draft);
+  /// Released catalog only; returned venue selection is always private.
+  Future<List<Map<String,dynamic>>> gymCatalogB11();
+  Future<String> activateB11(String gymId,List<Map<String,int>> weeklySlots);
   Future<List<Map<String,dynamic>>> discoverB11();
   Future<String> likeB11(String userId);
   Future<List<Map<String,dynamic>>> matchesB11();
