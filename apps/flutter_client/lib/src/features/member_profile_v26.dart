@@ -4,6 +4,7 @@ import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
+import 'member_dashboard_b8.dart';
 import 'community_b4.dart';
 import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
@@ -355,6 +356,18 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               Text((p['headline']??'').toString()),
             ])),
           const SizedBox(height:16),
+          MemberAgendaB8(
+            api:widget.api,
+            onExplore:() async {
+              await Navigator.of(context).push(MaterialPageRoute<void>(
+                builder:(_)=>ActivitiesB1(api:widget.api)));
+            },
+            onReservations:() async {
+              await Navigator.of(context).push(MaterialPageRoute<void>(
+                builder:(_)=>MyActivitiesB2(api:widget.api)));
+            },
+          ),
+          const SizedBox(height:12),
           FilledButton.icon(
             key:const Key('b1-explore-activities'),
             onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
