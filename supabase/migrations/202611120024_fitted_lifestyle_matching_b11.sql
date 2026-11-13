@@ -302,6 +302,14 @@ begin
  then return 'rate_limited'; end if;
  insert into app_private.fitdating_reports_b11(match_id,reporter_id,reason,detail)
  values(p_match,me,p_reason,coalesce(p_detail,''));
+ -- Reuse the EXISTING B4 moderation queue (owner/operator auditable),
+ -- otherwise dating reports would be invisible to staffed moderators.
+ insert into public.community_reports_b4(reporter_id,subject_id,reason,detail)
+ values(me,case when me=a then b else a end,
+   case when p_reason='impersonation' then 'other' else p_reason end,
+   left(case when p_reason='impersonation'
+     then '[Suplantación] ' || coalesce(p_detail,'')
+     else coalesce(p_detail,'') end,300));
  insert into app_private.user_blocks(blocker_id,blocked_id)
  values(me,case when me=a then b else a end)
  on conflict do nothing;
@@ -364,6 +372,38 @@ create function public.fitdating_date_ideas_b11(p_match uuid)
 returns text[] language sql security invoker set search_path='' as $$
  select app_private.b11_date_ideas(p_match)
 $$;
+
+-- Explicit withdrawal clears the newly persisted lifestyle fields.
+-- Match/chat evidence is retained under existing policy/erasure review until
+-- legal retention is approved; no former participant remains discoverable.
+create or replace function public.fitdating_disable_b5()
+returns text language plpgsql security definer set search_path=''
+as $
+declare v_user uuid:=(select auth.uid()); v_deleted integer:=0;
+begin
+ if v_user is null or coalesce(auth.jwt()->>'is_anonymous','false')='true'
+ then return 'forbidden'; end if;
+ update app_private.fitdating_preferences_b5
+ set participation_requested=false,updated_at=now()
+ where user_id=v_user;
+ update app_private.dating_profiles
+ set dating_enabled=false,updated_at=now()
+ where user_id=v_user;
+ delete from public.member_rhythm_b11 where user_id=v_user;
+ delete from public.member_consents_v26
+ where user_id=v_user and consent_kind='dating';
+ get diagnostics v_deleted=row_count;
+ if v_deleted>0 then
+   insert into app_private.fitdating_consent_withdrawals_b5(user_id,document_version)
+   values(v_user,'dating-v1');
+ end if;
+ return 'disabled';
+end;
+$;
+revoke all on function public.fitdating_disable_b5()
+  from public,anon,authenticated;
+grant execute on function public.fitdating_disable_b5()
+  to authenticated;
 
 revoke all on function app_private.b11_member_eligible(uuid),
  app_private.b11_pair_allowed(uuid,uuid),app_private.b11_reasons(uuid,uuid)
