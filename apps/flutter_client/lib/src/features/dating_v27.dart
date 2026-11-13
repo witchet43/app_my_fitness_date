@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../core/dating_preferences_b5.dart';
 import 'rhythm_concept_lab_b10.dart';
+import 'dating_discovery_b11.dart';
+import '../core/dating_repository_b11.dart';
 import '../core/dating_repository_b5.dart';
 
 /// B5 — Private readiness and preferences, NOT an unrestricted dating launch.
@@ -42,7 +44,8 @@ class _DatingV27State extends State<DatingV27> {
       final latest=await widget.api.datingStatus();
       if(!mounted)return;
       final enabled=latest['enabled']==true;
-      final matches=enabled?await widget.api.datingCandidates()
+      final matches=enabled && widget.api is! DatingRepositoryB11
+          ?await widget.api.datingCandidates()
           :<Map<String,dynamic>>[];
       if(!mounted)return;
       setState((){
@@ -189,7 +192,11 @@ class _DatingV27State extends State<DatingV27> {
                 trailing:const Icon(Icons.chevron_right),
                 onTap:()=>Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder:(_)=>const RhythmConceptLabB10())),
+                    builder:(_)=>RhythmConceptLabB10(
+                      repository:widget.api is DatingRepositoryB11
+                        ?widget.api as DatingRepositoryB11:null,
+                      canSave:consent && available,
+                    ))),
               ),
             ),
             const SizedBox(height:12),
@@ -344,7 +351,22 @@ class _DatingV27State extends State<DatingV27> {
                 satisfied:released,
                 message:'Control obligatorio del servidor, no del cliente.'),
               const SizedBox(height:10),
-              if(active) ...[
+              if(active && widget.api is DatingRepositoryB11)...[
+                FilledButton.icon(
+                  key:const Key('b11-open-real-discovery'),
+                  icon:const Icon(Icons.favorite_border),
+                  label:const Text('Ver personas, matches y conversaciones'),
+                  onPressed:()=>Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder:(_)=>DatingDiscoveryB11(
+                        api:widget.api as DatingRepositoryB11))),
+                ),
+                const SizedBox(height:12),
+                const Text('La compatibilidad se explica, no se puntúa '
+                  'por físico o rendimiento. Toda conversación requiere '
+                  'interés mutuo y permiso del servidor.'),
+              ],
+              if(active && widget.api is! DatingRepositoryB11) ...[
                 Text('Personas compatibles',
                   style:Theme.of(context).textTheme.titleLarge),
                 if(candidates.isEmpty)
