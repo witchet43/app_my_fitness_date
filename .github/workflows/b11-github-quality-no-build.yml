@@ -3,7 +3,7 @@
 name: MFD B11 — GitHub QA only (NO Cloud Build)
 on:
   push:
-    branches: [feature/b11-one-final-real-product-20261112, qa/b11-github-quality-no-cloudbuild-20261112, qa/b11-github-quality-no-cloudbuild-r2-20261112]
+    branches: [feature/b11-one-final-real-product-20261112, qa/b11-github-quality-no-cloudbuild-20261112, qa/b11-github-quality-no-cloudbuild-r2-20261112, qa/b11-github-quality-no-cloudbuild-r3-20261112]
     paths: [.build-gates/b11-github-qa-request.txt]
 
 permissions:
