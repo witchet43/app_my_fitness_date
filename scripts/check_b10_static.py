@@ -37,7 +37,7 @@ assert all(x not in ui for x in [
 ])
 assert "PRIVATE_GYM_DO_NOT_LEAK" in tests
 assert "throwsUnsupportedError" in tests
-assert len(re.findall(r"^\\| [FNE]-\\d{3} \\|", audit, re.MULTILINE)) == 84
+assert len(re.findall(r"^\| [FNE]-\d{3} \|", audit, re.MULTILINE)) == 84
 assert release["release_channel"] == "not_published"
 assert all(g["status"] == "pending" for g in release["gates"].values())
 print("B10 STATIC PREFLIGHT PASS — not a Flutter build or product signoff")
