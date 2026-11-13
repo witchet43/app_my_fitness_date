@@ -3,18 +3,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:my_fitness_date/src/core/dating_repository_b11.dart';
 import 'package:my_fitness_date/src/features/rhythm_concept_lab_b10.dart';
 import 'package:my_fitness_date/src/features/dating_discovery_b11.dart';
+import 'package:my_fitness_date/src/features/gym_shield_activation_b11.dart';
 
 const candidateIdB11='bc8e3ef2-a487-46da-b3d1-d0747607a411';
 const matchIdB11='cc8e3ef2-a487-46da-b3d1-d0747607a411';
 class FakeDatingB11 implements DatingRepositoryB11 {
   Map<String,dynamic>? doc;
-  int saveCalls=0,likeCalls=0,reportCalls=0,sendCalls=0;
+  int saveCalls=0,likeCalls=0,reportCalls=0,sendCalls=0,activationCalls=0;
   @override
   Future<Map<String,dynamic>?> loadRhythmB11() async => doc;
   @override
   Future<void> saveRhythmB11(Map<String,dynamic> draft) async {
     saveCalls++;doc={...draft};
   }
+  @override
+  Future<List<Map<String,dynamic>>> gymCatalogB11() async => [{
+    'id':'ab8e3ef2-a487-46da-b3d1-d0747607a411',
+    'name':'Gimnasio de QA','city':'Ciudad de prueba',
+  }];
+
+  @override
+  Future<String> activateB11(
+      String gymId,List<Map<String,int>> weeklySlots) async {
+    expect(gymId,'ab8e3ef2-a487-46da-b3d1-d0747607a411');
+    activationCalls++;
+    return 'activated';
+  }
+
   @override
   Future<List<Map<String,dynamic>>> discoverB11() async => [{
     'user_id':candidateIdB11,'display_name':'QA Candidate',
@@ -135,4 +150,41 @@ void main(){
       expect(repo.reportCalls,1);
       expect(tester.takeException(),isNull);
     });
+
+testWidgets('Gym Shield mode A uses an explicit real catalog selection',
+  (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1100,1100));
+    addTearDown(()=>tester.binding.setSurfaceSize(null));
+    final repo=FakeDatingB11();
+    await tester.pumpWidget(MaterialApp(
+      home:GymShieldActivationB11(api:repo,mode:'other_gyms')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('b11-gym-select')),findsOneWidget);
+    expect(find.byKey(const Key('b11-activate-confirm')),findsOneWidget);
+    expect(find.byKey(const Key('b11-add-slot')),findsNothing);
+    await tester.tap(find.byKey(const Key('b11-gym-select')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Gimnasio de QA · Ciudad de prueba').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('b11-activate-confirm')));
+    await tester.pumpAndSettle();
+    expect(repo.activationCalls,1);
+    expect(tester.takeException(),isNull);
+  });
+
+testWidgets('Gym Shield mode B cannot activate without private slots',
+  (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1100,1300));
+    addTearDown(()=>tester.binding.setSurfaceSize(null));
+    final repo=FakeDatingB11();
+    await tester.pumpWidget(MaterialApp(
+      home:GymShieldActivationB11(
+        api:repo,mode:'same_gym_other_time')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('b11-add-slot')),findsOneWidget);
+    expect(find.byKey(const Key('b11-slot-start')),findsOneWidget);
+    expect(repo.activationCalls,0);
+    expect(tester.takeException(),isNull);
+  });
+
 }
