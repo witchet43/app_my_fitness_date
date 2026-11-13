@@ -31,6 +31,7 @@ const allowedOrigins = new Set([
   "https://b9-preview.my-fitness-date.pages.dev",
   "https://b10-preview.my-fitness-date.pages.dev",
   "https://b11-preview.my-fitness-date.pages.dev",
+  "https://b11-preview.my-fitness-date.pages.dev",
 ]);
 const cors = {
   "Access-Control-Allow-Origin": origin,
