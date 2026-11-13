@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/dating_preferences_b5.dart';
 import 'rhythm_concept_lab_b10.dart';
 import 'dating_discovery_b11.dart';
+import 'gym_shield_activation_b11.dart';
 import '../core/dating_repository_b11.dart';
 import '../core/dating_repository_b5.dart';
 
@@ -146,6 +147,8 @@ class _DatingV27State extends State<DatingV27> {
     final verifiedProvider=data['independent_provider_ready']==true;
     final released=data['discovery_release_ready']==true;
     final available=data['status']=='available';
+    final setupGym=data['gym_setup_required']==true &&
+      widget.api is DatingRepositoryB11;
     return Scaffold(
       appBar:AppBar(
         title:const Text('FitDating · privacidad primero'),
@@ -188,7 +191,8 @@ class _DatingV27State extends State<DatingV27> {
                 title:const Text('How I Move · How I Live · How I Relate'),
                 subtitle:const Text(
                   'Explora el concepto FITTED en español e inglés. '
-                  'Simulación local sin perfiles reales ni datos guardados.'),
+                  'Edita los tres ritmos de forma privada. Guardar requiere '
+                  'consentimiento separado; publicar requiere autorización.'),
                 trailing:const Icon(Icons.chevron_right),
                 onTap:()=>Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -219,6 +223,38 @@ class _DatingV27State extends State<DatingV27> {
                       'hasta aprobar verificación independiente de edad, '
                       'moderación y los controles de privacidad.'),
                   ]))),
+              if(!active && setupGym)...[
+                Card(child:Padding(
+                  padding:const EdgeInsets.all(16),
+                  child:Column(
+                    crossAxisAlignment:CrossAxisAlignment.start,
+                    children:[
+                      Text('Último paso · Gym Shield',
+                        style:Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height:6),
+                      const Text('Ya tienes las verificaciones externas '
+                        'aprobadas. Configura tu gimnasio real y, si elegiste '
+                        'el modo B, sus franjas privadas antes de participar.'),
+                      const SizedBox(height:10),
+                      FilledButton.icon(
+                        key:const Key('b11-open-gym-activation'),
+                        icon:const Icon(Icons.shield_outlined),
+                        label:const Text('Completar protección y activar'),
+                        onPressed:()=>Navigator.of(context).push<bool>(
+                          MaterialPageRoute<bool>(
+                            builder:(_)=>GymShieldActivationB11(
+                              api:widget.api as DatingRepositoryB11,
+                              mode:privacy,
+                            )),
+                        ).then((activated){
+                          if(activated==true&&mounted)reload();
+                        }),
+                      ),
+                    ],
+                  ),
+                )),
+                const SizedBox(height:12),
+              ],
               const SizedBox(height:15),
               Text('Mis preferencias',
                 style:Theme.of(context).textTheme.titleLarge),
