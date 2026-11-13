@@ -50,6 +50,6 @@ assert 'saveRhythmB11' in api and 'reportB11' in api
 assert 'b11-open-real-discovery' in ui
 assert 'b11-save-rhythm' in lab
 assert 'b11-report' in chat and 'b11-send' in chat
-assert 'user_id' in validator and 'validateRhythmB11' in validator
+assert 'Object.keys(data).some' in validator and 'validateRhythmB11' in validator
 assert 'gym_id' in tests and 'canSave:false' in tests
 print('B11 final static P0 checks PASS — human release gates remain closed')
