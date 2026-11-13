@@ -1,0 +1,1 @@
+One GitHub Actions NO RELEASE BUILD run. Test local GoTrue JWT -> Edge Functions HTTP -> PostgREST RLS persisted FITTED rhythm, consent, BOLA, re-login and opt-out; Flutter analyze/widget tests. No Supabase hosted writes, no Cloudflare, no Google Cloud Build.
