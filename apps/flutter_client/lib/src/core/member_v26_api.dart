@@ -8,8 +8,8 @@ import 'curator_repository.dart';
 import 'community_repository.dart';
 import 'dating_repository_b11.dart';
 
-/// Business data travels through our own FastAPI Gateway, not directly
-/// through a privileged database key or user-selected identity.
+/// Business data travels through our authenticated Supabase Edge gateway,
+/// using the member JWT and RLS, never a privileged database key.
 class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11 {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
