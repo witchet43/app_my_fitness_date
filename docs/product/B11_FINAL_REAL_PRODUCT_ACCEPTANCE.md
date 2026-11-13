@@ -3,7 +3,7 @@ Fecha: 2026-11-12 (México). Issue #76. Rama `feature/b11-one-final-real-product
 Documento fuente: `FITTED_Concepto_Exploratorio_Spanglish.pdf` (8 páginas); matriz previa: `docs/product/B10_FITTED_84_REQUIREMENTS_AUDIT.md`.
 
 ## Resultado orientado a la persona y no al despliegue
-El perfil en tres capas deja de ser un simulador sin persistencia: con la sesión real y consentimiento FitDating, **How I Move / How I Live / How I Relate** ahora consulta y actualiza únicamente su propio registro en `public.member_rhythm_b11`. No se publican nombres de gimnasios, franjas exactas ni ubicaciones; RLS exige propietario y consentimiento. Se pueden revocar consentimiento y ritmo en la misma operación segura.
+**En código fuente**, el perfil en tres capas cuenta con operaciones de lectura y guardado de preferencias por el propietario, condicionadas al consentimiento FitDating. **Estas operaciones aún no se han demostrado en el entorno alojado**, porque la migración `public.member_rhythm_b11` no se aplicó en el Supabase conectado y la última CI no completó PostgreSQL ni Flutter. No se publican nombres de gimnasios, franjas exactas ni ubicaciones; RLS exige propietario y consentimiento. Se pueden revocar consentimiento y ritmo en la misma operación segura.
 
 La infraestructura también implementa perfiles candidatos explicables, interés bidireccional, matches, chat solo tras reciprocidad, reporte/bloqueo y propuestas de Active Date posteriores al match. La API usa JWT sin service_role y funciones privadas con controles de elegibilidad, suspensión, edad independiente, privacidad y cuotas; la UI no inventa personas y no puede levantar flags.
 
@@ -33,3 +33,12 @@ La infraestructura también implementa perfiles candidatos explicables, interés
 - Candidato único: NO repetir builds en caso de fallo; documentar exactamente el error y mantener el PR en Draft.
 - Solo se permite merge/producción si todas las verificaciones externas y requerimientos de release están probados y un propietario lo aprueba de manera informada.
 - Un éxito en CI no es equivalencia a producto comercial terminado.
+
+## Resultado real de la única ejecución B11 (sin suposiciones)
+
+- Ejecución: https://github.com/witchet43/app_my_fitness_date/actions/runs/43368513212; **FAILURE** en `Node and SQL contracts B1+B2+B3+B5`.
+- 62 pruebas Node pasaron, `npm run candidate:audit` aprobó la reconciliación de 24 migraciones.
+- Causa: `scripts/check_b5_static.py` exigía el tipo `DatingRepositoryB5` escrito directamente, aunque B11 lo extiende; contrato de comprobación corregido en commit posterior `9a52dc00beb2d81e36d89a811f41050cab8d38ab`.
+- PostgreSQL, Gym Shield, Flutter analyzer/widgets, Flutter web y Cloudflare B11: **NO EJECUTADOS**. **No existe preview B11 validada** y la URL B10 corresponde exclusivamente a B10.
+- Migración B11: **SOLO EN REPOSITORIO**; no se aplicó a Supabase conectado. API QA `member-api-b11-preview` sí existe pero sus rutas B11 dependen de una tabla no instalada, por lo que no se debe presentar como producto funcionando.
+- No se repetirá ni ocultará el error bajo una ejecución nueva. El PR B11 permanece en borrador; producción `main` y los 9 release gates permanecen sin cambios.
