@@ -245,6 +245,9 @@ begin
    where user_id='00000000-0000-4000-8000-0000000011b2') then
    raise exception 'Consent withdrawal retained private rhythm';
  end if;
+ if not exists(select 1 from app_private.fitdating_matches_b11 m
+   where m.created_at < app_private.b11_pair_epoch(m.low_user,m.high_user))
+ then raise exception 'Old match was not invalidated by consent withdrawal'; end if;
  if not exists(select 1 from public.community_reports_b4
    where reporter_id='00000000-0000-4000-8000-0000000011a1'
      and subject_id='00000000-0000-4000-8000-0000000011b2') then
