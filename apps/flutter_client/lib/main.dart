@@ -22,9 +22,15 @@ Future<void> main() async {
 
   // Existing Supabase project (formerly labeled DEV) is the intended PROD.
   // Its project ref is immutable; activation still needs OAuth, legal and API gates.
-  const supabaseUrl=String.fromEnvironment('MFD_PROD_SUPABASE_URL');
-  const publishableKey=String.fromEnvironment(
-      'MFD_PROD_SUPABASE_PUBLISHABLE_KEY');
+  // Explicit local-only QA; NEVER permits plaintext HTTP on remote hosts.
+  // Production stays pinned to the independently identified PROD project.
+  const localQa=bool.fromEnvironment('MFD_LOCAL_QA',defaultValue:false);
+  const supabaseUrl=localQa
+      ?String.fromEnvironment('MFD_LOCAL_SUPABASE_URL')
+      :String.fromEnvironment('MFD_PROD_SUPABASE_URL');
+  const publishableKey=localQa
+      ?String.fromEnvironment('MFD_LOCAL_SUPABASE_PUBLISHABLE_KEY')
+      :String.fromEnvironment('MFD_PROD_SUPABASE_PUBLISHABLE_KEY');
   const apiUrl=String.fromEnvironment('MFD_API_BASE_URL');
   const termsUrl=String.fromEnvironment('MFD_TERMS_URL');
   const privacyUrl=String.fromEnvironment('MFD_PRIVACY_URL');
@@ -34,13 +40,25 @@ Future<void> main() async {
   const providerVerified=bool.fromEnvironment(
       'MFD_GOOGLE_PROVIDER_VERIFIED',defaultValue:false);
 
-  final ready=
+  final productionReady=
+      !localQa &&
       supabaseUrl == 'https://jtrdvnwbxpfdnbzasvcj.supabase.co' &&
       publishableKey.startsWith('sb_publishable_') &&
       apiUrl.startsWith('https://') &&
       termsUrl.startsWith('https://') &&
       privacyUrl.startsWith('https://') &&
-      redirectUrl.startsWith('https://') &&
+      redirectUrl.startsWith('https://');
+  final localQaReady=
+      localQa &&
+      Uri.base.scheme == 'http' &&
+      Uri.base.host == '127.0.0.1' &&
+      supabaseUrl == 'http://127.0.0.1:54321' &&
+      apiUrl == 'http://127.0.0.1:54321/functions/v1/member-api-v26' &&
+      publishableKey.startsWith('sb_publishable_') &&
+      termsUrl.startsWith('http://127.0.0.1:5173/') &&
+      privacyUrl.startsWith('http://127.0.0.1:5173/') &&
+      redirectUrl == 'http://127.0.0.1:5173/';
+  final ready=(productionReady||localQaReady) &&
       termsVersion.isNotEmpty && privacyVersion.isNotEmpty;
   if(!ready){
     runApp(MaterialApp(
