@@ -1,0 +1,4 @@
+MFD — Build 10 / FINAL functional feature candidate (FITTED PDF audit).
+Owner's latest explicit request: generate the last build. This ONE final QA run follows 10 previous remote QA executions consumed by B1-B9 corrections. Never retry automatically.
+Scope: B1-B5+B8+B9+B10, Gym Shield, hosted QA API, Flutter analyze and widget tests, Flutter web candidate, isolated Cloudflare b10-preview and exact SHA smoke.
+Release state remains NO-GO: no real dating discovery, match/chat, brand rename, public beta, production or approval bypass.
