@@ -1,0 +1,1 @@
+One TEST-ONLY GitHub Actions run: disposable local Supabase GoTrue email confirmation, two genuine JWT sessions, B5 global release gate, B11 activation denial, RLS ownership, social deletion/suspension gates. No Cloud Build, no Flutter release compile, no deploy to hosting, no managed DB writes.
