@@ -17,7 +17,8 @@
     "candidate:audit": "tsx scripts/candidate-audit.mts",
     "candidate:require-beta": "tsx scripts/candidate-audit.mts --require-beta",
     "release:preflight:demo": "tsx scripts/release-preflight.mts demo",
-    "release:preflight:beta": "tsx scripts/release-preflight.mts beta"
+    "release:preflight:beta": "tsx scripts/release-preflight.mts beta",
+    "test:edge:b11:local": "tsx scripts/local-edge-profile-b11.mts"
   },
   "dependencies": {
     "expo": "~57.0.31",
