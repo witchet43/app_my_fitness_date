@@ -174,6 +174,12 @@ end;
 $assert$;
 reset role;
 
+-- Only the ephemeral PostgreSQL operator may inspect internal match IDs.
+-- An outsider learns the UUID here solely as an adversarial BOLA fixture.
+select set_config('qa.b11.match_id',
+  (select m.id::text from app_private.fitdating_matches_b11 m limit 1),
+  false);
+
 -- C must never read or send messages despite possessing a signed-in JWT.
 set role authenticated;
 select set_config('request.jwt.claim.sub',
@@ -181,7 +187,7 @@ select set_config('request.jwt.claim.sub',
 do $assert$
 declare mid uuid;
 begin
- select m.id into mid from app_private.fitdating_matches_b11 m limit 1;
+ mid:=current_setting('qa.b11.match_id')::uuid;
  if exists(select 1 from public.fitdating_my_messages_b11(mid)) then
    raise exception 'BOLA: C read someone else''s chat';
  end if;
@@ -198,7 +204,7 @@ select set_config('request.jwt.claim.sub',
 do $assert$
 declare mid uuid;
 begin
- select m.id into mid from app_private.fitdating_matches_b11 m limit 1;
+ mid:=current_setting('qa.b11.match_id')::uuid;
  if public.fitdating_send_b11(mid,'Hello from A')<>'sent' then
    raise exception 'First real private chat message failed';
  end if;
