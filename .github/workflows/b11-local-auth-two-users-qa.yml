@@ -2,7 +2,7 @@
 name: MFD B11 — two-account local Auth QA (no builds)
 on:
   push:
-    branches: [qa/b11-local-auth-two-users-20261112]
+    branches: [qa/b11-local-auth-two-users-20261112, qa/b11-owner-profile-persistence-20261112]
     paths: [.build-gates/b11-local-two-users-qa.txt]
 
 permissions:
