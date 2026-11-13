@@ -10,7 +10,7 @@ String normalizeActivitySearchB9(String value) {
   for (final entry in accents.entries) {
     normalized = normalized.replaceAll(entry.key, entry.value);
   }
-  return normalized.replaceAll(RegExp(r'\\s+'), ' ');
+  return normalized.replaceAll(RegExp(r'\s+'), ' ');
 }
 
 List<String> activityFilterOptionsB9(
