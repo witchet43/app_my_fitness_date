@@ -2,7 +2,7 @@
 name: MFD B11 — Local API + Flutter QA (no cloud build)
 on:
   push:
-    branches: [qa/b11-local-api-flutter-integration-20261112, qa/b11-local-api-flutter-integration-r2-20261112]
+    branches: [qa/b11-local-api-flutter-integration-20261112, qa/b11-local-api-flutter-integration-r2-20261112, qa/b11-local-api-flutter-integration-r3-20261112]
     paths: [.build-gates/b11-local-api-qa-request.txt]
 
 permissions:
