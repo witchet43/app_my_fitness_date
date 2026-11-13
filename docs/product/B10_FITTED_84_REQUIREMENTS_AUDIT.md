@@ -40,7 +40,7 @@ FITTED es un **working brand concept**, no nombre aprobado. My Fitness Date (com
 4. Flutter Android/iOS en dispositivos físicos, accesibilidad WCAG, E2E de dos cuentas y BOLA/IDOR no acreditados (N-001/003).
 5. CI MVP B8 detectó drift de secuencia de migraciones; Auth local E2E no recibió OTP en Mailpit; no declarar verdes los flujos incompletos.
 6. Experimento cualitativo 15–20 personas, 2–3 prototipos, naming, trademark, países/culturas y métricas sin investigación real (E-007, E-010..017).
-7. B10 no cuenta con una nueva compilación remota porque el límite acordado de **10/10** ejecuciones ya fue consumido por el cierre de B9.
+7. El ciclo QA B1–B9 consumió 10/10 ejecuciones. Ante la solicitud explícita del usuario de generar el **Build funcional #10**, se realizará **una sola ejecución adicional de QA B10** (11.ª ejecución acumulada), sin reintentos ni producción. El resultado debe verificarse por separado.
 8. Las decisiones D-01..14 permanecen abiertas. El usuario solicita implementar el último build, no ha aprobado sustituir marca/dominio, abrir datos románticos, lanzar a tiendas, ni pagar proveedores.
 
 ## Alcance funcional final B10 (sin promesas infladas)
