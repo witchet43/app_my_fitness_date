@@ -2,7 +2,7 @@
 name: MFD B11 — Local API + Flutter QA (no cloud build)
 on:
   push:
-    branches: [qa/b11-local-api-flutter-integration-20261112, qa/b11-local-api-flutter-integration-r2-20261112, qa/b11-local-api-flutter-integration-r3-20261112]
+    branches: [qa/b11-local-api-flutter-integration-20261112, qa/b11-local-api-flutter-integration-r2-20261112, qa/b11-local-api-flutter-integration-r3-20261112, qa/b11-local-api-flutter-integration-r4-20261112]
     paths: [.build-gates/b11-local-api-qa-request.txt]
 
 permissions:
@@ -71,6 +71,13 @@ jobs:
           flutter pub get
           flutter analyze --no-fatal-infos
           flutter test --reporter expanded
+      - name: Local Edge diagnostics on failure (no credentials)
+        if: failure()
+        run: |
+          if [ -f /tmp/mfd-b11-local-edge.log ]; then
+            echo "Last local Edge diagnostic lines:"
+            tail -n 90 /tmp/mfd-b11-local-edge.log
+          fi
       - name: Destroy all local QA resources
         if: always()
         run: npx --yes supabase@latest stop --no-backup || true
