@@ -208,7 +208,7 @@ begin
  order by c.user_id
  limit p_limit;
 end;
-$;
+$$;
 
 create function app_private.b11_like(p_user_id uuid)
 returns text language plpgsql security definer set search_path=''
@@ -380,7 +380,7 @@ $$;
 -- legal retention is approved; no former participant remains discoverable.
 create or replace function public.fitdating_disable_b5()
 returns text language plpgsql security definer set search_path=''
-as $
+as $$
 declare v_user uuid:=(select auth.uid()); v_deleted integer:=0;
 begin
  if v_user is null or coalesce(auth.jwt()->>'is_anonymous','false')='true'
@@ -401,7 +401,7 @@ begin
  end if;
  return 'disabled';
 end;
-$;
+$$;
 revoke all on function public.fitdating_disable_b5()
   from public,anon,authenticated;
 grant execute on function public.fitdating_disable_b5()
