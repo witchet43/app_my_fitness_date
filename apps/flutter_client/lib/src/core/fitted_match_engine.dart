@@ -53,6 +53,8 @@ abstract final class FittedMatchEngine {
     required Map<String,String> a,
     required Map<String,String> b,
     required Map<String,int> weights,
+    Set<String> aInterests=const {},
+    Set<String> bInterests=const {},
   }){
     if(!validWeights(weights))return null;
     final contributions=<String,double>{};
@@ -100,7 +102,11 @@ abstract final class FittedMatchEngine {
         case 'autonomy':return group(['together','train_partner']);
         case 'social':return group(['weekday','alcohol']);
         case 'competition':return group(['competitions','training_mode']);
-        case 'interests':return null; // No interest arrays in this legacy simulator.
+        case 'interests':
+          if(aInterests.isEmpty||bInterests.isEmpty)return null;
+          final combined=aInterests.union(bInterests);
+          final shared=aInterests.intersection(bInterests);
+          return .35+.65*shared.length/combined.length;
         default:return null;
       }
     }
@@ -117,7 +123,9 @@ abstract final class FittedMatchEngine {
         ?'complementary_sports'
         :v>=.8?'aligned_${f.id}':'discuss_${f.id}';
       reasonCodes[f.id]=code;
-      if(v>=.8 && f.id=='recovery'&&a['sleep']=='early_bird'){
+      if(f.id=='interests'&&aInterests.intersection(bInterests).isNotEmpty){
+        reasonCodes[f.id]='aligned_interests';
+      }else if(v>=.8 && f.id=='recovery'&&a['sleep']=='early_bird'){
         reasonCodes[f.id]='shared_early_sleep';
       }else if(v>=.8&&f.id=='lifestyle'&&a['weekday']=='home'&&
         b['weekday']=='home'){
