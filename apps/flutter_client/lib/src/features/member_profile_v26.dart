@@ -407,14 +407,6 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             ),
           ),
           const SizedBox(height:16),
-          Padding(
-            padding:const EdgeInsets.symmetric(horizontal:4),
-            child:Align(alignment:Alignment.centerLeft,
-              child:Text(FittedLocaleScope.t(context,
-                'Tu próxima actividad','Your next activity'),
-                style:Theme.of(context).textTheme.titleMedium)),
-          ),
-          const SizedBox(height:7),
           MemberAgendaB8(
             api:widget.api,
             onExplore:() async {
