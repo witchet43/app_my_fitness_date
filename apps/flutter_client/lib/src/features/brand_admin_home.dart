@@ -157,7 +157,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   void _notice(String text, {bool bad=false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(text),
+      content: FittedText(text),
       backgroundColor: bad ? const Color(0xFF8F3434) : null,
     ));
   }
@@ -505,9 +505,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   Widget _header(String title, String subtitle) => Padding(
     padding:const EdgeInsets.only(bottom:15),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      Text(title,style:Theme.of(context).textTheme.headlineMedium),
+      FittedText(title,style:Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height:7),
-      Text(subtitle,style:Theme.of(context).textTheme.bodyMedium),
+      FittedText(subtitle,style:Theme.of(context).textTheme.bodyMedium),
     ]),
   );
 
@@ -529,15 +529,15 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     const SizedBox(height:24),
     Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(
       crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text('Brand Studio',style:Theme.of(context).textTheme.titleLarge),
+        FittedText('Brand Studio',style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:8),
-        const Text('Configura nombre, paletas, textos, logotipos y portadas. '
+        const FittedText('Configura nombre, paletas, textos, logotipos y portadas. '
           'Se guardan globalmente sin revisión ni despliegue adicional.'),
         const SizedBox(height:12),
         FilledButton.icon(
           onPressed:()=>setState(()=>tab=1),
           icon:const Icon(Icons.design_services_outlined),
-          label:const Text('Editar marca en vivo'),
+          label:const FittedText('Editar marca en vivo'),
         ),
       ],
     ))),
@@ -545,10 +545,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       const SizedBox(height:14),
       Card(child:Padding(padding:const EdgeInsets.all(20),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Actividades deportivas',
+          FittedText('Actividades deportivas',
             style:Theme.of(context).textTheme.titleLarge),
           const SizedBox(height:8),
-          const Text('Publica actividades verificadas para los miembros y '
+          const FittedText('Publica actividades verificadas para los miembros y '
             'mira cómo se ven en la aplicación, sin salir de tu cuenta '
             'administrativa ni solicitar un nuevo despliegue.'),
           const SizedBox(height:12),
@@ -557,7 +557,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
               builder:(_)=>AdminCuratedActivitiesB2(api:widget.curatorApi!))),
             icon:const Icon(Icons.event_available_outlined),
-            label:const Text('Administrar actividades')),
+            label:const FittedText('Administrar actividades')),
           if(widget.activityPreviewApi!=null) ...[
             const SizedBox(height:10),
             OutlinedButton.icon(
@@ -566,17 +566,17 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 builder:(_)=>ActivitiesB1(
                   api:widget.activityPreviewApi!,readOnly:true))),
               icon:const Icon(Icons.visibility_outlined),
-              label:const Text('Ver como miembro (solo lectura)')),
+              label:const FittedText('Ver como miembro (solo lectura)')),
           ],
         ]))),
     ],
     const SizedBox(height:14),
     Card(child:Padding(padding:const EdgeInsets.all(20),
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text('Gimnasios para Gym Shield',
+        FittedText('Gimnasios para Gym Shield',
           style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:8),
-        const Text('Catálogo de gimnasios reales para proteger '
+        const FittedText('Catálogo de gimnasios reales para proteger '
           'los lugares y horarios privados de los miembros. '
           'Registro administrativo con MFA y auditoría.'),
         const SizedBox(height:12),
@@ -587,17 +587,17 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               builder:(_)=>GymCatalogueAdminB11(
                 repository:widget.repository))),
           icon:const Icon(Icons.fitness_center_outlined),
-          label:const Text('Administrar gimnasios'),
+          label:const FittedText('Administrar gimnasios'),
         ),
       ]))),
     if(widget.communityAdmin!=null)...[
       const SizedBox(height:14),
       Card(child:Padding(padding:const EdgeInsets.all(20),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Seguridad de comunidad',
+          FittedText('Seguridad de comunidad',
             style:Theme.of(context).textTheme.titleLarge),
           const SizedBox(height:8),
-          const Text('Revisa denuncias, oculta publicaciones, suspende '
+          const FittedText('Revisa denuncias, oculta publicaciones, suspende '
             'participaciones y consulta solicitudes de baja con trazabilidad.'),
           const SizedBox(height:12),
           FilledButton.icon(
@@ -605,12 +605,12 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
               builder:(_)=>CommunityModerationB4(api:widget.communityAdmin!))),
             icon:const Icon(Icons.gpp_good_outlined),
-            label:const Text('Moderación y privacidad')),
+            label:const FittedText('Moderación y privacidad')),
         ]))),
     ],
     const SizedBox(height:14),
     const Card(child:Padding(padding:EdgeInsets.all(18),
-      child:Text('Los cambios de apariencia internos se guardan sin otro build. '
+      child:FittedText('Los cambios de apariencia internos se guardan sin otro build. '
         'El icono instalado, tiendas y permisos móviles continúan requiriendo publicación de software.'))),
   ]);
 
@@ -619,8 +619,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       crossAxisAlignment:CrossAxisAlignment.start,children:[
         Icon(icon,size:30),
         const SizedBox(height:14),
-        Text('$value',style:Theme.of(context).textTheme.headlineMedium),
-        Text(label),
+        FittedText('$value',style:Theme.of(context).textTheme.headlineMedium),
+        FittedText(label),
       ],
     ))));
 
@@ -633,9 +633,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       child:Row(children:[
         Icon(_brandSaving?Icons.sync:Icons.cloud_done_outlined,size:20),
         const SizedBox(width:8),
-        Expanded(child:Text(brandStatus!,key:const Key('b3-save-status'))),
+        Expanded(child:FittedText(brandStatus!,key:const Key('b3-save-status'))),
         if(!_brandReady) TextButton(onPressed:()=>widget.liveBrand.refresh(),
-          child:const Text('Sincronizar')),
+          child:const FittedText('Sincronizar')),
       ])),
     LayoutBuilder(builder:(context,box) {
       final wide=box.maxWidth>=950;
@@ -652,7 +652,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     crossAxisAlignment:CrossAxisAlignment.stretch,children:[
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Nombre y comunicación',style:Theme.of(context).textTheme.titleLarge),
+          FittedText('Nombre y comunicación',style:Theme.of(context).textTheme.titleLarge),
           const SizedBox(height:12),
           _field(name,'Nombre de la aplicación'),
           _field(tagline,'Lema'),
@@ -662,20 +662,20 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Paletas y colores',style:Theme.of(context).textTheme.titleLarge),
+          FittedText('Paletas y colores',style:Theme.of(context).textTheme.titleLarge),
           const SizedBox(height:8),
           Wrap(spacing:7,runSpacing:7,children:[
             for(final p in _paletteSeeds)
-              ChoiceChip(label:Text(p['name']!),
+              ChoiceChip(label:FittedText(p['name']!),
                 selected:paletteName.text==p['name'],
                 onSelected:(_)=>_applyPalette(p)),
           ]),
           if(palettes.isNotEmpty) ...[
             const SizedBox(height:12),
-            const Text('Mis paletas guardadas'),
+            const FittedText('Mis paletas guardadas'),
             Wrap(spacing:6,runSpacing:6,children:[
               for(final p in palettes)
-                ActionChip(label:Text(p['name'].toString()),
+                ActionChip(label:FittedText(p['name'].toString()),
                   onPressed:(){
                     final c=Map<String,dynamic>.from(p['colors'] as Map);
                     _applyPalette({'name':p['name'].toString(),
@@ -695,41 +695,41 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           FilledButton.tonalIcon(
             onPressed:validPalette?_savePalette:null,
             icon:const Icon(Icons.add_circle_outline),
-            label:const Text('Crear paleta en catálogo'),
+            label:const FittedText('Crear paleta en catálogo'),
           ),
         ]))),
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Tipografía',style:Theme.of(context).textTheme.titleLarge),
+          FittedText('Tipografía',style:Theme.of(context).textTheme.titleLarge),
           DropdownButtonFormField<String>(
             key:ValueKey('font-$font'),initialValue:font,
             decoration:const InputDecoration(labelText:'Familia de prueba'),
             items:[
               for(final f in ['Georgia','Palatino','Garamond','Arial'])
-                DropdownMenuItem(value:f,child:Text(f)),
+                DropdownMenuItem(value:f,child:FittedText(f)),
               if(font.startsWith('asset:'))
                 DropdownMenuItem(value:font,
-                  child:const Text('Fuente WOFF2 cargada (requiere compilación)')),
+                  child:const FittedText('Fuente WOFF2 cargada (requiere compilación)')),
             ],
             onChanged:(v){setState(()=>font=v??'Georgia');_queueBrandSave();},
           ),
           const SizedBox(height:8),
-          const Text('Las fuentes WOFF2 se conservan en la biblioteca. '
+          const FittedText('Las fuentes WOFF2 se conservan en la biblioteca. '
             'Su visualización nativa completa requiere procesarlas para Flutter.',
             style:TextStyle(fontSize:12)),
         ]))),
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Logotipos del catálogo',style:Theme.of(context).textTheme.titleLarge),
+          FittedText('Logotipos del catálogo',style:Theme.of(context).textTheme.titleLarge),
           const SizedBox(height:12),
           Wrap(spacing:8,runSpacing:8,children:[
             for(var i=0;i<_logoNames.length;i++)
               ChoiceChip(
                 key:Key('admin-logo-$i'),
                 avatar:Icon(_logoIcons[i],size:19),
-                label:Text(_logoNames[i]),
+                label:FittedText(_logoNames[i]),
                 selected:selectedLogoAsset==null&&logoIndex==i,
                 onSelected:(_){setState((){
                   selectedLogoAsset=null;logoIndex=i;
@@ -739,18 +739,18 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           if(selectedLogoAsset!=null)
             TextButton(
               onPressed:(){setState(()=>selectedLogoAsset=null);_queueBrandSave();},
-              child:const Text('Volver a los logos del catálogo')),
+              child:const FittedText('Volver a los logos del catálogo')),
           const SizedBox(height:10),
           SwitchListTile(
-            title:const Text('Vista oscura'),
+            title:const FittedText('Vista oscura'),
             value:dark,
             onChanged:(v){setState(()=>dark=v);_queueBrandSave();}),
           DropdownButtonFormField<String>(
             key:ValueKey('layout-$layout'),
             initialValue:layout,
             items:const [
-              DropdownMenuItem(value:'editorial',child:Text('Editorial')),
-              DropdownMenuItem(value:'minimal',child:Text('Minimalista')),
+              DropdownMenuItem(value:'editorial',child:FittedText('Editorial')),
+              DropdownMenuItem(value:'minimal',child:FittedText('Minimalista')),
             ],
             onChanged:(v){setState(()=>layout=v??'editorial');_queueBrandSave();},
             decoration:const InputDecoration(labelText:'Distribución'),
@@ -760,8 +760,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       const ListTile(
         key:Key('b3-auto-publish-label'),
         leading:Icon(Icons.cloud_done_outlined),
-        title:Text('Guardado automático activo'),
-        subtitle:Text('No hay solicitudes de revisión ni builds por cada cambio.')),
+        title:FittedText('Guardado automático activo'),
+        subtitle:FittedText('No hay solicitudes de revisión ni builds por cada cambio.')),
     ]);
 
   Widget _preview(){
@@ -779,13 +779,13 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         ? NetworkImage(heroAssetId) : null;
     return Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-        Text('Vista previa en vivo',style:Theme.of(context).textTheme.titleLarge),
+        FittedText('Vista previa en vivo',style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:8),
         Wrap(children:[
-          FilterChip(label:const Text('Web'),selected:!mobilePreview,
+          FilterChip(label:const FittedText('Web'),selected:!mobilePreview,
             onSelected:(_)=>setState(()=>mobilePreview=false)),
           const SizedBox(width:8),
-          FilterChip(label:const Text('Móvil'),selected:mobilePreview,
+          FilterChip(label:const FittedText('Móvil'),selected:mobilePreview,
             onSelected:(_)=>setState(()=>mobilePreview=true)),
         ]),
         const SizedBox(height:10),
@@ -810,7 +810,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   else
                     Icon(_logoIcons[logoIndex],color:p,size:32),
                   const SizedBox(width:8),
-                  Expanded(child:Text(name.text.isEmpty?'Mi marca':name.text,
+                  Expanded(child:FittedText(name.text.isEmpty?'Mi marca':name.text,
                     maxLines:2,overflow:TextOverflow.ellipsis,
                     style:TextStyle(color:foreground,fontSize:19,
                       fontWeight:FontWeight.w600,
@@ -828,32 +828,32 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 ),
                 Padding(padding:const EdgeInsets.all(26),
                   child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    const Text('CONEXIONES CON INTENCIÓN',style:TextStyle(
+                    const FittedText('CONEXIONES CON INTENCIÓN',style:TextStyle(
                       fontSize:11,color:Colors.white70,letterSpacing:2)),
                     const SizedBox(height:15),
-                    Text(headline.text,
+                    FittedText(headline.text,
                       style:TextStyle(fontFamily:font.startsWith('asset:')?null:font,
                         fontSize:mobilePreview?28:34,
                         color:Colors.white,height:1.22)),
                     const SizedBox(height:16),
-                    Text(description.text,style:const TextStyle(
+                    FittedText(description.text,style:const TextStyle(
                       color:Colors.white,fontSize:15,height:1.5)),
                     const SizedBox(height:18),
                     Container(
                       decoration:BoxDecoration(
                         color:a,borderRadius:BorderRadius.circular(10)),
                       padding:const EdgeInsets.all(12),
-                      child:const Text('Conocer nuestra propuesta',
+                      child:const FittedText('Conocer nuestra propuesta',
                         style:TextStyle(color:Colors.black87,fontWeight:FontWeight.w700))),
                   ])),
               ]),
               Container(
                 padding:const EdgeInsets.all(20),
                 child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  Text(tagline.text,style:TextStyle(
+                  FittedText(tagline.text,style:TextStyle(
                     color:foreground,fontWeight:FontWeight.bold,fontSize:18)),
                   const SizedBox(height:7),
-                  Text('Cómo me muevo · Cómo vivo · Cómo me relaciono',
+                  FittedText('Cómo me muevo · Cómo vivo · Cómo me relaciono',
                     style:TextStyle(color:foreground)),
                 ]),
               ),
@@ -861,7 +861,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           ),
         )),
         const SizedBox(height:12),
-        Text('El diseño de la portada ya usa esta marca global. '
+        FittedText('El diseño de la portada ya usa esta marca global. '
           'Versión activa: ${widget.liveBrand.version}.',
           style:const TextStyle(fontSize:12)),
       ])));
@@ -877,14 +877,14 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           initialValue:selectedUploadKind,
           decoration:const InputDecoration(labelText:'Tipo de recurso'),
           items:const [
-            DropdownMenuItem(value:'logo',child:Text('Logo PNG o WebP')),
-            DropdownMenuItem(value:'font',child:Text('Tipografía WOFF2')),
-            DropdownMenuItem(value:'cover_desktop',child:Text('Portada escritorio')),
-            DropdownMenuItem(value:'cover_mobile',child:Text('Portada móvil')),
-            DropdownMenuItem(value:'login_image',child:Text('Imagen de acceso')),
-            DropdownMenuItem(value:'onboarding_image',child:Text('Imagen de onboarding')),
-            DropdownMenuItem(value:'app_image',child:Text('Imagen interior')),
-            DropdownMenuItem(value:'illustration',child:Text('Ilustración')),
+            DropdownMenuItem(value:'logo',child:FittedText('Logo PNG o WebP')),
+            DropdownMenuItem(value:'font',child:FittedText('Tipografía WOFF2')),
+            DropdownMenuItem(value:'cover_desktop',child:FittedText('Portada escritorio')),
+            DropdownMenuItem(value:'cover_mobile',child:FittedText('Portada móvil')),
+            DropdownMenuItem(value:'login_image',child:FittedText('Imagen de acceso')),
+            DropdownMenuItem(value:'onboarding_image',child:FittedText('Imagen de onboarding')),
+            DropdownMenuItem(value:'app_image',child:FittedText('Imagen interior')),
+            DropdownMenuItem(value:'illustration',child:FittedText('Ilustración')),
           ],
           onChanged:(v)=>setState(()=>selectedUploadKind=v??'logo'),
         ),
@@ -894,9 +894,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             initialValue:license,
             decoration:const InputDecoration(labelText:'Licencia de uso declarada'),
             items:const [
-              DropdownMenuItem(value:'open',child:Text('Licencia abierta compatible')),
-              DropdownMenuItem(value:'owned',child:Text('Soy titular de los derechos')),
-              DropdownMenuItem(value:'licensed',child:Text('Licencia comercial válida')),
+              DropdownMenuItem(value:'open',child:FittedText('Licencia abierta compatible')),
+              DropdownMenuItem(value:'owned',child:FittedText('Soy titular de los derechos')),
+              DropdownMenuItem(value:'licensed',child:FittedText('Licencia comercial válida')),
             ],
             onChanged:(v)=>setState(()=>license=v??'open'),
           ),
@@ -906,10 +906,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           key:const Key('admin-upload-brand-asset'),
           onPressed:busy?null:_upload,
           icon:const Icon(Icons.upload_file_outlined),
-          label:Text(busy?'Cargando...':'Seleccionar y subir archivo privado'),
+          label:FittedText(busy?'Cargando...':'Seleccionar y subir archivo privado'),
         ),
         const SizedBox(height:8),
-        const Text('Imágenes PNG/WebP/JPG hasta 8 MiB; fuentes WOFF2 hasta '
+        const FittedText('Imágenes PNG/WebP/JPG hasta 8 MiB; fuentes WOFF2 hasta '
           '2 MiB. No se admiten SVG externos activos.',style:TextStyle(fontSize:12)),
       ],
     ))),
@@ -918,8 +918,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       Card(child:ListTile(
         leading:Icon(item['asset_kind']=='font'?Icons.text_fields:
           item['asset_kind']=='logo'?Icons.auto_awesome_mosaic:Icons.image_outlined),
-        title:Text(item['name'].toString(),maxLines:1,overflow:TextOverflow.ellipsis),
-        subtitle:Text('${item['asset_kind']} · ${((item['bytes'] as num)/1024).ceil()} KB'),
+        title:FittedText(item['name'].toString(),maxLines:1,overflow:TextOverflow.ellipsis),
+        subtitle:FittedText('${item['asset_kind']} · ${((item['bytes'] as num)/1024).ceil()} KB'),
         trailing:const Icon(Icons.check_circle_outline),
         onTap:()async{
           await _loadAsset(item);
@@ -929,7 +929,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       )),
     if(assets.isEmpty)const Padding(
       padding:EdgeInsets.all(20),
-      child:Text('Aún no hay recursos privados.')),
+      child:FittedText('Aún no hay recursos privados.')),
   ]);
 
   Widget _drafts()=>ListView(padding:const EdgeInsets.all(22),children:[
@@ -939,37 +939,37 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     FilledButton.icon(
       onPressed:busy?null:_saveDraft,
       icon:const Icon(Icons.save_outlined),
-      label:Text(draft==null?'Crear borrador':'Guardar nueva revisión'),
+      label:FittedText(draft==null?'Crear borrador':'Guardar nueva revisión'),
     ),
     const SizedBox(height:12),
     OutlinedButton(
       onPressed:()=>setState((){
         draft=null;revisions=[];draftTitle.text='Nueva propuesta';
       }),
-      child:const Text('Comenzar una propuesta nueva'),
+      child:const FittedText('Comenzar una propuesta nueva'),
     ),
     if(draft!=null) ...[
       const SizedBox(height:14),
       OutlinedButton.icon(onPressed:_fetchRevisions,
         icon:const Icon(Icons.history),
-        label:const Text('Ver historial del borrador')),
+        label:const FittedText('Ver historial del borrador')),
       for(final rev in revisions)
         ListTile(
           leading:const Icon(Icons.history_toggle_off),
-          title:Text('Revisión ${rev['revision']}'),
-          subtitle:Text(rev['recorded_at'].toString()),
+          title:FittedText('Revisión ${rev['revision']}'),
+          subtitle:FittedText(rev['recorded_at'].toString()),
         ),
     ],
     const SizedBox(height:20),
-    Text('Diseños guardados',style:Theme.of(context).textTheme.titleLarge),
+    FittedText('Diseños guardados',style:Theme.of(context).textTheme.titleLarge),
     for(final item in drafts)
       Card(child:ListTile(
-        title:Text(item['title'].toString()),
-        subtitle:Text('Revisión ${item['revision']} · ${item['updated_at']}'),
+        title:FittedText(item['title'].toString()),
+        subtitle:FittedText('Revisión ${item['revision']} · ${item['updated_at']}'),
         trailing:const Icon(Icons.edit_outlined),
         onTap:()=>_loadDraft(item),
       )),
-    if(drafts.isEmpty)const Text('No se han creado borradores.'),
+    if(drafts.isEmpty)const FittedText('No se han creado borradores.'),
   ]);
 
   Widget _publication() => ListView(
@@ -982,36 +982,36 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       Card(child:Padding(
         padding:const EdgeInsets.all(18),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Versión global activa: ${widget.liveBrand.version}',
+          FittedText('Versión global activa: ${widget.liveBrand.version}',
             key:const Key('b3-active-version'),
             style:Theme.of(context).textTheme.titleLarge),
           const SizedBox(height:8),
-          Text('Nombre: ${widget.liveBrand.current.name}'),
+          FittedText('Nombre: ${widget.liveBrand.current.name}'),
           const SizedBox(height:12),
           OutlinedButton.icon(
             key:const Key('b3-refresh-history'),
             onPressed:_fetchBrandHistory,
             icon:const Icon(Icons.refresh_outlined),
-            label:const Text('Consultar historial')),
+            label:const FittedText('Consultar historial')),
         ]))),
       const SizedBox(height:12),
-      if(brandHistory.isEmpty)const Text(
+      if(brandHistory.isEmpty)const FittedText(
         'Pulsa Consultar historial para ver las versiones guardadas.'),
       for(final entry in brandHistory)
         Card(child:ListTile(
           leading:const Icon(Icons.history),
-          title:Text('Versión ${entry['version']}'),
-          subtitle:Text(entry['restored_from']==null
+          title:FittedText('Versión ${entry['version']}'),
+          subtitle:FittedText(entry['restored_from']==null
             ?'Cambio de identidad · ${entry['changed_at']}'
             :'Restaurada desde versión ${entry['restored_from']}'),
           trailing:OutlinedButton(
             onPressed:widget.liveBrand.saving
               ?null:()=>_restoreBrandVersion(
                 (entry['version'] as num).toInt()),
-            child:const Text('Restaurar')),
+            child:const FittedText('Restaurar')),
         )),
       const SizedBox(height:20),
-      const Text('Las contraseñas, los datos privados y las '
+      const FittedText('Las contraseñas, los datos privados y las '
         'credenciales nunca se incluyen en una versión de marca.'),
     ],
   );
@@ -1020,9 +1020,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     if(loading)return const Center(child:CircularProgressIndicator());
     if(error!=null)return Center(child:Padding(padding:const EdgeInsets.all(24),
       child:Column(mainAxisSize:MainAxisSize.min,children:[
-        Text(error!,textAlign:TextAlign.center),
+        FittedText(error!,textAlign:TextAlign.center),
         const SizedBox(height:12),
-        FilledButton(onPressed:_reload,child:const Text('Reintentar')),
+        FilledButton(onPressed:_reload,child:const FittedText('Reintentar')),
       ])));
     return switch(tab) {
       0=>_summary(),1=>_editor(),2=>MatchCalculatorAdmin(client:widget.liveBrand.client),
@@ -1039,13 +1039,13 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         title:Row(mainAxisSize:MainAxisSize.min,children:[
           MfdBranding(full:false,width:38),
           SizedBox(width:10),
-          Flexible(child:Text(widget.liveBrand.current.name+' · Administrador',
+          Flexible(child:FittedText(widget.liveBrand.current.name+' · Administrador',
             maxLines:1,overflow:TextOverflow.ellipsis)),
         ]),
         actions:[
           const Padding(padding:EdgeInsets.only(right:10),child:FittedLanguageSelector()),
           if(wide)Padding(padding:const EdgeInsets.only(right:10),
-            child:Center(child:Text(widget.email,style:const TextStyle(fontSize:12)))),
+            child:Center(child:FittedText(widget.email,style:const TextStyle(fontSize:12)))),
           IconButton(
             onPressed:_reload,
             tooltip:'Actualizar catálogo',
@@ -1067,7 +1067,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           destinations:[
             for(var i=0;i<_tabs.length;i++)
               NavigationRailDestination(
-                icon:Icon(_icons[i]),label:Text(tabLabel(i))),
+                icon:Icon(_icons[i]),label:FittedText(tabLabel(i))),
           ],
         ),
         Expanded(child:_body()),

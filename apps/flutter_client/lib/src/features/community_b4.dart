@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/community_repository.dart';
@@ -45,7 +46,7 @@ class _CommunityB4State extends State<CommunityB4> {
   void message(String text) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(text)));
+        SnackBar(content: FittedText(text)));
     }
   }
 
@@ -137,12 +138,12 @@ class _CommunityB4State extends State<CommunityB4> {
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (dialog, update) => AlertDialog(
-          title: const Text('Compartir con la comunidad'),
+          title: const FittedText('Compartir con la comunidad'),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 490),
             child: SingleChildScrollView(child: Column(
               mainAxisSize: MainAxisSize.min, children: [
-                const Text('Comparte una idea o pregunta deportiva. '
+                const FittedText('Comparte una idea o pregunta deportiva. '
                   'No incluyas teléfonos, enlaces, direcciones ni horarios '
                   'privados. No se admiten mensajes directos.'),
                 const SizedBox(height: 12),
@@ -153,7 +154,7 @@ class _CommunityB4State extends State<CommunityB4> {
                   items: [
                     for (final entry in communityTopicsB4.entries)
                       DropdownMenuItem(value:entry.key,
-                        child:Text(entry.value)),
+                        child:FittedText(entry.value)),
                   ],
                   onChanged: (value) {
                     if (value != null) update(() => selectedTopic = value);
@@ -169,14 +170,14 @@ class _CommunityB4State extends State<CommunityB4> {
                   decoration: const InputDecoration(
                     labelText: 'Tu publicación'),
                 ),
-                if (validation != null) Text(validation!,
+                if (validation != null) FittedText(validation!,
                   style: const TextStyle(color: Colors.redAccent)),
               ],
             )),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancelar')),
+              child: const FittedText('Cancelar')),
             FilledButton(
               key: const Key('b4-post-submit'),
               onPressed: () {
@@ -195,7 +196,7 @@ class _CommunityB4State extends State<CommunityB4> {
                   'topic':selectedTopic,'content':text,
                 });
               },
-              child: const Text('Publicar'),
+              child: const FittedText('Publicar'),
             ),
           ],
         ),
@@ -226,16 +227,16 @@ class _CommunityB4State extends State<CommunityB4> {
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Retirar mi publicación'),
-        content: const Text('El texto desaparecerá del muro, '
+        title: const FittedText('Retirar mi publicación'),
+        content: const FittedText('El texto desaparecerá del muro, '
           'pero podría conservarse en registros internos de moderación.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog,false),
-            child: const Text('Conservar')),
+            child: const FittedText('Conservar')),
           FilledButton(
             key: const Key('b4-remove-confirm'),
             onPressed: () => Navigator.pop(dialog,true),
-            child: const Text('Retirar publicación')),
+            child: const FittedText('Retirar publicación')),
         ],
       ),
     );
@@ -258,16 +259,16 @@ class _CommunityB4State extends State<CommunityB4> {
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Bloquear a esta persona'),
-        content: Text('Dejarás de ver las publicaciones de $name, '
+        title: const FittedText('Bloquear a esta persona'),
+        content: FittedText('Dejarás de ver las publicaciones de $name, '
           'y esa persona tampoco verá las tuyas en la comunidad.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog,false),
-            child: const Text('Cancelar')),
+            child: const FittedText('Cancelar')),
           FilledButton(
             key: const Key('b4-block-confirm'),
             onPressed: () => Navigator.pop(dialog,true),
-            child: const Text('Bloquear')),
+            child: const FittedText('Bloquear')),
         ],
       ),
     );
@@ -295,12 +296,12 @@ class _CommunityB4State extends State<CommunityB4> {
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (dialog, update) => AlertDialog(
-          title: Text(profile ? 'Reportar perfil' : 'Reportar publicación'),
+          title: FittedText(profile ? 'Reportar perfil' : 'Reportar publicación'),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: SingleChildScrollView(child: Column(
               mainAxisSize: MainAxisSize.min, children: [
-                const Text('El reporte es privado y llegará a moderación. '
+                const FittedText('El reporte es privado y llegará a moderación. '
                   'La persona reportada no verá tu identidad.'),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -311,7 +312,7 @@ class _CommunityB4State extends State<CommunityB4> {
                   items: [
                     for (final item in communityReasonsB4.entries)
                       DropdownMenuItem(
-                        value:item.key,child:Text(item.value)),
+                        value:item.key,child:FittedText(item.value)),
                   ],
                   onChanged: (v) {
                     if (v != null) update(() => reason = v);
@@ -329,13 +330,13 @@ class _CommunityB4State extends State<CommunityB4> {
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancelar')),
+              child: const FittedText('Cancelar')),
             FilledButton(
               key: const Key('b4-report-submit'),
               onPressed: () => Navigator.pop(dialog,{
                 'reason':reason,'detail':detailText.trim(),
               }),
-              child: const Text('Enviar reporte')),
+              child: const FittedText('Enviar reporte')),
           ],
         ),
       ),
@@ -387,8 +388,8 @@ class _CommunityB4State extends State<CommunityB4> {
               Expanded(child:Column(
                 crossAxisAlignment:CrossAxisAlignment.start,
                 children:[
-                  Text(author,style:Theme.of(context).textTheme.titleMedium),
-                  Text('${communityTopicsB4[topic] ?? 'Deporte'} · $time',
+                  FittedText(author,style:Theme.of(context).textTheme.titleMedium),
+                  FittedText('${communityTopicsB4[topic] ?? 'Deporte'} · $time',
                     style:Theme.of(context).textTheme.bodySmall),
                 ],
               )),
@@ -403,22 +404,22 @@ class _CommunityB4State extends State<CommunityB4> {
                 },
                 itemBuilder:(_)=>mine
                   ? [const PopupMenuItem(
-                    value:'remove',child:Text('Retirar mi publicación'))]
+                    value:'remove',child:FittedText('Retirar mi publicación'))]
                   : official ? [
                     const PopupMenuItem(
-                      value:'report_post',child:Text('Reportar comunicado')),
+                      value:'report_post',child:FittedText('Reportar comunicado')),
                   ] : [
                     const PopupMenuItem(
-                      value:'report_post',child:Text('Reportar publicación')),
+                      value:'report_post',child:FittedText('Reportar publicación')),
                     const PopupMenuItem(
-                      value:'report_profile',child:Text('Reportar perfil')),
+                      value:'report_profile',child:FittedText('Reportar perfil')),
                     const PopupMenuItem(
-                      value:'block',child:Text('Bloquear persona')),
+                      value:'block',child:FittedText('Bloquear persona')),
                   ],
               ),
             ]),
             const SizedBox(height:12),
-            Text((item['content'] ?? '').toString(),
+            FittedText((item['content'] ?? '').toString(),
               style:Theme.of(context).textTheme.bodyLarge),
           ],
         ),
@@ -433,10 +434,10 @@ class _CommunityB4State extends State<CommunityB4> {
         child:Column(
           crossAxisAlignment:CrossAxisAlignment.start,
           children:[
-            Text('Comunidad opcional',
+            FittedText('Comunidad opcional',
               style:Theme.of(context).textTheme.titleLarge),
             const SizedBox(height:10),
-            const Text('Las publicaciones visibles llevan tu nombre público. '
+            const FittedText('Las publicaciones visibles llevan tu nombre público. '
               'Puedes reportar, bloquear o retirar lo que compartes. '
               'El consentimiento para la comunidad NO habilita FitDating. '
               'No publiques tu dirección, gimnasio, rutina ni teléfono.'),
@@ -445,7 +446,7 @@ class _CommunityB4State extends State<CommunityB4> {
               key:const Key('b4-consent-submit'),
               onPressed:sending?null:optIn,
               icon:const Icon(Icons.volunteer_activism_outlined),
-              label:const Text('Acepto participar en la comunidad')),
+              label:const FittedText('Acepto participar en la comunidad')),
           ],
         ),
       ));
@@ -466,14 +467,14 @@ class _CommunityB4State extends State<CommunityB4> {
       padding:const EdgeInsets.symmetric(vertical:28),
       child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text(label,key:const Key('b4-community-gate')),
+          FittedText(label,key:const Key('b4-community-gate')),
           if(status=='opted_out')...[
             const SizedBox(height:14),
             FilledButton.icon(
               key:const Key('b4-community-rejoin'),
               onPressed:sending?null:rejoin,
               icon:const Icon(Icons.refresh_outlined),
-              label:const Text('Volver a participar')),
+              label:const FittedText('Volver a participar')),
           ],
         ],
       ),
@@ -483,7 +484,7 @@ class _CommunityB4State extends State<CommunityB4> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar:AppBar(
-      title:const Text('Comunidad deportiva'),
+      title:const FittedText('Comunidad deportiva'),
       actions:[
         IconButton(
           key:const Key('b4-blocks-open'),
@@ -516,19 +517,19 @@ class _CommunityB4State extends State<CommunityB4> {
           physics:const AlwaysScrollableScrollPhysics(),
           padding:const EdgeInsets.all(18),
           children:[
-            Text('Compartimos el movimiento',
+            FittedText('Compartimos el movimiento',
               style:Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height:8),
-            const Text('Comparte experiencias deportivas y conecta con '
+            const FittedText('Comparte experiencias deportivas y conecta con '
               'personas de forma voluntaria. Sin chat privado ni citas.'),
             if(loading)const Padding(
               padding:EdgeInsets.all(24),
               child:Center(child:CircularProgressIndicator())),
             if(error!=null)...[
               const SizedBox(height:14),
-              Text(error!,key:const Key('b4-community-error'),
+              FittedText(error!,key:const Key('b4-community-error'),
                 style:const TextStyle(color:Colors.redAccent)),
-              TextButton(onPressed:reload,child:const Text('Reintentar')),
+              TextButton(onPressed:reload,child:const FittedText('Reintentar')),
             ],
             if(!loading && error==null && status!='available')gate(),
             if(!loading && status=='available')...[
@@ -537,22 +538,22 @@ class _CommunityB4State extends State<CommunityB4> {
                 key:const Key('b4-create-post'),
                 onPressed:sending?null:create,
                 icon:const Icon(Icons.edit_note_outlined),
-                label:const Text('Crear publicación')),
+                label:const FittedText('Crear publicación')),
               const SizedBox(height:20),
               if(posts.isEmpty && error==null)
                 const Padding(
                   padding:EdgeInsets.all(20),
-                  child:Text('Todavía no hay publicaciones. '
+                  child:FittedText('Todavía no hay publicaciones. '
                     'Comparte la primera experiencia deportiva auténtica.',
                     key:Key('b4-empty-feed'))),
               for(final item in posts)itemCard(item),
               if(hasMore)TextButton(
                 key:const Key('b4-more'),
                 onPressed:loadingMore?null:more,
-                child:Text(loadingMore?'Cargando…':'Mostrar más')),
+                child:FittedText(loadingMore?'Cargando…':'Mostrar más')),
             ],
             const SizedBox(height:20),
-            const Text('Reportes revisados por personas. '
+            const FittedText('Reportes revisados por personas. '
               'La moderación de una comunidad real requiere un equipo activo.',
               textAlign:TextAlign.center),
           ],
@@ -597,31 +598,31 @@ class _CommunityBlocksB4State extends State<CommunityBlocksB4> {
       if(result=='unblocked'&&mounted) {
         setState(()=>items.removeWhere((p)=>p['blocked_id']==id));
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content:Text('Cuenta desbloqueada.')));
+          content:FittedText('Cuenta desbloqueada.')));
       }
     }catch(_){
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content:Text('No se pudo desbloquear.')));
+        const SnackBar(content:FittedText('No se pudo desbloquear.')));
     }
   }
 
   @override
   Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('Personas bloqueadas')),
+    appBar:AppBar(title:const FittedText('Personas bloqueadas')),
     body:ListView(padding:const EdgeInsets.all(18),children:[
-      const Text('El bloqueo funciona en ambos sentidos dentro '
+      const FittedText('El bloqueo funciona en ambos sentidos dentro '
         'de la comunidad y nunca avisa a la otra persona.'),
       if(loading)const Center(child:CircularProgressIndicator()),
-      if(error!=null)Text(error!),
+      if(error!=null)FittedText(error!),
       if(!loading&&items.isEmpty)
-        const Text('No tienes personas bloqueadas.',
+        const FittedText('No tienes personas bloqueadas.',
           key:Key('b4-blocks-empty')),
       for(final item in items)Card(child:ListTile(
-        title:Text((item['display_name']??'Persona bloqueada').toString()),
+        title:FittedText((item['display_name']??'Persona bloqueada').toString()),
         trailing:TextButton(
           key:Key('b4-unblock-${item['blocked_id']}'),
           onPressed:()=>unblock(item),
-          child:const Text('Desbloquear')),
+          child:const FittedText('Desbloquear')),
       )),
     ]),
   );
@@ -663,17 +664,17 @@ class _CommunityPrivacyB4State extends State<CommunityPrivacyB4> {
   Future<void> leaveCommunity() async {
     final ok=await showDialog<bool>(
       context:context,builder:(dialog)=>AlertDialog(
-        title:const Text('Salir de la comunidad'),
-        content:const Text('Tus publicaciones dejarán de mostrarse '
+        title:const FittedText('Salir de la comunidad'),
+        content:const FittedText('Tus publicaciones dejarán de mostrarse '
           'y no se restaurarán si vuelves a entrar. Tu cuenta y tus '
           'reservas deportivas seguirán existiendo.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Conservar participación')),
+            child:const FittedText('Conservar participación')),
           FilledButton(
             key:const Key('b4-community-leave-confirm'),
             onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Salir de la comunidad')),
+            child:const FittedText('Salir de la comunidad')),
         ],
       ),
     );
@@ -693,25 +694,25 @@ class _CommunityPrivacyB4State extends State<CommunityPrivacyB4> {
     final accepted=await showDialog<bool>(
       context:context,builder:(dialog)=>StatefulBuilder(
         builder:(dialog,update)=>AlertDialog(
-          title:const Text('Solicitar baja de cuenta'),
+          title:const FittedText('Solicitar baja de cuenta'),
           content:Column(mainAxisSize:MainAxisSize.min,children:[
-            const Text('Esta acción enviará una solicitud humana de baja, '
+            const FittedText('Esta acción enviará una solicitud humana de baja, '
               'ocultará tus publicaciones y desactivará tu participación '
               'en la comunidad. La eliminación definitiva de Auth, '
               'archivos, copias de seguridad y registros NO es inmediata.'),
             CheckboxListTile(
               value:confirmed,
               onChanged:(v)=>update(()=>confirmed=v??false),
-              title:const Text('Comprendo que es una solicitud, '
+              title:const FittedText('Comprendo que es una solicitud, '
                 'no un borrado inmediato.')),
           ]),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog,false),
-              child:const Text('Conservar cuenta')),
+              child:const FittedText('Conservar cuenta')),
             FilledButton(
               key:const Key('b4-delete-request-confirm'),
               onPressed:confirmed?()=>Navigator.pop(dialog,true):null,
-              child:const Text('Enviar solicitud de baja')),
+              child:const FittedText('Enviar solicitud de baja')),
           ],
         ),
       ),
@@ -731,31 +732,31 @@ class _CommunityPrivacyB4State extends State<CommunityPrivacyB4> {
 
   @override
   Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('Privacidad y baja')),
+    appBar:AppBar(title:const FittedText('Privacidad y baja')),
     body:Center(child:ConstrainedBox(
       constraints:const BoxConstraints(maxWidth:700),
       child:ListView(padding:const EdgeInsets.all(18),children:[
-        Text('Tus publicaciones',
+        FittedText('Tus publicaciones',
           style:Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height:8),
-        const Text('Puedes consultar los textos que compartiste, '
+        const FittedText('Puedes consultar los textos que compartiste, '
           'incluyendo aquellos retirados u ocultos. Un expediente '
           'completo de datos personales se gestiona por el proceso '
           'de privacidad de la plataforma.'),
         if(loading)const Center(child:CircularProgressIndicator()),
-        if(error!=null)Text(error!,key:const Key('b4-privacy-error')),
+        if(error!=null)FittedText(error!,key:const Key('b4-privacy-error')),
         if(!loading&&history.isEmpty)
-          const Text('No has creado publicaciones.',
+          const FittedText('No has creado publicaciones.',
             key:Key('b4-history-empty')),
         for(final post in history)Card(child:ListTile(
-          title:Text((post['content']??'').toString()),
-          subtitle:Text('Estado: ${post['status']??'desconocido'}'),
+          title:FittedText((post['content']??'').toString()),
+          subtitle:FittedText('Estado: ${post['status']??'desconocido'}'),
         )),
         const SizedBox(height:22),
-        Text('Participación voluntaria',
+        FittedText('Participación voluntaria',
           style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:8),
-        const Text('Puedes dejar la comunidad sin eliminar tu cuenta '
+        const FittedText('Puedes dejar la comunidad sin eliminar tu cuenta '
           'ni cancelar tus reservas. Tus publicaciones dejarán de '
           'estar visibles y no se restaurarán al reingresar.'),
         const SizedBox(height:10),
@@ -763,12 +764,12 @@ class _CommunityPrivacyB4State extends State<CommunityPrivacyB4> {
           key:const Key('b4-community-leave'),
           onPressed:leaveCommunity,
           icon:const Icon(Icons.logout_outlined),
-          label:const Text('Salir de la comunidad')),
+          label:const FittedText('Salir de la comunidad')),
         const SizedBox(height:22),
-        Text('Baja de cuenta',
+        FittedText('Baja de cuenta',
           style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:8),
-        Text(status=='none'
+        FittedText(status=='none'
           ?'Si solicitas la baja, dejaremos de mostrar tus publicaciones '
             'y abriremos una revisión humana de eliminación y retención.'
           :'Solicitud de baja registrada: $status. La eliminación '
@@ -778,7 +779,7 @@ class _CommunityPrivacyB4State extends State<CommunityPrivacyB4> {
           key:const Key('b4-delete-request'),
           onPressed:submitting?null:requestDeletion,
           icon:const Icon(Icons.person_remove_outlined),
-          label:const Text('Solicitar eliminación de mi cuenta')),
+          label:const FittedText('Solicitar eliminación de mi cuenta')),
       ]),
     )),
   );

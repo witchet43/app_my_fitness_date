@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/curator_repository.dart';
@@ -57,7 +58,7 @@ class _AdminCuratedActivitiesB2State
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (dialog, update) => AlertDialog(
-          title: const Text('Publicar actividad curada'),
+          title: const FittedText('Publicar actividad curada'),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: SingleChildScrollView(
@@ -86,7 +87,7 @@ class _AdminCuratedActivitiesB2State
                 OutlinedButton.icon(
                   key: const Key('b2-admin-date'),
                   icon: const Icon(Icons.calendar_month_outlined),
-                  label: Text(b2LocalDate(start.toIso8601String())),
+                  label: FittedText(b2LocalDate(start.toIso8601String())),
                   onPressed: () async {
                     final now = DateTime.now();
                     final picked = await showDatePicker(
@@ -107,10 +108,10 @@ class _AdminCuratedActivitiesB2State
                     ));
                   },
                 ),
-                if (validation != null) Text(validation!,
+                if (validation != null) FittedText(validation!,
                   style: const TextStyle(color: Colors.redAccent)),
                 const SizedBox(height: 8),
-                const Text('Solo publica actividades verificadas. '
+                const FittedText('Solo publica actividades verificadas. '
                   'No inventes eventos ni incluyas domicilios o '
                   'horarios personales.'),
               ]),
@@ -119,12 +120,12 @@ class _AdminCuratedActivitiesB2State
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialog),
-              child: const Text('Volver'),
+              child: const FittedText('Volver'),
             ),
             FilledButton.icon(
               key: const Key('b2-admin-create-submit'),
               icon: const Icon(Icons.check),
-              label: const Text('Publicar actividad'),
+              label: const FittedText('Publicar actividad'),
               onPressed: () {
                 final capacity = int.tryParse(seats.text.trim());
                 final minutes = start.difference(DateTime.now()).inMinutes;
@@ -163,7 +164,7 @@ class _AdminCuratedActivitiesB2State
       await reload();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Actividad guardada y visible en el catálogo.'),
+          content: FittedText('Actividad guardada y visible en el catálogo.'),
         ));
       }
     } on MemberApiException catch (e) {
@@ -182,19 +183,19 @@ class _AdminCuratedActivitiesB2State
     final agreed = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Cancelar actividad publicada'),
-        content: const Text('Este evento dejará de recibir reservas. '
+        title: const FittedText('Cancelar actividad publicada'),
+        content: const FittedText('Este evento dejará de recibir reservas. '
           'Los participantes conservarán su historial y podrán ver '
           'que el organizador lo canceló.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('Conservar actividad'),
+            child: const FittedText('Conservar actividad'),
           ),
           FilledButton(
             key: const Key('b2-admin-confirm-cancel'),
             onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('Cancelar evento'),
+            child: const FittedText('Cancelar evento'),
           ),
         ],
       ),
@@ -216,17 +217,17 @@ class _AdminCuratedActivitiesB2State
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Administrar actividades')),
+    appBar: AppBar(title: const FittedText('Administrar actividades')),
     body: Center(child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 850),
       child: ListView(
         key: const Key('b2-admin-curation'),
         padding: const EdgeInsets.all(20),
         children: [
-          Text('Actividades de My Fitness Date',
+          FittedText('Actividades de My Fitness Date',
             style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 10),
-          const Text('Lo que publiques aquí aparecerá en el catálogo '
+          const FittedText('Lo que publiques aquí aparecerá en el catálogo '
             'de miembros. No requiere compilar o desplegar la aplicación. '
             'Exige tu sesión de propietario con MFA.'),
           const SizedBox(height: 18),
@@ -234,7 +235,7 @@ class _AdminCuratedActivitiesB2State
             key: const Key('b2-admin-create'),
             icon: const Icon(Icons.add_circle_outline),
             onPressed: busy ? null : create,
-            label: Text(busy ? 'Guardando…' : 'Publicar actividad real'),
+            label: FittedText(busy ? 'Guardando…' : 'Publicar actividad real'),
           ),
           if (loading) const Padding(
             padding: EdgeInsets.all(24),
@@ -242,14 +243,14 @@ class _AdminCuratedActivitiesB2State
           ),
           if (error != null) ...[
             const SizedBox(height: 14),
-            Text(error!, key: const Key('b2-admin-error'),
+            FittedText(error!, key: const Key('b2-admin-error'),
               style: const TextStyle(color: Colors.redAccent)),
-            TextButton(onPressed: reload, child: const Text('Reintentar')),
+            TextButton(onPressed: reload, child: const FittedText('Reintentar')),
           ],
           if (!loading && error == null && items.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
-              child: Text('Todavía no hay actividades publicadas. '
+              child: FittedText('Todavía no hay actividades publicadas. '
                 'Crea una actividad verificada para poblar el catálogo.',
                 key: Key('b2-admin-empty')),
             ),
@@ -268,21 +269,21 @@ class _AdminCuratedActivitiesB2State
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text((item['title'] ?? 'Actividad').toString(),
+                      FittedText((item['title'] ?? 'Actividad').toString(),
                         style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(height: 8),
-                      Text('${item['sport'] ?? ''} · ${item['city'] ?? ''}'),
-                      Text(b2LocalDate(item['starts_at'])),
-                      Text('Reservas: ${item['active_reservations'] ?? 0}'
+                      FittedText('${item['sport'] ?? ''} · ${item['city'] ?? ''}'),
+                      FittedText(b2LocalDate(item['starts_at'])),
+                      FittedText('Reservas: ${item['active_reservations'] ?? 0}'
                           ' / ${item['capacity'] ?? '—'}'),
                       if (item['event_cancelled'] == true)
-                        const Text('Evento cancelado'),
+                        const FittedText('Evento cancelado'),
                       if (canCancel)
                         OutlinedButton.icon(
                           key: Key('b2-admin-cancel-$id'),
                           onPressed: busy ? null : () => cancel(item),
                           icon: const Icon(Icons.event_busy_outlined),
-                          label: const Text('Cancelar esta actividad'),
+                          label: const FittedText('Cancelar esta actividad'),
                         ),
                     ],
                   ),

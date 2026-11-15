@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/community_repository.dart';
@@ -44,11 +45,11 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
     final selected=await showDialog<String>(
       context:context,builder:(dialog)=>StatefulBuilder(
         builder:(dialog,update)=>AlertDialog(
-          title:const Text('Autorizar cuenta de prueba'),
+          title:const FittedText('Autorizar cuenta de prueba'),
           content:ConstrainedBox(
             constraints:const BoxConstraints(maxWidth:460),
             child:Column(mainAxisSize:MainAxisSize.min,children:[
-              const Text('La cuenta ya debe existir en My Fitness Date '
+              const FittedText('La cuenta ya debe existir en My Fitness Date '
                 'y tener su correo confirmado. Este permiso habilita '
                 'solamente la comunidad de prueba, no FitDating.'),
               const SizedBox(height:12),
@@ -58,13 +59,13 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
                 keyboardType:TextInputType.emailAddress,
                 decoration:const InputDecoration(
                   labelText:'Correo de la cuenta registrada')),
-              if(validation!=null)Text(validation!,
+              if(validation!=null)FittedText(validation!,
                 style:const TextStyle(color:Colors.redAccent)),
             ]),
           ),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog),
-              child:const Text('Cancelar')),
+              child:const FittedText('Cancelar')),
             FilledButton(
               key:const Key('b4-pilot-submit'),
               onPressed:(){
@@ -78,7 +79,7 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
                 }
                 Navigator.pop(dialog,value);
               },
-              child:const Text('Autorizar acceso')),
+              child:const FittedText('Autorizar acceso')),
           ],
         ),
       ),
@@ -90,7 +91,7 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
       if(outcome=='admitted'){
         await reload();
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content:Text('Cuenta autorizada para el piloto.')));
+          const SnackBar(content:FittedText('Cuenta autorizada para el piloto.')));
       }
     }on MemberApiException catch(e){
       if(mounted)setState(()=>error=e.message);
@@ -108,17 +109,17 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
     final email=(member['email']??'esta cuenta').toString();
     final accept=await showDialog<bool>(
       context:context,builder:(dialog)=>AlertDialog(
-        title:const Text('Revocar acceso de piloto'),
-        content:Text('Se impedirá el acceso a la comunidad de $email '
+        title:const FittedText('Revocar acceso de piloto'),
+        content:FittedText('Se impedirá el acceso a la comunidad de $email '
           'y sus publicaciones dejarán de mostrarse. '
           'Su cuenta deportiva y reservas no se eliminarán.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Conservar acceso')),
+            child:const FittedText('Conservar acceso')),
           FilledButton(
             key:const Key('b4-pilot-revoke-confirm'),
             onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Revocar acceso')),
+            child:const FittedText('Revocar acceso')),
         ],
       ),
     );
@@ -136,7 +137,7 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
 
   @override
   Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('Acceso a piloto cerrado'),
+    appBar:AppBar(title:const FittedText('Acceso a piloto cerrado'),
       actions:[IconButton(
         tooltip:'Actualizar',
         onPressed:loading?null:reload,
@@ -145,10 +146,10 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
     body:Center(child:ConstrainedBox(
       constraints:const BoxConstraints(maxWidth:780),
       child:ListView(padding:const EdgeInsets.all(20),children:[
-        Text('Autorizar participantes',
+        FittedText('Autorizar participantes',
           style:Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height:9),
-        const Text('La comunidad permanece CERRADA para cuentas no '
+        const FittedText('La comunidad permanece CERRADA para cuentas no '
           'autorizadas. Puedes habilitar o revocar miembros existentes '
           'sin compilar ni desplegar nuevamente. Se registra una '
           'auditoría por cada decisión.'),
@@ -157,35 +158,35 @@ class _CommunityPilotB4State extends State<CommunityPilotB4> {
           key:const Key('b4-pilot-invite'),
           onPressed:busy?null:invite,
           icon:const Icon(Icons.person_add_alt_1_outlined),
-          label:const Text('Autorizar cuenta registrada')),
+          label:const FittedText('Autorizar cuenta registrada')),
         const SizedBox(height:15),
         if(loading)const Center(child:CircularProgressIndicator()),
         if(error!=null)...[
-          Text(error!,key:const Key('b4-pilot-error'),
+          FittedText(error!,key:const Key('b4-pilot-error'),
             style:const TextStyle(color:Colors.redAccent)),
-          TextButton(onPressed:reload,child:const Text('Reintentar')),
+          TextButton(onPressed:reload,child:const FittedText('Reintentar')),
         ],
         if(!loading&&error==null&&members.isEmpty)
           const Padding(
             padding:EdgeInsets.symmetric(vertical:20),
-            child:Text('Ninguna cuenta está autorizada todavía. '
+            child:FittedText('Ninguna cuenta está autorizada todavía. '
               'La comunidad seguirá cerrada.',
               key:Key('b4-pilot-empty'))),
         for(final item in members)
           Card(child:ListTile(
             key:Key('b4-pilot-member-${item['user_id']}'),
-            title:Text((item['display_name']??item['email']??'Cuenta').toString()),
-            subtitle:Text('${item['email']??''} · '
+            title:FittedText((item['display_name']??item['email']??'Cuenta').toString()),
+            subtitle:FittedText('${item['email']??''} · '
               '${item['active']==true?'Autorizado':'Revocado'}'),
             trailing:item['active']==true
               ?TextButton(
                 key:Key('b4-pilot-revoke-${item['user_id']}'),
                 onPressed:busy?null:()=>revoke(item),
-                child:const Text('Revocar'))
+                child:const FittedText('Revocar'))
               :const Icon(Icons.lock_outline),
           )),
         const SizedBox(height:18),
-        const Text('El acceso al piloto no constituye autorización para '
+        const FittedText('El acceso al piloto no constituye autorización para '
           'beta pública. Siguen pendientes edad verificada, personal de '
           'moderación, incidentes y privacidad integral.'),
       ]),

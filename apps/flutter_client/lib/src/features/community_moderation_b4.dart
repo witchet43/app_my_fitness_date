@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/community_repository.dart';
@@ -62,12 +63,12 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
       context:context,
       builder:(dialog)=>StatefulBuilder(
         builder:(dialog,update)=>AlertDialog(
-          title:const Text('Resolver reporte'),
+          title:const FittedText('Resolver reporte'),
           content:ConstrainedBox(
             constraints:const BoxConstraints(maxWidth:480),
             child:SingleChildScrollView(child:Column(
               mainAxisSize:MainAxisSize.min,children:[
-                const Text('Las decisiones son definitivas en el historial '
+                const FittedText('Las decisiones son definitivas en el historial '
                   'de auditoría. No se comunica la identidad del denunciante.'),
                 const SizedBox(height:12),
                 DropdownButtonFormField<String>(
@@ -77,11 +78,11 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                     labelText:'Decisión'),
                   items:[
                     const DropdownMenuItem(value:'dismiss',
-                      child:Text('Desestimar reporte')),
+                      child:FittedText('Desestimar reporte')),
                     if(hasPost)const DropdownMenuItem(value:'hide_post',
-                      child:Text('Ocultar publicación')),
+                      child:FittedText('Ocultar publicación')),
                     const DropdownMenuItem(value:'suspend_user',
-                      child:Text('Suspender en comunidad')),
+                      child:FittedText('Suspender en comunidad')),
                   ],
                   onChanged:(v){
                     if(v!=null)update(()=>selectedAction=v);
@@ -93,14 +94,14 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                   onChanged:(value)=>noteText=value,maxLength:500,maxLines:3,
                   decoration:const InputDecoration(
                     labelText:'Justificación (5–500 caracteres)')),
-                if(validation!=null)Text(validation!,
+                if(validation!=null)FittedText(validation!,
                   style:const TextStyle(color:Colors.redAccent)),
               ],
             )),
           ),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog),
-              child:const Text('Cancelar')),
+              child:const FittedText('Cancelar')),
             FilledButton(
               key:const Key('b4-moderation-submit'),
               onPressed:(){
@@ -114,7 +115,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                   'action':selectedAction,'note':value,
                 });
               },
-              child:const Text('Confirmar decisión')),
+              child:const FittedText('Confirmar decisión')),
           ],
         ),
       ),
@@ -128,11 +129,11 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
       if(status=='resolved'){
         await reload();
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content:Text('Decisión guardada y auditada.')));
+          const SnackBar(content:FittedText('Decisión guardada y auditada.')));
       }
     }on MemberApiException catch(e){
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content:Text(e.message)));
+        SnackBar(content:FittedText(e.message)));
     }catch(_){
       if(mounted)setState(()=>error='No se pudo resolver este reporte.');
     }finally{
@@ -153,27 +154,27 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
         child:Column(
           crossAxisAlignment:CrossAxisAlignment.start,
           children:[
-            Text('Reporte · ${communityReasonsB4[reason]??reason}',
+            FittedText('Reporte · ${communityReasonsB4[reason]??reason}',
               style:Theme.of(context).textTheme.titleMedium),
             const SizedBox(height:7),
-            Text('Cuenta reportada: $target'),
+            FittedText('Cuenta reportada: $target'),
             if(excerpt.isNotEmpty)...[
               const SizedBox(height:7),
-              Text('Extracto: $excerpt',
+              FittedText('Extracto: $excerpt',
                 maxLines:4,overflow:TextOverflow.ellipsis),
             ],
             if((report['detail']??'').toString().isNotEmpty)...[
               const SizedBox(height:7),
-              Text('Contexto: ${report['detail']}'),
+              FittedText('Contexto: ${report['detail']}'),
             ],
             const SizedBox(height:6),
-            const Text('Identidad del denunciante reservada.'),
+            const FittedText('Identidad del denunciante reservada.'),
             const SizedBox(height:12),
             OutlinedButton.icon(
               key:Key('b4-resolve-$id'),
               onPressed:sending?null:()=>resolve(report),
               icon:const Icon(Icons.fact_check_outlined),
-              label:const Text('Revisar y resolver')),
+              label:const FittedText('Revisar y resolver')),
           ],
         ),
       ),
@@ -192,13 +193,13 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
         child:Column(
           crossAxisAlignment:CrossAxisAlignment.start,
           children:[
-            Text('Solicitud de baja · $shortId',
+            FittedText('Solicitud de baja · $shortId',
               style:Theme.of(context).textTheme.titleMedium),
             const SizedBox(height:8),
-            Text('Fecha: ${request['requested_at']??''}'),
-            Text('Estado: ${request['status']??'pendiente'}'),
+            FittedText('Fecha: ${request['requested_at']??''}'),
+            FittedText('Estado: ${request['status']??'pendiente'}'),
             const SizedBox(height:8),
-            const Text('Requiere gestión humana de retención, '
+            const FittedText('Requiere gestión humana de retención, '
               'exportación, Auth, Storage, respaldos y auditoría. '
               'No marcar como eliminada sin evidencia.'),
           ],
@@ -215,12 +216,12 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
     final draft=await showDialog<Map<String,String>>(
       context:context,builder:(dialog)=>StatefulBuilder(
         builder:(dialog,update)=>AlertDialog(
-          title:const Text('Nuevo comunicado oficial'),
+          title:const FittedText('Nuevo comunicado oficial'),
           content:ConstrainedBox(
             constraints:const BoxConstraints(maxWidth:480),
             child:SingleChildScrollView(child:Column(
               mainAxisSize:MainAxisSize.min,children:[
-                const Text('Tu comunicado será visible a los miembros '
+                const FittedText('Tu comunicado será visible a los miembros '
                   'que hayan aceptado participar en la comunidad. '
                   'No inventes eventos ni publiques información privada.'),
                 const SizedBox(height:12),
@@ -230,7 +231,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                   items:[
                     for(final entry in communityTopicsB4.entries)
                       DropdownMenuItem(value:entry.key,
-                        child:Text(entry.value)),
+                        child:FittedText(entry.value)),
                   ],
                   onChanged:(v){
                     if(v!=null)update(()=>topic=v);
@@ -241,14 +242,14 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                   onChanged:(value)=>contentText=value,maxLength:480,minLines:3,maxLines:5,
                   decoration:const InputDecoration(
                     labelText:'Contenido oficial')),
-                if(validation!=null)Text(validation!,
+                if(validation!=null)FittedText(validation!,
                   style:const TextStyle(color:Colors.redAccent)),
               ],
             )),
           ),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog),
-              child:const Text('Cancelar')),
+              child:const FittedText('Cancelar')),
             FilledButton(
               key:const Key('b4-announcement-submit'),
               onPressed:(){
@@ -262,7 +263,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
                 }
                 Navigator.pop(dialog,{'topic':topic,'content':value});
               },
-              child:const Text('Publicar comunicado')),
+              child:const FittedText('Publicar comunicado')),
           ],
         ),
       ),
@@ -275,7 +276,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
       if(response=='published'){
         await reload();
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content:Text(
+          const SnackBar(content:FittedText(
             'Comunicado oficial publicado para miembros de la comunidad.')));
       }
     }catch(_){
@@ -290,16 +291,16 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
     final id=(item['id']??'').toString();
     final ok=await showDialog<bool>(
       context:context,builder:(dialog)=>AlertDialog(
-        title:const Text('Retirar comunicado'),
-        content:const Text('Dejará de mostrarse a los miembros. '
+        title:const FittedText('Retirar comunicado'),
+        content:const FittedText('Dejará de mostrarse a los miembros. '
           'Su historial de auditoría se conserva.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Volver')),
+            child:const FittedText('Volver')),
           FilledButton(
             key:const Key('b4-announcement-remove-confirm'),
             onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Retirar')),
+            child:const FittedText('Retirar')),
         ],
       ),
     );
@@ -316,7 +317,7 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
   @override
   Widget build(BuildContext context)=>Scaffold(
     appBar:AppBar(
-      title:const Text('Moderación de comunidad'),
+      title:const FittedText('Moderación de comunidad'),
       actions:[IconButton(
         key:const Key('b4-moderation-reload'),
         onPressed:loading?null:reload,
@@ -330,10 +331,10 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
         key:const Key('b4-moderation-list'),
         padding:const EdgeInsets.all(18),
         children:[
-          Text('Seguridad de la comunidad',
+          FittedText('Seguridad de la comunidad',
             style:Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height:8),
-          const Text('Solo propietario con MFA. Las decisiones de '
+          const FittedText('Solo propietario con MFA. Las decisiones de '
             'moderación se registran con autor, fecha y motivo en '
             'un historial no accesible para los miembros.'),
           const SizedBox(height:14),
@@ -343,26 +344,26 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
               MaterialPageRoute<void>(builder:(_)=>
                 CommunityPilotB4(api:widget.api))),
             icon:const Icon(Icons.lock_person_outlined),
-            label:const Text('Gestionar acceso al piloto cerrado')),
+            label:const FittedText('Gestionar acceso al piloto cerrado')),
           const SizedBox(height:16),
           Wrap(spacing:10,runSpacing:10,children:[
             ChoiceChip(
               key:const Key('b4-moderation-tab-reports'),
-              label:Text('Reportes pendientes (${reports.length})'),
+              label:FittedText('Reportes pendientes (${reports.length})'),
               selected:!showDeletion && !showAnnouncements,
               onSelected:(_)=>setState((){
                 showDeletion=false;showAnnouncements=false;
               })), 
             ChoiceChip(
               key:const Key('b4-moderation-tab-deletions'),
-              label:Text('Solicitudes de baja (${deletions.length})'),
+              label:FittedText('Solicitudes de baja (${deletions.length})'),
               selected:showDeletion,
               onSelected:(_)=>setState((){
                 showDeletion=true;showAnnouncements=false;
               })),
             ChoiceChip(
               key:const Key('b4-moderation-tab-announcements'),
-              label:Text('Comunicados (${announcements.length})'),
+              label:FittedText('Comunicados (${announcements.length})'),
               selected:showAnnouncements,
               onSelected:(_)=>setState((){
                 showAnnouncements=true;showDeletion=false;
@@ -371,17 +372,17 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
           const SizedBox(height:18),
           if(loading)const Center(child:CircularProgressIndicator()),
           if(error!=null)...[
-            Text(error!,key:const Key('b4-moderation-error'),
+            FittedText(error!,key:const Key('b4-moderation-error'),
               style:const TextStyle(color:Colors.redAccent)),
-            TextButton(onPressed:reload,child:const Text('Reintentar')),
+            TextButton(onPressed:reload,child:const FittedText('Reintentar')),
           ],
           if(!loading && error==null && !showDeletion && !showAnnouncements)...[
-            if(reports.isEmpty)const Text('No hay reportes pendientes.',
+            if(reports.isEmpty)const FittedText('No hay reportes pendientes.',
               key:Key('b4-reports-empty')),
             for(final report in reports)reportCard(report),
           ],
           if(!loading && error==null && showDeletion && !showAnnouncements)...[
-            if(deletions.isEmpty)const Text(
+            if(deletions.isEmpty)const FittedText(
               'No hay solicitudes de baja pendientes.',
               key:Key('b4-deletions-empty')),
             for(final request in deletions)deletionCard(request),
@@ -391,33 +392,33 @@ class _CommunityModerationB4State extends State<CommunityModerationB4> {
               key:const Key('b4-admin-new-announcement'),
               onPressed:sending?null:createAnnouncement,
               icon:const Icon(Icons.campaign_outlined),
-              label:const Text('Publicar comunicado oficial')),
+              label:const FittedText('Publicar comunicado oficial')),
             const SizedBox(height:14),
             if(announcements.isEmpty)
-              const Text('Todavía no hay comunicados oficiales.',
+              const FittedText('Todavía no hay comunicados oficiales.',
                 key:Key('b4-announcements-empty')),
             for(final item in announcements)
               Card(child:Padding(
                 padding:const EdgeInsets.all(18),
                 child:Column(
                   crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    Text((item['topic']??'Deporte').toString(),
+                    FittedText((item['topic']??'Deporte').toString(),
                       style:Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height:8),
-                    Text((item['content']??'').toString()),
+                    FittedText((item['content']??'').toString()),
                     const SizedBox(height:8),
-                    Text('Estado: ${item['status']??'desconocido'}'),
+                    FittedText('Estado: ${item['status']??'desconocido'}'),
                     if(item['status']=='visible')OutlinedButton.icon(
                       key:Key('b4-announcement-remove-${item['id']}'),
                       onPressed:()=>removeAnnouncement(item),
                       icon:const Icon(Icons.remove_circle_outline),
-                      label:const Text('Retirar comunicado')),
+                      label:const FittedText('Retirar comunicado')),
                   ],
                 ),
               )),
           ],
           const SizedBox(height:20),
-          const Text('El acceso a una beta social real exige personal '
+          const FittedText('El acceso a una beta social real exige personal '
             'de respuesta humana, protocolos de incidentes y gates '
             'de seguridad aprobados.'),
         ],

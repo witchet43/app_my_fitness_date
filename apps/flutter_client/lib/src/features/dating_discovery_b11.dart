@@ -38,13 +38,13 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
     final agreed=await showDialog<bool>(
       context:context,
       builder:(ctx)=>AlertDialog(
-        title:const Text('¿Te interesa conocer a esta persona?'),
-        content:const Text('Solo habrá match si ambos expresan interés.'),
+        title:const FittedText('¿Te interesa conocer a esta persona?'),
+        content:const FittedText('Solo habrá match si ambos expresan interés.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(ctx,false),
-            child:const Text('Cancelar')),
+            child:const FittedText('Cancelar')),
           FilledButton(onPressed:()=>Navigator.pop(ctx,true),
-            child:const Text('Expresar interés')),
+            child:const FittedText('Expresar interés')),
         ],
       ),
     );
@@ -54,7 +54,7 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
       final status=await widget.api.likeB11(id);
       if(!mounted)return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content:Text(status=='matched'
+        content:FittedText(status=='matched'
           ?'¡Interés mutuo! Ya pueden conversar.'
           :'Interés privado registrado.')));
       await reload();
@@ -79,41 +79,41 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
       await showDialog<void>(
         context:context,
         builder:(ctx)=>AlertDialog(
-          title:Text(FittedLocaleScope.t(context,
+          title:FittedText(FittedLocaleScope.t(context,
             'Compatibilidad: ${percent.round()} %',
             'Compatibility: ${percent.round()} %')),
           content:SingleChildScrollView(child:Column(
             mainAxisSize:MainAxisSize.min,
             crossAxisAlignment:CrossAxisAlignment.start,
             children:[
-              Text(FittedLocaleScope.t(context,
+              FittedText(FittedLocaleScope.t(context,
                 'Estas son las razones verificadas. Un porcentaje no es un match mutuo.',
                 'These are verified reasons. A percentage is not a mutual match.')),
               const SizedBox(height:12),
               for(final code in codes)
                 Padding(
                   padding:const EdgeInsets.only(bottom:8),
-                  child:Text('• ${explainMatchReason(code.toString(),
+                  child:FittedText('• ${explainMatchReason(code.toString(),
                     language:FittedLocaleScope.languageOf(context))}')),
               const SizedBox(height:12),
-              Text('Algoritmo ${score['algorithm']} · v${score['policy_version']}',
+              FittedText('Algoritmo ${score['algorithm']} · v${score['policy_version']}',
                 style:Theme.of(context).textTheme.bodySmall),
             ],
           )),
           actions:[TextButton(
             onPressed:()=>Navigator.pop(ctx),
-            child:Text(FittedLocaleScope.t(context,'Cerrar','Close')))],
+            child:FittedText(FittedLocaleScope.t(context,'Cerrar','Close')))],
         ),
       );
     }catch(_){
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content:Text(
+        const SnackBar(content:FittedText(
           'Compatibilidad no disponible o evidencia insuficiente.')));
     }finally{if(mounted)setState(()=>busyId=null);}
   }
   @override
   Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('Compatibilidad de vida'),
+    appBar:AppBar(title:const FittedText('Compatibilidad de vida'),
       actions:[IconButton(
         key:const Key('b11-refresh-discovery'),
         tooltip:'Actualizar personas y matches',
@@ -122,19 +122,19 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
     body:Center(child:ConstrainedBox(
       constraints:const BoxConstraints(maxWidth:820),
       child:ListView(padding:const EdgeInsets.all(16),children:[
-        const Text('Compatibilidad antes que mismo deporte',
+        const FittedText('Compatibilidad antes que mismo deporte',
           style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),
         const SizedBox(height:10),
-        const Text('Solo miembros adultos elegibles y autorizados. '
+        const FittedText('Solo miembros adultos elegibles y autorizados. '
           'Tu gimnasio, horario, rutas y preferencias completas no '
           'son visibles aquí. Las fotografías requieren moderación.'),
         if(loading)const LinearProgressIndicator(),
-        if(error!=null)Text(error!,key:const Key('b11-discovery-error')),
+        if(error!=null)FittedText(error!,key:const Key('b11-discovery-error')),
         const SizedBox(height:18),
-        const Text('Personas compatibles',
+        const FittedText('Personas compatibles',
           style:TextStyle(fontSize:19,fontWeight:FontWeight.bold)),
         if(!loading&&error==null&&candidates.isEmpty)
-          const Text('Todavía no hay perfiles autorizados. '
+          const FittedText('Todavía no hay perfiles autorizados. '
             'No presentamos personas ficticias como reales.',
             key:Key('b11-candidates-empty')),
         for(final person in candidates)
@@ -142,40 +142,40 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
             padding:const EdgeInsets.all(14),
             child:Column(
               crossAxisAlignment:CrossAxisAlignment.start,children:[
-                Text((person['display_name']??'').toString(),
+                FittedText((person['display_name']??'').toString(),
                   style:Theme.of(context).textTheme.titleLarge),
-                Text((person['city']??'').toString()),
+                FittedText((person['city']??'').toString()),
                 const SizedBox(height:6),
                 for(final reason in (person['reason_codes'] is List
                     ?person['reason_codes'] as List:[]))
                   Padding(padding:const EdgeInsets.only(bottom:5),
-                    child:Text(reasonDescriptionB11(reason.toString()))),
+                    child:FittedText(reasonDescriptionB11(reason.toString()))),
                 const SizedBox(height:8),
                 TextButton.icon(
                   key:Key('b11-explain-${person['user_id']}'),
                   onPressed:busyId==null ?
                     ()=>explain((person['user_id']??'').toString()) : null,
                   icon:const Icon(Icons.auto_awesome_outlined),
-                  label:const Text('¿Por qué somos compatibles?')),
+                  label:const FittedText('¿Por qué somos compatibles?')),
                 FilledButton.icon(
                   key:Key('b11-like-${person['user_id']}'),
                   onPressed:busyId==null?
                     ()=>like((person['user_id']??'').toString()):null,
                   icon:const Icon(Icons.favorite_outline),
-                  label:const Text('Me interesa')),
+                  label:const FittedText('Me interesa')),
               ]),
           )),
         const SizedBox(height:24),
-        const Text('Matches mutuos',
+        const FittedText('Matches mutuos',
           style:TextStyle(fontSize:19,fontWeight:FontWeight.bold)),
         if(!loading&&error==null&&matches.isEmpty)
-          const Text('Aún no hay interés recíproco.',
+          const FittedText('Aún no hay interés recíproco.',
             key:Key('b11-matches-empty')),
         for(final match in matches)
           ListTile(
             key:Key('b11-match-${match['id']}'),
-            title:Text((match['display_name']??'Match').toString()),
-            subtitle:const Text('Interés confirmado por ambas personas'),
+            title:FittedText((match['display_name']??'Match').toString()),
+            subtitle:const FittedText('Interés confirmado por ambas personas'),
             trailing:const Icon(Icons.chat_outlined),
             onTap:()=>Navigator.of(context).push(MaterialPageRoute<void>(
               builder:(_)=>DatingChatB11(
@@ -258,11 +258,11 @@ class _DatingChatB11State extends State<DatingChatB11>{
   Future<void> report() async {
     final reason=await showDialog<String>(
       context:context,builder:(ctx)=>SimpleDialog(
-        title:const Text('Reportar y bloquear a esta persona'),
+        title:const FittedText('Reportar y bloquear a esta persona'),
         children:[
           for(final reason in ['harassment','spam','impersonation','unsafe','other'])
             SimpleDialogOption(onPressed:()=>Navigator.pop(ctx,reason),
-              child:Text(switch(reason){
+              child:FittedText(switch(reason){
                 'harassment'=>'Acoso','spam'=>'Spam',
                 'impersonation'=>'Suplantación',
                 'unsafe'=>'Riesgo de seguridad',_=>'Otro motivo',
@@ -275,7 +275,7 @@ class _DatingChatB11State extends State<DatingChatB11>{
       await widget.api.reportB11(widget.matchId,reason);
       if(mounted){
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content:Text('Reporte enviado y cuenta bloqueada.')));
+          const SnackBar(content:FittedText('Reporte enviado y cuenta bloqueada.')));
         Navigator.of(context).pop();
       }
     }catch(_){
@@ -291,7 +291,7 @@ class _DatingChatB11State extends State<DatingChatB11>{
   };
   @override
   Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:Text(widget.title),actions:[
+    appBar:AppBar(title:FittedText(widget.title),actions:[
       IconButton(key:const Key('b11-report'),
         tooltip:'Reportar y bloquear',
         onPressed:report,icon:const Icon(Icons.report_outlined)),
@@ -300,16 +300,16 @@ class _DatingChatB11State extends State<DatingChatB11>{
       constraints:const BoxConstraints(maxWidth:760),
       child:Column(children:[
         const Padding(padding:EdgeInsets.all(12),
-          child:Text('Chat privado solo después de un match mutuo. '
+          child:FittedText('Chat privado solo después de un match mutuo. '
             'Puedes reportar o bloquear cuando lo necesites.')),
         if(loading)const LinearProgressIndicator(),
-        if(error!=null)Text(error!,key:const Key('b11-chat-error')),
+        if(error!=null)FittedText(error!,key:const Key('b11-chat-error')),
         Expanded(child:ListView(
           key:const Key('b11-chat-messages'),
           padding:const EdgeInsets.all(12),
           children:[
             for(final msg in items.reversed)
-              Card(child:ListTile(title:Text(
+              Card(child:ListTile(title:FittedText(
                 (msg['body']??'').toString()))),
           ],
         )),
@@ -317,12 +317,12 @@ class _DatingChatB11State extends State<DatingChatB11>{
           padding:const EdgeInsets.all(12),
           child:Wrap(spacing:10,children:[
             for(final idea in ideas)
-              Chip(label:Text(ideaName(idea))),
+              Chip(label:FittedText(ideaName(idea))),
           ]),
         ),
         const Padding(
           padding:EdgeInsets.all(8),
-          child:Text('Active Date: ideas, no reservas ni ubicaciones reales.')),
+          child:FittedText('Active Date: ideas, no reservas ni ubicaciones reales.')),
         Row(children:[
           Expanded(child:TextField(
             key:const Key('b11-message-input'),

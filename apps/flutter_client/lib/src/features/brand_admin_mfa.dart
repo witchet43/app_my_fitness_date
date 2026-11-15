@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -128,7 +129,7 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('My Fitness Date · Administrador'),
+      title: const FittedText('My Fitness Date · Administrador'),
       actions: [
         IconButton(onPressed: () => widget.onSignOut(),
           icon: const Icon(Icons.logout), tooltip: 'Cerrar sesión'),
@@ -141,17 +142,17 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
         children: [
           const Icon(Icons.admin_panel_settings_outlined, size: 54),
           const SizedBox(height: 15),
-          Text(enrollment ? 'Configura tu segundo factor'
+          FittedText(enrollment ? 'Configura tu segundo factor'
             : 'Confirma tu identidad',
             style: Theme.of(context).textTheme.headlineMedium,
             textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          const Text('El rol administrador tiene acceso a funciones '
+          const FittedText('El rol administrador tiene acceso a funciones '
             'privilegiadas. Utiliza un código temporal de tu autenticador.',
             textAlign: TextAlign.center),
           if (enrollment && secret != null) ...[
             const SizedBox(height: 20),
-            const Text('Introduce esta clave en Google Authenticator o '
+            const FittedText('Introduce esta clave en Google Authenticator o '
               'Microsoft Authenticator. No la compartas.'),
             const SizedBox(height: 10),
             SelectableText(secret!, key: const Key('admin-mfa-secret'),
@@ -167,17 +168,17 @@ class _BrandAdminMfaGateState extends State<BrandAdminMfaGate> {
           ),
           if (error != null)
             Padding(padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(error!, style: const TextStyle(color: Colors.redAccent))),
+              child: FittedText(error!, style: const TextStyle(color: Colors.redAccent))),
           FilledButton(
             key: const Key('admin-mfa-verify'),
             onPressed: busy ? null : _verify,
-            child: Text(busy ? 'Comprobando...' : 'Verificar y entrar al panel'),
+            child: FittedText(busy ? 'Comprobando...' : 'Verificar y entrar al panel'),
           ),
           const SizedBox(height: 10),
           TextButton(onPressed: busy ? null : _prepare,
-            child: const Text('Reintentar configuración')),
+            child: const FittedText('Reintentar configuración')),
           TextButton(onPressed: () => widget.onSignOut(),
-            child: const Text('Cerrar sesión')),
+            child: const FittedText('Cerrar sesión')),
         ],
       ),
     )),

@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import '../core/activity_repository.dart';
@@ -98,12 +99,12 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                     items: [
                       const DropdownMenuItem<String>(
                         value: '',
-                        child: Text('Todos los deportes'),
+                        child: FittedText('Todos los deportes'),
                       ),
                       for (final sport in sports)
                         DropdownMenuItem<String>(
                           value: sport,
-                          child: Text(sport,
+                          child: FittedText(sport,
                             overflow: TextOverflow.ellipsis),
                         ),
                     ],
@@ -125,12 +126,12 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                     items: [
                       const DropdownMenuItem<String>(
                         value: '',
-                        child: Text('Todas las ciudades'),
+                        child: FittedText('Todas las ciudades'),
                       ),
                       for (final city in cities)
                         DropdownMenuItem<String>(
                           value: city,
-                          child: Text(city,
+                          child: FittedText(city,
                             overflow: TextOverflow.ellipsis),
                         ),
                     ],
@@ -142,7 +143,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
             ),
             FilterChip(
               key: const Key('b9-only-upcoming'),
-              label: const Text('Sólo próximas'),
+              label: const FittedText('Sólo próximas'),
               selected: upcomingOnly,
               onSelected: (value) =>
                   setState(() => upcomingOnly = value),
@@ -153,7 +154,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
         Row(
           children: [
             Expanded(
-              child: Text(
+              child: FittedText(
                 '$visibleCount ${visibleCount == 1 ? 'actividad encontrada' : 'actividades encontradas'}',
                 key: const Key('b9-results-count'),
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -163,7 +164,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
               key: const Key('b9-reset'),
               onPressed: clearDiscoveryB9,
               icon: const Icon(Icons.restart_alt),
-              label: const Text('Limpiar filtros'),
+              label: const FittedText('Limpiar filtros'),
             ),
           ],
         ),
@@ -224,13 +225,13 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
       if (!mounted) return;
       setState(() => item['joined'] = true);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Participación confirmada y guardada de forma privada.'),
+        content: FittedText('Participación confirmada y guardada de forma privada.'),
       ));
     } on MemberApiException catch (e) {
       if (mounted) {
         setState(() => error = e.message);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)));
+          SnackBar(content: FittedText(e.message)));
       }
     } catch (_) {
       if (mounted) setState(() =>
@@ -253,7 +254,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (dialog, update) => AlertDialog(
-          title: const Text('Crear actividad deportiva'),
+          title: const FittedText('Crear actividad deportiva'),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: SingleChildScrollView(
@@ -280,7 +281,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                 OutlinedButton.icon(
                   key: const Key('b1-create-date'),
                   icon: const Icon(Icons.event_outlined),
-                  label: Text(formatStart(scheduled.toIso8601String())),
+                  label: FittedText(formatStart(scheduled.toIso8601String())),
                   onPressed: () async {
                     final now = DateTime.now();
                     final date = await showDatePicker(
@@ -301,14 +302,14 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                     ));
                   },
                 ),
-                if (validation != null) Text(validation!,
+                if (validation != null) FittedText(validation!,
                   style: const TextStyle(color: Colors.redAccent)),
               ]),
             ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancelar')),
+              child: const FittedText('Cancelar')),
             FilledButton(
               key: const Key('b1-create-submit'),
               onPressed: () {
@@ -333,7 +334,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                   'starts_at': scheduled.toUtc().toIso8601String(),
                 });
               },
-              child: const Text('Publicar actividad'),
+              child: const FittedText('Publicar actividad'),
             ),
           ],
         ),
@@ -350,7 +351,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
       await widget.api.publishActivity(payload);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Actividad publicada correctamente.'),
+          content: FittedText('Actividad publicada correctamente.'),
         ));
         await load();
       }
@@ -389,16 +390,16 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          FittedText(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          Text('${item['sport'] ?? ''} · ${item['city'] ?? ''}',
+          FittedText('${item['sport'] ?? ''} · ${item['city'] ?? ''}',
             style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 5),
-          Text(formatStart(item['starts_at'])),
+          FittedText(formatStart(item['starts_at'])),
           const SizedBox(height: 12),
-          Text((item['description'] ?? '').toString()),
+          FittedText((item['description'] ?? '').toString()),
           const SizedBox(height: 12),
-          Text('Cupo máximo: ${item['capacity'] ?? '—'} personas.',
+          FittedText('Cupo máximo: ${item['capacity'] ?? '—'} personas.',
             style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -406,7 +407,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
             onPressed: widget.readOnly || joined || busy
                 ? null : () => confirm(item),
             icon: Icon(joined ? Icons.check_circle : Icons.event_available),
-            label: Text(widget.readOnly
+            label: FittedText(widget.readOnly
               ? 'Vista de administrador: sin reservaciones'
               : joined ? 'Participación confirmada' :
                 activeRsvp == id ? 'Confirmando…' : 'Confirmar participación'),
@@ -428,7 +429,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
     );
     return Scaffold(
     appBar: AppBar(
-      title: const Text('Explorar actividades'),
+      title: const FittedText('Explorar actividades'),
       actions: [
         if (!widget.readOnly) IconButton(
           key: const Key('b2-open-my-activities'),
@@ -453,12 +454,12 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
             key: const Key('b1-activities-list'),
             padding: const EdgeInsets.all(18),
             children: [
-              Text(widget.readOnly
+              FittedText(widget.readOnly
                 ? 'Vista previa de la experiencia de miembro'
                 : 'Muévete en buena compañía',
                 style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 8),
-              Text(widget.readOnly
+              FittedText(widget.readOnly
                 ? 'Estás viendo la experiencia pública como administrador. '
                   'Para confirmar una participación utiliza otra cuenta de miembro.'
                 : 'Actividades publicadas por organizadores autorizados. '
@@ -468,7 +469,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                 key: const Key('b2-my-activities-button'),
                 onPressed: showMyActivities,
                 icon: const Icon(Icons.calendar_month_outlined),
-                label: const Text('Mis actividades y reservas'),
+                label: const FittedText('Mis actividades y reservas'),
               ),
               if (!widget.readOnly && widget.api is CommunityRepository) ...[
                 const SizedBox(height:10),
@@ -478,7 +479,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                     MaterialPageRoute<void>(builder:(_)=>CommunityB4(
                       api:widget.api as CommunityRepository))),
                   icon:const Icon(Icons.groups_outlined),
-                  label:const Text('Entrar a la comunidad deportiva')),
+                  label:const FittedText('Entrar a la comunidad deportiva')),
               ],
               if (organizer) ...[
                 const SizedBox(height: 14),
@@ -486,14 +487,14 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                   key: const Key('b2-organizer-list-button'),
                   onPressed: showOrganizedActivities,
                   icon: const Icon(Icons.manage_accounts_outlined),
-                  label: const Text('Administrar mis eventos'),
+                  label: const FittedText('Administrar mis eventos'),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   key: const Key('b1-organizer-create'),
                   onPressed: publishing ? null : createActivity,
                   icon: const Icon(Icons.add_circle_outline),
-                  label: Text(publishing ? 'Publicando…' : 'Crear actividad'),
+                  label: FittedText(publishing ? 'Publicando…' : 'Crear actividad'),
                 ),
               ],
               if (!loading && error == null && activities.isNotEmpty) ...[
@@ -506,15 +507,15 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
               ),
               if (error != null) ...[
                 const SizedBox(height: 18),
-                Text(error!, key: const Key('b1-activities-error'),
+                FittedText(error!, key: const Key('b1-activities-error'),
                   style: const TextStyle(color: Colors.redAccent)),
                 TextButton(onPressed: load,
-                  child: const Text('Reintentar')),
+                  child: const FittedText('Reintentar')),
               ],
               if (!loading && error == null && activities.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 28),
-                  child: Text(
+                  child: FittedText(
                     'Aún no hay actividades publicadas. No mostramos '
                     'actividades ficticias como si fueran reales.',
                     key: Key('b1-activities-empty'),
@@ -524,7 +525,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
                   activities.isNotEmpty && visible.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Text(
+                  child: FittedText(
                     'No encontramos actividades con esos filtros. '
                     'Prueba otra disciplina o muestra todas las fechas.',
                     key: Key('b9-no-results'),
@@ -534,7 +535,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
               if (!loading && error == null)
                 for (final item in visible) activityCard(item),
               const SizedBox(height: 24),
-              const Text('La participación es voluntaria. '
+              const FittedText('La participación es voluntaria. '
                 'La confirmación no publica tus horarios privados.'),
             ],
           ),
