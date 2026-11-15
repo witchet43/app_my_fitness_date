@@ -97,6 +97,8 @@ jobs:
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611140025_fitted_match_policy_v1.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611140026_fitted_editorial_brand_seed.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611140027_fitted_score_pair_v1.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611150028_fitted_private_gym_shield_preferences.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_shield_private_v28_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_match_policy_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/brand_admin_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/saas_heartbeat_test.sql
