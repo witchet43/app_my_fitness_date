@@ -6,9 +6,9 @@ abstract final class FittedProfileInsights {
     'move_for_fun','consistent','training_focused','competitive',
   ];
   static const pillars=[
-    ['sport','frequency','window','training_mode','training_with','competitions'],
-    ['weekday','sleep','travel','weekend','interests'],
-    ['intent','together','train_partner','active_importance','weeknight','support'],
+    ['sport','frequency','window','training_mode'],
+    ['weekday','sleep','travel'],
+    ['intent','together','train_partner'],
   ];
   static const weights=[35,35,30];
 
@@ -24,14 +24,8 @@ abstract final class FittedProfileInsights {
         if(a[key] is String && (a[key] as String).trim().isNotEmpty)
           key:true,
     };
-    final weekend=rhythm?['weekends'];
-    final interests=rhythm?['interests'];
-    final weeknight=rhythm?['weeknight'];
-    final support=rhythm?['support'];
-    values['weekend']=weekend is List && weekend.isNotEmpty;
-    values['interests']=interests is List && interests.isNotEmpty;
-    values['weeknight']=weeknight is String && weeknight.trim().isNotEmpty;
-    values['support']=support is String && support.trim().isNotEmpty;
+    // Sensitive or optional lifestyle details are deliberately excluded
+    // from the completion denominator.
     return [
       for(final group in pillars)
         ((group.where((k)=>values[k]==true).length/group.length)*100).round(),
