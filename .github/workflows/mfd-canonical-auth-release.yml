@@ -1,0 +1,147 @@
+name: My Fitness Date - canonical unified authentication release
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mfd-canonical-auth-release.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  deployments: write
+concurrency:
+  group: mfd-canonical-cloudflare-pages
+  cancel-in-progress: false
+jobs:
+  canonical-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout verified B11 unified application
+        uses: actions/checkout@v4
+        with:
+          ref: feature/b11-one-final-real-product-20261112
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.9"
+          cache: true
+      - name: Prepare Flutter Web
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Validate source, one canonical URL and legal documents
+        run: |
+          python3 scripts/verify_hosted_auth.py
+          python3 scripts/check_public_legal.py
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path("apps/flutter_client/lib/main.dart").read_text()
+          landing=Path("apps/flutter_client/lib/src/features/public_entry_shell.dart").read_text()
+          member=Path("apps/flutter_client/lib/src/member_v26_app.dart").read_text()
+          assert "FitnessDateApp(api:ApiClient())" not in source, "Legacy public app can still boot"
+          assert "anonymous-pace-tool" not in landing
+          assert "Acceso aún no configurado" not in landing
+          assert "popUntil((route) => route.isFirst)" in member
+          assert "brand_admin_status" in member and "brand_admin_session" in member
+          assert "onEmailSignIn" in member and "onGoogle" in member
+          print("One editorial welcome + authenticated member/admin gates verified")
+          PY
+      - name: Validate hosted Google, email, Apple availability and member API
+        run: |
+          python3 - <<'PY'
+          import json,re,os,urllib.request,urllib.error
+          from pathlib import Path
+          text=Path(".github/workflows/cloudflare-pages-production.yml").read_text()
+          m=re.search(r'MFD_PROD_SUPABASE_PUBLISHABLE_KEY=(sb_publishable_[A-Za-z0-9_-]+)',text)
+          assert m, "Publishable key unavailable"
+          base="https://jtrdvnwbxpfdnbzasvcj.supabase.co"
+          req=urllib.request.Request(base+"/auth/v1/settings",headers={"apikey":m.group(1),"User-Agent":"MFD-Canonical-QA/1.0"})
+          with urllib.request.urlopen(req,timeout=15) as response:
+              cfg=json.load(response)
+          providers=cfg.get("external",{})
+          assert providers.get("google") is True
+          assert providers.get("email") is True
+          apple=providers.get("apple") is True
+          with open(os.environ["GITHUB_ENV"],"a") as out:
+              out.write("MFD_APPLE_AVAILABLE="+str(apple).lower()+"\n")
+          print("Google + Email ready. Apple configured:",apple)
+          api=base+"/functions/v1/member-api-v26"
+          for endpoint in ("/v1/me/profile","/v1/dating/candidates"):
+              request=urllib.request.Request(api+endpoint,headers={"User-Agent":"MFD-Canonical-QA/1.0"})
+              try:
+                  with urllib.request.urlopen(request,timeout=15) as response:
+                      status=response.status
+              except urllib.error.HTTPError as err:
+                  status=err.code
+              assert status==401,(endpoint,status)
+          PY
+      - name: Analyze and test Flutter
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Build single canonical authenticated Flutter site
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release \
+            --dart-define=MFD_V26_ENABLED=true \
+            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=true \
+            --dart-define=MFD_APPLE_PROVIDER_VERIFIED="$MFD_APPLE_AVAILABLE" \
+            --dart-define=MFD_PROD_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co \
+            --dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk \
+            --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
+            --dart-define=MFD_TERMS_URL=https://my-fitness-date.pages.dev/terms/ \
+            --dart-define=MFD_PRIVACY_URL=https://my-fitness-date.pages.dev/privacy/ \
+            --dart-define=MFD_TERMS_VERSION=v27-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v27-privacy-1 \
+            --dart-define=MFD_OAUTH_REDIRECT_URL=https://my-fitness-date.pages.dev/
+          cp cloudflare/_headers build/web/_headers
+          cp cloudflare/_redirects build/web/_redirects
+          cp -R cloudflare/privacy cloudflare/terms build/web/
+          python3 - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          Path("build/web/mfd-release.json").write_text(json.dumps({
+            "commit":sha,"channel":"canonical-unified-auth",
+            "login_return":"https://my-fitness-date.pages.dev/",
+            "member_access":True,"dating_enabled":False
+          })+"\n")
+          PY
+      - name: Publish canonical production website on Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: d10780918aa05ee5532c754371c60c94
+          command: pages deploy apps/flutter_client/build/web --project-name=my-fitness-date --branch=main
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: End-to-end verify canonical HTTP release and legal pages
+        run: |
+          python3 - <<'PY'
+          import json,subprocess,urllib.request,time
+          home="https://my-fitness-date.pages.dev"
+          sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          def get(path):
+              req=urllib.request.Request(home+path,headers={"User-Agent":"MFD-Canonical-Release-Smoke/1.0"})
+              with urllib.request.urlopen(req,timeout=15) as response:
+                  assert response.status==200
+                  return response.read()
+          for attempt in range(12):
+              try:
+                  info=json.loads(get("/mfd-release.json?sha="+sha))
+                  assert info["commit"]==sha,info
+                  assert info["channel"]=="canonical-unified-auth",info
+                  assert info["login_return"]==home+"/",info
+                  assert info["member_access"] is True
+                  assert b"flutter" in get("/").lower()
+                  assert len(get("/main.dart.js"))>1000
+                  for slug in ("terms","privacy"):
+                      assert b"<html" in get("/"+slug+"/").lower()
+                  print("CANONICAL RELEASE VERIFIED:",home+"/","COMMIT:",sha)
+                  break
+              except Exception:
+                  if attempt==11: raise
+                  time.sleep(5)
+          PY
