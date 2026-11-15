@@ -1,16 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/fitted_match_engine.dart';
 
 /// Owner-only entry point: parent is gated with remote role + MFA/AAL2.
 /// These are sample, synthetic profiles, never real private member data.
 class MatchCalculatorAdmin extends StatefulWidget {
-  const MatchCalculatorAdmin({super.key});
+  const MatchCalculatorAdmin({super.key,required this.client});
+  final SupabaseClient client;
   @override
   State<MatchCalculatorAdmin> createState()=>_MatchCalculatorAdminState();
 }
 
 class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
   Map<String,int> weights=FittedMatchEngine.defaults;
+  int? serverVersion;
+  bool saving=false;
+  bool loading=true;
+  String? policyMessage;
+
+  @override
+  void initState(){super.initState();loadPolicy();}
+
+  Future<void> loadPolicy() async {
+    try {
+      final response=await widget.client.rpc('admin_fitted_match_policy_get');
+      if(response is! Map || response['status']!='ok')throw StateError('Role gate');
+      final raw=Map<String,dynamic>.from(response['weights'] as Map);
+      final values=raw.map((key,value)=>MapEntry(key,(value as num).toInt()));
+      if(!FittedMatchEngine.validWeights(values))throw StateError('Invalid weights');
+      if(mounted)setState((){
+        weights=values;serverVersion=(response['version'] as num).toInt();
+        loading=false;policyMessage=null;
+      });
+    } catch (_) {
+      if(mounted)setState((){
+        loading=false;serverVersion=null;
+        policyMessage='No se pudo cargar la configuración. Verifica MFA y la migración del servidor.';
+      });
+    }
+  }
+
+  Future<void> savePolicy() async {
+    if(serverVersion==null||saving)return;
+    setState((){saving=true;policyMessage=null;});
+    try {
+      final response=await widget.client.rpc('admin_fitted_match_policy_save',params:{
+        'p_weights':weights,'p_expected_version':serverVersion,
+      });
+      if(response is! Map||response['status']!='saved'){
+        throw StateError('Conflict or denied');
+      }
+      if(mounted)setState((){
+        serverVersion=(response['version'] as num).toInt();
+        policyMessage='Política guardada y auditada (versión $serverVersion). No activa citas.';
+      });
+    }catch(_){
+      if(mounted)setState(()=>policyMessage='No se guardó: verifica MFA o recarga la versión activa.');
+    }finally{if(mounted)setState(()=>saving=false);}
+  }
   String language='es';
   bool complementary=true;
 
@@ -65,6 +112,10 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
         const Text('Simulador auditable con perfiles ficticios. '
           'Un mismo deporte no es requisito: intención, estilo de vida, '
           'entrenamiento, recuperación y autonomía se ponderan juntos.'),
+        if(loading)const LinearProgressIndicator(),
+        if(policyMessage!=null)Padding(
+          padding:const EdgeInsets.symmetric(vertical:12),
+          child:Text(policyMessage!)),
         const SizedBox(height:18),
         Row(children:[
           Expanded(child:Text('Ponderaciones · total 100 %',
@@ -85,6 +136,12 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
             onChanged:(v)=>adjust(f.id,v.round()),
           ),
         ],
+        FilledButton.icon(
+          key:const Key('save-match-policy'),
+          onPressed:serverVersion==null||saving?null:savePolicy,
+          icon:const Icon(Icons.verified_outlined),
+          label:Text(saving?'Guardando…':'Guardar ponderaciones · requiere MFA'),
+        ),
         const Divider(),
         Wrap(spacing:12,runSpacing:12,children:[
           ChoiceChip(
@@ -127,8 +184,8 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
         const SizedBox(height:18),
         const Text('Prototipo de cálculo, no política activa en producción. '
           'Las ponderaciones y resultados aquí son simulados: '
-          'su publicación requiere guardar una versión en el servidor, '
-          'auditoría MFA y evaluar las restricciones de seguridad.'),
+          'guardar ponderaciones NO activa el descubrimiento real. '
+          'Faltan evaluación y controles de seguridad del motor.'),
       ],
     );
   }
