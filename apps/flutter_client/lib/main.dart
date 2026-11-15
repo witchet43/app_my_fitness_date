@@ -7,15 +7,15 @@ import 'src/member_v26_app.dart';
 import 'src/theme/fitness_date_theme.dart';
 
 /// A SINGLE coordinated V26 release. No partial production activation:
-/// if the identity/consent/backend configuration is incomplete, the new
-/// release stays on a marketing-only, fail-closed entry screen.
+/// if the identity/consent/backend configuration is incomplete, the app
+/// shows the same editorial welcome, with authentication fail-closed.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const v26=bool.fromEnvironment('MFD_V26_ENABLED',defaultValue:false);
   if(!v26){
-    // The public website is a welcome experience, not the legacy
-    // anonymous sports-tools application. Auth stays fail-closed.
+    // Unified welcome only: never boot the obsolete sports-tools landing.
+    // Auth remains fail-closed until configured.
     runApp(MaterialApp(
       title:'My Fitness Date',
       debugShowCheckedModeBanner:false,
