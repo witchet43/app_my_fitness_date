@@ -67,7 +67,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     Icons.auto_graph_outlined,
   ];
   static const _paletteSeeds = <Map<String, String>>[
-    {'name':'Bosque', 'primary':'#28463D','accent':'#B49A6A','background':'#F7F5F0'},
+    {'name':'Bosque', 'primary':'#D5BE8A','accent':'#9FB5A9','background':'#101B21'},
     {'name':'Azul noche', 'primary':'#152D3D','accent':'#859EA3','background':'#F4F5F2'},
     {'name':'Tierra', 'primary':'#5A4838','accent':'#B2936A','background':'#FAF5EB'},
     {'name':'Pizarra', 'primary':'#36434A','accent':'#8D9A9D','background':'#F4F5F4'},
@@ -79,10 +79,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   final headline = TextEditingController(text:'Personas afines a tu forma de vivir.');
   final description = TextEditingController(
     text:'Una comunidad para personas que valoran la vida activa y las relaciones serias.');
-  final paletteName = TextEditingController(text:'Bosque');
-  final primary = TextEditingController(text:'#28463D');
-  final accent = TextEditingController(text:'#B49A6A');
-  final background = TextEditingController(text:'#F7F5F0');
+  final paletteName = TextEditingController(text:'Editorial Obsidian');
+  final primary = TextEditingController(text:'#D5BE8A');
+  final accent = TextEditingController(text:'#9FB5A9');
+  final background = TextEditingController(text:'#101B21');
   final draftTitle = TextEditingController(text:'Propuesta elegante 40+');
   int tab = 0;
   int logoIndex = 0;
