@@ -31,6 +31,7 @@ class PublicEntryShell extends StatefulWidget {
 
 class _PublicEntryShellState extends State<PublicEntryShell> {
   bool register = false;
+  final _accessKey = GlobalKey();
   static const navy = Color(0xFF101B21);
   static const gold = Color(0xFFD5BE8A);
   static const ivory = Color(0xFFF4F0E8);
@@ -117,7 +118,15 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           const SizedBox(height:23),
           FilledButton.icon(
             key:const Key('landing-create-profile'),
-            onPressed:()=>setState(()=>register=true),
+            onPressed:(){
+              setState(()=>register=true);
+              WidgetsBinding.instance.addPostFrameCallback((_){
+                final target=_accessKey.currentContext;
+                if(target!=null)Scrollable.ensureVisible(target,
+                  duration:const Duration(milliseconds:350),
+                  curve:Curves.easeInOut);
+              });
+            },
             style:FilledButton.styleFrom(
               backgroundColor:const Color(0xFFB6F266),
               foregroundColor:navy,
@@ -169,7 +178,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       ?widget.onEmailRegister??widget.onEmail
       :widget.onEmailSignIn??widget.onEmail;
     return Container(
-      key:const Key('landing-access'),
+      key:_accessKey,
       padding:EdgeInsets.all(wide?28:21),
       decoration:BoxDecoration(
         color:const Color(0xFF19272C),
