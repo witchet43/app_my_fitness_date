@@ -7,7 +7,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const MaterialApp(home: PublicEntryShell()));
     expect(find.byKey(const Key('landing-headline')), findsOneWidget);
-    expect(find.byKey(const Key('signup-closed')), findsOneWidget);
+    expect(find.textContaining('Acceso aún no configurado'), findsNothing);
     expect(find.byType(NavigationRail), findsNothing);
     final google = tester.widget<OutlinedButton>(
       find.byKey(const Key('google-signin-entry')));
