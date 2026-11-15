@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'src/app.dart';
-import 'src/core/api_client.dart';
 import 'src/core/member_v26_api.dart';
 import 'src/features/public_entry_shell.dart';
 import 'src/member_v26_app.dart';
@@ -16,7 +14,17 @@ Future<void> main() async {
 
   const v26=bool.fromEnvironment('MFD_V26_ENABLED',defaultValue:false);
   if(!v26){
-    runApp(FitnessDateApp(api:ApiClient()));
+    // The public website is a welcome experience, not the legacy
+    // anonymous sports-tools application. Auth stays fail-closed.
+    runApp(MaterialApp(
+      title:'My Fitness Date',
+      debugShowCheckedModeBanner:false,
+      theme:FitDateTheme.dark(),
+      home:const PublicEntryShell(
+        termsUrl:'https://my-fitness-date.pages.dev/terms/',
+        privacyUrl:'https://my-fitness-date.pages.dev/privacy/',
+      ),
+    ));
     return;
   }
 
