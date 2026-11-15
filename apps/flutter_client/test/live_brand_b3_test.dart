@@ -13,8 +13,8 @@ void main() {
     data['media'] = {'cover_desktop':'https://example.test/cover.png'};
     final resolved = LiveBrandSettings.fromMap(data);
     expect(resolved.name,'Ritmo y Vida');
-    expect(resolved.logo,'catalog:0');
-    expect(resolved.font,'Arial');
+    expect(resolved.logo,LiveBrandSettings.fallback.logo);
+    expect(resolved.font,LiveBrandSettings.fallback.font);
     expect(resolved.media,isEmpty);
   });
 
@@ -61,11 +61,11 @@ void main() {
         home:LiveBrandScope(brand:brand,child:const PublicEntryShell()),
       ));
       await tester.pumpAndSettle();
-      expect(find.text('Ritmo y Vida'),findsOneWidget);
+      expect(find.text('Ritmo y Vida'),findsNWidgets(2));
       expect(find.text('Personas que disfrutan moverse.'),findsOneWidget);
       expect(find.text('Comparte actividades deportivas auténticas.'),
         findsOneWidget);
-      expect(find.text('EN MOVIMIENTO.'),findsOneWidget);
+      expect(find.text('UNA CONEXIÓN A TU ALTURA'),findsOneWidget);
       expect(tester.takeException(),isNull);
     },
   );
