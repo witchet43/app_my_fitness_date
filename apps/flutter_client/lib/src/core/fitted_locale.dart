@@ -109,6 +109,19 @@ class FittedText extends StatelessWidget {
 
 abstract final class FittedTranslations {
   static const Map<String,String> en={
+    'Personas en movimiento. Conexiones que trascienden.':
+      'People in motion. Connections that go further.',
+    'Entrenamiento, recovery y rutinas intencionales. Conecta por tus valores y estilo de vida, incluso si practican deportes distintos.':
+      'Training, recovery, and intentional routines. Connect through shared values and lifestyle, even when you practice different sports.',
+    'Entrenamiento, recovery y rutinas intencionales. Conecta con alguien por sus valores y estilo de vida, incluso si practican deportes distintos.':
+      'Training, recovery, and intentional routines. Connect through values and lifestyle, even when you practice different sports.',
+    'Personas en movimiento. Conexiones con intención.':
+      'People in motion. Intentional connections.',
+    'Conexiones con intención.':
+      'Intentional connections.',
+    'Conexiones con intención. Las funciones de citas se habilitarán cuando concluyan las verificaciones de seguridad.':
+      'Intentional connections. Dating features will open when safety checks are complete.',
+
     'UNA CONEXIÓN A TU ALTURA':'A CONNECTION THAT MATCHES YOUR AMBITION',
     'TU PRÓXIMO CAPÍTULO':'YOUR NEXT CHAPTER',
     'CONEXIONES CON INTENCIÓN':'INTENTIONAL CONNECTIONS',
