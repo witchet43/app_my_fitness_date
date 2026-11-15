@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/dating_repository_b11.dart';
+import '../core/fitted_match_engine.dart';
+import '../core/fitted_locale.dart';
 
 /// This UI can ONLY be reached after the server returns enabled=true.
 class DatingDiscoveryB11 extends StatefulWidget {
@@ -62,6 +64,53 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
       if(mounted)setState(()=>busyId=null);
     }
   }
+  Future<void> explain(String userId) async {
+    if(busyId!=null)return;
+    setState(()=>busyId=userId);
+    try {
+      final score=await widget.api.compatibilityB11(userId);
+      if(!mounted)return;
+      final percent=score['percent'];
+      final codes=score['reason_codes'] is List
+        ?score['reason_codes'] as List:[];
+      if(score['available']!=true || percent is! num) {
+        throw StateError('Insufficient evidence');
+      }
+      await showDialog<void>(
+        context:context,
+        builder:(ctx)=>AlertDialog(
+          title:Text(FittedLocaleScope.t(context,
+            'Compatibilidad: ${percent.round()} %',
+            'Compatibility: ${percent.round()} %')),
+          content:SingleChildScrollView(child:Column(
+            mainAxisSize:MainAxisSize.min,
+            crossAxisAlignment:CrossAxisAlignment.start,
+            children:[
+              Text(FittedLocaleScope.t(context,
+                'Estas son las razones verificadas. Un porcentaje no es un match mutuo.',
+                'These are verified reasons. A percentage is not a mutual match.')),
+              const SizedBox(height:12),
+              for(final code in codes)
+                Padding(
+                  padding:const EdgeInsets.only(bottom:8),
+                  child:Text('• ${explainMatchReason(code.toString(),
+                    language:FittedLocaleScope.languageOf(context))}')),
+              const SizedBox(height:12),
+              Text('Algoritmo ${score['algorithm']} · v${score['policy_version']}',
+                style:Theme.of(context).textTheme.bodySmall),
+            ],
+          )),
+          actions:[TextButton(
+            onPressed:()=>Navigator.pop(ctx),
+            child:Text(FittedLocaleScope.t(context,'Cerrar','Close')))],
+        ),
+      );
+    }catch(_){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content:Text(
+          'Compatibilidad no disponible o evidencia insuficiente.')));
+    }finally{if(mounted)setState(()=>busyId=null);}
+  }
   @override
   Widget build(BuildContext context)=>Scaffold(
     appBar:AppBar(title:const Text('Compatibilidad de vida'),
@@ -102,6 +151,12 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
                   Padding(padding:const EdgeInsets.only(bottom:5),
                     child:Text(reasonDescriptionB11(reason.toString()))),
                 const SizedBox(height:8),
+                TextButton.icon(
+                  key:Key('b11-explain-${person['user_id']}'),
+                  onPressed:busyId==null ?
+                    ()=>explain((person['user_id']??'').toString()) : null,
+                  icon:const Icon(Icons.auto_awesome_outlined),
+                  label:const Text('¿Por qué somos compatibles?')),
                 FilledButton.icon(
                   key:Key('b11-like-${person['user_id']}'),
                   onPressed:busyId==null?
