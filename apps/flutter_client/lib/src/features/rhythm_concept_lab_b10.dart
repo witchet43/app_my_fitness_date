@@ -107,7 +107,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   String? saveNotice;
   String? saveError;
   String scenario = 'cross_sport';
-  final answers = emptyRhythmB10();
+  late final Map<String,String> answers;
   final additionalSports = <String>{};
   final weekends = <String>{};
   final interests = <String>{};
@@ -119,6 +119,8 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   @override
   void initState() {
     super.initState();
+    // Saved answers are user declarations; never count preview defaults as facts.
+    answers=widget.profileMode?<String,String>{}:emptyRhythmB10();
     if(widget.repository!=null && widget.canSave) loadSaved();
   }
 
