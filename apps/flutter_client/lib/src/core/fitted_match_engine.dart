@@ -111,6 +111,7 @@ abstract final class FittedMatchEngine {
       }
     }
     double earned=0,covered=0;
+    var evaluatedFactors=0;
     for(final f in factors){
       final weight=weights[f.id]??0;
       if(weight<=0)continue;
@@ -118,6 +119,7 @@ abstract final class FittedMatchEngine {
       if(v==null)continue;
       covered+=weight;
       earned+=weight*v;
+      evaluatedFactors++;
       contributions[f.id]=v*100;
       final code=f.id=='sport'&&a['sport']!=b['sport']
         ?'complementary_sports'
@@ -135,7 +137,7 @@ abstract final class FittedMatchEngine {
         reasonCodes[f.id]='shared_independence_balance';
       }
     }
-    if(covered<70||!known('intent'))return null;
+    if(covered<70||evaluatedFactors<3||!known('intent'))return null;
     return MatchBreakdown(
       percent:(earned/covered*100).round().clamp(0,100),
       coverage:covered.round(),factors:contributions,
@@ -169,7 +171,7 @@ String explainMatchReason(String code,{String language='es'}){
       :'Entrenan con una frecuencia semanal similar',
     'complementary_sports'=>en
       ?'Different sports, compatible active lifestyles'
-      :'Practican deportes distintos, sin dejar de tener hábitos compatibles',
+      :'Practican disciplinas diferentes, sin dejar de tener hábitos compatibles',
     'aligned_intent'=>en
       ?'Their relationship intentions align'
       :'Sus intenciones de relación son compatibles',
