@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'rhythm_concept_lab_b10.dart';
+import 'fitted_profile_story_v28.dart';
+import 'fitted_gym_shield_v28.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
 import 'member_dashboard_b8.dart';
@@ -226,6 +228,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   late final Future<bool> lifestyleConsent;
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
+  Map<String,dynamic>? lifestyle;
   String? problem;
   bool loading=true;
   @override
@@ -242,9 +245,33 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
       final result=await Future.wait([
         widget.api.loadPlaces(),widget.api.loadPhotos()]);
       if(mounted)setState((){places=result[0];photos=result[1];});
+      // Private rhythm answers are fetched ONLY with separate dating consent.
+      final consent=await lifestyleConsent;
+      if(consent){
+        try{
+          final saved=await widget.api.loadRhythmB11();
+          if(mounted)setState(()=>lifestyle=saved);
+        }catch(_){if(mounted)setState(()=>lifestyle=null);}
+      } else if(mounted){setState(()=>lifestyle=null);}
     } catch (_) {
       if(mounted)setState(()=>problem='No se pudieron cargar los datos privados.');
     } finally {if(mounted)setState(()=>loading=false);}
+  }
+
+  Future<void> configurePillars() async {
+    final consent=await lifestyleConsent;
+    if(!mounted)return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>RhythmConceptLabB10(
+        repository:widget.api,canSave:consent,profileMode:true)));
+    if(mounted)await reload();
+  }
+
+  Future<void> configureShield() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>FittedGymShieldV28(
+        api:widget.api,onAddPlace:addPlace)));
+    if(mounted)await reload();
   }
 
   Future<void> addPlace() async {
@@ -348,88 +375,21 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
       body:Center(child:ConstrainedBox(
         constraints:const BoxConstraints(maxWidth:980),
         child:ListView(padding:const EdgeInsets.all(16),children:[
-          Container(padding:const EdgeInsets.all(22),
-            decoration:BoxDecoration(
-              borderRadius:BorderRadius.circular(24),
-              gradient:const LinearGradient(colors:[
-                Color(0xFF1F3437),Color(0xFF26392E)])),
-            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              const MfdBranding(full:false,width:80),
-              const SizedBox(height:12),
-              const FittedText('MI PERFIL · PRIVADO',style:TextStyle(
-                color:FitDateColors.lime,letterSpacing:2,fontSize:11)),
-              const SizedBox(height:10),
-              FittedText((p['display_name']??'').toString(),
-                key:const Key('v26-member-name'),
-                style:const TextStyle(fontSize:30,fontWeight:FontWeight.w900)),
-              FittedText((p['city']??'').toString(),style:const TextStyle(
-                color:FitDateColors.muted)),
-              const SizedBox(height:10),
-              FittedText((p['headline']??'').toString()),
-            ])),
-          const SizedBox(height:16),
-          Card(
+          KeyedSubtree(
             key:const Key('fitted-profile-three-pillars-card'),
-            clipBehavior:Clip.antiAlias,
-            child:Padding(padding:const EdgeInsets.all(20),
-              child:Column(
-                crossAxisAlignment:CrossAxisAlignment.start,
-                children:[
-                  Text(FittedLocaleScope.t(context,
-                    'Tu vida, en tres pilares',
-                    'Your life, in three pillars'),
-                    style:Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height:7),
-                  Text(FittedLocaleScope.t(context,
-                    'Más allá del deporte: movimiento, hábitos y relaciones.',
-                    'Beyond sport: movement, lifestyle and relationships.')),
-                  const SizedBox(height:16),
-                  const Wrap(spacing:8,runSpacing:8,children:[
-                    Chip(avatar:Icon(Icons.directions_run_outlined,size:18),
-                      label:Text('How I Move')),
-                    Chip(avatar:Icon(Icons.wb_sunny_outlined,size:18),
-                      label:Text('How I Live')),
-                    Chip(avatar:Icon(Icons.people_outline,size:18),
-                      label:Text('How I Relate')),
-                  ]),
-                  const SizedBox(height:15),
-                  FutureBuilder<bool>(
-                    future:lifestyleConsent,
-                    builder:(context,state)=>Column(
-                      crossAxisAlignment:CrossAxisAlignment.start,
-                      children:[
-                        if(state.hasData && !state.data!)
-                          Padding(
-                            padding:const EdgeInsets.only(bottom:10),
-                            child:Text(FittedLocaleScope.t(context,
-                              'Puedes explorar los tres pilares. Para guardar '
-                              'tus respuestas privadas se requiere el '
-                              'consentimiento independiente de FitDating.',
-                              'Explore all three pillars. Saving private '
-                              'answers requires separate FitDating consent.'),
-                              style:Theme.of(context).textTheme.bodySmall)),
-                        FilledButton.icon(
-                          key:const Key('fitted-edit-three-pillars'),
-                          onPressed:state.connectionState!=ConnectionState.done
-                            ?null:()=>Navigator.of(context).push(
-                              MaterialPageRoute<void>(builder:(_)=>
-                                RhythmConceptLabB10(
-                                  repository:widget.api,
-                                  canSave:state.data==true,
-                                  profileMode:true))),
-                          icon:const Icon(Icons.tune_outlined),
-                          label:Text(FittedLocaleScope.t(context,
-                            'Configurar mis tres pilares',
-                            'Set up my three pillars')),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            child:FittedProfileStoryV28(
+              profile:p,rhythm:lifestyle,
+              onConfigure:configurePillars,
+              onEditIdentity:widget.onEdit,
             ),
           ),
-          const SizedBox(height:16),
+          const SizedBox(height:18),
+          Row(children:[
+            Expanded(child:Text(FittedLocaleScope.t(context,
+              'Tus experiencias','Your experiences'),
+              style:Theme.of(context).textTheme.titleLarge)),
+          ]),
+          const SizedBox(height:12),
           MemberAgendaB8(
             api:widget.api,
             onExplore:() async {
@@ -463,24 +423,42 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             icon:const Icon(Icons.groups_outlined),
             label:const FittedText('Comunidad deportiva')),
           const SizedBox(height:10),
-          section('Yo como persona',Icons.favorite,FitDateColors.coral,
+          section(FittedLocaleScope.t(context,'Lo que hago, no solo lo que digo',
+              'What I do, not just what I say'),
+            Icons.auto_awesome_outlined,FitDateColors.lime,
             Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              FittedText((p['about_me']??'').toString()),
-              const SizedBox(height:12),tags(p['hobbies']),
+              Text(FittedLocaleScope.t(context,
+                'Estas experiencias proceden de lo que has guardado. '
+                'No usamos frases automáticas sobre tu personalidad.',
+                'These are based on your saved experiences. '
+                'We do not invent personality traits.')),
               const SizedBox(height:12),
-              FittedText('Valores: ${_list(p['life_values'])}'),
-              for(final answer in (p['prompts'] is List?p['prompts'] as List:[]))
-                if(answer is Map)
-                  ListTile(title:FittedText((answer['question']??'').toString()),
-                    subtitle:FittedText((answer['answer']??'').toString())),
-            ])),
-          section('Mi lado deportivo',Icons.directions_run,FitDateColors.lime,
-            Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              tags(p['sports']),const SizedBox(height:8),
-              const FittedText('Mis objetivos',style:TextStyle(fontWeight:FontWeight.bold)),
-              tags(p['fitness_goals']),const SizedBox(height:10),
-              const FittedText('Mis logros',style:TextStyle(fontWeight:FontWeight.bold)),
-              tags(p['achievements']),
+              if(lifestyle!=null && (lifestyle!['challenge']??'').toString().isNotEmpty)
+                ListTile(
+                  leading:const Icon(Icons.flag_outlined),
+                  title:Text(FittedLocaleScope.t(context,
+                    'Mi reto actual','My current challenge')),
+                  subtitle:Text(lifestyle!['challenge'].toString())),
+              if(p['achievements'] is List &&
+                (p['achievements'] as List).isNotEmpty)...[
+                Text(FittedLocaleScope.t(context,
+                  'Lo que he conseguido','What I have accomplished'),
+                  style:Theme.of(context).textTheme.titleSmall),
+                tags(p['achievements']),
+              ],
+              if(lifestyle==null || (p['achievements'] is List &&
+                  (p['achievements'] as List).isEmpty))
+                Text(FittedLocaleScope.t(context,
+                  'Completa tus tres pilares para que tu vida activa '
+                  'hable por ti.',
+                  'Complete your three pillars so your active life '
+                  'can speak for itself.')),
+              const SizedBox(height:12),
+              TextButton.icon(
+                onPressed:configurePillars,
+                icon:const Icon(Icons.edit_note_outlined),
+                label:Text(FittedLocaleScope.t(context,
+                  'Refinar mi historia','Refine my story'))),
             ])),
           section('Fotografías privadas',Icons.photo_library_outlined,
             FitDateColors.lilac,Column(
@@ -495,27 +473,34 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 Wrap(spacing:8,runSpacing:8,
                   children:photos.map(photoTile).toList()),
             ])),
-          section('Gimnasios, studios y zonas privadas',
-            Icons.shield_outlined,FitDateColors.lime,Column(
-              crossAxisAlignment:CrossAxisAlignment.start,children:[
-                const FittedText('Solo tú ves estos lugares. Nunca mostramos '
-                  'ubicaciones exactas ni horarios de asistencia.',
-                  style:TextStyle(color:FitDateColors.muted,fontSize:12)),
-                const SizedBox(height:12),
-                FilledButton.icon(onPressed:addPlace,
-                  icon:const Icon(Icons.add_location_alt_outlined),
-                  label:const FittedText('Añadir lugar privado')),
-                for(final place in places)
-                  ListTile(
-                    title:FittedText((place['place_name']??'').toString()),
-                    subtitle:FittedText((place['city']??'').toString()),
-                    trailing:IconButton(
-                      icon:const Icon(Icons.delete_outline),
-                      onPressed:()async{
-                        try{await widget.api.removePlace(place['id'].toString());await reload();}
-                        catch(_){if(mounted)setState(()=>problem='No se pudo eliminar.');}
-                      },
-                    )),
+          section('Gym Shield',Icons.shield_outlined,
+            FitDateColors.lime,
+            Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Text(FittedLocaleScope.t(context,
+                'Protege dónde y cuándo entrenas. Decide si aceptas '
+                'personas de tu mismo gimnasio o de horarios compartidos, '
+                'sin publicar tu rutina.',
+                'Protect when and where you train. Choose whether to '
+                'allow people from your gym or overlapping times, '
+                'without publishing your schedule.')),
+              const SizedBox(height:12),
+              Wrap(spacing:7,runSpacing:7,children:[
+                for(final place in places.take(3))
+                  Chip(avatar:const Icon(Icons.lock_outline,size:16),
+                    label:Text((place['place_name']??'').toString())),
+              ]),
+              if(places.isEmpty)
+                Text(FittedLocaleScope.t(context,
+                  'Añade tus lugares y ventanas generales para personalizar '
+                  'la protección.',
+                  'Add places and broad time windows to customize protection.')),
+              const SizedBox(height:13),
+              FilledButton.icon(
+                key:const Key('fitted-open-gym-shield'),
+                onPressed:configureShield,
+                icon:const Icon(Icons.admin_panel_settings_outlined),
+                label:Text(FittedLocaleScope.t(context,
+                  'Configurar Gym Shield','Configure Gym Shield'))),
             ])),
           section('FitDating y seguridad',Icons.verified_user_outlined,
             FitDateColors.coral,
