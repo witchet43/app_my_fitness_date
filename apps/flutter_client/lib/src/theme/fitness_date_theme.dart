@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Brand system: athletic energy (lime) + human connection (coral).
+/// Fitted editorial tokens: midnight teal, champagne and sage.
 /// Static tokens support Flutter Web, Android and iOS without external fonts.
 abstract final class FitDateColors {
-  static const ink = Color(0xFF10121E);
-  static const inkDeep = Color(0xFF0A0D16);
-  static const surface = Color(0xFF191D2C);
-  static const surfaceRaised = Color(0xFF23283A);
-  static const coral = Color(0xFFFF617B);
-  static const coralDark = Color(0xFF361B30);
-  static const lime = Color(0xFFC8FF6B);
-  static const lilac = Color(0xFFA995FF);
-  static const pearl = Color(0xFFF6F5F7);
-  static const muted = Color(0xFFC3C6D3);
-  static const outline = Color(0xFF3A4054);
+  static const ink = Color(0xFF18282C);
+  static const inkDeep = Color(0xFF101B21);
+  static const surface = Color(0xFF19272C);
+  static const surfaceRaised = Color(0xFF23363A);
+  static const coral = Color(0xFFD5BE8A);
+  static const coralDark = Color(0xFF34483F);
+  static const lime = Color(0xFF9FB5A9);
+  static const lilac = Color(0xFFB0B5AC);
+  static const pearl = Color(0xFFF4F0E8);
+  static const muted = Color(0xFFB0C1B8);
+  static const outline = Color(0xFF425150);
 }
 
 abstract final class FitDateTheme {
@@ -112,7 +112,7 @@ abstract final class FitDateTheme {
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: FitDateColors.inkDeep,
-        indicatorColor: const Color(0xFF3A263F),
+        indicatorColor: const Color(0xFF34483F),
         selectedIconTheme: const IconThemeData(
           color: FitDateColors.coral, size: 26,
         ),
