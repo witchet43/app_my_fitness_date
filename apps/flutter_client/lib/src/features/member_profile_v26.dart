@@ -1,9 +1,11 @@
 import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'rhythm_concept_lab_b10.dart';
 import 'fitted_profile_story_v28.dart';
+import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
@@ -228,11 +230,16 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
   Map<String,dynamic>? lifestyle;
+  String? startingRhythm;
   String? problem;
   bool loading=true;
   @override
   void initState(){
     super.initState();
+    final hint=widget.api.auth.auth.currentUser?.userMetadata?['fitted_starting_rhythm'];
+    if(FittedProfileInsights.segments.contains(hint)){
+      startingRhythm=hint as String;
+    }
     lifestyleConsent=widget.api.loadConsents().then((records)=>records.any(
       (r)=>r['consent_kind']=='dating' &&
         r['document_version']=='dating-v1')).catchError((Object _)=>false);
@@ -255,6 +262,21 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     } catch (_) {
       if(mounted)setState(()=>problem='No se pudieron cargar los datos privados.');
     } finally {if(mounted)setState(()=>loading=false);}
+  }
+
+  Future<void> setStartingRhythm(String? value) async {
+    if(value!=null&&!FittedProfileInsights.segments.contains(value))return;
+    try{
+      await widget.api.auth.auth.updateUser(UserAttributes(
+        data:{'fitted_starting_rhythm':value},
+      ));
+      if(mounted)setState(()=>startingRhythm=value);
+    }catch(_){
+      if(mounted)ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content:Text(FittedLocaleScope.t(context,
+          'No se pudo guardar tu selección inicial.',
+          'Could not save your starting preference.'))));
+    }
   }
 
   Future<void> configurePillars() async {
@@ -378,6 +400,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             key:const Key('fitted-profile-three-pillars-card'),
             child:FittedProfileStoryV28(
               profile:p,rhythm:lifestyle,
+              startingPreference:startingRhythm,
+              onChooseStarting:setStartingRhythm,
               onConfigure:configurePillars,
               onEditIdentity:widget.onEdit,
             ),
