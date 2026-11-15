@@ -199,8 +199,6 @@ abstract final class FittedTranslations {
     'Limpiar filtros':'Clear filters',
     'Crear actividad deportiva':'Create a sports activity',
     'Publicar actividad':'Publish activity',
-    'Explorar actividades':'Explore activities',
-    'Reintentar':'Try again',
     'Cupo máximo':'Capacity',
     'Aún no hay actividades publicadas. No mostramos ':
       'No activities have been published yet. We do not show ',
@@ -223,7 +221,6 @@ abstract final class FittedTranslations {
     'Compartir con la comunidad':'Share with the community',
     'Retirar mi publicación':'Remove my post',
     'Retirar publicación':'Remove post',
-    'Compartir con la comunidad':'Share with the community',
     'Conservar':'Keep',
     'Publicar':'Publish',
     'Enviar reporte':'Submit report',
@@ -292,7 +289,6 @@ abstract final class FittedTranslations {
       'Scoring prototype. Saving weights does NOT enable real discovery; safety evaluation and controls are still required.',
     'Marca en vivo':'Live brand',
     'Diseñador de Marca':'Brand Designer',
-    'Calculadora del match':'Match Calculator',
     'Resumen':'Overview',
     'Biblioteca':'Library',
     'Borradores':'Drafts',
@@ -340,7 +336,6 @@ abstract final class FittedTranslations {
     'Deporte':'Sport',
     'Hora':'Time',
     'Detalles':'Details',
-    'Guardar cambios':'Save changes',
     'Editar':'Edit',
     'Actualizar':'Refresh',
     'Sin información':'No information',
@@ -356,7 +351,7 @@ abstract final class FittedTranslations {
     if(value!=null){
       final prefix=source.length-source.trimLeft().length;
       final suffix=source.length-source.trimRight().length;
-      return '${' '*prefix}$value${' '*suffix}';
+      return '${List.filled(prefix, ' ').join()}$value${List.filled(suffix, ' ').join()}';
     }
     return source;
   }
