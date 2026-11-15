@@ -1,4 +1,5 @@
 name: My Fitness Date - landing redesign preview
+# Release candidate: B11 editorial marketing only; does not change production.
 on:
   push:
     branches:
