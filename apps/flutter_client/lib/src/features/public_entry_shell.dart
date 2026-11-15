@@ -56,7 +56,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           borderRadius: BorderRadius.circular(compact ? 11 : 15),
           color: const Color(0xFF1A2B30),
         ),
-        child: Text('M', style: TextStyle(
+        child: Text(brand.name.isEmpty ? 'F' : brand.name[0].toUpperCase(), style: TextStyle(
           color: gold, fontFamily: 'Georgia',
           fontSize: compact ? 27 : 38, fontWeight: FontWeight.w700,
           fontStyle: FontStyle.italic, height: 1,
@@ -259,7 +259,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               const SizedBox(height: 36),
               const Divider(color: Color(0xFF425150)),
               const SizedBox(height: 14),
-              const Text('My Fitness Date · Conexiones con intención. '
+              Text(brand.name+' · Conexiones con intención. '
                 'Las funciones de citas se habilitarán cuando concluyan '
                 'las verificaciones de seguridad.',
                 textAlign: TextAlign.center,
