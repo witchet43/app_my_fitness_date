@@ -364,7 +364,6 @@ abstract final class FittedTranslations {
     'Privacidad antes que exposición':'Privacy comes first',
     'Tu rutina y tus espacios de entrenamiento son privados.':
       'Your routines and training locations stay private.',
-      'Intentional connections. Dating features will open when safety checks are complete.',
     'Mi perfil 360°':'My 360° profile',
     'Mi perfil':'My profile',
     'Completa tu perfil':'Complete your profile',
