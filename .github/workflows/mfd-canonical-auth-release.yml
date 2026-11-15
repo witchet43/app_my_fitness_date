@@ -1,5 +1,6 @@
 name: Fitted - canonical unified authentication release
 # Unified editorial logo and multilingual compatibility interface verified.
+# Runtime ES/EN strings and saved user preference regression tested.
 # Final brand-polish release: shared editorial logo, verified 6-factor policy, ES/EN locale.
 on:
   push:
