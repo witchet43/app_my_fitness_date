@@ -1,0 +1,66 @@
+name: My Fitness Date - retire historical preview landing URLs
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/mfd-retire-legacy-previews.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  deployments: write
+concurrency:
+  group: mfd-retire-legacy-previews
+  cancel-in-progress: false
+jobs:
+  redirect-legacy-branches:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Prepare external permanent redirects to canonical site
+        run: |
+          mkdir -p redirect-only
+          cat > redirect-only/_redirects <<'EOF'
+          /* https://my-fitness-date.pages.dev/:splat 301
+          EOF
+          cat > redirect-only/index.html <<'EOF'
+          <!doctype html>
+          <html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=https://my-fitness-date.pages.dev/"><title>My Fitness Date</title></head>
+          <body><a href="https://my-fitness-date.pages.dev/">Abrir My Fitness Date</a></body></html>
+          EOF
+      - name: Retire former landing redesign preview
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: d10780918aa05ee5532c754371c60c94
+          command: pages deploy redirect-only --project-name=my-fitness-date --branch=landing-redesign
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Retire B10 legacy preview
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: d10780918aa05ee5532c754371c60c94
+          command: pages deploy redirect-only --project-name=my-fitness-date --branch=b10-preview
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify preview URLs redirect to single canonical home
+        run: |
+          python3 - <<'PY'
+          import time,urllib.request,urllib.error
+          from urllib.parse import urlparse
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl): return None
+          opener=urllib.request.build_opener(NoRedirect())
+          for host in ('landing-redesign','b10-preview'):
+              url=f'https://{host}.my-fitness-date.pages.dev/'
+              for attempt in range(12):
+                  try:
+                      with opener.open(urllib.request.Request(url,headers={'User-Agent':'MFD-Legacy-Retirement/1.0'}),timeout=15) as r:
+                          code=r.status
+                          location=r.headers.get('Location','')
+                  except urllib.error.HTTPError as e:
+                      code=e.code
+                      location=e.headers.get('Location','')
+                  if code in (301,302,307,308) and location.startswith('https://my-fitness-date.pages.dev/'):
+                      print('RETIRED',url,'=>',location)
+                      break
+                  if attempt==11: raise RuntimeError(f'{url}: {code}, {location}')
+                  time.sleep(5)
+          PY
