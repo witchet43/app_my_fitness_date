@@ -36,10 +36,12 @@ void main() {
     expect(find.byType(CheckboxListTile), findsNothing);
     expect(find.text('Términos'), findsOneWidget);
     expect(find.text('Privacidad'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('switch-entry-mode')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('switch-entry-mode')));
     await tester.pump();
     expect(find.byType(CheckboxListTile), findsNothing);
     await tester.ensureVisible(find.byKey(const Key('email-entry')));
-    expect(find.text('Crear cuenta con correo'), findsOneWidget);
+    expect(find.text('Comienza aquí'), findsOneWidget);
   });
 }
