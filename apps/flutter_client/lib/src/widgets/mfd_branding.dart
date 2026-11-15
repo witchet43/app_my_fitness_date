@@ -53,7 +53,7 @@ class MfdBranding extends StatelessWidget {
         fit: BoxFit.contain,
         filterQuality: FilterQuality.medium,
         errorBuilder:(context,error,stackTrace)=>Icon(
-          Icons.favorite_outline,color:brand.primaryColor,size:32),
+          Icons.diamond_outlined,color:brand.primaryColor,size:32),
       );
     }
     return Semantics(
