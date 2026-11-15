@@ -1,5 +1,5 @@
 name: My Fitness Date - landing redesign preview
-# B11 authenticated preview only; no main application merge or production deploy.
+# B11 authenticated preview; single editorial welcome after logout; Apple remains provider-gated.
 on:
   push:
     branches:
