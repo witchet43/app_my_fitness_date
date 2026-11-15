@@ -13,14 +13,18 @@ class FittedLocaleController extends ChangeNotifier {
   }
   final SupabaseClient client;
   String _language='es';
+  int _languageChangeCount=0;
   Future<void> _restoreSavedChoice() async {
     try {
+      final initialRevision=_languageChangeCount;
       final prefs=await SharedPreferences.getInstance();
       final authenticated=client.auth.currentUser?.userMetadata?['preferred_language'];
       final saved=prefs.getString('fitted-preferred-language');
       final next=(authenticated=='en'||authenticated=='es') ? authenticated
         :(saved=='en'||saved=='es'?saved:'es');
-      if(next!=_language){_language=next;notifyListeners();}
+      if(initialRevision==_languageChangeCount && next!=_language){
+        _language=next;notifyListeners();
+      }
     }catch(_){/* No preferences storage: in-memory locale still works. */}
   }
   String get language=>_language;
@@ -31,6 +35,7 @@ class FittedLocaleController extends ChangeNotifier {
     if(code!='es' && code!='en')throw ArgumentError('Unsupported language');
     if(code==_language)return;
     final prior=_language;
+    _languageChangeCount++;
     _language=code;
     notifyListeners();
     try {
@@ -73,6 +78,8 @@ class FittedLocaleScope extends InheritedNotifier<FittedLocaleController> {
     maybeOf(context)?.language??'es';
   static String t(BuildContext context,String es,String en)=>
     languageOf(context)=='en'?en:es;
+  static String translate(BuildContext context,String message)=>
+    FittedTranslations.translate(message,languageOf(context));
 }
 
 class FittedText extends StatelessWidget {
