@@ -48,6 +48,14 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   static const _tabs = <String>[
     'Resumen', 'Diseñador de Marca', 'Calculadora del match', 'Biblioteca', 'Borradores', 'Historial'
   ];
+  static const _englishTabs = <String>[
+    'Overview', 'Brand Designer', 'Match Calculator',
+    'Library', 'Drafts', 'History',
+  ];
+  String tabLabel(int index) =>
+    FittedLocaleScope.languageOf(context)=='en'
+      ?_englishTabs[index]:_tabs[index];
+
   static const _icons = <IconData>[
     Icons.space_dashboard_outlined,
     Icons.palette_outlined,
@@ -1059,7 +1067,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           destinations:[
             for(var i=0;i<_tabs.length;i++)
               NavigationRailDestination(
-                icon:Icon(_icons[i]),label:Text(_tabs[i])),
+                icon:Icon(_icons[i]),label:Text(tabLabel(i))),
           ],
         ),
         Expanded(child:_body()),
@@ -1069,7 +1077,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         onDestinationSelected:(v)=>setState(()=>tab=v),
         destinations:[
           for(var i=0;i<_tabs.length;i++)
-            NavigationDestination(icon:Icon(_icons[i]),label:_tabs[i]),
+            NavigationDestination(icon:Icon(_icons[i]),label:tabLabel(i)),
         ],
       ),
     );
