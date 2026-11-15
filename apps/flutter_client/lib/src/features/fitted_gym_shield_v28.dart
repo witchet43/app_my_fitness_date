@@ -161,6 +161,36 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
     if(!already&&windows.length<28)setState(()=>windows.add(result));
   }
 
+  Future<void> removePlace(Map<String,dynamic> place) async{
+    final id=place['id']?.toString();
+    if(id==null)return;
+    final confirm=await showDialog<bool>(context:context,
+      builder:(ctx)=>AlertDialog(
+        title:Text(tr('Quitar lugar privado','Remove private place')),
+        content:Text(tr('Se eliminarán también sus ventanas habituales. '
+          'Esta acción no afecta otros lugares.',
+          'Its usual time windows will also be deleted. '
+          'Other places are unaffected.')),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx,false),
+            child:Text(tr('Cancelar','Cancel'))),
+          FilledButton(onPressed:()=>Navigator.pop(ctx,true),
+            child:Text(tr('Eliminar','Delete'))),
+        ],
+      ),
+    );
+    if(confirm!=true||!mounted)return;
+    try{
+      await widget.api.removePlace(id);
+      setState(()=>windows.removeWhere((w)=>w['place_id']==id));
+      await load();
+    }catch(_){
+      if(mounted)setState(()=>message=tr(
+        'No se pudo quitar este lugar.',
+        'Could not remove this place.'));
+    }
+  }
+
   Widget modeCard(int i) {
     final active=mode==modes[i];
     return Semantics(
@@ -241,6 +271,11 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
                 Expanded(child:Text(
                   (place['place_name']??'').toString(),
                   style:Theme.of(context).textTheme.titleMedium)),
+                IconButton(
+                  key:Key('gym-shield-delete-place-${place['id']}'),
+                  onPressed:()=>removePlace(place),
+                  tooltip:tr('Eliminar lugar','Remove place'),
+                  icon:const Icon(Icons.delete_outline)),
                 TextButton.icon(
                   key:Key('gym-shield-add-window-${place['id']}'),
                   onPressed:windows.length>=28?null:()=>addWindow(place),
