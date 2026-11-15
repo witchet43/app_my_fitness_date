@@ -65,7 +65,7 @@ void main() {
       expect(find.text('Personas que disfrutan moverse.'),findsOneWidget);
       expect(find.text('Comparte actividades deportivas auténticas.'),
         findsOneWidget);
-      expect(find.text('UNA CONEXIÓN A TU ALTURA'),findsOneWidget);
+      expect(find.text('PERSONAS EN MOVIMIENTO'),findsOneWidget);
       expect(tester.takeException(),isNull);
     },
   );
