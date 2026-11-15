@@ -45,10 +45,10 @@ jobs:
           cp cloudflare/_redirects build/web/_redirects
           cp -R cloudflare/terms cloudflare/privacy build/web/
           python3 - <<'PY'
-          import json,os
+          import json,subprocess
           from pathlib import Path
           Path('build/web/mfd-release.json').write_text(json.dumps({
-            'commit':'feature/b11-one-final-real-product-20261112',
+            'commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
             'channel':'landing_redesign_preview',
             'member_access':False,
             'dating_enabled':False
