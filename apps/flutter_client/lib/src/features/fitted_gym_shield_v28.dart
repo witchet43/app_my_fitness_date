@@ -287,3 +287,4 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
       ]),
     )),
   );
+}
