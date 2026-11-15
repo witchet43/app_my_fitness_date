@@ -48,31 +48,6 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     }
   }
 
-  Widget _benefit(IconData icon,String esTitle,String enTitle,
-      String esCopy,String enCopy,{required bool compact}) {
-    return Padding(
-      padding:EdgeInsets.symmetric(vertical:compact?7:11),
-      child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Container(
-          width:38,height:38,
-          decoration:BoxDecoration(
-            color:const Color(0xFF293D3C),
-            borderRadius:BorderRadius.circular(11)),
-          child:Icon(icon,color:gold,size:20)),
-        const SizedBox(width:12),
-        Expanded(child:Column(
-          crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Text(FittedLocaleScope.t(context,esTitle,enTitle),
-              style:const TextStyle(color:ivory,fontWeight:FontWeight.w700,
-                fontSize:14)),
-            const SizedBox(height:3),
-            Text(FittedLocaleScope.t(context,esCopy,enCopy),
-              style:const TextStyle(color:sage,fontSize:12,height:1.45)),
-          ])),
-      ]),
-    );
-  }
-
   Widget _compactPromise(IconData icon,String es,String en) =>
     Row(mainAxisSize:MainAxisSize.min,children:[
       Icon(icon,color:gold,size:17),
