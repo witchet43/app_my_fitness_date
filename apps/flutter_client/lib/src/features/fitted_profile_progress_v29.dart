@@ -9,11 +9,13 @@ class FittedProfileProgressV29 extends StatelessWidget {
     super.key,required this.rhythm,
     required this.startingPreference,required this.onChooseStarting,
     required this.onConfigure,
+    this.showCompletion=true,this.showRhythm=true,
   });
   final Map<String,dynamic>? rhythm;
   final String? startingPreference;
   final Future<void> Function(String?) onChooseStarting;
   final VoidCallback onConfigure;
+  final bool showCompletion,showRhythm;
 
   static const labelEs={
     'move_for_fun':'Me muevo por disfrutar',
@@ -75,6 +77,7 @@ class FittedProfileProgressV29 extends StatelessWidget {
       child:Padding(
         padding:const EdgeInsets.all(18),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          if(showCompletion)...[
           Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               children:[
@@ -105,7 +108,8 @@ class FittedProfileProgressV29 extends StatelessWidget {
             key:const Key('fitted-progress-complete'),
             onPressed:onConfigure,icon:const Icon(Icons.arrow_forward),
             label:Text(en?'Continue my profile':'Continuar mi perfil')),
-          const Divider(height:30),
+          ],
+          if(showRhythm)...[
           Text(en?'MY CURRENT MOVEMENT RHYTHM':'MI RITMO ACTUAL',
             style:const TextStyle(color:Color(0xFFD5BE8A),
               fontSize:11,letterSpacing:1.2,fontWeight:FontWeight.w700)),
@@ -165,6 +169,7 @@ class FittedProfileProgressV29 extends StatelessWidget {
                 ),
             ],
           ),
+          ],
         ]),
       ),
     );
