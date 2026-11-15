@@ -14,7 +14,7 @@ class MfdBranding extends StatelessWidget {
   final double width;
 
   static const _catalog = <IconData>[
-    Icons.favorite_outline,
+    Icons.diamond_outlined,
     Icons.graphic_eq,
     Icons.landscape_outlined,
     Icons.hub_outlined,
@@ -40,7 +40,7 @@ class MfdBranding extends StatelessWidget {
         fit: BoxFit.contain,
         filterQuality: FilterQuality.medium,
         errorBuilder:(context,error,stackTrace)=>Icon(
-          Icons.favorite_outline,color:brand.primaryColor,size:32),
+          Icons.diamond_outlined,color:brand.primaryColor,size:32),
       );
     } else if (index != null && index > 0 && index < _catalog.length) {
       image = FittedBox(child:Icon(
@@ -66,7 +66,8 @@ class MfdBranding extends StatelessWidget {
         constraints:BoxConstraints(minHeight:full ? 75 : 0),
         padding:const EdgeInsets.all(5),
         decoration:BoxDecoration(
-          color:Colors.white,
+          color:brand.backgroundColor,
+          border:Border.all(color:brand.primaryColor.withValues(alpha:.55)),
           borderRadius:BorderRadius.circular(full ? 18 : 14),
         ),
         child:image,
