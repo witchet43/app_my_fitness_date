@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/live_brand.dart';
+import '../core/fitted_locale.dart';
 
 /// Public marketing experience. Account consent is recorded in the
 /// authenticated registration gate, never duplicated on the landing page.
@@ -154,7 +155,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             style: TextStyle(fontSize: 11, letterSpacing: 2,
               color: gold, fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
-          Text(register ? 'Comienza aquí' : 'Bienvenido',
+          Text(register ? FittedLocaleScope.t(context,'Comienza aquí','Start here') : FittedLocaleScope.t(context,'Bienvenido','Welcome'),
             style: const TextStyle(fontFamily: 'Georgia',
               fontSize: 33, color: ivory)),
           const SizedBox(height: 12),
@@ -167,14 +168,14 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             key: const Key('google-signin-entry'),
             onPressed: enabled ? widget.onGoogle : null,
             icon: const Icon(Icons.account_circle_outlined),
-            label: const Text('Continuar con Google'),
+            label: Text(FittedLocaleScope.t(context,'Continuar con Google','Continue with Google')),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             key: const Key('apple-signin-entry'),
             onPressed: enabled ? widget.onApple : null,
             icon: const Icon(Icons.apple),
-            label: const Text('Continuar con Apple'),
+            label: Text(FittedLocaleScope.t(context,'Continuar con Apple','Continue with Apple')),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -183,7 +184,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             style: FilledButton.styleFrom(backgroundColor: gold,
               foregroundColor: navy, minimumSize: const Size(0, 54)),
             icon: const Icon(Icons.mail_outline),
-            label: Text(register ? 'Crear cuenta con correo' : 'Entrar con correo'),
+            label: Text(register ? FittedLocaleScope.t(context,'Crear cuenta con correo','Create account with email') : FittedLocaleScope.t(context,'Entrar con correo','Sign in with email')),
           ),
           const SizedBox(height: 22),
           TextButton(
@@ -205,11 +206,11 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               children: [
                 TextButton(
                   onPressed: enabled ? () => openPolicy(widget.termsUrl) : null,
-                  child: const Text('Términos', style: TextStyle(color: ivory)),
+                  child: Text(FittedLocaleScope.t(context,'Términos','Terms'), style: const TextStyle(color: ivory)),
                 ),
                 TextButton(
                   onPressed: enabled ? () => openPolicy(widget.privacyUrl) : null,
-                  child: const Text('Privacidad', style: TextStyle(color: ivory)),
+                  child: Text(FittedLocaleScope.t(context,'Privacidad','Privacy'), style: const TextStyle(color: ivory)),
                 ),
               ],
             ),
@@ -222,6 +223,9 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         backgroundColor: navy,
         title: _wordmark(brand, compact: true),
         actions: [
+          const Padding(
+            padding: EdgeInsets.only(right:12),
+            child:Center(child:FittedLanguageSelector())),
           if (wide) const Padding(
             padding: EdgeInsets.only(right: 16),
             child: Center(child: Text('CONEXIONES CON INTENCIÓN',
