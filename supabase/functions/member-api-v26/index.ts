@@ -667,7 +667,7 @@ async function handleRequest(req: Request): Promise<Response> {
     }
     // Explainability is computed server-side from private, consented lifestyle
     // answers. Only a percentage and approved reason codes may leave SQL.
-    const scoreRoute = route.match(/^\\/v1\\/dating\\/b11\\/score\\/([0-9a-f-]{36})$/i);
+    const scoreRoute = route.match(/^\/v1\/dating\/b11\/score\/([0-9a-f-]{36})$/i);
     if (scoreRoute && req.method === "GET") {
       const state=await datingStatus(token,identity.id);
       if(state.enabled !== true)return error(403);
