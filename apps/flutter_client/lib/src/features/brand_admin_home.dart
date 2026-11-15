@@ -1017,7 +1017,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         FilledButton(onPressed:_reload,child:const Text('Reintentar')),
       ])));
     return switch(tab) {
-      0=>_summary(),1=>_editor(),2=>const MatchCalculatorAdmin(),
+      0=>_summary(),1=>_editor(),2=>MatchCalculatorAdmin(client:widget.liveBrand.client),
       3=>_library(),4=>_drafts(),_=>_publication(),
     };
   }
