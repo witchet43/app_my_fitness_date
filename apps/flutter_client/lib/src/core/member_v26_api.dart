@@ -467,6 +467,14 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
     _items(_decode(await _request('GET','/v1/dating/b11/candidates')));
 
   @override
+  Future<Map<String,dynamic>> compatibilityB11(String userId) async {
+    if (!_validActivityId(userId)) {
+      throw const MemberApiException('Perfil inválido.');
+    }
+    return _decode(await _request('GET','/v1/dating/b11/score/$userId'));
+  }
+
+  @override
   Future<String> likeB11(String userId) async {
     if (!_validActivityId(userId)) {
       throw const MemberApiException('Perfil inválido.');
