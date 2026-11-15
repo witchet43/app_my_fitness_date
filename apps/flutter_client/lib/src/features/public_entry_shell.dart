@@ -165,7 +165,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           Text(register
             ?FittedLocaleScope.t(context,'Comienza aquí','Start here')
             :FittedLocaleScope.t(context,'Bienvenido','Welcome'),
-            style:const TextStyle(
+            style:TextStyle(
               fontFamily:'Georgia',fontSize:wide?29:27,color:ivory)),
           const SizedBox(height:7),
           Text(register
@@ -319,7 +319,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             ]),
           )),
         ]),
-      )),
+      ),
     );
   }
 }
