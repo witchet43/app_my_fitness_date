@@ -196,27 +196,24 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           ),
           const Divider(color: Color(0xFF425150)),
           const SizedBox(height: 12),
-          const Text('Al crear una cuenta se te solicitará aceptar '
-            'los documentos legales y declarar tu mayoría de edad. '
-            'No volveremos a pedirlo en cada inicio de sesión.',
-            style: TextStyle(color: sage, fontSize: 12, height: 1.5)),
-          const SizedBox(height: 12),
-          Wrap(spacing: 8, runSpacing: 4, children: [
-            TextButton(onPressed: enabled
-              ? () => openPolicy(widget.termsUrl) : null,
-              child: const Text('Términos', style: TextStyle(color: ivory))),
-            TextButton(onPressed: enabled
-              ? () => openPolicy(widget.privacyUrl) : null,
-              child: const Text('Privacidad', style: TextStyle(color: ivory))),
-          ]),
-          if (!enabled || (widget.onGoogle == null &&
-              widget.onApple == null && emailAction == null))
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Text('Acceso aún no configurado para este entorno.',
-                key: Key('signup-closed'),
-                style: TextStyle(color: sage, fontSize: 12)),
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 22,
+              runSpacing: 4,
+              children: [
+                TextButton(
+                  onPressed: enabled ? () => openPolicy(widget.termsUrl) : null,
+                  child: const Text('Términos', style: TextStyle(color: ivory)),
+                ),
+                TextButton(
+                  onPressed: enabled ? () => openPolicy(widget.privacyUrl) : null,
+                  child: const Text('Privacidad', style: TextStyle(color: ivory)),
+                ),
+              ],
             ),
+          ),
         ]),
     );
     return Scaffold(
