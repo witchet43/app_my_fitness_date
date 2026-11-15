@@ -227,6 +227,7 @@ class MemberProfileHomeV26 extends StatefulWidget {
 
 class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   late final Future<bool> lifestyleConsent;
+  int selectedArea = 0; // 0 = Inicio, 1 = Mi perfil
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
   Map<String,dynamic>? lifestyle;
@@ -385,17 +386,123 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   Widget build(BuildContext context) {
     final p=widget.profile;
     return Scaffold(
-      appBar:AppBar(title:FittedText(LiveBrandScope.of(context).name),
+      appBar:AppBar(
+        title:FittedText(LiveBrandScope.of(context).name),
         actions:[
           const FittedLanguageSelector(),
-          IconButton(tooltip:FittedLocaleScope.translate(context,'Editar'),onPressed:widget.onEdit,
-            icon:const Icon(Icons.edit_outlined)),
-          IconButton(tooltip:FittedLocaleScope.translate(context,'Cerrar sesión'),onPressed:widget.onLogout,
-            icon:const Icon(Icons.logout)),
+          PopupMenuButton<String>(
+            tooltip:FittedLocaleScope.t(context,'Cuenta','Account'),
+            icon:const Icon(Icons.account_circle_outlined),
+            onSelected:(value) {
+              if(value=='profile')setState(()=>selectedArea=1);
+              if(value=='edit')widget.onEdit();
+              if(value=='logout')widget.onLogout();
+            },
+            itemBuilder:(_)=>[
+              PopupMenuItem(value:'profile',
+                child:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
+              PopupMenuItem(value:'edit',
+                child:Text(FittedLocaleScope.t(context,'Editar perfil','Edit profile'))),
+              PopupMenuItem(value:'logout',
+                child:Text(FittedLocaleScope.t(context,'Cerrar sesión','Sign out'))),
+            ],
+          ),
         ]),
       body:Center(child:ConstrainedBox(
         constraints:const BoxConstraints(maxWidth:980),
         child:ListView(padding:const EdgeInsets.all(16),children:[
+          SegmentedButton<int>(
+            key:const Key('fitted-home-navigation'),
+            showSelectedIcon:false,
+            segments:[
+              ButtonSegment(value:0,icon:const Icon(Icons.home_outlined),
+                label:Text(FittedLocaleScope.t(context,'Inicio','Home'))),
+              ButtonSegment(value:1,icon:const Icon(Icons.person_outline),
+                label:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
+            ],
+            selected:{selectedArea},
+            onSelectionChanged:(value)=>setState(()=>selectedArea=value.first),
+          ),
+          const SizedBox(height:18),
+          if(selectedArea==0)...[
+            Container(
+              key:const Key('fitted-member-dashboard'),
+              padding:const EdgeInsets.all(24),
+              decoration:BoxDecoration(
+                borderRadius:BorderRadius.circular(23),
+                gradient:const LinearGradient(colors:[
+                  Color(0xFF243A39),Color(0xFF142329)])),
+              child:Column(
+                crossAxisAlignment:CrossAxisAlignment.start,children:[
+                  Text(FittedLocaleScope.t(context,
+                    'TU ESPACIO PARA CONECTAR','YOUR SPACE TO CONNECT'),
+                    style:const TextStyle(color:Color(0xFFD5BE8A),
+                      letterSpacing:1.5,fontSize:11,fontWeight:FontWeight.w800)),
+                  const SizedBox(height:12),
+                  Text(FittedLocaleScope.t(context,
+                    'Hola, ${(p['display_name']??'').toString().split(' ').first}',
+                    'Hello, ${(p['display_name']??'').toString().split(' ').first}'),
+                    style:const TextStyle(fontSize:29,fontWeight:FontWeight.w800)),
+                  const SizedBox(height:8),
+                  Text(FittedLocaleScope.t(context,
+                    'Conoce personas a tu ritmo y encuentra actividades que van contigo.',
+                    'Meet people at your pace and find activities that fit your lifestyle.'),
+                    style:const TextStyle(fontSize:14,height:1.5)),
+                  const SizedBox(height:17),
+                  FilledButton.icon(
+                    key:const Key('fitted-discover-primary'),
+                    onPressed:()=>Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder:(_)=>DatingV27(api:widget.api))),
+                    icon:const Icon(Icons.explore_outlined),
+                    label:Text(FittedLocaleScope.t(context,
+                      'Descubrir conexiones','Discover connections'))),
+                  const SizedBox(height:9),
+                  const Text('FitDating requiere verificaciones de seguridad antes de mostrar perfiles.',
+                    style:TextStyle(fontSize:11,color:Color(0xFFB9CBC1))),
+                ]),
+            ),
+            const SizedBox(height:16),
+            MemberAgendaB8(
+              api:widget.api,
+              onExplore:()async {
+                await Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder:(_)=>ActivitiesB1(api:widget.api)));
+              },
+              onReservations:()async {
+                await Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder:(_)=>MyActivitiesB2(api:widget.api)));
+              },
+            ),
+            const SizedBox(height:12),
+            OutlinedButton.icon(
+              key:const Key('b4-member-community'),
+              onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+                builder:(_)=>CommunityB4(api:widget.api))),
+              icon:const Icon(Icons.groups_outlined),
+              label:Text(FittedLocaleScope.t(context,
+                'Explorar comunidad','Explore community'))),
+            const SizedBox(height:12),
+            ListTile(
+              contentPadding:const EdgeInsets.symmetric(horizontal:8),
+              leading:const Icon(Icons.tune_outlined),
+              title:Text(FittedLocaleScope.t(context,
+                'Personaliza tu perfil','Personalize your profile')),
+              subtitle:Text(FittedLocaleScope.t(context,
+                'Intereses, valores y privacidad en un solo lugar',
+                'Interests, values and privacy in one place')),
+              trailing:const Icon(Icons.chevron_right),
+              onTap:()=>setState(()=>selectedArea=1),
+            ),
+          ]else...[
+            Row(children:[
+              Expanded(child:Text(FittedLocaleScope.t(context,
+                'Mi perfil privado','My private profile'),
+                style:const TextStyle(fontSize:24,fontWeight:FontWeight.w800))),
+              IconButton(
+                tooltip:FittedLocaleScope.t(context,'Editar','Edit'),
+                onPressed:widget.onEdit,icon:const Icon(Icons.edit_outlined)),
+            ]),
+            const SizedBox(height:12),
           KeyedSubtree(
             key:const Key('fitted-profile-three-pillars-card'),
             child:FittedProfileStoryV28(
@@ -406,26 +513,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               onEditIdentity:widget.onEdit,
             ),
           ),
-          const SizedBox(height:16),
-          MemberAgendaB8(
-            api:widget.api,
-            onExplore:() async {
-              await Navigator.of(context).push(MaterialPageRoute<void>(
-                builder:(_)=>ActivitiesB1(api:widget.api)));
-            },
-            onReservations:() async {
-              await Navigator.of(context).push(MaterialPageRoute<void>(
-                builder:(_)=>MyActivitiesB2(api:widget.api)));
-            },
-          ),
-          const SizedBox(height:12),
-          FilledButton.tonalIcon(
-            key:const Key('b4-member-community'),
-            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
-              builder:(_)=>CommunityB4(api:widget.api))),
-            icon:const Icon(Icons.groups_outlined),
-            label:const FittedText('Comunidad deportiva')),
-          const SizedBox(height:10),
+
           if((lifestyle!=null &&
                 (lifestyle!['challenge']??'').toString().trim().isNotEmpty) ||
               (p['achievements'] is List &&
@@ -502,6 +590,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 icon:const Icon(Icons.favorite_outline),
                 label:const FittedText('Explorar FitDating')),
             ])),
+          ],
           if(problem!=null)FittedText(problem!,
             style:const TextStyle(color:Colors.redAccent)),
         ]),
