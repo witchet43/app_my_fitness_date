@@ -3,6 +3,7 @@ import '../core/fitted_locale.dart';
 import '../core/live_brand.dart';
 import '../widgets/mfd_branding.dart';
 import 'rhythm_concept_lab_b10.dart';
+import 'fitted_profile_progress_v29.dart';
 
 /// Editorial story built exclusively from the member's saved actions and
 /// choices. No inferred facts, no locations, no detailed schedules.
@@ -10,11 +11,14 @@ class FittedProfileStoryV28 extends StatelessWidget {
   const FittedProfileStoryV28({
     super.key,required this.profile,required this.rhythm,
     required this.onConfigure,required this.onEditIdentity,
+    required this.startingPreference,required this.onChooseStarting,
   });
   final Map<String,dynamic> profile;
   final Map<String,dynamic>? rhythm;
   final VoidCallback onConfigure;
   final VoidCallback onEditIdentity;
+  final String? startingPreference;
+  final Future<void> Function(String?) onChooseStarting;
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +122,12 @@ class FittedProfileStoryV28 extends StatelessWidget {
           Text(en?'MY RHYTHM AT A GLANCE':'MI RITMO EN TRES DIMENSIONES',
             style:const TextStyle(color:Color(0xFFD5BE8A),
               fontSize:11,letterSpacing:1.7,fontWeight:FontWeight.bold)),
+          const SizedBox(height:10),
+          FittedProfileProgressV29(
+            rhythm:rhythm,
+            startingPreference:startingPreference,
+            onChooseStarting:onChooseStarting,
+            onConfigure:onConfigure),
           const SizedBox(height:10),
           _rhythmTile(context,Icons.directions_run_outlined,
             'How I Move',en?'How I train':'Cómo me muevo',moves),
