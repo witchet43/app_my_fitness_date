@@ -73,6 +73,9 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
       final percent=score['percent'];
       final codes=score['reason_codes'] is List
         ?score['reason_codes'] as List:[];
+      final contributions=score['contributions'] is Map
+        ?Map<String,dynamic>.from(score['contributions'] as Map)
+        :<String,dynamic>{};
       if(score['available']!=true || percent is! num) {
         throw StateError('Insufficient evidence');
       }
@@ -89,6 +92,35 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
               FittedText(FittedLocaleScope.t(context,
                 'Estas son las razones verificadas. Un porcentaje no es un match mutuo.',
                 'These are verified reasons. A percentage is not a mutual match.')),
+              const SizedBox(height:11),
+              Text(FittedLocaleScope.t(context,
+                'Cobertura de evidencia: ${score['coverage']??0}%',
+                'Evidence coverage: ${score['coverage']??0}%'),
+                style:Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height:12),
+              for(final factor in FittedMatchEngine.factors)
+                if(contributions[factor.id] is Map)...[
+                  Builder(builder:(context){
+                    final part=Map<String,dynamic>.from(
+                      contributions[factor.id] as Map);
+                    final importance=(part['weight'] as num?)?.round()??0;
+                    final alignment=(part['alignment'] as num?)?.round()??0;
+                    return Padding(padding:const EdgeInsets.only(bottom:9),
+                      child:Column(
+                        crossAxisAlignment:CrossAxisAlignment.start,children:[
+                          Row(children:[
+                            Expanded(child:Text(
+                              FittedLocaleScope.languageOf(context)=='en'
+                                ?factor.en:factor.es)),
+                            Text('$importance% · $alignment%'),
+                          ]),
+                          const SizedBox(height:5),
+                          LinearProgressIndicator(
+                            value:alignment.clamp(0,100)/100,
+                            minHeight:5,color:const Color(0xFFD5BE8A)),
+                        ]));
+                  }),
+                ],
               const SizedBox(height:12),
               for(final code in codes)
                 Padding(
@@ -96,6 +128,11 @@ class _DatingDiscoveryB11State extends State<DatingDiscoveryB11>{
                   child:FittedText('• ${explainMatchReason(code.toString(),
                     language:FittedLocaleScope.languageOf(context))}')),
               const SizedBox(height:12),
+              Text(FittedLocaleScope.t(context,
+                'El porcentaje es una media ponderada basada en los datos disponibles, no una garantía de relación.',
+                'This percentage is a weighted average of available evidence, not a relationship guarantee.'),
+                style:Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height:8),
               FittedText('Algoritmo ${score['algorithm']} · v${score['policy_version']}',
                 style:Theme.of(context).textTheme.bodySmall),
             ],
