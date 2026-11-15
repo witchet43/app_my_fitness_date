@@ -8,6 +8,8 @@ import 'member_dashboard_b8.dart';
 import 'community_b4.dart';
 import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
+import '../core/live_brand.dart';
+import '../core/fitted_locale.dart';
 
 List<String> _tokens(String text) => text.split(',')
     .map((x) => x.trim()).where((x) => x.isNotEmpty).toSet().toList();
@@ -326,8 +328,9 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   Widget build(BuildContext context) {
     final p=widget.profile;
     return Scaffold(
-      appBar:AppBar(title:const Text('My Fitness Date'),
+      appBar:AppBar(title:Text(LiveBrandScope.of(context).name),
         actions:[
+          const FittedLanguageSelector(),
           IconButton(tooltip:'Editar',onPressed:widget.onEdit,
             icon:const Icon(Icons.edit_outlined)),
           IconButton(tooltip:'Cerrar sesión',onPressed:widget.onLogout,
