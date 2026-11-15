@@ -102,10 +102,8 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
   }
   void removeFactor(String id){
     if(weights.length<=3)return;
-    setState(()=>{
-      final temp=Map<String,int>.from(weights)..remove(id),
-      weights=_distribute(temp),
-    });
+    final remaining=Map<String,int>.from(weights)..remove(id);
+    setState(()=>weights=_distribute(remaining));
   }
   void adjust(String id,int selected){
     final others=<String,int>{
