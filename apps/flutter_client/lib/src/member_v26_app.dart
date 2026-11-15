@@ -221,8 +221,10 @@ class _MemberV26AppState extends State<MemberV26App> {
         redirectTo:widget.redirectUrl,
       );
     } catch (_) {
-      if(mounted)setState(()=>
-        failure='No fue posible iniciar sesión con Apple.');
+      if(mounted) {
+        _messengerKey.currentState?.showSnackBar(const SnackBar(
+          content:Text('No fue posible iniciar sesión con Apple.')));
+      }
     }
   }
 
@@ -353,8 +355,13 @@ class _MemberV26AppState extends State<MemberV26App> {
   }
 
   Future<void> logout() async {
+    // Always return to the single root welcome route in this same Flutter
+    // deployment. In-app activities and administrator pages must not remain
+    // on the Navigator stack after the session has been revoked.
     await widget.auth.auth.signOut();
     await refresh();
+    if (!mounted) return;
+    _navigatorKey.currentState?.popUntil((route) => route.isFirst);
   }
 
   @override
