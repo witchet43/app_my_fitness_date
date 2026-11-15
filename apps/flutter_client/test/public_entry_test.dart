@@ -12,14 +12,14 @@ void main() {
     final google = tester.widget<OutlinedButton>(
       find.byKey(const Key('google-signin-entry')));
     expect(google.onPressed, isNull);
-    final email = tester.widget<OutlinedButton>(
+    final email = tester.widget<FilledButton>(
       find.byKey(const Key('email-entry')));
     expect(email.onPressed, isNull);
     await tester.ensureVisible(find.byKey(const Key('switch-entry-mode')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('switch-entry-mode')));
     await tester.pump();
-    expect(find.text('Bienvenido de nuevo'), findsOneWidget);
+    expect(find.text('Comienza aquí'), findsOneWidget);
   });
   testWidgets('Small devices render the entry shell', (tester) async {
     await tester.binding.setSurfaceSize(const Size(375, 812));
