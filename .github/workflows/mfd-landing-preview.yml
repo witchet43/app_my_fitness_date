@@ -70,3 +70,34 @@ jobs:
           accountId: d10780918aa05ee5532c754371c60c94
           command: pages deploy apps/flutter_client/build/web --project-name=my-fitness-date --branch=landing-redesign
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: End-to-end public Cloudflare smoke and deployed SHA
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess,time,urllib.request
+          target='https://landing-redesign.my-fitness-date.pages.dev'
+          expected=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          def read(path):
+              req=urllib.request.Request(target+path,headers={
+                  'User-Agent':'MyFitnessDate-LandingSmoke/1.0'})
+              with urllib.request.urlopen(req,timeout=20) as response:
+                  assert response.status==200
+                  return response.read().decode('utf-8')
+          for attempt in range(10):
+              try:
+                  data=json.loads(read('/mfd-release.json?verify='+expected))
+                  assert data['commit']==expected,(data,expected)
+                  assert data['channel']=='landing_redesign_preview'
+                  assert data['member_access'] is False
+                  assert data['dating_enabled'] is False
+                  assert '<html' in read('/').lower()
+                  for page in ('terms','privacy'):
+                      assert '<html' in read('/'+page+'/').lower()
+                  print('DEPLOYED_AND_VERIFIED:',target,'SHA:',expected)
+                  break
+              except Exception as e:
+                  if attempt==9: raise
+                  time.sleep(6)
+          PY
