@@ -11,7 +11,8 @@ void main() {
 
   testWidgets('ES and EN update member text without restarting',
       (tester) async {
-    final client=SupabaseClient('https://localhost.supabase.co','test-key');
+    final client=SupabaseClient('https://localhost.supabase.co','test-key',
+      authOptions:const AuthClientOptions(autoRefreshToken:false));
     final controller=FittedLocaleController(client);
     addTearDown(() {controller.dispose();client.dispose();});
     await tester.pumpWidget(FittedLocaleScope(
@@ -40,7 +41,8 @@ void main() {
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280,1100));
     addTearDown(() async => tester.binding.setSurfaceSize(null));
-    final client=SupabaseClient('https://localhost.supabase.co','test-key');
+    final client=SupabaseClient('https://localhost.supabase.co','test-key',
+      authOptions:const AuthClientOptions(autoRefreshToken:false));
     final controller=FittedLocaleController(client);
     addTearDown(() {controller.dispose();client.dispose();});
     await tester.pumpWidget(FittedLocaleScope(controller:controller,
