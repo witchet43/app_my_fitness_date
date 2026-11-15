@@ -56,13 +56,13 @@ void main() {
     ));
     await controller.choose('en');
     await tester.pumpAndSettle();
-    expect(find.text('A CONNECTION THAT MATCHES YOUR AMBITION'),findsOneWidget);
-    expect(find.text('YOUR NEXT CHAPTER'),findsOneWidget);
+    expect(find.text('PEOPLE IN MOTION'),findsOneWidget);
+    expect(find.text('YOUR FITTED SPACE'),findsOneWidget);
     expect(find.text('Welcome'),findsOneWidget);
     expect(find.text('Sign in with email'),findsOneWidget);
     expect(find.text('People in motion. Connections that go further.'),findsOneWidget);
-    expect(find.text('A lifestyle in common'),findsOneWidget);
-    expect(find.text('Privacy comes first'),findsOneWidget);
+    expect(find.text('Compatibility, not identical sports'),findsOneWidget);
+    expect(find.text('Keep your spaces your own'),findsOneWidget);
     expect(find.text('Términos'),findsNothing);
   });
 }
