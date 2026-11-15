@@ -40,6 +40,9 @@ Future<void> main() async {
   const providerVerified=bool.fromEnvironment(
       'MFD_GOOGLE_PROVIDER_VERIFIED',defaultValue:false);
 
+  const appleProviderVerified=bool.fromEnvironment(
+      'MFD_APPLE_PROVIDER_VERIFIED',defaultValue:false);
+
   final productionReady=
       !localQa &&
       supabaseUrl == 'https://jtrdvnwbxpfdnbzasvcj.supabase.co' &&
@@ -87,5 +90,6 @@ Future<void> main() async {
     privacyVersion:privacyVersion,
     redirectUrl:redirectUrl,
     googleEnabled:providerVerified,
+    appleEnabled:appleProviderVerified,
   ));
 }
