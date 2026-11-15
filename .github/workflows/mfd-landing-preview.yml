@@ -38,10 +38,42 @@ jobs:
         working-directory: apps/flutter_client
         run: |
           flutter test test/landing_welcome_editorial_test.dart test/public_entry_test.dart test/live_brand_b3_test.dart test/email_sign_in_flow_test.dart
-      - name: Compile marketing-only Flutter web
+      - name: Check hosted Auth provider configuration
+        run: |
+          python3 scripts/verify_hosted_auth.py
+          python3 - <<'PY'
+          import json,re,urllib.request
+          from pathlib import Path
+          workflow=Path('.github/workflows/cloudflare-pages-production.yml').read_text()
+          match=re.search(r'MFD_PROD_SUPABASE_PUBLISHABLE_KEY=(sb_publishable_[A-Za-z0-9_-]+)',workflow)
+          assert match, 'Missing public publishable key'
+          url='https://jtrdvnwbxpfdnbzasvcj.supabase.co/auth/v1/settings'
+          req=urllib.request.Request(url,headers={'apikey':match.group(1),'User-Agent':'MFD-preview-auth-check/1.0'})
+          with urllib.request.urlopen(req,timeout=20) as response:
+              cfg=json.load(response)
+          providers=cfg.get('external',{})
+          assert providers.get('email') is True, 'Email login unavailable'
+          assert providers.get('google') is True, 'Google provider unavailable'
+          apple=providers.get('apple') is True
+          with open(__import__('os').environ['GITHUB_ENV'],'a') as env:
+              env.write('MFD_APPLE_AVAILABLE='+str(apple).lower()+'\\n')
+          print('Google and email available; Apple provider configured:',apple)
+          PY
+      - name: Compile authenticated Flutter web preview
         working-directory: apps/flutter_client
         run: |
-          flutter build web --release --dart-define=MFD_V26_ENABLED=false
+          flutter build web --release \
+            --dart-define=MFD_V26_ENABLED=true \
+            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=true \
+            --dart-define=MFD_APPLE_PROVIDER_VERIFIED="$MFD_APPLE_AVAILABLE" \
+            --dart-define=MFD_PROD_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co \
+            --dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk \
+            --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
+            --dart-define=MFD_TERMS_URL=https://landing-redesign.my-fitness-date.pages.dev/terms/ \
+            --dart-define=MFD_PRIVACY_URL=https://landing-redesign.my-fitness-date.pages.dev/privacy/ \
+            --dart-define=MFD_TERMS_VERSION=v27-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v27-privacy-1 \
+            --dart-define=MFD_OAUTH_REDIRECT_URL=https://landing-redesign.my-fitness-date.pages.dev/
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
           cp -R cloudflare/terms cloudflare/privacy build/web/
@@ -51,7 +83,7 @@ jobs:
           Path('build/web/mfd-release.json').write_text(json.dumps({
             'commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
             'channel':'landing_redesign_preview',
-            'member_access':False,
+            'member_access':True,
             'dating_enabled':False
           })+'\n')
           PY
