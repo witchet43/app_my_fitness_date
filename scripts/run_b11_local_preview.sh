@@ -11,7 +11,7 @@ if [ "${SUPABASE_ACCESS_TOKEN:-}" != "" ]; then
 fi
 # Supabase CLI otherwise binds its Docker ports to 0.0.0.0. Pin them
 # to loopback so the local anonymous/auth services are not on the LAN.
-QA_NET="mfd-b11-loopback-$"
+QA_NET="mfd-b11-loopback-${BASHPID}"
 docker network create -o 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1' "$QA_NET" >/dev/null
 cleanup() {
   if [ -n "${EDGE_PID:-}" ]; then kill "$EDGE_PID" 2>/dev/null || true; fi
