@@ -72,6 +72,14 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     );
   }
 
+  Widget _compactPromise(IconData icon,String es,String en) =>
+    Row(mainAxisSize:MainAxisSize.min,children:[
+      Icon(icon,color:gold,size:17),
+      const SizedBox(width:7),
+      Text(FittedLocaleScope.t(context,es,en),
+        style:const TextStyle(color:sage,fontSize:12)),
+    ]);
+
   Widget _hero(LiveBrandSettings brand,bool wide) {
     final cover=brand.media[wide?'cover_desktop':'cover_mobile'];
     return Container(
@@ -115,30 +123,14 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             style:const TextStyle(color:Color(0xFFE1E8E0),
               height:1.55,fontSize:14)),
           SizedBox(height:wide?21:13),
-          if(wide)...[
-            const Divider(color:Color(0xFF425751)),
-            const SizedBox(height:5),
-            _benefit(Icons.compare_arrows_outlined,
-              'Compatibilidad, no deportes idénticos',
-              'Compatibility, not identical sports',
-              'Los hábitos compartidos importan más que la disciplina.',
-              'Shared habits matter more than identical sports.',
-              compact:false),
-            _benefit(Icons.shield_outlined,
-              'Tus espacios siguen siendo tuyos',
-              'Keep your spaces your own',
-              'Gym Shield protege lugares y rutinas privadas.',
-              'Gym Shield protects private venues and routines.',
-              compact:false),
-          ]else
-            Row(mainAxisSize:MainAxisSize.min,children:[
-              const Icon(Icons.shield_outlined,color:gold,size:17),
-              const SizedBox(width:8),
-              Flexible(child:Text(FittedLocaleScope.t(context,
-                'Conexiones con intención y privacidad',
-                'Intentional connections with privacy'),
-                style:const TextStyle(color:sage,fontSize:12))),
-            ]),
+          Row(mainAxisSize:MainAxisSize.min,children:[
+            const Icon(Icons.shield_outlined,color:gold,size:17),
+            const SizedBox(width:8),
+            Flexible(child:Text(FittedLocaleScope.t(context,
+              'Afinidad real, privacidad primero',
+              'Genuine affinity, privacy first'),
+              style:const TextStyle(color:sage,fontSize:12))),
+          ]),
         ]),
     );
   }
@@ -281,16 +273,19 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
                 const SizedBox(height:12),
                 _access(false),
               ],
-              if(!wide)...[
-                const SizedBox(height:12),
-                _benefit(
-                  Icons.compare_arrows_outlined,
-                  'Compatibilidad más allá del deporte',
-                  'Compatibility beyond sport',
-                  'Tus hábitos importan más que entrenar lo mismo.',
-                  'Your lifestyle matters more than the same workout.',
-                  compact:true),
-              ],
+              const SizedBox(height:18),
+              Wrap(
+                alignment:WrapAlignment.center,
+                spacing:20,runSpacing:12,
+                children:[
+                  _compactPromise(Icons.people_outline,
+                    'Personas auténticas','Authentic people'),
+                  _compactPromise(Icons.auto_awesome_outlined,
+                    'Afinidad real','Meaningful affinity'),
+                  _compactPromise(Icons.shield_outlined,
+                    'Privacidad','Privacy'),
+                ]),
+              
               const Divider(color:Color(0xFF425150),height:26),
               Padding(padding:const EdgeInsets.only(bottom:14),
                 child:Text(FittedLocaleScope.t(context,
