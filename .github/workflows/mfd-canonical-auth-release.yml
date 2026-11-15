@@ -1,4 +1,4 @@
-name: My Fitness Date - canonical unified authentication release
+name: Fitted - canonical unified authentication release
 on:
   push:
     branches: [main]
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Checkout verified B11 unified application
+      - name: Checkout verified Fitted bilingual weighted-match application
         uses: actions/checkout@v4
         with:
           ref: feature/b11-one-final-real-product-20261112
@@ -77,7 +77,7 @@ jobs:
                   status=err.code
               assert status==401,(endpoint,status)
           PY
-      - name: Analyze and test Flutter
+      - name: Analyze and test Flutter including Fitted match and locale
         working-directory: apps/flutter_client
         run: |
           flutter analyze --no-fatal-infos
