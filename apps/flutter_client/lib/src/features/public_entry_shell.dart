@@ -281,26 +281,8 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
                 const SizedBox(height:12),
                 _access(false),
               ],
-              const SizedBox(height:21),
-              if(wide)
-                Row(children:[
-                  Expanded(child:_benefit(
-                    Icons.auto_awesome_outlined,
-                    'Estilo de vida antes que etiquetas',
-                    'Lifestyle before labels',
-                    'Conoce el ritmo de alguien, no una biografía genérica.',
-                    'Understand someone’s rhythm, not a generic biography.',
-                    compact:true)),
-                  const SizedBox(width:19),
-                  Expanded(child:_benefit(
-                    Icons.people_outline,
-                    'Movimiento con intención',
-                    'Move with intention',
-                    'Conexiones entre personas con hábitos compatibles.',
-                    'Connections between people with compatible habits.',
-                    compact:true)),
-                ])
-              else
+              if(!wide)...[
+                const SizedBox(height:12),
                 _benefit(
                   Icons.compare_arrows_outlined,
                   'Compatibilidad más allá del deporte',
@@ -308,6 +290,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
                   'Tus hábitos importan más que entrenar lo mismo.',
                   'Your lifestyle matters more than the same workout.',
                   compact:true),
+              ],
               const Divider(color:Color(0xFF425150),height:26),
               Padding(padding:const EdgeInsets.only(bottom:14),
                 child:Text(FittedLocaleScope.t(context,
