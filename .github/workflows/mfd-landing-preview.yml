@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  deployments: write
 concurrency:
   group: mfd-landing-redesign-preview
   cancel-in-progress: false
