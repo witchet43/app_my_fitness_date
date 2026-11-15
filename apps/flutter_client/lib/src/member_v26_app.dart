@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -463,6 +464,11 @@ class _MemberV26AppState extends State<MemberV26App> {
         title:liveBrand.current.name,
         locale:localeController.locale,
         supportedLocales:const [Locale('es'),Locale('en')],
+        localizationsDelegates:const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
         navigatorKey:_navigatorKey,
         scaffoldMessengerKey:_messengerKey,
         debugShowCheckedModeBanner:false,
