@@ -343,7 +343,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             decoration:BoxDecoration(
               borderRadius:BorderRadius.circular(24),
               gradient:const LinearGradient(colors:[
-                Color(0xFF38233D),Color(0xFF1B3029)])),
+                Color(0xFF1F3437),Color(0xFF26392E)])),
             child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
               const MfdBranding(full:false,width:80),
               const SizedBox(height:12),
