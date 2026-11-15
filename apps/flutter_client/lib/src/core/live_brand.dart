@@ -29,10 +29,10 @@ class LiveBrandSettings {
   final Map<String, String> media;
 
   static const fallback = LiveBrandSettings(
-    name: 'My Fitness Date',
-    tagline: 'Conexiones con intención.',
-    title: 'La mejor conexión comienza con lo que eres.',
-    description: 'Un espacio para personas activas que buscan afinidad, autenticidad y relaciones con propósito.',
+    name: 'Fitted',
+    tagline: 'Personas en movimiento. Conexiones con intención.',
+    title: 'Personas en movimiento. Conexiones que trascienden.',
+    description: 'Entrenamiento, recovery y rutinas intencionales. Conecta con alguien por sus valores y estilo de vida, incluso si practican deportes distintos.',
     paletteName: 'Editorial Obsidian',
     primary: '#D5BE8A',
     accent: '#9FB5A9',
