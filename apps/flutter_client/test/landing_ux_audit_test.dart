@@ -4,7 +4,9 @@ import 'package:my_fitness_date/src/features/public_entry_shell.dart';
 import 'package:my_fitness_date/src/core/live_brand.dart';
 
 void main(){
-  Widget page({VoidCallback? email})=>MaterialApp(
+  Widget page({VoidCallback? email,Size? viewport})=>MaterialApp(
+    builder:(context,child)=>viewport==null?child!:
+      MediaQuery(data:MediaQueryData(size:viewport),child:child!),
     home:LiveBrandScope(
       brand:LiveBrandSettings.fallback,
       child:PublicEntryShell(
@@ -37,7 +39,7 @@ void main(){
     (tester) async{
       await tester.binding.setSurfaceSize(const Size(1280,900));
       addTearDown(()=>tester.binding.setSurfaceSize(null));
-      await tester.pumpWidget(page());
+      await tester.pumpWidget(page(viewport:const Size(1280,900)));
       await tester.pumpAndSettle();
       final hero=tester.getTopLeft(find.byKey(const Key('landing-hero')));
       final login=tester.getTopLeft(find.byKey(const Key('landing-access')));
