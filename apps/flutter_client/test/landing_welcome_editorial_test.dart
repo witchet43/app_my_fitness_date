@@ -44,4 +44,35 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('email-entry')));
     expect(find.text('Comienza aquí'), findsOneWidget);
   });
+  testWidgets('configured access buttons invoke real supplied sign-in actions',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 1000));
+    addTearDown(() async => tester.binding.setSurfaceSize(null));
+    var google = 0;
+    var apple = 0;
+    var email = 0;
+    await tester.pumpWidget(wrap(PublicEntryShell(
+      termsUrl: 'https://example.org/terms',
+      privacyUrl: 'https://example.org/privacy',
+      onGoogle: () => google++,
+      onApple: () => apple++,
+      onEmailSignIn: () => email++,
+    )));
+    for (final key in const [
+      'google-signin-entry',
+      'apple-signin-entry',
+      'email-entry',
+    ]) {
+      await tester.ensureVisible(find.byKey(Key(key)));
+      await tester.pump();
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pump();
+    }
+    expect(google, 1);
+    expect(apple, 1);
+    expect(email, 1);
+    expect(find.textContaining('Acceso aún no configurado'), findsNothing);
+    expect(find.textContaining('Al crear una cuenta se te solicitará'), findsNothing);
+  });
+
 }
