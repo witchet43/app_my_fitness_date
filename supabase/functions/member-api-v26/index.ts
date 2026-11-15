@@ -665,6 +665,20 @@ async function handleRequest(req: Request): Promise<Response> {
       const values = await r.json() as unknown[];
       return json({items:values,count:values.length});
     }
+    // Explainability is computed server-side from private, consented lifestyle
+    // answers. Only a percentage and approved reason codes may leave SQL.
+    const scoreRoute = route.match(/^\\/v1\\/dating\\/b11\\/score\\/([0-9a-f-]{36})$/i);
+    if (scoreRoute && req.method === "GET") {
+      const state=await datingStatus(token,identity.id);
+      if(state.enabled !== true)return error(403);
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitted_match_score_v1",token,
+        {p_user_id:scoreRoute[1]});
+      if(!r.ok)return error(r.status===403?403:r.status===429?429:503);
+      const info=await r.json() as Record<string,unknown>;
+      if(info.available !== true)return error(403);
+      return json(info);
+    }
     if (route === "/v1/dating/b11/like" && req.method === "POST") {
       const input=await body(req);
       const id=String(input?.user_id??"");
