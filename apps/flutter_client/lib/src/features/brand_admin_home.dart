@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../core/brand_admin_repository.dart';
 import '../core/live_brand.dart';
+import '../core/fitted_locale.dart';
 import '../core/curator_repository.dart';
 import '../core/activity_repository.dart';
 import '../core/community_repository.dart';
@@ -1034,6 +1035,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             maxLines:1,overflow:TextOverflow.ellipsis)),
         ]),
         actions:[
+          const Padding(padding:EdgeInsets.only(right:10),child:FittedLanguageSelector()),
           if(wide)Padding(padding:const EdgeInsets.only(right:10),
             child:Center(child:Text(widget.email,style:const TextStyle(fontSize:12)))),
           IconButton(
