@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'core/member_v26_api.dart';
 import 'core/live_brand.dart';
+import 'core/fitted_locale.dart';
 import 'theme/fitness_date_theme.dart';
 import 'core/brand_admin_repository.dart';
 import 'core/account_role.dart';
@@ -47,6 +48,7 @@ class _MemberV26AppState extends State<MemberV26App> {
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
   late final StreamSubscription<AuthState> sub;
   late final LiveBrandController liveBrand;
+  late final FittedLocaleController localeController;
   Timer? _brandRefreshTimer;
   bool loading=true;
   bool verified=false;
@@ -66,6 +68,7 @@ class _MemberV26AppState extends State<MemberV26App> {
   void initState(){
     super.initState();
     liveBrand=LiveBrandController(widget.auth);
+    localeController=FittedLocaleController(widget.auth);
     unawaited(liveBrand.refresh());
     _brandRefreshTimer=Timer.periodic(const Duration(seconds:20),
       (_)=>unawaited(liveBrand.refresh()));
@@ -80,6 +83,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       // on every token refresh repeatedly replaced the MFA enrollment UI.
       // Challenge verification calls refresh() explicitly after AAL2.
       if(shouldRefreshIdentityForAuthEvent(event.event)){
+        localeController.syncFromSession();
         final currentId = widget.auth.auth.currentSession?.user.id;
         // Supabase may re-emit signedIn for an existing session on page
         // focus. Do not recreate MFA enrollment for that same identity.
@@ -369,6 +373,7 @@ class _MemberV26AppState extends State<MemberV26App> {
     sub.cancel();
     _brandRefreshTimer?.cancel();
     liveBrand.dispose();
+    localeController.dispose();
     super.dispose();
   }
 
@@ -453,15 +458,19 @@ class _MemberV26AppState extends State<MemberV26App> {
       );
     }
     return AnimatedBuilder(
-      animation:liveBrand,
+      animation:Listenable.merge([liveBrand,localeController]),
       builder:(context,_)=>MaterialApp(
         title:liveBrand.current.name,
+        locale:localeController.locale,
+        supportedLocales:const [Locale('es'),Locale('en')],
         navigatorKey:_navigatorKey,
         scaffoldMessengerKey:_messengerKey,
         debugShowCheckedModeBanner:false,
         theme:liveBrand.current.toTheme(),
-        builder:(context,child)=>LiveBrandScope(
-          brand:liveBrand.current,child:child??const SizedBox.shrink()),
+        builder:(context,child)=>FittedLocaleScope(
+          controller:localeController,
+          child:LiveBrandScope(
+            brand:liveBrand.current,child:child??const SizedBox.shrink())),
         home:body,
       ),
     );
