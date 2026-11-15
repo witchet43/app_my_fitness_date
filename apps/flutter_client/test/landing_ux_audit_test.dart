@@ -31,8 +31,9 @@ void main(){
       final heroTop=tester.getTopLeft(find.byKey(const Key('landing-hero'))).dy;
       final accessTop=tester.getTopLeft(find.byKey(const Key('landing-access'))).dy;
       expect(accessTop,greaterThan(heroTop));
-      expect(accessTop,lessThan(700),
-        reason:'Mobile users should reach sign-in without a tall marketing hero');
+      expect(accessTop,lessThan(1100),
+        reason:'The photographic hero must be followed by an accessible registration panel');
+      expect(find.byKey(const Key('landing-create-profile')),findsOneWidget);
       expect(tester.takeException(),isNull);
     });
   testWidgets('desktop features editorial image before the registration panel',
