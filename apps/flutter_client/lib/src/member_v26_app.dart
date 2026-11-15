@@ -26,13 +26,14 @@ class MemberV26App extends StatefulWidget {
   const MemberV26App({super.key,required this.auth,required this.api,
     required this.termsUrl,required this.privacyUrl,
     required this.redirectUrl,required this.termsVersion,
-    required this.privacyVersion,this.googleEnabled=false});
+    required this.privacyVersion,this.googleEnabled=false,this.appleEnabled=false});
   final SupabaseClient auth;
   final MemberV26Api api;
   final String termsUrl;
   final String privacyUrl;
   final String redirectUrl;
   final bool googleEnabled;
+  final bool appleEnabled;
   final String termsVersion;
   final String privacyVersion;
   @override
@@ -210,6 +211,18 @@ class _MemberV26AppState extends State<MemberV26App> {
     }
   }
 
+  Future<void> apple() async {
+    try {
+      await widget.auth.auth.signInWithOAuth(
+        OAuthProvider.apple,
+        redirectTo:widget.redirectUrl,
+      );
+    } catch (_) {
+      if(mounted)setState(()=>
+        failure='No fue posible iniciar sesión con Apple.');
+    }
+  }
+
   Future<void> email({required bool register}) async {
     final email=TextEditingController();
     final password=TextEditingController();
@@ -361,6 +374,7 @@ class _MemberV26AppState extends State<MemberV26App> {
     }else if(widget.auth.auth.currentSession==null){
       body=PublicEntryShell(
         onGoogle:widget.googleEnabled?google:null,
+        onApple:widget.appleEnabled?apple:null,
         onEmailRegister:()=>email(register:true),
         onEmailSignIn:()=>email(register:false),
         termsUrl:widget.termsUrl,
