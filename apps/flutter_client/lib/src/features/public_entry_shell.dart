@@ -59,22 +59,22 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
   // Editorial photograph is a real landing asset, not a placeholder card.
   // A configured administrator cover takes precedence over the licensed default.
   static const _editorialPhoto =
-    'https://images.unsplash.com/photo-1758520705254-1e9d913d78ea'
-    '?auto=format&fit=crop&w=1400&q=82';
+    'https://images.pexels.com/photos/8795582/pexels-photo-8795582.jpeg'
+    '?auto=compress&cs=tinysrgb&w=1400';
 
   Widget _hero(LiveBrandSettings brand,bool wide) {
     final cover=brand.media[wide?'cover_desktop':'cover_mobile'];
     final photo=cover!=null && cover.startsWith('https://')
         ?cover:_editorialPhoto;
     final message=Padding(
-      padding:EdgeInsets.all(wide?38:23),
+      padding:EdgeInsets.all(wide?38:16),
       child:Column(
         mainAxisAlignment:MainAxisAlignment.center,
         crossAxisAlignment:CrossAxisAlignment.start,
         mainAxisSize:MainAxisSize.min,
         children:[
           Text(FittedLocaleScope.t(context,
-            'CONEXIONES QUE VAN CONTIGO','CONNECTIONS THAT MOVE WITH YOU'),
+            'PERSONAS EN MOVIMIENTO','PEOPLE IN MOTION'),
             style:const TextStyle(color:Color(0xFFB6F266),
               fontSize:11,letterSpacing:1.3,fontWeight:FontWeight.w800)),
           const SizedBox(height:20),
@@ -119,7 +119,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         key:const Key('landing-editorial-photo'),
         fit:BoxFit.cover,
         width:double.infinity,
-        height:wide?430:260,
+        height:wide?430:160,
         semanticLabel:FittedLocaleScope.t(context,
           'Dos personas activas compartiendo un momento al aire libre',
           'Two active people sharing a moment outdoors'),
@@ -152,7 +152,9 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     final action=register
       ?widget.onEmailRegister??widget.onEmail
       :widget.onEmailSignIn??widget.onEmail;
-    return Container(
+    return KeyedSubtree(
+      key:const Key('landing-access'),
+      child:Container(
       key:_accessKey,
       padding:EdgeInsets.all(wide?28:21),
       decoration:BoxDecoration(
@@ -242,6 +244,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
                   style:const TextStyle(color:ivory))),
             ])),
         ]),
+      ),
     );
   }
 
@@ -291,7 +294,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
                   _compactPromise(Icons.auto_awesome_outlined,
                     'Afinidad real','Meaningful affinity'),
                   _compactPromise(Icons.shield_outlined,
-                    'Privacidad','Privacy'),
+                    'Protección','Protection'),
                 ]),
               
               const Divider(color:Color(0xFF425150),height:26),
