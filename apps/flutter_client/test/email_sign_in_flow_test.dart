@@ -37,6 +37,7 @@ void main() {
         find.byKey(const Key('email-entry')));
     expect(signInButton.onPressed, isNotNull);
     await tester.ensureVisible(find.byKey(const Key('email-entry')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('email-entry')));
     await tester.pump();
     expect(find.byType(AlertDialog), findsOneWidget);
