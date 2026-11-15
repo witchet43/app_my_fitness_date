@@ -61,7 +61,7 @@ void main() {
         home:LiveBrandScope(brand:brand,child:const PublicEntryShell()),
       ));
       await tester.pumpAndSettle();
-      expect(find.text('Ritmo y Vida'),findsNWidgets(2));
+      expect(find.text('Ritmo y Vida'),findsOneWidget);
       expect(find.text('Personas que disfrutan moverse.'),findsOneWidget);
       expect(find.text('Comparte actividades deportivas auténticas.'),
         findsOneWidget);
