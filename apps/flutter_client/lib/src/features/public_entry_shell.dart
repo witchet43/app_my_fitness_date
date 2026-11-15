@@ -285,7 +285,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               if(wide)
                 Row(children:[
                   Expanded(child:_benefit(
-                    Icons.favorite_border,
+                    Icons.auto_awesome_outlined,
                     'Estilo de vida antes que etiquetas',
                     'Lifestyle before labels',
                     'Conoce el ritmo de alguien, no una biografía genérica.',
