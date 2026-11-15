@@ -6,9 +6,11 @@ import '../core/dating_repository_b11.dart';
 /// B10 concept-only study. All values stay in this widget state until close.
 /// Never treated as onboarding, a saved lifestyle profile or a real match.
 class RhythmConceptLabB10 extends StatefulWidget {
-  const RhythmConceptLabB10({super.key,this.repository,this.canSave=false});
+  const RhythmConceptLabB10({super.key,this.repository,this.canSave=false,
+    this.profileMode=false});
   final DatingRepositoryB11? repository;
   final bool canSave;
+  final bool profileMode;
 
   @override
   State<RhythmConceptLabB10> createState() => _RhythmConceptLabB10State();
@@ -98,6 +100,7 @@ const rhythmLabelsB10 = <String,Map<String,String>>{
 
 class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   bool english = false;
+  int activePillar=0;
   bool showIdeas = false;
   bool loading = false;
   bool saving = false;
@@ -117,6 +120,12 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   void initState() {
     super.initState();
     if(widget.repository!=null && widget.canSave) loadSaved();
+  }
+
+  @override
+  void didChangeDependencies(){
+    super.didChangeDependencies();
+    if(widget.profileMode)english=FittedLocaleScope.languageOf(context)=='en';
   }
 
   Future<void> loadSaved() async {
@@ -217,6 +226,166 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
     super.dispose();
   }
 
+  Widget profileProgress(){
+    const identifiers=['How I Move','How I Live','How I Relate'];
+    const icons=[Icons.directions_run_outlined,Icons.wb_sunny_outlined,
+      Icons.people_outline];
+    return Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Text(tr('Tu perfil en tres dimensiones','Your profile in three dimensions'),
+        style:Theme.of(context).textTheme.headlineMedium),
+      const SizedBox(height:8),
+      Text(tr('No necesitas practicar el mismo deporte para conectar. '
+        'Cuenta cómo te mueves, vives y te relacionas.',
+        'You do not need the same sport to connect. '
+        'Share how you move, live and relate.')),
+      const SizedBox(height:16),
+      Row(children:[
+        for(var i=0;i<3;i++)Expanded(
+          child:Padding(
+            padding:EdgeInsets.only(right:i==2?0:8),
+            child:InkWell(
+              key:Key('pillar-tab-$i'),
+              borderRadius:BorderRadius.circular(16),
+              onTap:()=>setState(()=>activePillar=i),
+              child:AnimatedContainer(
+                duration:const Duration(milliseconds:200),
+                padding:const EdgeInsets.symmetric(vertical:16,horizontal:6),
+                decoration:BoxDecoration(
+                  color:i==activePillar
+                    ?Theme.of(context).colorScheme.primaryContainer
+                    :Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius:BorderRadius.circular(16),
+                  border:Border.all(color:i==activePillar
+                    ?Theme.of(context).colorScheme.primary
+                    :Colors.transparent)),
+                child:Column(children:[
+                  Icon(icons[i],size:25),
+                  const SizedBox(height:7),
+                  Text('0${i+1}',style:Theme.of(context).textTheme.labelMedium),
+                  const SizedBox(height:3),
+                  Text(identifiers[i],textAlign:TextAlign.center,
+                    style:Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight:i==activePillar
+                        ?FontWeight.w800:FontWeight.w500)),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      ]),
+      const SizedBox(height:10),
+      LinearProgressIndicator(value:(activePillar+1)/3,minHeight:4,
+        borderRadius:BorderRadius.circular(4)),
+      const SizedBox(height:12),
+      Row(children:[
+        const Icon(Icons.lock_outline,size:16),
+        const SizedBox(width:8),
+        Expanded(child:Text(tr(
+          'Tus respuestas son privadas. Tus gimnasios y horarios exactos '
+          'no se muestran a otras personas.',
+          'Your answers stay private. Exact gym locations and schedules '
+          'are never shown to others.'),
+          style:Theme.of(context).textTheme.bodySmall)),
+      ]),
+    ]);
+  }
+
+  Widget profileActions()=>Padding(
+    padding:const EdgeInsets.only(top:18,bottom:16),
+    child:Row(children:[
+      if(activePillar>0)
+        OutlinedButton.icon(
+          key:const Key('pillar-back'),
+          onPressed:()=>setState(()=>activePillar--),
+          icon:const Icon(Icons.arrow_back),
+          label:Text(tr('Anterior','Back'))),
+      const Spacer(),
+      if(activePillar<2)
+        FilledButton.icon(
+          key:const Key('pillar-next'),
+          onPressed:()=>setState(()=>activePillar++),
+          icon:const Icon(Icons.arrow_forward),
+          label:Text(tr('Siguiente','Next'))),
+      if(activePillar==2)
+        FilledButton.icon(
+          key:const Key('pillars-save'),
+          onPressed:saving||loading||!widget.canSave?null:saveRhythms,
+          icon:const Icon(Icons.lock_outline),
+          label:Text(tr('Guardar mis tres pilares','Save my three pillars'))),
+    ]),
+  );
+
+  Widget profileSections()=>Column(
+    crossAxisAlignment:CrossAxisAlignment.stretch,
+    children:[
+      profileProgress(),
+      const SizedBox(height:16),
+      Card(clipBehavior:Clip.antiAlias,child:Padding(
+        padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          if(activePillar==0)...[
+            heading('How I Move · Training DNA',
+              'How I Move · Training DNA',Icons.directions_run_outlined),
+            select('sport','Actividad principal','Primary activity'),
+            multi('sport',additionalSports,'Otras actividades que disfruto',
+              'Other activities I enjoy'),
+            select('frequency','Frecuencia semanal','Weekly frequency'),
+            select('window','Horario general preferido',
+              'Preferred general time of day'),
+            select('training_mode','Modo actual','Current training mode'),
+            select('training_with','Prefiero entrenar','I prefer to train'),
+            select('competitions','Competiciones','Competition participation'),
+            paragraphField('Mi reto actual (opcional)',
+              'My current challenge (optional)',challenge,'challenge',max:100),
+          ],
+          if(activePillar==1)...[
+            heading('How I Live · Life Rhythm',
+              'How I Live · Life Rhythm',Icons.wb_sunny_outlined),
+            select('weekday','Entre semana suelo…','On weekdays I usually…'),
+            multi('weekend',weekends,'Mi fin de semana puede incluir',
+              'My weekends may include',max:6),
+            select('alcohol','Alcohol (opcional, sin juicios)',
+              'Alcohol (optional, no judgment)'),
+            select('sleep','Ritmo de sueño','Sleep rhythm'),
+            select('food','Alimentación (opcional)',
+              'Food preferences (optional)'),
+            select('travel','Cuando viajo','When I travel'),
+            multi('interests',interests,'Más allá del entrenamiento',
+              'Beyond training',max:10),
+          ],
+          if(activePillar==2)...[
+            heading('How I Relate · Relationship Rhythm',
+              'How I Relate · Relationship Rhythm',Icons.people_outline),
+            select('intent','Qué busco','What I am looking for'),
+            select('together','Tiempo juntos e independencia',
+              'Togetherness and independence'),
+            select('train_partner','Entrenar en pareja',
+              'Training with a partner'),
+            select('active_importance','Vida activa de mi pareja',
+              'How important my partner being active is'),
+            paragraphField('Una noche entre semana en pareja sería…',
+              'A weeknight together would look like…',
+              weeknight,'weeknight'),
+            paragraphField('Durante un bloque de entrenamiento necesito…',
+              'During a training block I need…',support,'support'),
+          ],
+        ]),
+      )),
+      if(loading)const LinearProgressIndicator(),
+      if(saveNotice!=null)Text(saveNotice!,
+        key:const Key('b11-save-success')),
+      if(saveError!=null)Text(saveError!,key:const Key('b11-save-error')),
+      if(!widget.canSave)Padding(
+        padding:const EdgeInsets.symmetric(vertical:10),
+        child:Text(tr(
+          'Guardar requiere aceptar el consentimiento separado de FitDating. '
+          'Ajustar tus respuestas no publica tu perfil ni activa matches.',
+          'Saving requires separate FitDating consent. '
+          'Editing answers does not publish your profile or enable matches.'))),
+      profileActions(),
+    ],
+  );
+
   Widget heading(String es,String en,IconData icon) => Padding(
     padding:const EdgeInsets.fromLTRB(0,22,0,12),
     child:Row(children:[
@@ -306,16 +475,20 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
       support:support.text,
     );
     return Scaffold(
-      appBar:AppBar(title:FittedText(tr(
-        'Estudio de ritmo · FITTED (concepto)',
+      appBar:AppBar(title:Text(widget.profileMode
+        ?tr('Mis tres pilares · Fitted','My three pillars · Fitted')
+        :tr('Estudio de ritmo · FITTED (concepto)',
         'Rhythm studio · FITTED (concept)'))),
       body:Center(
         child:ConstrainedBox(
-          constraints:const BoxConstraints(maxWidth:820),
+          constraints:BoxConstraints(maxWidth:widget.profileMode?1040:820),
           child:ListView(
             key:const Key('b10-lab'),
             padding:const EdgeInsets.all(18),
             children:[
+              if(widget.profileMode)
+                profileSections()
+              else ...[
               Card(child:Padding(
                 padding:const EdgeInsets.all(18),
                 child:Column(
@@ -542,6 +715,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                 'gates are approved.',
               ),key:const Key('b10-locked-policy')),
               const SizedBox(height:32),
+              ],
             ],
           ),
         ),
