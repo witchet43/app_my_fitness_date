@@ -253,10 +253,10 @@ class _MemberV26AppState extends State<MemberV26App> {
           mainAxisSize:MainAxisSize.min,children:[
             TextField(controller:email,keyboardType:TextInputType.emailAddress,
               autofillHints:const [AutofillHints.email],
-              decoration:const InputDecoration(labelText:'Correo electrónico')),
+              decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Correo electrónico'))),
             const SizedBox(height:12),
             TextField(controller:password,obscureText:true,
-              decoration:const InputDecoration(labelText:'Contraseña')),
+              decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Contraseña'))),
             if(error!=null)Padding(padding:const EdgeInsets.only(top:10),
               child:FittedText(error!,style:const TextStyle(color:Colors.redAccent))),
           ])),
@@ -444,7 +444,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       body=Scaffold(
         appBar:AppBar(title:const FittedText('Completa tu perfil'),
           actions:[
-            IconButton(onPressed:logout,tooltip:'Cerrar sesión',
+            IconButton(onPressed:logout,tooltip:FittedLocaleScope.translate(context,'Cerrar sesión'),
               icon:const Icon(Icons.logout)),
           ]),
         body:MemberOnboardingB1(

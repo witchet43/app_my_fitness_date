@@ -155,7 +155,7 @@ class _DatingV27State extends State<DatingV27> {
         title:const FittedText('FitDating · privacidad primero'),
         actions:[
           IconButton(
-            tooltip:'Actualizar estado',
+            tooltip:FittedLocaleScope.translate(context,'Actualizar estado'),
             key:const Key('b5-refresh'),
             onPressed:loading||submitting?null:reload,
             icon:const Icon(Icons.refresh),
@@ -264,7 +264,7 @@ class _DatingV27State extends State<DatingV27> {
                 isExpanded:true,
                 key:ValueKey('b5-intent-$intent'),
                 initialValue:intent,
-                decoration:const InputDecoration(labelText:'¿Qué buscas?'),
+                decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'¿Qué buscas?')),
                 items:[
                   for(final item in datingIntentOptionsB5.entries)
                     DropdownMenuItem(value:item.key,child:FittedText(item.value)),
@@ -278,8 +278,8 @@ class _DatingV27State extends State<DatingV27> {
                 isExpanded:true,
                 key:ValueKey('b5-frequency-$frequency'),
                 initialValue:frequency,
-                decoration:const InputDecoration(
-                  labelText:'Mi ritmo deportivo'),
+                decoration:InputDecoration(
+                  labelText:FittedLocaleScope.translate(context,'Mi ritmo deportivo')),
                 items:[
                   for(final item in datingFrequencyOptionsB5.entries)
                     DropdownMenuItem(value:item.key,child:FittedText(item.value)),
@@ -310,8 +310,8 @@ class _DatingV27State extends State<DatingV27> {
                 isExpanded:true,
                 key:ValueKey('b5-privacy-$privacy'),
                 initialValue:privacy,
-                decoration:const InputDecoration(
-                  labelText:'Protección de mi gimnasio'),
+                decoration:InputDecoration(
+                  labelText:FittedLocaleScope.translate(context,'Protección de mi gimnasio')),
                 items:[
                   for(final item in datingPrivacyOptionsB5.entries)
                     DropdownMenuItem(

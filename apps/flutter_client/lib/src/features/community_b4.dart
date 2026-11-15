@@ -150,7 +150,7 @@ class _CommunityB4State extends State<CommunityB4> {
                 DropdownButtonFormField<String>(
                   key: const Key('b4-post-topic'),
                   initialValue: selectedTopic,
-                  decoration: const InputDecoration(labelText: 'Tema'),
+                  decoration: InputDecoration(labelText:FittedLocaleScope.translate(context,'Tema')),
                   items: [
                     for (final entry in communityTopicsB4.entries)
                       DropdownMenuItem(value:entry.key,
@@ -167,8 +167,8 @@ class _CommunityB4State extends State<CommunityB4> {
                   maxLines: 5,
                   minLines: 3,
                   maxLength: 480,
-                  decoration: const InputDecoration(
-                    labelText: 'Tu publicación'),
+                  decoration: InputDecoration(
+                    labelText:FittedLocaleScope.translate(context,'Tu publicación')),
                 ),
                 if (validation != null) FittedText(validation!,
                   style: const TextStyle(color: Colors.redAccent)),
@@ -307,8 +307,8 @@ class _CommunityB4State extends State<CommunityB4> {
                 DropdownButtonFormField<String>(
                   key: const Key('b4-report-reason'),
                   initialValue: reason,
-                  decoration: const InputDecoration(
-                    labelText: 'Motivo del reporte'),
+                  decoration: InputDecoration(
+                    labelText:FittedLocaleScope.translate(context,'Motivo del reporte')),
                   items: [
                     for (final item in communityReasonsB4.entries)
                       DropdownMenuItem(
@@ -322,8 +322,8 @@ class _CommunityB4State extends State<CommunityB4> {
                 TextField(
                   key: const Key('b4-report-detail'),
                   onChanged:(value)=>detailText=value, maxLength: 300,maxLines:3,
-                  decoration: const InputDecoration(
-                    labelText: 'Contexto adicional (opcional)'),
+                  decoration: InputDecoration(
+                    labelText:FittedLocaleScope.translate(context,'Contexto adicional (opcional)')),
                 ),
               ],
             )),
@@ -395,7 +395,7 @@ class _CommunityB4State extends State<CommunityB4> {
               )),
               PopupMenuButton<String>(
                 key:Key('b4-post-actions-$id'),
-                tooltip:'Opciones de la publicación',
+                tooltip:FittedLocaleScope.translate(context,'Opciones de la publicación'),
                 onSelected:(choice){
                   if(choice=='remove') {remove(item);}
                   if(choice=='report_post') {report(item,profile:false);}
@@ -488,7 +488,7 @@ class _CommunityB4State extends State<CommunityB4> {
       actions:[
         IconButton(
           key:const Key('b4-blocks-open'),
-          tooltip:'Personas bloqueadas',
+          tooltip:FittedLocaleScope.translate(context,'Personas bloqueadas'),
           icon:const Icon(Icons.block_outlined),
           onPressed:()=>Navigator.of(context).push(
             MaterialPageRoute<void>(builder:(_)=>
@@ -496,13 +496,13 @@ class _CommunityB4State extends State<CommunityB4> {
         ),
         IconButton(
           key:const Key('b4-privacy-open'),
-          tooltip:'Privacidad y baja',
+          tooltip:FittedLocaleScope.translate(context,'Privacidad y baja'),
           icon:const Icon(Icons.privacy_tip_outlined),
           onPressed:openPrivacy,
         ),
         IconButton(
           key:const Key('b4-community-reload'),
-          tooltip:'Actualizar muro',
+          tooltip:FittedLocaleScope.translate(context,'Actualizar muro'),
           icon:const Icon(Icons.refresh),
           onPressed:loading?null:reload,
         ),

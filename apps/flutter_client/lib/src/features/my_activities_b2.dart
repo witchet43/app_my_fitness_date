@@ -151,7 +151,7 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
           IconButton(
             key: const Key('b2-reload'),
             onPressed: loading ? null : reload,
-            tooltip: 'Actualizar mis actividades',
+            tooltip:FittedLocaleScope.translate(context,'Actualizar mis actividades'),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -297,7 +297,7 @@ class _OrganizedActivitiesB2State extends State<OrganizedActivitiesB2> {
         IconButton(
           onPressed: loading ? null : reload,
           icon: const Icon(Icons.refresh),
-          tooltip: 'Actualizar',
+          tooltip:FittedLocaleScope.translate(context,'Actualizar'),
         ),
       ],
     ),

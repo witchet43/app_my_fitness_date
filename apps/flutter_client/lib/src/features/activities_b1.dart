@@ -66,11 +66,11 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
           controller: searchController,
           maxLength: 80,
           decoration: InputDecoration(
-            labelText: 'Buscar actividad, deporte o ciudad',
+            labelText:FittedLocaleScope.translate(context,'Buscar actividad, deporte o ciudad'),
             prefixIcon: const Icon(Icons.search),
             suffixIcon: searchTerm.isNotEmpty
                 ? IconButton(
-                    tooltip: 'Borrar búsqueda',
+                    tooltip:FittedLocaleScope.translate(context,'Borrar búsqueda'),
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       searchController.clear();
@@ -90,7 +90,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
             SizedBox(
               width: 238,
               child: InputDecorator(
-                decoration: const InputDecoration(labelText: 'Deporte'),
+                decoration: InputDecoration(labelText:FittedLocaleScope.translate(context,'Deporte')),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     key: const Key('b9-sport-filter'),
@@ -117,7 +117,7 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
             SizedBox(
               width: 238,
               child: InputDecorator(
-                decoration: const InputDecoration(labelText: 'Ciudad'),
+                decoration: InputDecoration(labelText:FittedLocaleScope.translate(context,'Ciudad')),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     key: const Key('b9-city-filter'),
@@ -261,22 +261,22 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(key: const Key('b1-create-title'), controller: title,
                   maxLength: 100,
-                  decoration: const InputDecoration(labelText: 'Título')),
+                  decoration: InputDecoration(labelText:FittedLocaleScope.translate(context,'Título'))),
                 TextField(key: const Key('b1-create-description'),
                   controller: description, maxLength: 500, maxLines: 2,
-                  decoration: const InputDecoration(labelText: 'Descripción')),
+                  decoration: InputDecoration(labelText:FittedLocaleScope.translate(context,'Descripción'))),
                 TextField(key: const Key('b1-create-sport'), controller: sport,
                   maxLength: 40,
-                  decoration: const InputDecoration(labelText: 'Disciplina')),
+                  decoration: InputDecoration(labelText:FittedLocaleScope.translate(context,'Disciplina'))),
                 TextField(key: const Key('b1-create-city'), controller: city,
                   maxLength: 100,
-                  decoration: const InputDecoration(
-                    labelText: 'Ciudad o zona general (sin domicilio)')),
+                  decoration: InputDecoration(
+                    labelText:FittedLocaleScope.translate(context,'Ciudad o zona general (sin domicilio)'))),
                 TextField(key: const Key('b1-create-capacity'),
                   controller: capacity,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Límite de participantes (1–200)')),
+                  decoration: InputDecoration(
+                    labelText:FittedLocaleScope.translate(context,'Límite de participantes (1–200)'))),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   key: const Key('b1-create-date'),
@@ -433,13 +433,13 @@ class _ActivitiesB1State extends State<ActivitiesB1> {
       actions: [
         if (!widget.readOnly) IconButton(
           key: const Key('b2-open-my-activities'),
-          tooltip: 'Mis actividades',
+          tooltip:FittedLocaleScope.translate(context,'Mis actividades'),
           onPressed: showMyActivities,
           icon: const Icon(Icons.event_note_outlined),
         ),
         IconButton(
           key: const Key('b1-reload'),
-          tooltip: 'Actualizar actividades',
+          tooltip:FittedLocaleScope.translate(context,'Actualizar actividades'),
           onPressed: loading ? null : load,
           icon: const Icon(Icons.refresh),
         ),

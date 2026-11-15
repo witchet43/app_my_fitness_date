@@ -704,7 +704,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           FittedText('Tipografía',style:Theme.of(context).textTheme.titleLarge),
           DropdownButtonFormField<String>(
             key:ValueKey('font-$font'),initialValue:font,
-            decoration:const InputDecoration(labelText:'Familia de prueba'),
+            decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Familia de prueba')),
             items:[
               for(final f in ['Georgia','Palatino','Garamond','Arial'])
                 DropdownMenuItem(value:f,child:FittedText(f)),
@@ -753,7 +753,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               DropdownMenuItem(value:'minimal',child:FittedText('Minimalista')),
             ],
             onChanged:(v){setState(()=>layout=v??'editorial');_queueBrandSave();},
-            decoration:const InputDecoration(labelText:'Distribución'),
+            decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Distribución')),
           ),
         ]))),
       const SizedBox(height:12),
@@ -875,7 +875,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         DropdownButtonFormField<String>(
           key:ValueKey('asset-kind-$selectedUploadKind'),
           initialValue:selectedUploadKind,
-          decoration:const InputDecoration(labelText:'Tipo de recurso'),
+          decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Tipo de recurso')),
           items:const [
             DropdownMenuItem(value:'logo',child:FittedText('Logo PNG o WebP')),
             DropdownMenuItem(value:'font',child:FittedText('Tipografía WOFF2')),
@@ -892,7 +892,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           const SizedBox(height:12),
           DropdownButtonFormField<String>(
             initialValue:license,
-            decoration:const InputDecoration(labelText:'Licencia de uso declarada'),
+            decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Licencia de uso declarada')),
             items:const [
               DropdownMenuItem(value:'open',child:FittedText('Licencia abierta compatible')),
               DropdownMenuItem(value:'owned',child:FittedText('Soy titular de los derechos')),
@@ -1048,12 +1048,12 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             child:Center(child:FittedText(widget.email,style:const TextStyle(fontSize:12)))),
           IconButton(
             onPressed:_reload,
-            tooltip:'Actualizar catálogo',
+            tooltip:FittedLocaleScope.translate(context,'Actualizar catálogo'),
             icon:const Icon(Icons.refresh)),
           IconButton(
             key:const Key('admin-sign-out'),
             onPressed:()=>widget.onSignOut(),
-            tooltip:'Cerrar sesión',
+            tooltip:FittedLocaleScope.translate(context,'Cerrar sesión'),
             icon:const Icon(Icons.logout)),
         ],
       ),

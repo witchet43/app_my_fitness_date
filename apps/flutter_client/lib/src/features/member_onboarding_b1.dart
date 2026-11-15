@@ -114,28 +114,28 @@ class _MemberOnboardingB1State extends State<MemberOnboardingB1> {
           TextField(
             key: const Key('b1-name'), controller: name,
             maxLength: 60,
-            decoration: const InputDecoration(
-              labelText: 'Cómo quieres que te llamemos'),
+            decoration: InputDecoration(
+              labelText:FittedLocaleScope.translate(context,'Cómo quieres que te llamemos')),
           ),
           TextField(
             key: const Key('b1-city'), controller: city,
             maxLength: 100,
-            decoration: const InputDecoration(
-              labelText: 'Ciudad (sin dirección exacta)'),
+            decoration: InputDecoration(
+              labelText:FittedLocaleScope.translate(context,'Ciudad (sin dirección exacta)')),
           ),
           TextField(
             key: const Key('b1-sports'), controller: sports,
             maxLength: 400,
-            decoration: const InputDecoration(
-              labelText: 'Tus deportes',
-              helperText: 'Ej. correr, senderismo, ciclismo'),
+            decoration: InputDecoration(
+              labelText:FittedLocaleScope.translate(context,'Tus deportes'),
+              helperText:FittedLocaleScope.translate(context,'Ej. correr, senderismo, ciclismo')),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             key: const Key('b1-frequency'),
             initialValue: frequency,
-            decoration: const InputDecoration(
-              labelText: '¿Con qué frecuencia entrenas?'),
+            decoration: InputDecoration(
+              labelText:FittedLocaleScope.translate(context,'¿Con qué frecuencia entrenas?')),
             items: const [
               DropdownMenuItem(value: 'starting', child: FittedText('Estoy empezando')),
               DropdownMenuItem(value: 'one_to_two', child: FittedText('1–2 días')),

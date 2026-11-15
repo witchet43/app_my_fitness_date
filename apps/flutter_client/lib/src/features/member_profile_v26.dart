@@ -73,7 +73,8 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
     child:TextFormField(
       key:Key('profile-$field'),controller:fields[field],
       maxLines:lines,maxLength:maxLength,
-      decoration:InputDecoration(labelText:label,hintText:hint,
+      decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,label),
+        hintText:hint==null?null:FittedLocaleScope.translate(context,hint),
         alignLabelWithHint:lines>1),
       validator:required?(s)=>s==null||s.trim().length<2
           ?'Completa este campo':null:null,
@@ -151,8 +152,8 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
       heading('Mi mundo fitness',Icons.directions_run,FitDateColors.lime),
       input('sports','Mis disciplinas',hint:'Running, fuerza, yoga, ciclismo'),
       DropdownButtonFormField<String>(
-        initialValue:frequency,decoration:const InputDecoration(
-          labelText:'Frecuencia de entrenamiento'),
+        initialValue:frequency,decoration:InputDecoration(
+          labelText:FittedLocaleScope.translate(context,'Frecuencia de entrenamiento')),
         items:const [
           DropdownMenuItem(value:'starting',child:FittedText('Estoy empezando')),
           DropdownMenuItem(value:'one_to_two',child:FittedText('1–2 días')),
@@ -173,8 +174,8 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
         input('a$i','Mi respuesta',lines:2,maxLength:280),
       ],
       DropdownButtonFormField<String>(
-        initialValue:intent,decoration:const InputDecoration(
-          labelText:'Tipo de conexión (privado)'),
+        initialValue:intent,decoration:InputDecoration(
+          labelText:FittedLocaleScope.translate(context,'Tipo de conexión (privado)')),
         items:const [
           DropdownMenuItem(value:'unknown',child:FittedText('Prefiero decidir después')),
           DropdownMenuItem(value:'relationship',child:FittedText('Relación estable')),
@@ -184,8 +185,8 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
         onChanged:(v)=>setState(()=>intent=v??'unknown')),
       heading('Privacidad',Icons.shield_outlined,FitDateColors.lime),
       DropdownButtonFormField<String>(
-        initialValue:visibility,decoration:const InputDecoration(
-          labelText:'Preferencia social futura'),
+        initialValue:visibility,decoration:InputDecoration(
+          labelText:FittedLocaleScope.translate(context,'Preferencia social futura')),
         items:const [
           DropdownMenuItem(value:'private',child:FittedText('Solo yo')),
           DropdownMenuItem(value:'members',child:FittedText('Miembros, al habilitarse')),
@@ -249,7 +250,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
           content:SingleChildScrollView(child:Column(
             mainAxisSize:MainAxisSize.min,children:[
               DropdownButtonFormField<String>(initialValue:kind,
-                decoration:const InputDecoration(labelText:'Tipo'),
+                decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Tipo')),
                 items:const [
                   DropdownMenuItem(value:'gym',child:FittedText('Gimnasio')),
                   DropdownMenuItem(value:'studio',child:FittedText('Studio')),
@@ -261,14 +262,14 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 onChanged:(v)=>setDialog(()=>kind=v??'gym')),
               const SizedBox(height:10),
               TextField(controller:name,onChanged:(_)=>setDialog((){}),
-                decoration:const InputDecoration(labelText:'Nombre')),
+                decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Nombre'))),
               const SizedBox(height:10),
               TextField(controller:city,onChanged:(_)=>setDialog((){}),
-                decoration:const InputDecoration(labelText:'Ciudad')),
+                decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Ciudad'))),
               const SizedBox(height:10),
               TextField(controller:zone,
-                decoration:const InputDecoration(
-                  labelText:'Zona general (opcional)')),
+                decoration:InputDecoration(
+                  labelText:FittedLocaleScope.translate(context,'Zona general (opcional)'))),
               const SizedBox(height:10),
               const FittedText('El gimnasio y los horarios no se compartirán.',
                 style:TextStyle(fontSize:12)),
@@ -316,7 +317,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               :const Center(child:Icon(Icons.image_outlined)))),
         FittedText((photo['moderation_state']??'pending').toString(),
           style:const TextStyle(color:FitDateColors.muted,fontSize:11)),
-        IconButton(tooltip:'Eliminar mi foto',
+        IconButton(tooltip:FittedLocaleScope.translate(context,'Eliminar mi foto'),
           icon:const Icon(Icons.delete_outline),
           onPressed:()async{
             try{await widget.api.removePhoto(photo['id'].toString());await reload();}
@@ -331,9 +332,9 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
       appBar:AppBar(title:FittedText(LiveBrandScope.of(context).name),
         actions:[
           const FittedLanguageSelector(),
-          IconButton(tooltip:'Editar',onPressed:widget.onEdit,
+          IconButton(tooltip:FittedLocaleScope.translate(context,'Editar'),onPressed:widget.onEdit,
             icon:const Icon(Icons.edit_outlined)),
-          IconButton(tooltip:'Cerrar sesión',onPressed:widget.onLogout,
+          IconButton(tooltip:FittedLocaleScope.translate(context,'Cerrar sesión'),onPressed:widget.onLogout,
             icon:const Icon(Icons.logout)),
         ]),
       body:Center(child:ConstrainedBox(
