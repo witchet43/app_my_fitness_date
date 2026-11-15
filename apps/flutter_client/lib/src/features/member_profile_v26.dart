@@ -406,13 +406,15 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               onEditIdentity:widget.onEdit,
             ),
           ),
-          const SizedBox(height:18),
-          Row(children:[
-            Expanded(child:Text(FittedLocaleScope.t(context,
-              'Tus experiencias','Your experiences'),
-              style:Theme.of(context).textTheme.titleLarge)),
-          ]),
-          const SizedBox(height:12),
+          const SizedBox(height:16),
+          Padding(
+            padding:const EdgeInsets.symmetric(horizontal:4),
+            child:Align(alignment:Alignment.centerLeft,
+              child:Text(FittedLocaleScope.t(context,
+                'Tu próxima actividad','Your next activity'),
+                style:Theme.of(context).textTheme.titleMedium)),
+          ),
+          const SizedBox(height:7),
           MemberAgendaB8(
             api:widget.api,
             onExplore:() async {
@@ -425,20 +427,6 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             },
           ),
           const SizedBox(height:12),
-          FilledButton.icon(
-            key:const Key('b1-explore-activities'),
-            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
-              builder:(_)=>ActivitiesB1(api:widget.api))),
-            icon:const Icon(Icons.event_available_outlined),
-            label:const FittedText('Explorar actividades deportivas')),
-          const SizedBox(height:10),
-          OutlinedButton.icon(
-            key:const Key('b2-member-my-activities'),
-            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
-              builder:(_)=>MyActivitiesB2(api:widget.api))),
-            icon:const Icon(Icons.calendar_month_outlined),
-            label:const FittedText('Mis actividades y reservas')),
-          const SizedBox(height:10),
           FilledButton.tonalIcon(
             key:const Key('b4-member-community'),
             onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
@@ -446,56 +434,26 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             icon:const Icon(Icons.groups_outlined),
             label:const FittedText('Comunidad deportiva')),
           const SizedBox(height:10),
-          section(FittedLocaleScope.t(context,'Lo que hago, no solo lo que digo',
-              'What I do, not just what I say'),
-            Icons.auto_awesome_outlined,FitDateColors.lime,
-            Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              Text(FittedLocaleScope.t(context,
-                'Estas experiencias proceden de lo que has guardado. '
-                'No usamos frases automáticas sobre tu personalidad.',
-                'These are based on your saved experiences. '
-                'We do not invent personality traits.')),
-              const SizedBox(height:12),
-              if(lifestyle!=null && (lifestyle!['challenge']??'').toString().isNotEmpty)
-                ListTile(
-                  leading:const Icon(Icons.flag_outlined),
-                  title:Text(FittedLocaleScope.t(context,
-                    'Mi reto actual','My current challenge')),
-                  subtitle:Text(lifestyle!['challenge'].toString())),
-              if(p['achievements'] is List &&
-                (p['achievements'] as List).isNotEmpty)...[
-                Text(FittedLocaleScope.t(context,
-                  'Lo que he conseguido','What I have accomplished'),
-                  style:Theme.of(context).textTheme.titleSmall),
-                tags(p['achievements']),
-              ],
-              if(lifestyle==null || (p['achievements'] is List &&
-                  (p['achievements'] as List).isEmpty))
-                Text(FittedLocaleScope.t(context,
-                  'Completa tus tres pilares para que tu vida activa '
-                  'hable por ti.',
-                  'Complete your three pillars so your active life '
-                  'can speak for itself.')),
-              const SizedBox(height:12),
-              TextButton.icon(
-                onPressed:configurePillars,
-                icon:const Icon(Icons.edit_note_outlined),
-                label:Text(FittedLocaleScope.t(context,
-                  'Refinar mi historia','Refine my story'))),
-            ])),
-          section('Fotografías privadas',Icons.photo_library_outlined,
-            FitDateColors.lilac,Column(
-              crossAxisAlignment:CrossAxisAlignment.start,children:[
-                const FittedText('Hasta ocho fotos. Se eliminan metadatos y '
-                  'no se muestran a otras personas sin aprobación.',
-                  style:TextStyle(color:FitDateColors.muted,fontSize:12)),
-                const SizedBox(height:12),
-                const FittedText('Carga de fotos suspendida hasta completar la sanitización y moderación del servicio.',
-                  style:TextStyle(color:FitDateColors.muted,fontSize:12)),
-                if(loading)const LinearProgressIndicator(),
-                Wrap(spacing:8,runSpacing:8,
-                  children:photos.map(photoTile).toList()),
-            ])),
+          if((lifestyle!=null &&
+                (lifestyle!['challenge']??'').toString().trim().isNotEmpty) ||
+              (p['achievements'] is List &&
+                (p['achievements'] as List).isNotEmpty))
+            section(FittedLocaleScope.t(context,
+                'Mis retos y logros','My challenges and milestones'),
+              Icons.flag_outlined,FitDateColors.lime,
+              Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                if(lifestyle!=null &&
+                    (lifestyle!['challenge']??'').toString().trim().isNotEmpty)
+                  ListTile(
+                    contentPadding:EdgeInsets.zero,
+                    leading:const Icon(Icons.track_changes_outlined),
+                    title:Text(FittedLocaleScope.t(context,
+                      'En lo que estoy trabajando','What I am working on')),
+                    subtitle:Text(lifestyle!['challenge'].toString())),
+                if(p['achievements'] is List &&
+                    (p['achievements'] as List).isNotEmpty)
+                  tags(p['achievements']),
+              ])),
           section('Gym Shield',Icons.shield_outlined,
             FitDateColors.lime,
             Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -525,10 +483,25 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 label:Text(FittedLocaleScope.t(context,
                   'Configurar Gym Shield','Configure Gym Shield'))),
             ])),
-          section('FitDating y seguridad',Icons.verified_user_outlined,
-            FitDateColors.coral,
+          if(photos.isNotEmpty)section(FittedLocaleScope.t(context,'Fotografías privadas','Private photos'),Icons.photo_library_outlined,
+            FitDateColors.lilac,Column(
+              crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text(FittedLocaleScope.t(context,
+                  'Tus fotos permanecen privadas hasta su aprobación.',
+                  'Your photos remain private until approved.'),
+                  style:const TextStyle(color:FitDateColors.muted,fontSize:12)),
+                const SizedBox(height:12),
+                if(loading)const LinearProgressIndicator(),
+                Wrap(spacing:8,runSpacing:8,
+                  children:photos.map(photoTile).toList()),
+            ])),
+          section(FittedLocaleScope.t(context,'Compatibilidad y seguridad',
+              'Compatibility and safety'),Icons.verified_user_outlined,
+            FitDateColors.lime,
             Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
-              const FittedText('Revisa tu elegibilidad, registra el consentimiento separado y consulta personas compatibles cuando se apruebe tu verificación de edad.'),
+              Text(FittedLocaleScope.t(context,
+                'Consulta las protecciones de tu cuenta. Las funciones de citas se habilitarán después de las verificaciones de seguridad.',
+                'Review your account protections. Dating features will open after safety checks.' )),
               const SizedBox(height:12),
               FilledButton.icon(
                 key:const Key('fitdating-open'),
