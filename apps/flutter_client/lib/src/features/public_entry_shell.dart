@@ -80,10 +80,10 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(heading, style: const TextStyle(color: ivory,
+            FittedText(heading, style: const TextStyle(color: ivory,
               fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 7),
-            Text(detail, style: const TextStyle(color: sage,
+            FittedText(detail, style: const TextStyle(color: sage,
               fontSize: 13, height: 1.45)),
           ])),
       ]),
@@ -121,22 +121,22 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         mainAxisAlignment: MainAxisAlignment.center, children: [
           _wordmark(brand),
           const SizedBox(height: 38),
-          const Text('UNA CONEXIÓN A TU ALTURA',
+          const FittedText('UNA CONEXIÓN A TU ALTURA',
             style: TextStyle(color: gold, letterSpacing: 2.2,
               fontSize: 11, fontWeight: FontWeight.w800)),
           const SizedBox(height: 18),
-          Text(brand.title,
+          Text(FittedTranslations.translate(brand.title,FittedLocaleScope.languageOf(context)),
             key: const Key('landing-headline'),
             style: TextStyle(color: ivory, height: 1.09,
               fontFamily: 'Georgia', fontSize: wide ? 48 : 37)),
           const SizedBox(height: 22),
-          Text(brand.description, key: const Key('landing-brand-description'),
+          Text(FittedTranslations.translate(brand.description,FittedLocaleScope.languageOf(context)), key: const Key('landing-brand-description'),
             style: const TextStyle(color: Color(0xFFD7DFD8),
               height: 1.65, fontSize: 16)),
           const SizedBox(height: 30),
           Container(width: 72, height: 2, color: gold),
           const SizedBox(height: 25),
-          const Text('Para personas activas que buscan algo auténtico. '
+          const FittedText('Para personas activas que buscan algo auténtico. '
             'Porque compartir valores importa tanto como compartir una pasión.',
             style: TextStyle(color: sage, height: 1.6, fontSize: 14)),
         ]),
@@ -151,7 +151,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min, children: [
-          const Text('TU PRÓXIMO CAPÍTULO',
+          const FittedText('TU PRÓXIMO CAPÍTULO',
             style: TextStyle(fontSize: 11, letterSpacing: 2,
               color: gold, fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
@@ -160,8 +160,8 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               fontSize: 33, color: ivory)),
           const SizedBox(height: 12),
           Text(register
-            ? 'Crea tu cuenta y descubre una forma distinta de conectar.'
-            : 'Accede a tu espacio y continúa donde lo dejaste.',
+            ? FittedLocaleScope.t(context,'Crea tu cuenta y descubre una forma distinta de conectar.','Create an account and discover a different way to connect.')
+            : FittedLocaleScope.t(context,'Accede a tu espacio y continúa donde lo dejaste.','Sign in to your space and pick up where you left off.'),
             style: const TextStyle(color: sage, fontSize: 14, height: 1.5)),
           const SizedBox(height: 28),
           OutlinedButton.icon(
@@ -191,8 +191,8 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             key: const Key('switch-entry-mode'),
             onPressed: () => setState(() => register = !register),
             child: Text(register
-              ? '¿Ya tienes cuenta? Inicia sesión'
-              : '¿Aún no tienes cuenta? Regístrate',
+              ? FittedLocaleScope.t(context,'¿Ya tienes cuenta? Inicia sesión','Already have an account? Sign in')
+              : FittedLocaleScope.t(context,'¿Aún no tienes cuenta? Regístrate','New here? Sign up'),
               style: const TextStyle(color: gold)),
           ),
           const Divider(color: Color(0xFF425150)),
@@ -228,7 +228,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             child:Center(child:FittedLanguageSelector())),
           if (wide) const Padding(
             padding: EdgeInsets.only(right: 16),
-            child: Center(child: Text('CONEXIONES CON INTENCIÓN',
+            child: Center(child: FittedText('CONEXIONES CON INTENCIÓN',
               style: TextStyle(color: sage, fontSize: 11,
                 letterSpacing: 1.4)))),
         ],
@@ -263,9 +263,9 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               const SizedBox(height: 36),
               const Divider(color: Color(0xFF425150)),
               const SizedBox(height: 14),
-              Text(brand.name+' · Conexiones con intención. '
-                'Las funciones de citas se habilitarán cuando concluyan '
-                'las verificaciones de seguridad.',
+              Text(brand.name+' · '+FittedLocaleScope.t(context,
+                'Conexiones con intención. Las funciones de citas se habilitarán cuando concluyan las verificaciones de seguridad.',
+                'Intentional connections. Dating features will open when safety checks are complete.'),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: sage, fontSize: 12, height: 1.5)),
             ]),
