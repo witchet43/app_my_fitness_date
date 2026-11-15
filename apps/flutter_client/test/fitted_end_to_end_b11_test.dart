@@ -37,6 +37,15 @@ class FakeDatingB11 implements DatingRepositoryB11 {
     'reason_codes':['intent_aligned','sport_different_ok'],
   }];
   @override
+  Future<Map<String,dynamic>> compatibilityB11(String id) async {
+    expect(id,candidateIdB11);
+    return {
+      'available':true,'percent':86,'coverage':100,
+      'reason_codes':['aligned_intent','complementary_sports'],
+      'algorithm':'fitted-compatibility-v1','policy_version':1,
+    };
+  }
+  @override
   Future<String> likeB11(String id) async {
     expect(id,candidateIdB11);likeCalls++;return 'matched';
   }
