@@ -12,6 +12,7 @@ import '../core/activity_repository.dart';
 import '../core/community_repository.dart';
 import 'community_moderation_b4.dart';
 import 'gym_catalog_admin_b11.dart';
+import 'match_calculator_admin.dart';
 import 'activities_b1.dart';
 import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
@@ -44,11 +45,12 @@ class BrandAdminHome extends StatefulWidget {
 
 class _BrandAdminHomeState extends State<BrandAdminHome> {
   static const _tabs = <String>[
-    'Resumen', 'Marca en vivo', 'Biblioteca', 'Borradores', 'Historial'
+    'Resumen', 'Diseñador de Marca', 'Calculadora del match', 'Biblioteca', 'Borradores', 'Historial'
   ];
   static const _icons = <IconData>[
     Icons.space_dashboard_outlined,
     Icons.palette_outlined,
+    Icons.tune_outlined,
     Icons.collections_outlined,
     Icons.layers_outlined,
     Icons.history_outlined
@@ -71,7 +73,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     {'name':'Salvia', 'primary':'#455D4B','accent':'#9AA57D','background':'#F8F7F1'},
   ];
 
-  final name = TextEditingController(text:'My Fitness Date');
+  final name = TextEditingController(text:'Fitted');
   final tagline = TextEditingController(text:'Conexiones con intención.');
   final headline = TextEditingController(text:'Personas afines a tu forma de vivir.');
   final description = TextEditingController(
@@ -379,7 +381,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       setState(() {
         draft=item;
         draftTitle.text=(item['title']??'Borrador').toString();
-        name.text=(settings['name']??'My Fitness Date').toString();
+        name.text=(settings['name']??'Fitted').toString();
         tagline.text=(settings['tagline']??'').toString();
         headline.text=(settings['title']??'').toString();
         description.text=(settings['description']??'').toString();
@@ -1014,7 +1016,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         FilledButton(onPressed:_reload,child:const Text('Reintentar')),
       ])));
     return switch(tab) {
-      0=>_summary(),1=>_editor(),2=>_library(),3=>_drafts(),_=>_publication(),
+      0=>_summary(),1=>_editor(),2=>const MatchCalculatorAdmin(),
+      3=>_library(),4=>_drafts(),_=>_publication(),
     };
   }
 
@@ -1024,10 +1027,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     return Scaffold(
       key:const Key('brand-admin-flutter-shell'),
       appBar:AppBar(
-        title:const Row(mainAxisSize:MainAxisSize.min,children:[
+        title:Row(mainAxisSize:MainAxisSize.min,children:[
           MfdBranding(full:false,width:38),
           SizedBox(width:10),
-          Flexible(child:Text('My Fitness Date · Administrador',
+          Flexible(child:Text(widget.liveBrand.current.name+' · Administrador',
             maxLines:1,overflow:TextOverflow.ellipsis)),
         ]),
         actions:[
