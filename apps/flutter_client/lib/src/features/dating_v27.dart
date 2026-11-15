@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/dating_preferences_b5.dart';
@@ -133,8 +134,8 @@ class _DatingV27State extends State<DatingV27> {
       required String message}) => ListTile(
     leading:Icon(satisfied?Icons.check_circle_outline:Icons.lock_outline,
       color:satisfied?Colors.green:Theme.of(context).colorScheme.secondary),
-    title:Text(title),
-    subtitle:Text(message),
+    title:FittedText(title),
+    subtitle:FittedText(message),
   );
 
   @override
@@ -151,7 +152,7 @@ class _DatingV27State extends State<DatingV27> {
       widget.api is DatingRepositoryB11;
     return Scaffold(
       appBar:AppBar(
-        title:const Text('FitDating · privacidad primero'),
+        title:const FittedText('FitDating · privacidad primero'),
         actions:[
           IconButton(
             tooltip:'Actualizar estado',
@@ -167,29 +168,29 @@ class _DatingV27State extends State<DatingV27> {
           key:const Key('b5-dating-readiness'),
           padding:const EdgeInsets.all(20),
           children:[
-            Text('Conecta con intención',
+            FittedText('Conecta con intención',
               style:Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height:8),
-            const Text('Explora lo que buscas y cómo disfrutas el deporte. '
+            const FittedText('Explora lo que buscas y cómo disfrutas el deporte. '
               'Tus preferencias no publican tus gimnasios, horarios, '
               'rutas, teléfono ni ubicación exacta.'),
             const SizedBox(height:20),
             if(loading)const Center(child:CircularProgressIndicator()),
             if(error!=null) Padding(
               padding:const EdgeInsets.symmetric(vertical:12),
-              child:Text(error!,key:const Key('b5-error'),
+              child:FittedText(error!,key:const Key('b5-error'),
                 style:const TextStyle(color:Colors.redAccent)),
             ),
             if(note!=null) Padding(
               padding:const EdgeInsets.symmetric(vertical:12),
-              child:Text(note!,key:const Key('b5-saved-status')),
+              child:FittedText(note!,key:const Key('b5-saved-status')),
             ),
             Card(
               child:ListTile(
                 key:const Key('b10-enter-rhythm-lab'),
                 leading:const Icon(Icons.auto_awesome_outlined),
-                title:const Text('How I Move · How I Live · How I Relate'),
-                subtitle:const Text(
+                title:const FittedText('How I Move · How I Live · How I Relate'),
+                subtitle:const FittedText(
                   'Explora el concepto FITTED en español e inglés. '
                   'Edita los tres ritmos de forma privada. Guardar requiere '
                   'consentimiento separado; publicar requiere autorización.'),
@@ -207,19 +208,19 @@ class _DatingV27State extends State<DatingV27> {
             if(!loading && !available)
               const Card(child:Padding(
                 padding:EdgeInsets.all(20),
-                child:Text('FitDating no está disponible con esta cuenta. '
+                child:FittedText('FitDating no está disponible con esta cuenta. '
                   'El perfil deportivo y las actividades siguen separados.'))),
             if(!loading && available) ...[
               Card(child:Padding(
                 padding:const EdgeInsets.all(17),
                 child:Column(crossAxisAlignment:CrossAxisAlignment.start,
                   children:[
-                    Text(active?'Descubrimiento habilitado':
+                    FittedText(active?'Descubrimiento habilitado':
                       'Preparación privada · descubrimiento deshabilitado',
                       key:const Key('b5-availability'),
                       style:Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height:10),
-                    const Text('No se muestran perfiles ni se envían mensajes '
+                    const FittedText('No se muestran perfiles ni se envían mensajes '
                       'hasta aprobar verificación independiente de edad, '
                       'moderación y los controles de privacidad.'),
                   ]))),
@@ -229,17 +230,17 @@ class _DatingV27State extends State<DatingV27> {
                   child:Column(
                     crossAxisAlignment:CrossAxisAlignment.start,
                     children:[
-                      Text('Último paso · Gym Shield',
+                      FittedText('Último paso · Gym Shield',
                         style:Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height:6),
-                      const Text('Ya tienes las verificaciones externas '
+                      const FittedText('Ya tienes las verificaciones externas '
                         'aprobadas. Configura tu gimnasio real y, si elegiste '
                         'el modo B, sus franjas privadas antes de participar.'),
                       const SizedBox(height:10),
                       FilledButton.icon(
                         key:const Key('b11-open-gym-activation'),
                         icon:const Icon(Icons.shield_outlined),
-                        label:const Text('Completar protección y activar'),
+                        label:const FittedText('Completar protección y activar'),
                         onPressed:()=>Navigator.of(context).push<bool>(
                           MaterialPageRoute<bool>(
                             builder:(_)=>GymShieldActivationB11(
@@ -256,7 +257,7 @@ class _DatingV27State extends State<DatingV27> {
                 const SizedBox(height:12),
               ],
               const SizedBox(height:15),
-              Text('Mis preferencias',
+              FittedText('Mis preferencias',
                 style:Theme.of(context).textTheme.titleLarge),
               const SizedBox(height:10),
               DropdownButtonFormField<String>(
@@ -266,7 +267,7 @@ class _DatingV27State extends State<DatingV27> {
                 decoration:const InputDecoration(labelText:'¿Qué buscas?'),
                 items:[
                   for(final item in datingIntentOptionsB5.entries)
-                    DropdownMenuItem(value:item.key,child:Text(item.value)),
+                    DropdownMenuItem(value:item.key,child:FittedText(item.value)),
                 ],
                 onChanged:submitting?null:(v){
                   if(v!=null)setState(()=>intent=v);
@@ -281,20 +282,20 @@ class _DatingV27State extends State<DatingV27> {
                   labelText:'Mi ritmo deportivo'),
                 items:[
                   for(final item in datingFrequencyOptionsB5.entries)
-                    DropdownMenuItem(value:item.key,child:Text(item.value)),
+                    DropdownMenuItem(value:item.key,child:FittedText(item.value)),
                 ],
                 onChanged:submitting?null:(v){
                   if(v!=null)setState(()=>frequency=v);
                 },
               ),
               const SizedBox(height:18),
-              const Text('Deportes que disfruto (hasta ocho)'),
+              const FittedText('Deportes que disfruto (hasta ocho)'),
               const SizedBox(height:8),
               Wrap(spacing:8,runSpacing:4,children:[
                 for(final item in datingSportOptionsB5.entries)
                   FilterChip(
                     key:Key('b5-sport-${item.key}'),
-                    label:Text(item.value),
+                    label:FittedText(item.value),
                     selected:sports.contains(item.key),
                     onSelected:submitting?null:(selected){
                       setState((){
@@ -315,7 +316,7 @@ class _DatingV27State extends State<DatingV27> {
                   for(final item in datingPrivacyOptionsB5.entries)
                     DropdownMenuItem(
                       value:item.key,
-                      child:Text(item.value,maxLines:1,
+                      child:FittedText(item.value,maxLines:1,
                         overflow:TextOverflow.ellipsis),
                     ),
                 ],
@@ -325,7 +326,7 @@ class _DatingV27State extends State<DatingV27> {
               ),
               if(privacy=='same_gym_other_time')const Padding(
                 padding:EdgeInsets.only(top:10),
-                child:Text('Este modo necesitará horarios privados '
+                child:FittedText('Este modo necesitará horarios privados '
                   'configurados y separación de al menos 30 minutos. '
                   'No activa coincidencias por sí mismo.'),
               ),
@@ -336,10 +337,10 @@ class _DatingV27State extends State<DatingV27> {
                 value:acceptedConsent,
                 onChanged:submitting||consent?null:(v)=>
                   setState(()=>acceptedConsent=v??false),
-                title:Text(consent
+                title:FittedText(consent
                   ?'Consentimiento independiente registrado'
                   :'Acepto voluntariamente participar en FitDating'),
-                subtitle:const Text(
+                subtitle:const FittedText(
                   'Separado de los términos y de la comunidad deportiva.'),
               ),
               SwitchListTile(
@@ -347,8 +348,8 @@ class _DatingV27State extends State<DatingV27> {
                 value:requested,
                 onChanged:submitting?null:(v)=>
                   setState(()=>requested=v),
-                title:const Text('Dejar preparada mi solicitud de participación'),
-                subtitle:const Text('Solicitar participación no habilita '
+                title:const FittedText('Dejar preparada mi solicitud de participación'),
+                subtitle:const FittedText('Solicitar participación no habilita '
                   'descubrimiento ni anula verificaciones.'),
               ),
               const SizedBox(height:12),
@@ -356,7 +357,7 @@ class _DatingV27State extends State<DatingV27> {
                 key:const Key('b5-save-preferences'),
                 onPressed:submitting?null:save,
                 icon:const Icon(Icons.shield_outlined),
-                label:Text(submitting?'Guardando…':
+                label:FittedText(submitting?'Guardando…':
                   'Guardar mis preferencias privadas'),
               ),
               const SizedBox(height:10),
@@ -364,10 +365,10 @@ class _DatingV27State extends State<DatingV27> {
                 key:const Key('b5-disable'),
                 onPressed:submitting?null:disable,
                 icon:const Icon(Icons.visibility_off_outlined),
-                label:const Text('Desactivar mi participación'),
+                label:const FittedText('Desactivar mi participación'),
               ),
               const SizedBox(height:24),
-              Text('Protecciones y requisitos',
+              FittedText('Protecciones y requisitos',
                 style:Theme.of(context).textTheme.titleLarge),
               gateRow(title:'Verificación de edad registrada',
                 satisfied:age,
@@ -391,30 +392,30 @@ class _DatingV27State extends State<DatingV27> {
                 FilledButton.icon(
                   key:const Key('b11-open-real-discovery'),
                   icon:const Icon(Icons.favorite_border),
-                  label:const Text('Ver personas, matches y conversaciones'),
+                  label:const FittedText('Ver personas, matches y conversaciones'),
                   onPressed:()=>Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder:(_)=>DatingDiscoveryB11(
                         api:widget.api as DatingRepositoryB11))),
                 ),
                 const SizedBox(height:12),
-                const Text('La compatibilidad se explica, no se puntúa '
+                const FittedText('La compatibilidad se explica, no se puntúa '
                   'por físico o rendimiento. Toda conversación requiere '
                   'interés mutuo y permiso del servidor.'),
               ],
               if(active && widget.api is! DatingRepositoryB11) ...[
-                Text('Personas compatibles',
+                FittedText('Personas compatibles',
                   style:Theme.of(context).textTheme.titleLarge),
                 if(candidates.isEmpty)
-                  const Text('No hay perfiles compatibles disponibles.'),
+                  const FittedText('No hay perfiles compatibles disponibles.'),
                 for(final person in candidates)
                   Card(child:ListTile(
                     leading:const Icon(Icons.person_outline),
-                    title:Text((person['display_name']??'Deportista').toString()),
-                    subtitle:Text((person['city']??'').toString()),
+                    title:FittedText((person['display_name']??'Deportista').toString()),
+                    subtitle:FittedText((person['city']??'').toString()),
                   )),
               ] else
-                const Text('La búsqueda y los mensajes permanecen '
+                const FittedText('La búsqueda y los mensajes permanecen '
                   'deshabilitados. Tu comunidad deportiva no requiere FitDating.'),
             ],
           ],

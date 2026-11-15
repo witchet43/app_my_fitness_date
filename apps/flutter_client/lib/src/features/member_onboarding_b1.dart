@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 import '../core/member_onboarding_validation.dart';
 
@@ -103,10 +104,10 @@ class _MemberOnboardingB1State extends State<MemberOnboardingB1> {
         children: [
           const Icon(Icons.directions_run, size: 43),
           const SizedBox(height: 12),
-          Text('Tu perfil deportivo', key: const Key('b1-onboarding-title'),
+          FittedText('Tu perfil deportivo', key: const Key('b1-onboarding-title'),
             style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
-          const Text('Solo lo esencial para encontrar actividades. '
+          const FittedText('Solo lo esencial para encontrar actividades. '
             'Tu fecha de nacimiento y lugares de entrenamiento no se muestran '
             'a otras personas.'),
           const SizedBox(height: 22),
@@ -136,11 +137,11 @@ class _MemberOnboardingB1State extends State<MemberOnboardingB1> {
             decoration: const InputDecoration(
               labelText: '¿Con qué frecuencia entrenas?'),
             items: const [
-              DropdownMenuItem(value: 'starting', child: Text('Estoy empezando')),
-              DropdownMenuItem(value: 'one_to_two', child: Text('1–2 días')),
-              DropdownMenuItem(value: 'three_to_four', child: Text('3–4 días')),
-              DropdownMenuItem(value: 'five_plus', child: Text('5 o más días')),
-              DropdownMenuItem(value: 'flexible', child: Text('Variable')),
+              DropdownMenuItem(value: 'starting', child: FittedText('Estoy empezando')),
+              DropdownMenuItem(value: 'one_to_two', child: FittedText('1–2 días')),
+              DropdownMenuItem(value: 'three_to_four', child: FittedText('3–4 días')),
+              DropdownMenuItem(value: 'five_plus', child: FittedText('5 o más días')),
+              DropdownMenuItem(value: 'flexible', child: FittedText('Variable')),
             ],
             onChanged: saving ? null : (v) {
               if (v != null) setState(() => frequency = v);
@@ -151,7 +152,7 @@ class _MemberOnboardingB1State extends State<MemberOnboardingB1> {
             key: const Key('b1-birthday'),
             onPressed: saving ? null : chooseBirthday,
             icon: const Icon(Icons.calendar_today_outlined),
-            label: Text(birthday == null
+            label: FittedText(birthday == null
               ? 'Indicar fecha de nacimiento privada'
               : 'Nacimiento: ${dateOnly(birthday!)}'),
           ),
@@ -160,15 +161,15 @@ class _MemberOnboardingB1State extends State<MemberOnboardingB1> {
             value: adultDeclared,
             onChanged: saving ? null : (value) =>
               setState(() => adultDeclared = value ?? false),
-            title: const Text('Declaro ser mayor de 18 años'),
-            subtitle: const Text('Esta declaración no sustituye la '
+            title: const FittedText('Declaro ser mayor de 18 años'),
+            subtitle: const FittedText('Esta declaración no sustituye la '
               'verificación independiente requerida para FitDating.'),
             controlAffinity: ListTileControlAffinity.leading,
             contentPadding: EdgeInsets.zero,
           ),
           if (warning != null) Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Text(warning!, key: const Key('b1-error'),
+            child: FittedText(warning!, key: const Key('b1-error'),
               style: const TextStyle(color: Colors.redAccent)),
           ),
           const SizedBox(height: 12),
@@ -176,11 +177,11 @@ class _MemberOnboardingB1State extends State<MemberOnboardingB1> {
             key: const Key('b1-save'),
             onPressed: saving ? null : save,
             icon: const Icon(Icons.check_circle_outline),
-            label: Text(saving ? 'Guardando…' : 'Guardar y explorar actividades'),
+            label: FittedText(saving ? 'Guardando…' : 'Guardar y explorar actividades'),
           ),
           if (widget.onCancel != null)
             TextButton(onPressed: saving ? null : widget.onCancel,
-              child: const Text('Volver a mi perfil')),
+              child: const FittedText('Volver a mi perfil')),
         ],
       ),
     ),

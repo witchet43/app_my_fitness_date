@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/activity_repository.dart';
@@ -106,7 +107,7 @@ class _MemberAgendaB8State extends State<MemberAgendaB8> {
             Row(children: [
               Icon(Icons.event_available_outlined, color: scheme.primary),
               const SizedBox(width: 10),
-              Expanded(child: Text(
+              Expanded(child: FittedText(
                 'Tu próxima actividad',
                 style: Theme.of(context).textTheme.titleLarge,
               )),
@@ -118,7 +119,7 @@ class _MemberAgendaB8State extends State<MemberAgendaB8> {
               ),
             ]),
             const SizedBox(height: 6),
-            Text(
+            FittedText(
               'Tu agenda es privada: solo muestra tus reservaciones.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
@@ -126,20 +127,20 @@ class _MemberAgendaB8State extends State<MemberAgendaB8> {
             if (loading)
               const LinearProgressIndicator(key: Key('b8-agenda-loading'))
             else if (error != null) ...[
-              Text(error!, key: const Key('b8-agenda-error'),
+              FittedText(error!, key: const Key('b8-agenda-error'),
                 style: TextStyle(color: scheme.error)),
               TextButton(
                 key: const Key('b8-agenda-retry'),
                 onPressed: reload,
-                child: const Text('Volver a intentar'),
+                child: const FittedText('Volver a intentar'),
               ),
             ] else if (upcoming == null) ...[
-              const Text(
+              const FittedText(
                 'Aún no tienes próximas actividades confirmadas.',
                 key: Key('b8-agenda-empty'),
               ),
               const SizedBox(height: 4),
-              Text('Explora actividades reales y reserva tu lugar.',
+              FittedText('Explora actividades reales y reserva tu lugar.',
                 style: Theme.of(context).textTheme.bodySmall),
             ] else
               Semantics(
@@ -148,14 +149,14 @@ class _MemberAgendaB8State extends State<MemberAgendaB8> {
                   key: const Key('b8-agenda-confirmed'),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text((upcoming['title'] ?? 'Actividad deportiva').toString(),
+                    FittedText((upcoming['title'] ?? 'Actividad deportiva').toString(),
                       style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 5),
-                    Text('${upcoming['sport'] ?? 'Deporte'} · '
+                    FittedText('${upcoming['sport'] ?? 'Deporte'} · '
                       '${upcoming['city'] ?? 'Ciudad por confirmar'}'),
-                    Text(b2LocalDate(upcoming['starts_at'])),
+                    FittedText(b2LocalDate(upcoming['starts_at'])),
                     const SizedBox(height: 4),
-                    Text('Participación confirmada',
+                    FittedText('Participación confirmada',
                       style: TextStyle(color: scheme.primary)),
                   ],
                 ),
@@ -169,13 +170,13 @@ class _MemberAgendaB8State extends State<MemberAgendaB8> {
                   key: const Key('b8-explore-activities'),
                   onPressed: () => navigate(widget.onExplore),
                   icon: const Icon(Icons.search),
-                  label: const Text('Explorar actividades'),
+                  label: const FittedText('Explorar actividades'),
                 ),
                 OutlinedButton.icon(
                   key: const Key('b8-view-reservations'),
                   onPressed: () => navigate(widget.onReservations),
                   icon: const Icon(Icons.calendar_month_outlined),
-                  label: const Text('Mis reservas'),
+                  label: const FittedText('Mis reservas'),
                 ),
               ],
             ),

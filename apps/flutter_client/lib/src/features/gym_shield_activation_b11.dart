@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/dating_repository_b11.dart';
@@ -102,19 +103,19 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
   Widget build(BuildContext context) {
     final strict=widget.mode!='same_gym_other_time';
     return Scaffold(
-      appBar:AppBar(title:const Text('Configurar Gym Shield')),
+      appBar:AppBar(title:const FittedText('Configurar Gym Shield')),
       body:Center(child:ConstrainedBox(
         constraints:const BoxConstraints(maxWidth:720),
         child:ListView(
           key:const Key('b11-gym-shield-activation'),
           padding:const EdgeInsets.all(18),
           children:[
-            Text(strict
+            FittedText(strict
               ?'Modo A · Excluir el gimnasio donde entreno'
               :'Modo B · Mismo gimnasio solo con separación temporal',
               style:Theme.of(context).textTheme.titleLarge),
             const SizedBox(height:10),
-            const Text('Tu gimnasio y tus horarios son privados. '
+            const FittedText('Tu gimnasio y tus horarios son privados. '
               'No se muestran a candidatos ni a matches. '
               'Esta configuración solo funciona con autorización '
               'independiente de edad, consentimiento y moderación.'),
@@ -123,7 +124,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
             if(!loading&&gyms.isEmpty)
               const Card(child:Padding(
                 padding:EdgeInsets.all(16),
-                child:Text('No hay gimnasios reales aprobados en el '
+                child:FittedText('No hay gimnasios reales aprobados en el '
                   'catálogo. Un administrador debe registrar el lugar '
                   'antes de habilitar las citas. No usamos gimnasios '
                   'ficticios ni aceptamos ubicaciones sin validar.'),
@@ -138,7 +139,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
                 for(final gym in gyms)
                   DropdownMenuItem(
                     value:gym['id'].toString(),
-                    child:Text('${gym['name']} · ${gym['city']}',
+                    child:FittedText('${gym['name']} · ${gym['city']}',
                       overflow:TextOverflow.ellipsis),
                   ),
               ],
@@ -147,7 +148,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
             ),
             if(!strict)...[
               const SizedBox(height:16),
-              const Text('Horarios privados para proteger tu rutina. '
+              const FittedText('Horarios privados para proteger tu rutina. '
                 'Solo se usan para evitar coincidencias con menos '
                 'de 30 minutos de separación.'),
               DropdownButtonFormField<int>(
@@ -156,7 +157,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
                 decoration:const InputDecoration(labelText:'Día de la semana'),
                 items:[
                   for(var d=0;d<7;d++)
-                    DropdownMenuItem(value:d,child:Text(weekdays[d])),
+                    DropdownMenuItem(value:d,child:FittedText(weekdays[d])),
                 ],
                 onChanged:submitting?null:(value){
                   if(value!=null)setState(()=>day=value);
@@ -169,7 +170,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
                   decoration:const InputDecoration(labelText:'Desde'),
                   items:[
                     for(final m in times)
-                      DropdownMenuItem(value:m,child:Text(formatTime(m))),
+                      DropdownMenuItem(value:m,child:FittedText(formatTime(m))),
                   ],
                   onChanged:submitting?null:(value){
                     if(value!=null)setState(()=>start=value);
@@ -182,7 +183,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
                   decoration:const InputDecoration(labelText:'Hasta'),
                   items:[
                     for(final m in times)
-                      DropdownMenuItem(value:m,child:Text(formatTime(m))),
+                      DropdownMenuItem(value:m,child:FittedText(formatTime(m))),
                   ],
                   onChanged:submitting?null:(value){
                     if(value!=null)setState(()=>end=value);
@@ -193,11 +194,11 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
                 key:const Key('b11-add-slot'),
                 onPressed:submitting?null:addSlot,
                 icon:const Icon(Icons.add),
-                label:const Text('Añadir franja privada'),
+                label:const FittedText('Añadir franja privada'),
               ),
               for(var i=0;i<slots.length;i++)
                 ListTile(
-                  title:Text('${weekdays[slots[i]['day']!]} · '
+                  title:FittedText('${weekdays[slots[i]['day']!]} · '
                     '${formatTime(slots[i]['startMinutes']!)} – '
                     '${formatTime(slots[i]['endMinutes']!)}'),
                   trailing:IconButton(
@@ -210,7 +211,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
             ],
             if(error!=null)Padding(
               padding:const EdgeInsets.symmetric(vertical:10),
-              child:Text(error!,
+              child:FittedText(error!,
                 key:const Key('b11-gym-error'),
                 style:const TextStyle(color:Colors.redAccent)),
             ),
@@ -220,7 +221,7 @@ class _GymShieldActivationB11State extends State<GymShieldActivationB11> {
               onPressed:loading||submitting||gymId==null
                 ?null:submitGymActivation,
               icon:const Icon(Icons.verified_user_outlined),
-              label:Text(submitting
+              label:FittedText(submitting
                 ?'Verificando…'
                 :'Activar mi participación protegida'),
             ),

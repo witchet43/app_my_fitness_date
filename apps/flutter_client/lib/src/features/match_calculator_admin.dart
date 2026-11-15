@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/fitted_match_engine.dart';
@@ -106,27 +107,27 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
       key:const Key('match-calculator-admin'),
       padding:const EdgeInsets.all(24),
       children:[
-        const Text('Calculadora del match',
+        const FittedText('Calculadora del match',
           style:TextStyle(fontSize:27,fontWeight:FontWeight.bold)),
         const SizedBox(height:8),
-        const Text('Simulador auditable con perfiles ficticios. '
+        const FittedText('Simulador auditable con perfiles ficticios. '
           'Un mismo deporte no es requisito: intención, estilo de vida, '
           'entrenamiento, recuperación y autonomía se ponderan juntos.'),
         if(loading)const LinearProgressIndicator(),
         if(policyMessage!=null)Padding(
           padding:const EdgeInsets.symmetric(vertical:12),
-          child:Text(policyMessage!)),
+          child:FittedText(policyMessage!)),
         const SizedBox(height:18),
         Row(children:[
-          Expanded(child:Text('Ponderaciones · total 100 %',
+          Expanded(child:FittedText('Ponderaciones · total 100 %',
             style:Theme.of(context).textTheme.titleLarge)),
           TextButton(onPressed:()=>setState(
-            ()=>weights=FittedMatchEngine.defaults),child:const Text('Restaurar')),
+            ()=>weights=FittedMatchEngine.defaults),child:const FittedText('Restaurar')),
         ]),
         for(final f in FittedMatchEngine.factors)...[
           Row(children:[
-            Expanded(child:Text(language=='en'?f.en:f.es)),
-            Text('${weights[f.id]} %',key:Key('weight-${f.id}')),
+            Expanded(child:FittedText(language=='en'?f.en:f.es)),
+            FittedText('${weights[f.id]} %',key:Key('weight-${f.id}')),
           ]),
           Slider(
             key:Key('weight-slider-${f.id}'),
@@ -140,49 +141,49 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
           key:const Key('save-match-policy'),
           onPressed:serverVersion==null||saving?null:savePolicy,
           icon:const Icon(Icons.verified_outlined),
-          label:Text(saving?'Guardando…':'Guardar ponderaciones · requiere MFA'),
+          label:FittedText(saving?'Guardando…':'Guardar ponderaciones · requiere MFA'),
         ),
         const Divider(),
         Wrap(spacing:12,runSpacing:12,children:[
           ChoiceChip(
             key:const Key('cross-sport-scenario'),
-            label:const Text('Running + gym'),
+            label:const FittedText('Running + gym'),
             selected:complementary,
             onSelected:(_)=>setState(()=>complementary=true)),
           ChoiceChip(
             key:const Key('same-sport-scenario'),
-            label:const Text('Running + running (otras prioridades)'),
+            label:const FittedText('Running + running (otras prioridades)'),
             selected:!complementary,
             onSelected:(_)=>setState(()=>complementary=false)),
           SegmentedButton<String>(
             segments:const [
-              ButtonSegment(value:'es',label:Text('ES')),
-              ButtonSegment(value:'en',label:Text('EN')),
+              ButtonSegment(value:'es',label:FittedText('ES')),
+              ButtonSegment(value:'en',label:FittedText('EN')),
             ],
             selected:{language},
             onSelectionChanged:(s)=>setState(()=>language=s.first)),
         ]),
         const SizedBox(height:22),
         if(result!=null)...[
-          Text('${result.percent} %',
+          FittedText('${result.percent} %',
             key:const Key('calculated-match-percent'),
             style:Theme.of(context).textTheme.displayMedium),
-          Text(language=='en'?'Illustrative compatibility':
+          FittedText(language=='en'?'Illustrative compatibility':
             'Compatibilidad ilustrativa'),
           const SizedBox(height:8),
-          Text('Cobertura de factores: ${result.coverage} %'),
+          FittedText('Cobertura de factores: ${result.coverage} %'),
           const SizedBox(height:12),
           for(final reason in result.reasonCodes.values)
             Padding(padding:const EdgeInsets.symmetric(vertical:4),
               child:Row(children:[
                 const Icon(Icons.check_circle_outline,size:19),
                 const SizedBox(width:8),
-                Expanded(child:Text(explainMatchReason(
+                Expanded(child:FittedText(explainMatchReason(
                   reason,language:language))),
               ])),
-        ]else const Text('Se requieren suficientes respuestas para calcular.'),
+        ]else const FittedText('Se requieren suficientes respuestas para calcular.'),
         const SizedBox(height:18),
-        const Text('Prototipo de cálculo, no política activa en producción. '
+        const FittedText('Prototipo de cálculo, no política activa en producción. '
           'Las ponderaciones y resultados aquí son simulados: '
           'guardar ponderaciones NO activa el descubrimiento real. '
           'Faltan evaluación y controles de seguridad del motor.'),

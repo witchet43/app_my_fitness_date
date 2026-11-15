@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import '../core/activity_repository.dart';
@@ -55,17 +56,17 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Cancelar participación'),
-        content: const Text('Dejarás de tener un lugar reservado en esta '
+        title: const FittedText('Cancelar participación'),
+        content: const FittedText('Dejarás de tener un lugar reservado en esta '
             'actividad. Podrás volver a inscribirte únicamente si sigue '
             'disponible y quedan lugares.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('Conservar mi lugar')),
+            child: const FittedText('Conservar mi lugar')),
           FilledButton(
             key: const Key('b2-confirm-cancel'),
             onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('Sí, cancelar'),
+            child: const FittedText('Sí, cancelar'),
           ),
         ],
       ),
@@ -77,7 +78,7 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
       await reload();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Tu participación se canceló y guardó correctamente.'),
+          content: FittedText('Tu participación se canceló y guardó correctamente.'),
         ));
       }
     } on MemberApiException catch (e) {
@@ -106,17 +107,17 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text((item['title'] ?? 'Actividad').toString(),
+          FittedText((item['title'] ?? 'Actividad').toString(),
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          Text('${item['sport'] ?? ''} · ${item['city'] ?? ''}'),
-          Text(b2LocalDate(item['starts_at'])),
+          FittedText('${item['sport'] ?? ''} · ${item['city'] ?? ''}'),
+          FittedText(b2LocalDate(item['starts_at'])),
           const SizedBox(height: 10),
           Row(children: [
             Icon(canceled || eventCanceled ? Icons.cancel_outlined
               : Icons.check_circle_outline, size: 18),
             const SizedBox(width: 8),
-            Expanded(child: Text(state, key: Key('b2-state-$id'))),
+            Expanded(child: FittedText(state, key: Key('b2-state-$id'))),
           ]),
           if (allowed) ...[
             const SizedBox(height: 12),
@@ -124,7 +125,7 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
               key: Key('b2-cancel-$id'),
               onPressed: busyId == null ? () => cancel(item) : null,
               icon: const Icon(Icons.event_busy_outlined),
-              label: Text(busyId == id ? 'Cancelando…'
+              label: FittedText(busyId == id ? 'Cancelando…'
                   : 'Cancelar mi participación'),
             ),
           ],
@@ -145,7 +146,7 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
     }).toList();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis actividades'),
+        title: const FittedText('Mis actividades'),
         actions: [
           IconButton(
             key: const Key('b2-reload'),
@@ -164,10 +165,10 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
               key: const Key('b2-my-activities'),
               padding: const EdgeInsets.all(18),
               children: [
-                Text('Tus próximas experiencias',
+                FittedText('Tus próximas experiencias',
                     style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 8),
-                const Text('Consulta tus confirmaciones privadas y gestiona '
+                const FittedText('Consulta tus confirmaciones privadas y gestiona '
                     'tu participación. Solo tú puedes ver esta lista.'),
                 if (loading) const Padding(
                   padding: EdgeInsets.all(24),
@@ -175,27 +176,27 @@ class _MyActivitiesB2State extends State<MyActivitiesB2> {
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 14),
-                  Text(error!, key: const Key('b2-error'),
+                  FittedText(error!, key: const Key('b2-error'),
                     style: const TextStyle(color: Colors.redAccent)),
                   TextButton(onPressed: reload,
-                    child: const Text('Reintentar')),
+                    child: const FittedText('Reintentar')),
                 ],
                 if (!loading && error == null && items.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Text('Todavía no tienes actividades reservadas. '
+                    child: FittedText('Todavía no tienes actividades reservadas. '
                       'Explora el catálogo y confirma tu primera participación.',
                       key: Key('b2-empty')),
                   ),
                 if (!loading && current.isNotEmpty) ...[
                   const SizedBox(height: 22),
-                  Text('Próximas', style: Theme.of(context).textTheme.titleLarge),
+                  FittedText('Próximas', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 10),
                   for (final item in current) card(item),
                 ],
                 if (!loading && past.isNotEmpty) ...[
                   const SizedBox(height: 22),
-                  Text('Anteriores',
+                  FittedText('Anteriores',
                       style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 10),
                   for (final item in past) card(item),
@@ -253,17 +254,17 @@ class _OrganizedActivitiesB2State extends State<OrganizedActivitiesB2> {
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Cancelar esta actividad'),
-        content: const Text('La actividad dejará de aceptar reservas. '
+        title: const FittedText('Cancelar esta actividad'),
+        content: const FittedText('La actividad dejará de aceptar reservas. '
             'Los participantes verán que fue cancelada. '
             'Esta operación no se puede deshacer.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('Volver')),
+            child: const FittedText('Volver')),
           FilledButton(
             key: const Key('b2-organizer-confirm-cancel'),
             onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('Cancelar evento'),
+            child: const FittedText('Cancelar evento'),
           ),
         ],
       ),
@@ -275,7 +276,7 @@ class _OrganizedActivitiesB2State extends State<OrganizedActivitiesB2> {
       await reload();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Actividad cancelada. Se conserva el historial.'),
+          content: FittedText('Actividad cancelada. Se conserva el historial.'),
         ));
       }
     } on MemberApiException catch (e) {
@@ -291,7 +292,7 @@ class _OrganizedActivitiesB2State extends State<OrganizedActivitiesB2> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Actividades organizadas'),
+      title: const FittedText('Actividades organizadas'),
       actions: [
         IconButton(
           onPressed: loading ? null : reload,
@@ -307,24 +308,24 @@ class _OrganizedActivitiesB2State extends State<OrganizedActivitiesB2> {
           key: const Key('b2-organizer-list'),
           padding: const EdgeInsets.all(18),
           children: [
-            Text('Mis eventos publicados',
+            FittedText('Mis eventos publicados',
               style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 8),
-            const Text('Como organizador autorizado, puedes revisar '
+            const FittedText('Como organizador autorizado, puedes revisar '
               'reservas totales y cancelar tus propios eventos.'),
             if (loading) const Padding(
               padding: EdgeInsets.all(24),
               child: Center(child: CircularProgressIndicator()),
             ),
             if (error != null) ...[
-              Text(error!, key: const Key('b2-organizer-error'),
+              FittedText(error!, key: const Key('b2-organizer-error'),
                 style: const TextStyle(color: Colors.redAccent)),
-              TextButton(onPressed: reload, child: const Text('Reintentar')),
+              TextButton(onPressed: reload, child: const FittedText('Reintentar')),
             ],
             if (!loading && error == null && items.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(20),
-                child: Text('Aún no has publicado actividades.',
+                child: FittedText('Aún no has publicado actividades.',
                   key: Key('b2-organizer-empty')),
               ),
             if (!loading) for (final item in items) Builder(
@@ -343,22 +344,22 @@ class _OrganizedActivitiesB2State extends State<OrganizedActivitiesB2> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text((item['title'] ?? 'Evento').toString(),
+                        FittedText((item['title'] ?? 'Evento').toString(),
                           style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 8),
-                        Text('${item['sport'] ?? ''} · ${item['city'] ?? ''}'),
-                        Text(b2LocalDate(item['starts_at'])),
-                        Text('Reservas: ${item['active_reservations'] ?? 0} '
+                        FittedText('${item['sport'] ?? ''} · ${item['city'] ?? ''}'),
+                        FittedText(b2LocalDate(item['starts_at'])),
+                        FittedText('Reservas: ${item['active_reservations'] ?? 0} '
                           '/ ${item['capacity'] ?? '—'}'),
                         if (item['event_cancelled'] == true)
-                          const Text('Cancelado'),
+                          const FittedText('Cancelado'),
                         if (canCancel) ...[
                           const SizedBox(height: 10),
                           OutlinedButton(
                             key: Key('b2-organizer-cancel-$id'),
                             onPressed: busyId == null
                                 ? () => cancel(item) : null,
-                            child: Text(busyId == id
+                            child: FittedText(busyId == id
                                 ? 'Cancelando…' : 'Cancelar evento'),
                           ),
                         ],
