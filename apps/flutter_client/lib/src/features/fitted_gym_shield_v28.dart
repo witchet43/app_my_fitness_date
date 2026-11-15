@@ -83,6 +83,14 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
 
   Future<void> save() async{
     if(saving||loading)return;
+    if(mode=='different_time' && windows.isEmpty){
+      setState(()=>message=tr(
+        'Para proteger tus horarios, agrega al menos una franja. '
+        'Sin datos suficientes no habilitaremos coincidencias del mismo gimnasio.',
+        'Add at least one broad time window to protect your schedule. '
+        'Without enough data, same-gym discovery remains disabled.'));
+      return;
+    }
     setState((){saving=true;message=null;});
     try{
       final response=await widget.api.auth.rpc('fitted_shield_save_v28',
@@ -191,6 +199,59 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
     }
   }
 
+  Widget safetyNotice(){
+    final incomplete=mode=='different_time' && windows.isEmpty;
+    return Container(
+      key:const Key('gym-shield-privacy-summary'),
+      padding:const EdgeInsets.all(15),
+      decoration:BoxDecoration(
+        color:const Color(0xFF1D3432),
+        borderRadius:BorderRadius.circular(15),
+        border:Border.all(color:const Color(0xFF718477)),
+      ),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[
+          const Icon(Icons.verified_user_outlined,
+            color:Color(0xFFD5BE8A)),
+          const SizedBox(width:9),
+          Expanded(child:Text(tr(
+            'Tu privacidad manda','Your boundaries come first'),
+            style:Theme.of(context).textTheme.titleMedium)),
+        ]),
+        const SizedBox(height:8),
+        Text(mode=='exclude_same_gym'
+          ?tr('Modo conservador: excluye el gimnasio principal verificado.',
+              'Conservative mode: exclude the verified primary gym.')
+          :mode=='different_time'
+            ?tr('Para el mismo gimnasio, ambos deben aceptar horarios '
+                'separados. Cualquier traslape o dato ausente excluye '
+                'la coincidencia.',
+                'For the same gym, both people must allow separate times. '
+                'Any overlap or missing data excludes the pairing.')
+            :tr('Tu preferencia queda guardada, pero coincidir en el mismo '
+                'gimnasio y horario todavía NO está habilitado.',
+                'Your preference is saved, but same-gym, same-time matching '
+                'is NOT enabled.')),
+        if(incomplete)...[
+          const SizedBox(height:9),
+          Text(tr(
+            'Falta registrar una franja general para usar esta modalidad.',
+            'Add a broad time window before using this mode.'),
+            style:const TextStyle(color:Color(0xFFD5BE8A))),
+        ],
+        const SizedBox(height:11),
+        Text(tr(
+          'La regla más restrictiva prevalece. Gym Shield no revela '
+          'nombres de lugares, horarios, coincidencias ocultas ni '
+          'explicaciones sobre quién fue excluido.',
+          'The most restrictive rule wins. Gym Shield never reveals '
+          'venue names, schedules, hidden candidates or why another '
+          'person was excluded.'),
+          style:Theme.of(context).textTheme.bodySmall),
+      ]),
+    );
+  }
+
   Widget modeCard(int i) {
     final active=mode==modes[i];
     return Semantics(
@@ -248,14 +309,21 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
         for(var i=0;i<modes.length;i++)...[
           modeCard(i),const SizedBox(height:9),
         ],
+        const SizedBox(height:12),
+        safetyNotice(),
         const SizedBox(height:19),
         Text(tr('02 · Mis lugares y momentos habituales',
           '02 · My usual places and times'),
           style:Theme.of(context).textTheme.titleLarge),
         const SizedBox(height:9),
         Text(tr(
-          'Configura solo ventanas generales. No registramos horarios exactos.',
-          'Choose broad time windows only. Exact hours are not recorded.')),
+          'Configura solo ventanas generales. No registramos horarios exactos. '
+          'Los lugares adicionales se mantienen privados, pero por ahora '
+          'solo el gimnasio principal verificado participa en el filtro '
+          'de coincidencias.',
+          'Choose broad time windows only. Exact hours are not recorded. '
+          'Additional locations remain private, but only the verified '
+          'primary gym is currently covered by candidate filtering.')),
         if(loading)const LinearProgressIndicator(),
         if(places.isEmpty&&!loading)
           Padding(padding:const EdgeInsets.symmetric(vertical:18),
