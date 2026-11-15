@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 import '../core/rhythm_concept_b10.dart';
 import '../core/dating_repository_b11.dart';
@@ -221,7 +222,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
     child:Row(children:[
       Icon(icon),
       const SizedBox(width:10),
-      Expanded(child:Text(tr(es,en),
+      Expanded(child:FittedText(tr(es,en),
         style:Theme.of(context).textTheme.titleLarge)),
     ]),
   );
@@ -237,7 +238,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
         for(final option in rhythmOptionsB10[field]!)
           DropdownMenuItem<String>(
             value:option,
-            child:Text(label(option),overflow:TextOverflow.ellipsis),
+            child:FittedText(label(option),overflow:TextOverflow.ellipsis),
           ),
       ],
       onChanged:(value) {
@@ -255,12 +256,12 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
     crossAxisAlignment:CrossAxisAlignment.start,
     children:[
       Padding(padding:const EdgeInsets.only(bottom:8),
-        child:Text(tr(es,en))),
+        child:FittedText(tr(es,en))),
       Wrap(spacing:7,runSpacing:6,children:[
         for(final option in rhythmOptionsB10[field]!)
           FilterChip(
             key:Key('b10-$field-$option'),
-            label:Text(label(option)),
+            label:FittedText(label(option)),
             selected:selected.contains(option),
             onSelected:(next){
               if(next && selected.length>=max) return;
@@ -305,7 +306,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
       support:support.text,
     );
     return Scaffold(
-      appBar:AppBar(title:Text(tr(
+      appBar:AppBar(title:FittedText(tr(
         'Estudio de ritmo · FITTED (concepto)',
         'Rhythm studio · FITTED (concept)'))),
       body:Center(
@@ -320,17 +321,17 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                 child:Column(
                   crossAxisAlignment:CrossAxisAlignment.start,
                   children:[
-                    Text('FITTED · Match your rhythm.',
+                    FittedText('FITTED · Match your rhythm.',
                       style:Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height:9),
-                    Text(tr(
+                    FittedText(tr(
                       'Prototipo interactivo del concepto exploratorio. '
                       'No es un perfil guardado, una persona real ni una invitación a citas.',
                       'Interactive exploratory concept. '
                       'Not a saved profile, a real person, or a dating invitation.',
                     ),key:const Key('b10-prototype-only')),
                     const SizedBox(height:9),
-                    Text(tr(
+                    FittedText(tr(
                       'Nada de lo escrito aquí sale de esta pantalla. '
                       'No hay fotografías, contacto, gimnasio ni horarios exactos.',
                       'Nothing entered here leaves this screen. '
@@ -338,7 +339,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                     )),
                     SwitchListTile(
                       key:const Key('b10-language'),
-                      title:const Text('English / Español'),
+                      title:const FittedText('English / Español'),
                       value:english,
                       onChanged:(v)=>setState(()=>english=v),
                     ),
@@ -349,7 +350,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
               if(widget.canSave&&widget.repository!=null)
                 Card(child:Padding(
                   padding:const EdgeInsets.all(12),
-                  child:Text(tr(
+                  child:FittedText(tr(
                     'Tus ritmos pueden guardarse con consentimiento separado. '
                     'No se muestran perfiles sin edad verificada.',
                     'Your rhythms can be saved with separate consent. '
@@ -415,10 +416,10 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
               ListTile(
                 key:const Key('b10-gym-c-locked'),
                 leading:const Icon(Icons.lock_outline),
-                title:Text(tr(
+                title:FittedText(tr(
                   'C: Mismo gimnasio sin restricciones',
                   'C: Same gym without restrictions')),
-                subtitle:Text(tr(
+                subtitle:FittedText(tr(
                   'No disponible. Requiere análisis de riesgo y aprobación. '
                   'Los controles reales A/B siguen en FitDating.',
                   'Unavailable. Requires threat assessment and approval. '
@@ -429,7 +430,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
               heading('Compatibilidad explicable · simulación',
                 'Explainable compatibility · simulation',
                 Icons.balance_outlined),
-              Text(tr(
+              FittedText(tr(
                 'Comparamos tus selecciones con un ESCENARIO FICTICIO, '
                 'no con otra persona ni con datos del servidor. '
                 'Las razones explican hábitos, no un porcentaje de atractivo.',
@@ -448,11 +449,11 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                 items:[
                   DropdownMenuItem(
                     value:'cross_sport',
-                    child:Text(tr('Yoga y ritmo similar',
+                    child:FittedText(tr('Yoga y ritmo similar',
                       'Yoga with a similar rhythm'))),
                   DropdownMenuItem(
                     value:'same_sport_other_rhythm',
-                    child:Text(tr('Running y ritmos diferentes',
+                    child:FittedText(tr('Running y ritmos diferentes',
                       'Running with different rhythms'))),
                 ],
                 onChanged:(value){
@@ -461,7 +462,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
               ),
               const SizedBox(height:12),
               if(validation!=null)
-                Text(tr('Revisa los campos de la simulación.',
+                FittedText(tr('Revisa los campos de la simulación.',
                   'Review the simulation fields.')),
               for(final reason in reasons)
                 Card(
@@ -469,8 +470,8 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                   child:ListTile(
                     leading:Icon(reason.importance=='high'
                       ?Icons.favorite_border:Icons.tips_and_updates_outlined),
-                    title:Text(reason.message(english:english)),
-                    subtitle:Text(tr(
+                    title:FittedText(reason.message(english:english)),
+                    subtitle:FittedText(tr(
                       reason.importance=='high'
                         ?'Importancia alta para el ritmo (hipótesis)'
                         :reason.importance=='medium'
@@ -489,11 +490,11 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                 key:const Key('b10-active-date-ideas'),
                 onPressed:()=>setState(()=>showIdeas=!showIdeas),
                 icon:const Icon(Icons.lightbulb_outline),
-                label:Text(tr('Ver ideas hipotéticas de Active Date',
+                label:FittedText(tr('Ver ideas hipotéticas de Active Date',
                   'View hypothetical Active Date ideas')),
               ),
               if(showIdeas) ...[
-                Text(tr(
+                FittedText(tr(
                   'Sólo después de un match mutuo real, nunca antes. '
                   'No son reservaciones ni ubicaciones reales.',
                   'Only after a real mutual match, never before. '
@@ -502,7 +503,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                 for(final idea in hypotheticalActiveDatesB10(answers,sample))
                   ListTile(
                     leading:const Icon(Icons.park_outlined),
-                    title:Text(switch(idea){
+                    title:FittedText(switch(idea){
                       'yoga_brunch'=>tr('Yoga + brunch','Yoga + brunch'),
                       'museum_walk'=>tr('Museo + caminata','Museum + walk'),
                       'outdoor_market'=>tr('Mercado al aire libre',
@@ -517,20 +518,20 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
                   key:const Key('b11-save-rhythm'),
                   onPressed:saving||loading?null:saveRhythms,
                   icon:const Icon(Icons.lock_outline),
-                  label:Text(tr('Guardar mis tres ritmos privados',
+                  label:FittedText(tr('Guardar mis tres ritmos privados',
                     'Save my three private rhythms')),
                 ),
                 if(saveNotice!=null)
-                  Text(saveNotice!,key:const Key('b11-save-success')),
+                  FittedText(saveNotice!,key:const Key('b11-save-success')),
                 if(saveError!=null)
-                  Text(saveError!,key:const Key('b11-save-error')),
+                  FittedText(saveError!,key:const Key('b11-save-error')),
               ]else
-                Text(tr('Para guardar, acepta primero el consentimiento '
+                FittedText(tr('Para guardar, acepta primero el consentimiento '
                     'separado de FitDating.',
                   'To save, first accept the separate FitDating consent.'),
                   key:const Key('b11-consent-before-save')),
               const SizedBox(height:18),
-              Text(tr(
+              FittedText(tr(
                 'Estado: propuesta no validada. '
                 'No se permiten discovery real, fotos, swipe, '
                 'match, chat ni envíos hasta cumplir los gates legales, '

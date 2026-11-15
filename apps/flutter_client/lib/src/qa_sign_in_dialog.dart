@@ -1,3 +1,4 @@
+import 'core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 
 import 'core/auth_session.dart';
@@ -51,7 +52,7 @@ class _QaSignInDialogState extends State<QaSignInDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Acceso de pruebas'),
+      title: const FittedText('Acceso de pruebas'),
       content: SizedBox(
         width: 340,
         child: Form(
@@ -60,7 +61,7 @@ class _QaSignInDialogState extends State<QaSignInDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Solo cuentas QA existentes y autorizadas. '
+              const FittedText('Solo cuentas QA existentes y autorizadas. '
                   'No hay registro público.'),
               const SizedBox(height: 16),
               TextFormField(
@@ -95,7 +96,7 @@ class _QaSignInDialogState extends State<QaSignInDialog> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(_error!, key: const Key('qa-error'),
+                FittedText(_error!, key: const Key('qa-error'),
                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
             ],
@@ -105,12 +106,12 @@ class _QaSignInDialogState extends State<QaSignInDialog> {
       actions: [
         TextButton(
           onPressed: _working ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Cancelar'),
+          child: const FittedText('Cancelar'),
         ),
         FilledButton(
           key: const Key('qa-submit'),
           onPressed: _working ? null : _signIn,
-          child: Text(_working ? 'Verificando…' : 'Entrar'),
+          child: FittedText(_working ? 'Verificando…' : 'Entrar'),
         ),
       ],
     );

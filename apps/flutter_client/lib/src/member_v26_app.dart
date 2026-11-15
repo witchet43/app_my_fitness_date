@@ -214,7 +214,7 @@ class _MemberV26AppState extends State<MemberV26App> {
     }catch(_){
       if(mounted){
         _messengerKey.currentState?.showSnackBar(const SnackBar(
-          content:Text('No fue posible iniciar sesión con Google.')));
+          content:FittedText('No fue posible iniciar sesión con Google.')));
       }
     }
   }
@@ -228,7 +228,7 @@ class _MemberV26AppState extends State<MemberV26App> {
     } catch (_) {
       if(mounted) {
         _messengerKey.currentState?.showSnackBar(const SnackBar(
-          content:Text('No fue posible iniciar sesión con Apple.')));
+          content:FittedText('No fue posible iniciar sesión con Apple.')));
       }
     }
   }
@@ -248,7 +248,7 @@ class _MemberV26AppState extends State<MemberV26App> {
     }
     await showDialog<void>(context:dialogContext,builder:(ctx)=>
       StatefulBuilder(builder:(ctx,setDialog)=>AlertDialog(
-        title:Text(register?'Crear cuenta con correo':'Iniciar sesión'),
+        title:FittedText(register?'Crear cuenta con correo':'Iniciar sesión'),
         content:SingleChildScrollView(child:Column(
           mainAxisSize:MainAxisSize.min,children:[
             TextField(controller:email,keyboardType:TextInputType.emailAddress,
@@ -258,11 +258,11 @@ class _MemberV26AppState extends State<MemberV26App> {
             TextField(controller:password,obscureText:true,
               decoration:const InputDecoration(labelText:'Contraseña')),
             if(error!=null)Padding(padding:const EdgeInsets.only(top:10),
-              child:Text(error!,style:const TextStyle(color:Colors.redAccent))),
+              child:FittedText(error!,style:const TextStyle(color:Colors.redAccent))),
           ])),
         actions:[
           TextButton(onPressed:submitting?null:()=>Navigator.pop(ctx),
-            child:const Text('Cancelar')),
+            child:const FittedText('Cancelar')),
           if(!register) TextButton(
             key:const Key('request-password-recovery'),
             onPressed:submitting?null:()async{
@@ -279,7 +279,7 @@ class _MemberV26AppState extends State<MemberV26App> {
                 );
                 if(ctx.mounted)Navigator.pop(ctx);
                 if(mounted) _messengerKey.currentState?.showSnackBar(
-                  const SnackBar(content:Text(
+                  const SnackBar(content:FittedText(
                     'Si el correo está registrado, recibirás un enlace '
                     'para crear una contraseña.')),
                 );
@@ -290,7 +290,7 @@ class _MemberV26AppState extends State<MemberV26App> {
                 if(ctx.mounted)setDialog(()=>submitting=false);
               }
             },
-            child:const Text('Crear o recuperar mi contraseña'),
+            child:const FittedText('Crear o recuperar mi contraseña'),
           ),
           FilledButton(onPressed:submitting?null:()async{
             // Never reject a valid existing password based on the
@@ -315,7 +315,7 @@ class _MemberV26AppState extends State<MemberV26App> {
               if(ctx.mounted)Navigator.pop(ctx);
               if(mounted && register) {
                 _messengerKey.currentState?.showSnackBar(const SnackBar(
-                  content:Text('Revisa tu correo y confirma la cuenta para continuar.')));
+                  content:FittedText('Revisa tu correo y confirma la cuenta para continuar.')));
               }
               await refresh();
             }catch(_){
@@ -326,7 +326,7 @@ class _MemberV26AppState extends State<MemberV26App> {
             }finally{
               if(ctx.mounted)setDialog(()=>submitting=false);
             }
-          },child:Text(register?'Registrarme':'Entrar')),
+          },child:FittedText(register?'Registrarme':'Entrar')),
         ],
       )));
     email.dispose();password.dispose();
@@ -402,14 +402,14 @@ class _MemberV26AppState extends State<MemberV26App> {
         child:Column(mainAxisSize:MainAxisSize.min,children:[
           const Icon(Icons.shield_outlined,size:48),
           const SizedBox(height:15),
-          const Text('Tu acceso está protegido',
+          const FittedText('Tu acceso está protegido',
             style:TextStyle(fontWeight:FontWeight.w900,fontSize:23)),
           const SizedBox(height:10),
-          Text(failure??'Necesitamos validar tu cuenta.',
+          FittedText(failure??'Necesitamos validar tu cuenta.',
             textAlign:TextAlign.center),
           const SizedBox(height:12),
-          FilledButton(onPressed:refresh,child:const Text('Reintentar')),
-          TextButton(onPressed:logout,child:const Text('Cerrar sesión')),
+          FilledButton(onPressed:refresh,child:const FittedText('Reintentar')),
+          TextButton(onPressed:logout,child:const FittedText('Cerrar sesión')),
         ]))));
     }else if(passwordRecoveryRequested){
       body=PasswordRecoveryScreen(
@@ -442,7 +442,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       body=_legal();
     }else if(profile==null || profile!['onboarding_complete']!=true || editing){
       body=Scaffold(
-        appBar:AppBar(title:const Text('Completa tu perfil'),
+        appBar:AppBar(title:const FittedText('Completa tu perfil'),
           actions:[
             IconButton(onPressed:logout,tooltip:'Cerrar sesión',
               icon:const Icon(Icons.logout)),
@@ -506,40 +506,40 @@ class _LegalGateState extends State<_LegalGate> {
   }
   @override
   Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('Tu privacidad primero')),
+    appBar:AppBar(title:const FittedText('Tu privacidad primero')),
     body:Center(child:ConstrainedBox(
       constraints:const BoxConstraints(maxWidth:520),
       child:ListView(padding:const EdgeInsets.all(22),children:[
         const MfdBranding(full:true,width:220),
         const SizedBox(height:16),
-        const Text('Antes de crear tu perfil',
+        const FittedText('Antes de crear tu perfil',
           style:TextStyle(fontSize:25,fontWeight:FontWeight.w900)),
         const SizedBox(height:10),
-        const Text('Tu perfil comienza privado. FitDating requiere '
+        const FittedText('Tu perfil comienza privado. FitDating requiere '
           'verificación independiente y consentimiento posterior.',
           style:TextStyle(color:FitDateColors.muted)),
         TextButton(onPressed:()=>open(widget.termsUrl),
-          child:const Text('Leer Términos de uso')),
+          child:const FittedText('Leer Términos de uso')),
         TextButton(onPressed:()=>open(widget.privacyUrl),
-          child:const Text('Leer Aviso de privacidad')),
+          child:const FittedText('Leer Aviso de privacidad')),
         CheckboxListTile(
-          title:const Text('He leído y acepto los Términos'),
+          title:const FittedText('He leído y acepto los Términos'),
           value:terms,onChanged:(v)=>setState(()=>terms=v??false)),
         CheckboxListTile(
-          title:const Text('He leído el Aviso de privacidad'),
+          title:const FittedText('He leído el Aviso de privacidad'),
           value:privacy,onChanged:(v)=>setState(()=>privacy=v??false)),
         CheckboxListTile(
-          title:const Text('Declaro ser mayor de 18 años'),
-          subtitle:const Text('La declaración no sustituye '
+          title:const FittedText('Declaro ser mayor de 18 años'),
+          subtitle:const FittedText('La declaración no sustituye '
             'la verificación externa de edad.'),
           value:adult,onChanged:(v)=>setState(()=>adult=v??false)),
         FilledButton(
           key:const Key('v26-accept-legal'),
           onPressed:terms&&privacy&&adult&&!widget.submitting
             ?widget.onAccept:null,
-          child:Text(widget.submitting?'Guardando...':'Continuar')),
+          child:FittedText(widget.submitting?'Guardando...':'Continuar')),
         TextButton(onPressed:widget.onLogout,
-          child:const Text('Salir de mi cuenta')),
+          child:const FittedText('Salir de mi cuenta')),
       ]),
     )));
 }
