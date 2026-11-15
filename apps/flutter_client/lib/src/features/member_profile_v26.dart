@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
+import 'rhythm_concept_lab_b10.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
 import 'member_dashboard_b8.dart';
@@ -222,12 +223,19 @@ class MemberProfileHomeV26 extends StatefulWidget {
 }
 
 class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
+  late final Future<bool> lifestyleConsent;
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
   String? problem;
   bool loading=true;
   @override
-  void initState(){super.initState(); reload();}
+  void initState(){
+    super.initState();
+    lifestyleConsent=widget.api.loadConsents().then((records)=>records.any(
+      (r)=>r['consent_kind']=='dating' &&
+        r['document_version']=='dating-v1')).catchError((Object _)=>false);
+    reload();
+  }
   Future<void> reload() async {
     setState((){loading=true;problem=null;});
     try {
@@ -359,6 +367,68 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               const SizedBox(height:10),
               FittedText((p['headline']??'').toString()),
             ])),
+          const SizedBox(height:16),
+          Card(
+            key:const Key('fitted-profile-three-pillars-card'),
+            clipBehavior:Clip.antiAlias,
+            child:Padding(padding:const EdgeInsets.all(20),
+              child:Column(
+                crossAxisAlignment:CrossAxisAlignment.start,
+                children:[
+                  Text(FittedLocaleScope.t(context,
+                    'Tu vida, en tres pilares',
+                    'Your life, in three pillars'),
+                    style:Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height:7),
+                  Text(FittedLocaleScope.t(context,
+                    'Más allá del deporte: movimiento, hábitos y relaciones.',
+                    'Beyond sport: movement, lifestyle and relationships.')),
+                  const SizedBox(height:16),
+                  const Wrap(spacing:8,runSpacing:8,children:[
+                    Chip(avatar:Icon(Icons.directions_run_outlined,size:18),
+                      label:Text('How I Move')),
+                    Chip(avatar:Icon(Icons.wb_sunny_outlined,size:18),
+                      label:Text('How I Live')),
+                    Chip(avatar:Icon(Icons.people_outline,size:18),
+                      label:Text('How I Relate')),
+                  ]),
+                  const SizedBox(height:15),
+                  FutureBuilder<bool>(
+                    future:lifestyleConsent,
+                    builder:(context,state)=>Column(
+                      crossAxisAlignment:CrossAxisAlignment.start,
+                      children:[
+                        if(state.hasData && !state.data!)
+                          Padding(
+                            padding:const EdgeInsets.only(bottom:10),
+                            child:Text(FittedLocaleScope.t(context,
+                              'Puedes explorar los tres pilares. Para guardar '
+                              'tus respuestas privadas se requiere el '
+                              'consentimiento independiente de FitDating.',
+                              'Explore all three pillars. Saving private '
+                              'answers requires separate FitDating consent.'),
+                              style:Theme.of(context).textTheme.bodySmall)),
+                        FilledButton.icon(
+                          key:const Key('fitted-edit-three-pillars'),
+                          onPressed:state.connectionState!=ConnectionState.done
+                            ?null:()=>Navigator.of(context).push(
+                              MaterialPageRoute<void>(builder:(_)=>
+                                RhythmConceptLabB10(
+                                  repository:widget.api,
+                                  canSave:state.data==true,
+                                  profileMode:true))),
+                          icon:const Icon(Icons.tune_outlined),
+                          label:Text(FittedLocaleScope.t(context,
+                            'Configurar mis tres pilares',
+                            'Set up my three pillars')),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height:16),
           MemberAgendaB8(
             api:widget.api,
