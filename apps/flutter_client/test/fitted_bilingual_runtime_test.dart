@@ -61,8 +61,8 @@ void main() {
     expect(find.text('Welcome'),findsOneWidget);
     expect(find.text('Sign in with email'),findsOneWidget);
     expect(find.text('People in motion. Connections that go further.'),findsOneWidget);
-    expect(find.text('Compatibility beyond sport'),findsOneWidget);
-    expect(find.text('Intentional connections with privacy'),findsOneWidget);
+    expect(find.text('Meaningful affinity'),findsOneWidget);
+    expect(find.text('Protection'),findsOneWidget);
     expect(find.text('Términos'),findsNothing);
   });
 }
