@@ -218,7 +218,11 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
   @override
   Widget build(BuildContext context){
     final r=FittedMatchEngine.evaluate(
-      a:runner,b:complementary?gym:otherRunner,weights:weights);
+      a:runner,b:complementary?gym:otherRunner,weights:weights,
+      aInterests:const {'music','outdoors','culture'},
+      bInterests:complementary
+        ?const {'music','cooking','culture'}
+        :const {'gaming','pets','writing'});
     final unused=FittedMatchEngine.factors
       .where((f)=>!weights.containsKey(f.id)).toList();
     return ListView(
