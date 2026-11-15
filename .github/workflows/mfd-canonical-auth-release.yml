@@ -3,6 +3,7 @@ name: Fitted - canonical unified authentication release
 # Runtime ES/EN strings and saved user preference regression tested.
 # Final brand-polish release: shared editorial logo, verified 6-factor policy, ES/EN locale.
 # Profile v28: compact behavioral story, three-pillar chips and private Gym Shield schedules.
+# Profile v29: truthful three-pillar completion, dynamic four-rhythm classifier and optional starting point; CI verified.
 on:
   push:
     branches: [main]
