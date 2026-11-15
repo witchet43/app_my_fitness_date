@@ -12,6 +12,8 @@ void main(){
           'headline':'No utilizar una biografía cliché',
         },
         rhythm:rhythm,
+        startingPreference:null,
+        onChooseStarting:(_)async{},
         onConfigure:(){},
         onEditIdentity:onEdit??(){},
       ),
