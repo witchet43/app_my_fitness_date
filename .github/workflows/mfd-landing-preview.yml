@@ -1,0 +1,69 @@
+name: My Fitness Date - landing redesign preview
+on:
+  push:
+    branches:
+      - feature/b11-one-final-real-product-20261112
+    paths:
+      - .github/workflows/mfd-landing-preview.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mfd-landing-redesign-preview
+  cancel-in-progress: false
+jobs:
+  landing-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Generate web runner
+        working-directory: apps/flutter_client
+        run: flutter create --platforms=web . --project-name=my_fitness_date
+      - name: Fetch dependencies
+        working-directory: apps/flutter_client
+        run: flutter pub get
+      - name: Analyze Flutter
+        working-directory: apps/flutter_client
+        run: flutter analyze --no-fatal-infos
+      - name: Test landing, brand and sign-in gates
+        working-directory: apps/flutter_client
+        run: |
+          flutter test test/landing_welcome_editorial_test.dart test/public_entry_test.dart test/live_brand_b3_test.dart test/email_sign_in_flow_test.dart
+      - name: Compile marketing-only Flutter web
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release --dart-define=MFD_V26_ENABLED=false
+          cp cloudflare/_headers build/web/_headers
+          cp cloudflare/_redirects build/web/_redirects
+          cp -R cloudflare/terms cloudflare/privacy build/web/
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          Path('build/web/mfd-release.json').write_text(json.dumps({
+            'commit':os.environ['GITHUB_SHA'],
+            'channel':'landing_redesign_preview',
+            'member_access':False,
+            'dating_enabled':False
+          })+'\n')
+          PY
+      - name: Check Cloudflare token available
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is missing"
+            exit 1
+          fi
+      - name: Deploy preview only, never production
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: d10780918aa05ee5532c754371c60c94
+          command: pages deploy apps/flutter_client/build/web --project-name=my-fitness-date --branch=landing-redesign
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
