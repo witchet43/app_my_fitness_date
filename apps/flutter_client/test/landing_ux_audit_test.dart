@@ -35,7 +35,7 @@ void main(){
         reason:'Mobile users should reach sign-in without a tall marketing hero');
       expect(tester.takeException(),isNull);
     });
-  testWidgets('desktop positions primary message and login side-by-side',
+  testWidgets('desktop features editorial image before the registration panel',
     (tester) async{
       await tester.binding.setSurfaceSize(const Size(1280,900));
       addTearDown(()=>tester.binding.setSurfaceSize(null));
@@ -44,7 +44,8 @@ void main(){
       final hero=tester.getTopLeft(find.byKey(const Key('landing-hero')));
       final login=tester.getTopLeft(find.byKey(const Key('landing-access')));
       expect(hero.dy,isNonNegative);
-      expect(login.dx,greaterThan(hero.dx));
+      expect(login.dy,greaterThan(hero.dy));
+      expect(find.byKey(const Key('landing-editorial-photo')),findsOneWidget);
       expect(find.byKey(const Key('anonymous-pace-tool')),findsNothing);
       expect(tester.takeException(),isNull);
     });
