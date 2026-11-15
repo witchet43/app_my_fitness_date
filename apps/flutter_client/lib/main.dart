@@ -68,7 +68,10 @@ Future<void> main() async {
       title:'My Fitness Date',
       debugShowCheckedModeBanner:false,
       theme:FitDateTheme.dark(),
-      home:const PublicEntryShell(),
+      home:const PublicEntryShell(
+        termsUrl:'https://my-fitness-date.pages.dev/terms/',
+        privacyUrl:'https://my-fitness-date.pages.dev/privacy/',
+      ),
     ));
     return;
   }
