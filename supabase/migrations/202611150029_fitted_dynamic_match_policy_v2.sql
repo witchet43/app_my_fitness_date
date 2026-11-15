@@ -109,6 +109,7 @@ declare
   score numeric;
   earned numeric:=0;
   covered numeric:=0;
+  scored_factors integer:=0;
   n integer;
   total numeric;
   code text;
@@ -199,6 +200,7 @@ begin
     end if;
     if score is not null then
       covered:=covered+weight;earned:=earned+weight*score;
+      scored_factors:=scored_factors+1;
       contributions:=contributions||jsonb_build_object(
         factor,jsonb_build_object('weight',weight,
           'alignment',round(score*100),'earned',round(score*weight,2)));
@@ -208,7 +210,8 @@ begin
     end if;
   end loop;
   -- Fail closed when substantial evidence or relationship intent is missing.
-  if covered<70 or a->>'intent' is null or b->>'intent' is null then
+  if covered<70 or scored_factors<3 or
+     a->>'intent' is null or b->>'intent' is null then
     return jsonb_build_object('available',false,
       'insufficient_evidence',true,'coverage',covered);
   end if;
