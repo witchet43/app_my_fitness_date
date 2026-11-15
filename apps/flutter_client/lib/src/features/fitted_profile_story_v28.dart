@@ -113,6 +113,11 @@ class FittedProfileStoryV28 extends StatelessWidget {
             onPressed:onConfigure,
             icon:const Icon(Icons.tune),
             label:Text(en?'Edit my lifestyle':'Configurar mi estilo de vida')),
+          const SizedBox(height:17),
+          FittedProfileProgressV29(
+            rhythm:rhythm,startingPreference:startingPreference,
+            onChooseStarting:onChooseStarting,onConfigure:onConfigure,
+            showRhythm:false),
         ]),
       );
       final rhythmCards=Column(
@@ -123,12 +128,6 @@ class FittedProfileStoryV28 extends StatelessWidget {
             style:const TextStyle(color:Color(0xFFD5BE8A),
               fontSize:11,letterSpacing:1.7,fontWeight:FontWeight.bold)),
           const SizedBox(height:10),
-          FittedProfileProgressV29(
-            rhythm:rhythm,
-            startingPreference:startingPreference,
-            onChooseStarting:onChooseStarting,
-            onConfigure:onConfigure),
-          const SizedBox(height:10),
           _rhythmTile(context,Icons.directions_run_outlined,
             'How I Move',en?'How I train':'Cómo me muevo',moves),
           const SizedBox(height:8),
@@ -137,6 +136,11 @@ class FittedProfileStoryV28 extends StatelessWidget {
           const SizedBox(height:8),
           _rhythmTile(context,Icons.people_outline,
             'How I Relate',en?'How I make room for someone':'Cómo comparto mi vida',relates),
+          const SizedBox(height:12),
+          FittedProfileProgressV29(
+            rhythm:rhythm,startingPreference:startingPreference,
+            onChooseStarting:onChooseStarting,onConfigure:onConfigure,
+            showCompletion:false),
         ],
       );
       return wide?Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
