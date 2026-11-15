@@ -10,6 +10,7 @@ abstract class DatingRepositoryB11 extends DatingRepositoryB5 {
   Future<List<Map<String,dynamic>>> gymCatalogB11();
   Future<String> activateB11(String gymId,List<Map<String,int>> weeklySlots);
   Future<List<Map<String,dynamic>>> discoverB11();
+  Future<Map<String,dynamic>> compatibilityB11(String userId);
   Future<String> likeB11(String userId);
   Future<List<Map<String,dynamic>>> matchesB11();
   Future<List<Map<String,dynamic>>> messagesB11(String matchId);
