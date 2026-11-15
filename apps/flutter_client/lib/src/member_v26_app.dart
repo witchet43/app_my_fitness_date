@@ -207,7 +207,10 @@ class _MemberV26AppState extends State<MemberV26App> {
         redirectTo:widget.redirectUrl,
       );
     }catch(_){
-      if(mounted)setState(()=>failure='No fue posible iniciar sesión con Google.');
+      if(mounted){
+        _messengerKey.currentState?.showSnackBar(const SnackBar(
+          content:Text('No fue posible iniciar sesión con Google.')));
+      }
     }
   }
 
