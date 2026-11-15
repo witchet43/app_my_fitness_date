@@ -9,7 +9,6 @@ import 'activities_b1.dart';
 import 'my_activities_b2.dart';
 import 'member_dashboard_b8.dart';
 import 'community_b4.dart';
-import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
 import '../core/live_brand.dart';
 import '../core/fitted_locale.dart';
