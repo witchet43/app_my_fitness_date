@@ -56,7 +56,7 @@ jobs:
           assert providers.get('google') is True, 'Google provider unavailable'
           apple=providers.get('apple') is True
           with open(__import__('os').environ['GITHUB_ENV'],'a') as env:
-              env.write('MFD_APPLE_AVAILABLE='+str(apple).lower()+'\\n')
+              env.write('MFD_APPLE_AVAILABLE='+str(apple).lower()+'\n')
           print('Google and email available; Apple provider configured:',apple)
           PY
       - name: Compile authenticated Flutter web preview
