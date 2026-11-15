@@ -1,5 +1,5 @@
 name: My Fitness Date - landing redesign preview
-# Release candidate: B11 editorial marketing only; does not change production.
+# B11 authenticated preview only; no main application merge or production deploy.
 on:
   push:
     branches:
@@ -102,6 +102,37 @@ jobs:
           accountId: d10780918aa05ee5532c754371c60c94
           command: pages deploy apps/flutter_client/build/web --project-name=my-fitness-date --branch=landing-redesign
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: End-to-end live deployment verification
+        run: |
+          python3 - <<'PY'
+          import json,subprocess,time,urllib.request
+          base='https://landing-redesign.my-fitness-date.pages.dev'
+          expected=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          def read(path):
+              request=urllib.request.Request(base+path,headers={
+                  'User-Agent':'MyFitnessDate-DeploymentSmoke/1.0'})
+              with urllib.request.urlopen(request,timeout=20) as response:
+                  assert response.status==200
+                  return response.read()
+          for i in range(12):
+              try:
+                  data=json.loads(read('/mfd-release.json?commit='+expected))
+                  assert data['commit']==expected,(data,expected)
+                  assert data['member_access'] is True
+                  assert data['dating_enabled'] is False
+                  assert b'flutter' in read('/').lower()
+                  assert len(read('/main.dart.js'))>1000
+                  for slug in ('terms','privacy'):
+                      assert b'<html' in read('/'+slug+'/').lower()
+                  print('VERIFIED PUBLIC URL:',base,'SHA:',expected)
+                  break
+              except Exception:
+                  if i==11:
+                      raise
+                  time.sleep(5)
+          PY
+
 
       - name: End-to-end public Cloudflare smoke and deployed SHA
         env:
