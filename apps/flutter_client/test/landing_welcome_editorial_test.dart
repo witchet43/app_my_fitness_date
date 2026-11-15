@@ -39,6 +39,7 @@ void main() {
     await tester.tap(find.byKey(const Key('switch-entry-mode')));
     await tester.pump();
     expect(find.byType(CheckboxListTile), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('email-entry')));
     expect(find.text('Crear cuenta con correo'), findsOneWidget);
   });
 }
