@@ -77,7 +77,7 @@ abstract final class FittedMatchEngine {
     bool known(String key)=>allowed[key]!.contains(a[key]) &&
       allowed[key]!.contains(b[key]);
     double similarity(String key)=>a[key]==b[key]?1:
-      (a[key]=='flexible'||b[key]=='flexible')?.8:.45;
+      (a[key]=='flexible'||b[key]=='flexible')? .8 : .45;
     double? group(List<String> keys){
       final v=keys.where(known).toList();
       return v.isEmpty?null:
