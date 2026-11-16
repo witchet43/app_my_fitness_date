@@ -1,2 +1,4 @@
 B16 2026-11-16: run all Flutter regressions and web release for the member-home design refresh; verify distinct private profile editors for Cómo me muevo, Cómo vivo, Cómo me relaciono in Spanish, preserved English, direct tap navigation, Fitted logo+name header, real profile-completion affinity card replacing agenda, optional activities still accessible via account menu, generated orbit-favicon browser cache bust, iOS/PWA icons from the same image. No Supabase changes, no Cloud Build.
 QA retry: accept optimized generated 160x160 orbit source while producing independent 48/192/512 PNG icons; all Flutter regressions follow.
+
+Final QA rerun: 106 earlier tests passed; English-only assertions updated to true Spanish locale, and cached pillar editor state tracks changed initialPillar target; regenerate oval favicon and execute all web tests.
