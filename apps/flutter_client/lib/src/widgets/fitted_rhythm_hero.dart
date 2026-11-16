@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/fitted_locale.dart';
 import '../theme/fitness_date_theme.dart';
+import 'fitted_glass_atmosphere.dart';
 
 /// Brand-safe, presentational hero shared by onboarding and profile.
 /// No user profiling, API calls, behavioral inference or feature gating here.
@@ -39,6 +40,7 @@ class FittedRhythmHero extends StatelessWidget {
           )],
         ),
         child: Stack(children: [
+          const Positioned.fill(child:FittedRhythmLines()),
           Positioned(
             top: compact ? -80 : -95, right: isWide ? -35 : -120,
             child: ExcludeSemantics(child: Container(
@@ -69,7 +71,10 @@ class FittedRhythmHero extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(mainAxisSize: MainAxisSize.min, children: [
+                  FittedGlassPanel(
+                    blur:6,radius:50,
+                    padding:const EdgeInsets.symmetric(horizontal:12,vertical:8),
+                    child:Row(mainAxisSize: MainAxisSize.min, children: [
                     Container(width: 18, height: 3,
                       decoration: BoxDecoration(color: FitDateColors.aqua,
                         borderRadius: BorderRadius.circular(3))),
@@ -77,7 +82,7 @@ class FittedRhythmHero extends StatelessWidget {
                     Text(en ? 'LIFESTYLE COMPATIBILITY' : 'AFINIDAD DE ESTILO DE VIDA',
                       style: const TextStyle(color: FitDateColors.aqua,
                         letterSpacing: 1.5, fontSize: 10, fontWeight: FontWeight.w800)),
-                  ]),
+                  ])),
                   const SizedBox(height: 17),
                   Text(en ? titleEn : titleEs,
                     style: TextStyle(fontFamily: 'Georgia',
