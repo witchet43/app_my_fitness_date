@@ -53,6 +53,7 @@ do $v$
 declare id_value uuid;
 begin
  id_value:=(public.age_review_status_b14()->>'request_id')::uuid;
+ perform set_config('qa.age_request_b14',id_value::text,false);
  if public.age_submit_review_b14(id_value)<>'pending' then
     raise exception 'Valid evidence not submitted'; end if;
  if (public.age_review_status_b14()->>'status')<>'pending' then
@@ -70,8 +71,7 @@ select set_config('request.jwt.claims','{"aal":"aal1"}',false);
 do $v$
 declare id_value uuid;
 begin
- select r.id into id_value from app_private.age_review_requests_b14 r
- where r.user_id='00000000-0000-4000-8000-0000000014a1';
+ id_value:=current_setting('qa.age_request_b14')::uuid;
  if public.admin_age_decide_b14(id_value,'approved',
    date '1991-05-13',true,true,null,
    'Operator AAL1 does not have authority')<>'forbidden'
@@ -82,8 +82,7 @@ select set_config('request.jwt.claims','{"aal":"aal2"}',false);
 do $v$
 declare id_value uuid; decision text;
 begin
- select r.id into id_value from app_private.age_review_requests_b14 r
- where r.user_id='00000000-0000-4000-8000-0000000014a1';
+ id_value:=current_setting('qa.age_request_b14')::uuid;
  if public.admin_age_decide_b14(id_value,'approved',
    date '2008-09-20',true,true,null,
    'The date in the document differs from profile')<>'verification_failed'
@@ -119,8 +118,7 @@ select set_config('request.jwt.claims','{"aal":"aal2"}',false);
 do $v$
 declare id_value uuid;
 begin
- select r.id into id_value from app_private.age_review_requests_b14 r
- where r.user_id='00000000-0000-4000-8000-0000000014a1';
+ id_value:=current_setting('qa.age_request_b14')::uuid;
  if public.admin_age_mark_erased_b14(id_value)<>'erased' then
    raise exception 'Document deletion acknowledgement failed'; end if;
  if (select count(*) from public.admin_age_erasure_queue_b14())<>0 then
