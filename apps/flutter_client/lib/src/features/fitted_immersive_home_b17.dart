@@ -373,7 +373,7 @@ class _FittedImmersiveHomeB17State extends State<FittedImmersiveHomeB17>{
     final title=t('Hola','Hello')+(first.isEmpty?'':', '+first)+
       t('. Sigue tu ritmo.','. Follow your rhythm.');
     final titleStyle=TextStyle(fontSize:wide?33:26,
-      fontWeight:FontWeight.w850,color:FitDateColors.pearl);
+      fontWeight:FontWeight.w800,color:FitDateColors.pearl);
     return Container(
       key:const Key('fitted-member-dashboard'),
       decoration:_panel(),
