@@ -42,7 +42,7 @@ revoke all on app_private.fitted_pulse_consents_b12 from public,anon,authenticat
 
 create or replace function public.fitted_consent_b12(p_accept boolean)
 returns text language plpgsql security definer set search_path=''
-as $
+as $$
 declare me uuid:=auth.uid();
 begin
   if me is null or p_accept is null then return 'not_available'; end if;
@@ -57,7 +57,7 @@ begin
   delete from app_private.fitted_meetups_b12 where user_id=me;
   return 'withdrawn';
 end;
-$;
+$$;
 
 -- Callers never supply the target identity: derive it from server-side match.
 create or replace function public.fitted_confirm_meetup_b12(p_match uuid)
