@@ -699,6 +699,58 @@ async function handleRequest(req: Request): Promise<Response> {
       if(!r.ok)return error(403);
       return json({items:await r.json()});
     }
+    // B13: member rights remain reachable after dating opt-out, subject-only.
+    if(route==="/v1/dating/pulse/my-observations" && req.method==="GET"){
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitted_my_private_observations_b13",token,{});
+      if(!r.ok)return error(r.status===403?403:503);
+      const items=await r.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+    if(route==="/v1/dating/pulse/appeal" && req.method==="POST"){
+      const payload=await body(req),id=payload?.signal_id,statement=payload?.statement;
+      if(typeof id!=="string"||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)
+         ||typeof statement!=="string"||
+         statement.trim().length<10||statement.trim().length>500)return error(400);
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitted_appeal_signal_b13",token,
+        {p_signal:id,p_statement:statement.trim()});
+      if(!r.ok)return error(403);
+      const status=await r.json();
+      return status==="appeal_requested"?json({status},201)
+        :error(status==="already_appealed"?409:403);
+    }
+    if(route==="/v1/dating/pulse/retract" && req.method==="POST"){
+      const payload=await body(req),id=payload?.signal_id;
+      if(typeof id!=="string"||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id))return error(400);
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitted_retract_signal_b13",token,{p_signal:id});
+      if(!r.ok)return error(403);
+      const status=await r.json();
+      return status==="deleted"?json({status}):error(403);
+    }
+    // Server-authoritative moderator / owner AAL2 check in private SQL.
+    if(route==="/v1/admin/pulse/reviews" && req.method==="GET"){
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitted_moderation_queue_b13",token,{p_limit:30});
+      if(!r.ok)return error(r.status===403?403:503);
+      const items=await r.json();
+      return json({items:Array.isArray(items)?items:[]});
+    }
+    if(route==="/v1/admin/pulse/review" && req.method==="POST"){
+      const payload=await body(req),id=payload?.signal_id,
+        decision=payload?.decision,note=payload?.note;
+      if(typeof id!=="string"||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)
+         ||typeof decision!=="string"||!["approve","reject","remove"].includes(decision)
+         ||typeof note!=="string"||note.trim().length<5||note.trim().length>500)
+          return error(400);
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitted_review_signal_b13",token,
+        {p_signal:id,p_decision:decision,p_note:note.trim()});
+      if(!r.ok)return error(403);
+      const status=await r.json();
+      return status==="resolved"?json({status}):error(403);
+    }
     if(route==="/v1/dating/b11/pulse/consent" && req.method==="POST"){
       const state=await datingStatus(token,identity.id);
       if(state.enabled!==true)return error(403);
