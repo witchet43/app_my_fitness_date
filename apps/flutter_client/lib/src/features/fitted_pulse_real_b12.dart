@@ -33,6 +33,32 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
       if(mounted)setState((){status=null;loading=false;});
     }
   }
+  Future<void> changeConsent(bool accept) async {
+    if(busy)return;
+    final approved=await showDialog<bool>(context:context,builder:(ctx)=>
+      AlertDialog(
+        title:Text(accept?'Activar Pulso Real':'Retirar consentimiento'),
+        content:Text(accept
+          ?'Tus observaciones después de citas se procesarán de forma privada, sin publicación automática. Puedes retirar tu consentimiento.'
+          :'Se eliminarán las observaciones asociadas a ti y tus confirmaciones. Esto no deshace reportes de seguridad independientes.'),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx,false),
+            child:const Text('Cancelar')),
+          FilledButton(onPressed:()=>Navigator.pop(ctx,true),
+            child:const Text('Confirmar')),
+        ],
+      ));
+    if(approved!=true||!mounted)return;
+    setState(()=>busy=true);
+    try{
+      final result=await widget.api.setPulseRealConsentB12(accept);
+      if(mounted)setState(()=>message=result=='accepted'
+        ?'Consentimiento registrado para Pulso Real.'
+        :'Consentimiento retirado y observaciones relacionadas eliminadas.');
+      await load();
+    }catch(_){if(mounted)setState(()=>message='No fue posible actualizar el consentimiento.');}
+    finally{if(mounted)setState(()=>busy=false);}
+  }
   Future<void> confirm() async{
     if(busy)return;
     setState(()=>busy=true);
@@ -83,6 +109,8 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
     final available=status?['available']==true;
     final both=status?['both_confirmed']==true;
     final own=status?['my_confirmation']==true;
+    final consent=status?['my_consent']==true;
+    final bothConsent=status?['both_consented']==true;
     final total=(status?['my_observations'] as num?)?.toInt()??0;
     return Stack(children:[
       Positioned.fill(child:ClipRRect(
@@ -124,17 +152,30 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
               :'Disponible después de un match mutuo y las verificaciones de seguridad.',
               style:const TextStyle(color:FitDateColors.muted,fontSize:12)),
           if(available)...[
-            if(!own)
+            SwitchListTile.adaptive(
+              key:const Key('pulse-real-consent'),
+              contentPadding:EdgeInsets.zero,
+              value:consent,
+              onChanged:busy?null:changeConsent,
+              title:Text(en?'Optional private feedback consent':
+                'Consentimiento independiente y opcional'),
+              subtitle:Text(en?'Reversible; withdrawal deletes associated observations.':
+                'Revocable; al retirarlo se eliminan las observaciones asociadas.'),
+            ),
+            if(consent&&!own)
               OutlinedButton.icon(
                 key:const Key('pulse-real-confirm-date'),
                 onPressed:busy?null:confirm,
                 icon:const Icon(Icons.handshake_outlined),
                 label:Text(en?'Confirm we met':'Confirmar que nos conocimos')),
-            if(own&&!both)
+            if(consent&&own&&!both)
               Text(en?'Waiting for the other person to confirm the encounter.':
                 'Esperando la confirmación de la otra persona.',
                 style:const TextStyle(color:FitDateColors.muted)),
-            if(both)...[
+            if(consent&&both&&!bothConsent)
+              const Text('La otra persona aún no ha aceptado el tratamiento de evaluaciones.',
+                style:TextStyle(color:FitDateColors.muted)),
+            if(consent&&both&&bothConsent)...[
               const SizedBox(height:6),
               Text(en?'Which dimension did you experience?':
                 '¿Qué parte de su estilo de vida observaste?',
