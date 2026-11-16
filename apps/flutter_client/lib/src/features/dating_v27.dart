@@ -7,6 +7,8 @@ import 'dating_discovery_b11.dart';
 import 'fitted_my_pulse_b13.dart';
 import 'gym_shield_activation_b11.dart';
 import '../core/dating_repository_b11.dart';
+import '../core/member_v26_api.dart';
+import 'fitted_age_verification_b14.dart';
 import '../core/dating_repository_b5.dart';
 
 /// B5 — Private readiness and preferences, NOT an unrestricted dating launch.
@@ -145,8 +147,8 @@ class _DatingV27State extends State<DatingV27> {
     final active=data['enabled']==true;
     final age=data['age_verified']==true;
     final consent=data['dating_consent']==true;
-    final pilot=data['pilot_member']==true;
-    final verifiedProvider=data['independent_provider_ready']==true;
+    final pilot=data['pilot_member']==true || data['manual_document_review_ready']==true;
+    final verifiedProvider=data['independent_provider_ready']==true || data['manual_document_review_ready']==true;
     final released=data['discovery_release_ready']==true;
     final available=data['status']=='available';
     final setupGym=data['gym_setup_required']==true &&
@@ -206,6 +208,25 @@ class _DatingV27State extends State<DatingV27> {
               ),
             ),
             const SizedBox(height:12),
+            if(widget.api is MemberV26Api)...[
+              Card(child:ListTile(
+                key:const Key('b14-age-verification-open'),
+                leading:const Icon(Icons.verified_user_outlined),
+                title:const FittedText('Verifica tu mayoría de edad'),
+                subtitle:FittedText(age
+                  ?'Tu edad ya está verificada. Consulta tu vigencia o '
+                    'revoca el consentimiento.'
+                  :'Envía una identificación y una fotografía para '
+                    'revisión humana protegida.'),
+                trailing:const Icon(Icons.chevron_right),
+                onTap:()=>Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder:(_)=>
+                    FittedAgeVerificationB14(
+                      api:widget.api as MemberV26Api)))
+                    .then((_){if(mounted)reload();}),
+              )),
+              const SizedBox(height:12),
+            ],
             if(widget.api is DatingRepositoryB11)...[
               Card(child:ListTile(
                 key:const Key('pulse-rights-open'),
@@ -238,7 +259,7 @@ class _DatingV27State extends State<DatingV27> {
                       style:Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height:10),
                     const FittedText('No se muestran perfiles ni se envían mensajes '
-                      'hasta aprobar verificación independiente de edad, '
+                      'hasta aprobar la verificación documental de edad, '
                       'moderación y los controles de privacidad.'),
                   ]))),
               if(!active && setupGym)...[

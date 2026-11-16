@@ -13,6 +13,7 @@ import '../core/activity_repository.dart';
 import '../core/community_repository.dart';
 import '../core/member_v26_api.dart';
 import 'fitted_pulse_moderation_b13.dart';
+import 'fitted_age_admin_b14.dart';
 import 'community_moderation_b4.dart';
 import 'gym_catalog_admin_b11.dart';
 import 'match_calculator_admin.dart';
@@ -592,6 +593,27 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           label:const FittedText('Administrar gimnasios'),
         ),
       ]))),
+    if(widget.communityAdmin is MemberV26Api)...[
+      const SizedBox(height:14),
+      Card(child:Padding(padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          FittedText('Verificación de edad y operación de citas',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          const FittedText('Identificación privada, comparación manual de '
+            'fotografía, verificación de mayoría de edad, eliminación de '
+            'evidencia y controles de lanzamiento con MFA.'),
+          const SizedBox(height:12),
+          FilledButton.icon(
+            key:const Key('admin-open-age-verification-b14'),
+            onPressed:()=>Navigator.of(context).push(
+              MaterialPageRoute<void>(builder:(_)=>
+                FittedAgeAdminB14(
+                  api:widget.communityAdmin as MemberV26Api))),
+            icon:const Icon(Icons.verified_user_outlined),
+            label:const FittedText('Revisar identidades y habilitación')),
+        ]))),
+    ],
     if(widget.communityAdmin is MemberV26Api)...[
       const SizedBox(height:14),
       Card(child:Padding(padding:const EdgeInsets.all(20),
