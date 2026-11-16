@@ -3,3 +3,5 @@ B17 independent production-readiness gate: 34 migration chain, private summary c
 QA retry: respect revoked AI role execution (insufficient_privilege), correct desktop weight, rebuild admin moderation note, run new 3-screen B17 tests and Cloudflare release preflight.
 
 QA retry 2: insert RLS-enforced media metadata permission missing in inherited DB, validated against actual production permission. Re-run SQL+API+Flutter.
+
+QA retry 3: all 34 migrations and SQL privacy tests PASS; TypeScript invalid escaped regex replaced by constructor. Now test AI Edge + full Flutter.
