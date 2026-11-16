@@ -71,6 +71,17 @@ class FakeDatingB11 implements DatingRepositoryB11 {
   @override
   Future<List<String>> ideasB11(String id) async => ['walk_coffee'];
   @override
+  Future<Map<String,dynamic>> pulseRealStatusB12(String id) async =>
+    {'available':false};
+  @override
+  Future<String> confirmMeetupB12(String id) async => 'not_available';
+  @override
+  Future<String> setPulseRealConsentB12(bool accepted) async =>
+    'not_available';
+  @override
+  Future<String> submitPulseRealB12(
+    String id,String dimension,String observation) async=>'not_available';
+  @override
   Future<Map<String,dynamic>> datingStatus() async => {
     'status':'available','enabled':false,'dating_consent':false,
   };
