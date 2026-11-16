@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/live_brand.dart';
 import '../core/fitted_locale.dart';
 import '../widgets/mfd_branding.dart';
+import '../theme/fitness_date_theme.dart';
 
 /// One canonical public entry: one brand, one clear proposition, one auth
 /// card. Legal consent is collected only by the registration flow.
@@ -32,10 +33,10 @@ class PublicEntryShell extends StatefulWidget {
 class _PublicEntryShellState extends State<PublicEntryShell> {
   bool register = false;
   final _accessKey = GlobalKey();
-  static const navy = Color(0xFF101B21);
-  static const gold = Color(0xFFD5BE8A);
-  static const ivory = Color(0xFFF4F0E8);
-  static const sage = Color(0xFFB9CBC1);
+  static const navy = FitDateColors.inkDeep;
+  static const gold = FitDateColors.apricot;
+  static const ivory = FitDateColors.pearl;
+  static const sage = FitDateColors.muted;
 
   bool get legalConfigured =>
     widget.termsUrl.startsWith('https://') &&
@@ -75,22 +76,31 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         children:[
           Text(FittedLocaleScope.t(context,
             'PERSONAS EN MOVIMIENTO','PEOPLE IN MOTION'),
-            style:const TextStyle(color:Color(0xFFB6F266),
-              fontSize:11,letterSpacing:1.3,fontWeight:FontWeight.w800)),
-          const SizedBox(height:20),
+            style:const TextStyle(color:FitDateColors.aqua,
+              fontSize:11,letterSpacing:1.8,fontWeight:FontWeight.w800)),
+          const SizedBox(height:14),
+          Container(width:42,height:3,decoration:BoxDecoration(
+            color:FitDateColors.apricot,borderRadius:BorderRadius.circular(3))),
+          const SizedBox(height:17),
           Text(FittedTranslations.translate(
               brand.title,FittedLocaleScope.languageOf(context)),
             key:const Key('landing-headline'),
             style:TextStyle(color:ivory,fontFamily:brand.font,
-              fontSize:wide?39:30,fontWeight:FontWeight.w700,
-              height:1.17)),
+              fontSize:wide?46:34,fontWeight:FontWeight.w700,
+              height:1.14,letterSpacing:-.9)),
           const SizedBox(height:14),
           Text(FittedTranslations.translate(
               brand.description,FittedLocaleScope.languageOf(context)),
             key:const Key('landing-brand-description'),
             style:const TextStyle(color:Color(0xFFE1E8E0),
               height:1.5,fontSize:15)),
-          const SizedBox(height:23),
+          const SizedBox(height:19),
+          Wrap(spacing:8,runSpacing:8,children:[
+            _heroPill(Icons.directions_run_rounded,'How I Move'),
+            _heroPill(Icons.wb_twilight_outlined,'How I Live'),
+            _heroPill(Icons.connect_without_contact_outlined,'How I Relate'),
+          ]),
+          const SizedBox(height:24),
           FilledButton.icon(
             key:const Key('landing-create-profile'),
             onPressed:(){
@@ -103,7 +113,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               });
             },
             style:FilledButton.styleFrom(
-              backgroundColor:const Color(0xFFB6F266),
+              backgroundColor:FitDateColors.aqua,
               foregroundColor:navy,
               minimumSize:const Size(0,50)),
             icon:const Icon(Icons.arrow_forward),
@@ -114,28 +124,51 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     );
     final picture=ClipRRect(
       borderRadius:BorderRadius.circular(22),
-      child:Image.network(
-        photo,
-        key:const Key('landing-editorial-photo'),
-        fit:BoxFit.cover,
+      child:SizedBox(
+        height:wide?460:245,
         width:double.infinity,
-        height:wide?430:160,
-        semanticLabel:FittedLocaleScope.t(context,
-          'Dos personas activas compartiendo un momento al aire libre',
-          'Two active people sharing a moment outdoors'),
-        errorBuilder:(_,__,___)=>const DecoratedBox(
-          decoration:BoxDecoration(color:Color(0xFF293D3C)),
-          child:SizedBox(height:260,child:Center(
-            child:Icon(Icons.landscape_outlined,color:gold,size:48))),
-        ),
+        child:Stack(fit:StackFit.expand,children:[
+          Image.network(
+            photo,
+            key:const Key('landing-editorial-photo'),
+            fit:BoxFit.cover,
+            semanticLabel:FittedLocaleScope.t(context,
+              'Dos personas activas compartiendo un momento al aire libre',
+              'Two active people sharing a moment outdoors'),
+            errorBuilder:(_,__,___)=>const ColoredBox(
+              color:Color(0xFF294A4A),child:Center(
+                child:Icon(Icons.landscape_outlined,color:gold,size:48))),
+          ),
+          const DecoratedBox(decoration:BoxDecoration(
+            gradient:LinearGradient(begin:Alignment.topCenter,
+              end:Alignment.bottomCenter,
+              colors:[Colors.transparent,Color(0xCC0F1821)],
+              stops:[.4,1]))),
+          Positioned(left:20,right:20,bottom:21,child:Row(children:[
+            Container(width:33,height:33,
+              decoration:BoxDecoration(shape:BoxShape.circle,
+                color:FitDateColors.aqua.withValues(alpha:.17),
+                border:Border.all(color:FitDateColors.aqua)),
+              child:const Icon(Icons.graphic_eq_rounded,color:FitDateColors.aqua,size:18)),
+            const SizedBox(width:10),
+            Expanded(child:Text(FittedLocaleScope.t(context,
+              'BUENA ENERGÍA · CONEXIONES CON SENTIDO',
+              'GOOD ENERGY · MEANINGFUL CONNECTIONS'),
+              style:const TextStyle(color:ivory,fontSize:10,
+                letterSpacing:1.1,fontWeight:FontWeight.w800))),
+          ])),
+        ]),
       ),
     );
     return Container(
       key:const Key('landing-hero'),
       padding:const EdgeInsets.all(12),
       decoration:BoxDecoration(
-        borderRadius:BorderRadius.circular(28),
-        color:const Color(0xFF172D29)),
+        borderRadius:BorderRadius.circular(30),
+        gradient:const LinearGradient(
+          colors:[Color(0xFF173B41),Color(0xFF192936),Color(0xFF26283B)],
+          begin:Alignment.topLeft,end:Alignment.bottomRight),
+        border:Border.all(color:FitDateColors.aqua.withValues(alpha:.24))),
       child:wide
         ?Row(children:[
             Expanded(flex:1,child:message),
@@ -148,6 +181,20 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     );
   }
 
+  Widget _heroPill(IconData icon,String label) => Container(
+    padding:const EdgeInsets.symmetric(horizontal:10,vertical:8),
+    decoration:BoxDecoration(
+      color:FitDateColors.inkDeep.withValues(alpha:.48),
+      borderRadius:BorderRadius.circular(50),
+      border:Border.all(color:FitDateColors.aqua.withValues(alpha:.3))),
+    child:Row(mainAxisSize:MainAxisSize.min,children:[
+      Icon(icon,color:FitDateColors.aqua,size:14),
+      const SizedBox(width:7),
+      Text(label,style:const TextStyle(color:ivory,fontSize:11,
+        fontWeight:FontWeight.w700)),
+    ]),
+  );
+
   Widget _access(bool wide) {
     final action=register
       ?widget.onEmailRegister??widget.onEmail
@@ -158,9 +205,9 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       key:_accessKey,
       padding:EdgeInsets.all(wide?28:21),
       decoration:BoxDecoration(
-        color:const Color(0xFF19272C),
-        borderRadius:BorderRadius.circular(22),
-        border:Border.all(color:gold.withValues(alpha:.3))),
+        color:FitDateColors.surface,
+        borderRadius:BorderRadius.circular(25),
+        border:Border.all(color:FitDateColors.aqua.withValues(alpha:.28))),
       child:Column(
         crossAxisAlignment:CrossAxisAlignment.stretch,
         mainAxisSize:MainAxisSize.min,children:[
