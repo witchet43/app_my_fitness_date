@@ -1,5 +1,5 @@
 name: Fitted - canonical unified authentication release
-# Source of truth: main. B13 private reviews and appeals deploy; public reputation remains blocked.
+# Source of truth: main. B14 private ID verification, human approval and manual operator release.
 # Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
@@ -105,8 +105,8 @@ jobs:
             --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
             --dart-define=MFD_TERMS_URL=https://my-fitness-date.pages.dev/terms/ \
             --dart-define=MFD_PRIVACY_URL=https://my-fitness-date.pages.dev/privacy/ \
-            --dart-define=MFD_TERMS_VERSION=v27-terms-1 \
-            --dart-define=MFD_PRIVACY_VERSION=v27-privacy-1 \
+            --dart-define=MFD_TERMS_VERSION=v28-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v28-privacy-1 \
             --dart-define=MFD_OAUTH_REDIRECT_URL=https://my-fitness-date.pages.dev/
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
@@ -119,8 +119,10 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-glass-pulse-b13",
-            "pulso_real_feedback_enabled":False
+            "visual_revision":"fitted-verified-dating-b14",
+            "pulso_real_feedback_enabled":False,
+            "manual_age_verification":True,
+            "dating_access":"reviewed_adults_with_operator_activation"
           })+"\n")
           PY
       - name: Publish canonical production website on Cloudflare Pages
@@ -148,7 +150,9 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-glass-pulse-b13"
+                  assert info["visual_revision"]=="fitted-verified-dating-b14"
+                  assert info["manual_age_verification"] is True
+                  assert info["dating_access"]=="reviewed_adults_with_operator_activation"
                   assert info["pulso_real_feedback_enabled"] is False
                   assert b"flutter" in get("/").lower()
                   assert len(get("/main.dart.js"))>1000
