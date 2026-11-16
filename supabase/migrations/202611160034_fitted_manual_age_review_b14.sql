@@ -273,7 +273,7 @@ create function public.admin_age_erasure_queue_b14()
 returns table(request_id uuid,user_id uuid,case_status text,
  document_path text,selfie_path text,reviewed_at timestamptz)
 language sql stable security definer set search_path=''
-as $
+as $$
  select r.id,r.user_id,r.status,
  r.user_id::text||'/'||r.id::text||'/document',
  r.user_id::text||'/'||r.id::text||'/selfie',r.reviewed_at
@@ -282,7 +282,7 @@ as $
    and r.status in ('approved','rejected','cancelled')
    and r.evidence_purged_at is null
  order by coalesce(r.reviewed_at,r.created_at) asc limit 50;
-$;
+$$;
 
 create table app_private.manual_dating_launch_b14 (
  id boolean primary key default true check(id),
