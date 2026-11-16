@@ -5,12 +5,22 @@ import 'src/core/member_v26_api.dart';
 import 'src/features/public_entry_shell.dart';
 import 'src/member_v26_app.dart';
 import 'src/theme/fitness_date_theme.dart';
+import 'src/qa/fitted_visual_showcase.dart';
 
 /// A SINGLE coordinated V26 release. No partial production activation:
 /// if the identity/consent/backend configuration is incomplete, the app
 /// shows the same editorial welcome, with authentication fail-closed.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Explicit QA-only compilation flag; never used by public/prod pipelines.
+  // No production accounts, authentication, dating or remote writes.
+  const visualPreview=bool.fromEnvironment(
+    'MFD_VISUAL_SHOWCASE',defaultValue:false);
+  if(visualPreview){
+    runApp(const FittedVisualShowcase());
+    return;
+  }
 
   const v26=bool.fromEnvironment('MFD_V26_ENABLED',defaultValue:false);
   if(!v26){
