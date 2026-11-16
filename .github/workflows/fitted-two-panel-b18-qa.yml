@@ -1,0 +1,62 @@
+name: FITTED B18 - two-panel AI match experience QA
+on:
+  push:
+    branches: [feature/fitted-two-panel-ai-matching-b18-20261116]
+    paths: [.build-gates/fitted-b18-qa-request.txt]
+permissions:
+  contents: read
+jobs:
+  b18-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SaaS Factory baseline
+        run: python3 scripts/check_saas_factory.py
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Static-check privacy-preserving AI function
+        run: |
+          deno check supabase/functions/fitted-ai-summary-b18/index.ts
+          python3 - <<'PY'
+          from pathlib import Path
+          sql=Path('supabase/migrations/202611160036_fitted_profile_showcase_b18.sql').read_text()
+          assert 'b11_member_eligible(viewer)' in sql
+          assert 'b11_member_eligible(p_user)' in sql
+          assert 'fitted_photo_viewable_b17' in sql
+          assert 'share_consented' in sql
+          edge=Path('supabase/functions/fitted-ai-summary-b18/index.ts').read_text()
+          for fragment in ('/auth/v1/user','fitted_summary_context_b17','fitted_summary_allow_generate_b17',
+            'fitted_summary_save_ai_b17','OPENAI_API_KEY','editorial_fallback'):
+              assert fragment in edge, fragment
+          print('B18 source privacy and AI consent assertions PASS')
+          PY
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Prepare Flutter and web
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Preserve actual Fitted icon and theme
+        run: |
+          python3 -m venv .fitted-brand-venv
+          .fitted-brand-venv/bin/python -m pip install --quiet Pillow==11.3.0
+          .fitted-brand-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
+          .fitted-brand-venv/bin/python scripts/check_fitted_brand_assets.py --project apps/flutter_client
+      - name: Analyze and full Flutter regression incl B18
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Production-mode web compile and icon smoke
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release --dart-define=MFD_V26_ENABLED=true
+          test -s build/web/main.dart.js
+          test -s build/web/favicon.png
+          test -s build/web/icons/Icon-512.png

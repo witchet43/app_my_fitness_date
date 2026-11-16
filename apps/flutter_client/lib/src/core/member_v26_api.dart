@@ -385,6 +385,51 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   Future<List<Map<String,dynamic>>> moderationDeletionRequests() async =>
     _items(_decode(await _request('GET','/v1/admin/community/deletions')));
 
+
+  // B18 safe summary: direct, authenticated owner-only RPC.
+  Future<Map<String,dynamic>> myFittedSummaryB18() async {
+    final raw=await auth.rpc('fitted_my_summary_b17');
+    return raw is Map?Map<String,dynamic>.from(raw):<String,dynamic>{};
+  }
+
+  Future<String> fittedSummaryConsentB18({
+    required bool ai,required bool share,
+  }) async=>(await auth.rpc('fitted_summary_consent_b17',
+    params:{'p_ai':ai,'p_share':share}))?.toString()??'not_available';
+
+  /// Best effort; base editorial SQL summaries update immediately on save.
+  /// The private AI function only accepts the owner's JWT after opt-in.
+  Future<bool> refreshFittedAiSummaryB18() async{
+    try {
+      final summary=await myFittedSummaryB18();
+      if(summary['ai_consented']!=true)return false;
+      final response=await auth.functions.invoke(
+        'fitted-ai-summary-b18',
+        body:{'action':'refresh'},
+      );
+      return response.status==200 &&
+        response.data is Map &&
+        (response.data as Map)['status']=='saved';
+    }catch(_){return false;}
+  }
+
+  Future<Map<String,dynamic>> candidateShowcaseB18(String id) async {
+    if(!_validActivityId(id))return <String,dynamic>{'available':false};
+    final raw=await auth.rpc('fitted_candidate_showcase_b18',
+      params:{'p_user':id});
+    return raw is Map?Map<String,dynamic>.from(raw):<String,dynamic>{};
+  }
+
+  Future<Uint8List> candidatePhotoB18(String path) async {
+    if(!RegExp(
+      r'^[0-9a-f-]{36}/[a-zA-Z0-9_./-]+$',
+      caseSensitive:false).hasMatch(path)){
+      throw const MemberApiException('Fotografía no autorizada.');
+    }
+    // Storage RLS verifies eligible audience and approval again.
+    return auth.storage.from('mfd-profile-private').download(path);
+  }
+
   Future<Map<String, dynamic>?> loadProfile() async {
     final value = _decode(await _request('GET', '/v1/me/profile'))['profile'];
     return value is Map<String, dynamic> ? value : null;
@@ -392,6 +437,7 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
 
   Future<Map<String, dynamic>> saveProfile(Map<String, dynamic> profile) async {
     final result = _decode(await _request('PUT', '/v1/me/profile', data: profile));
+    await refreshFittedAiSummaryB18();
     return result['profile'] as Map<String, dynamic>;
   }
 
@@ -431,6 +477,7 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   @override
   Future<void> saveRhythmB11(Map<String,dynamic> draft) async {
     _decode(await _request('PUT','/v1/dating/rhythm',data:draft));
+    await refreshFittedAiSummaryB18();
   }
 
   @override
