@@ -5,6 +5,7 @@ import '../widgets/mfd_branding.dart';
 import 'rhythm_concept_lab_b10.dart';
 import 'fitted_profile_progress_v29.dart';
 import '../theme/fitness_date_theme.dart';
+import '../widgets/fitted_glass_atmosphere.dart';
 
 /// Editorial story built exclusively from the member's saved actions and
 /// choices. No inferred facts, no locations, no detailed schedules.
@@ -75,7 +76,9 @@ class FittedProfileStoryV28 extends StatelessWidget {
           boxShadow:[BoxShadow(color:FitDateColors.aqua.withValues(alpha:.07),
             blurRadius:24,offset:const Offset(0,12))],
         ),
-        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        child:Stack(children:[
+          const Positioned.fill(child:FittedRhythmLines(density:.45)),
+          Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           Row(children:[
             const MfdBranding(full:false,width:55),
             const SizedBox(width:12),
@@ -136,6 +139,7 @@ class FittedProfileStoryV28 extends StatelessWidget {
             rhythm:rhythm,startingPreference:startingPreference,
             onChooseStarting:onChooseStarting,onConfigure:onConfigure,
             showRhythm:false),
+        ]),
         ]),
       );
       final rhythmCards=Column(
