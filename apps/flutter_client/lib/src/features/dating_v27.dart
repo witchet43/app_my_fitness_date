@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../core/dating_preferences_b5.dart';
 import 'rhythm_concept_lab_b10.dart';
 import 'dating_discovery_b11.dart';
+import 'fitted_my_pulse_b13.dart';
 import 'gym_shield_activation_b11.dart';
 import '../core/dating_repository_b11.dart';
 import '../core/dating_repository_b5.dart';
@@ -205,6 +206,22 @@ class _DatingV27State extends State<DatingV27> {
               ),
             ),
             const SizedBox(height:12),
+            if(widget.api is DatingRepositoryB11)...[
+              Card(child:ListTile(
+                key:const Key('pulse-rights-open'),
+                leading:const Icon(Icons.verified_user_outlined),
+                title:const FittedText('Pulso Real · mis derechos'),
+                subtitle:const FittedText(
+                  'Consulta observaciones revisadas sobre tu perfil '
+                  'y solicita correcciones, incluso si FitDating está apagado.'),
+                trailing:const Icon(Icons.chevron_right),
+                onTap:()=>Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder:(_)=>
+                    FittedMyPulseRealB13(
+                      api:widget.api as DatingRepositoryB11))),
+              )),
+              const SizedBox(height:12),
+            ],
             if(!loading && !available)
               const Card(child:Padding(
                 padding:EdgeInsets.all(20),
