@@ -787,8 +787,15 @@ class MemberApiException implements Exception {
     'p_responsibility':responsibility,
   }))?.toString()??'not_available';
 
-  Future<Map<String, dynamic>> datingStatus() async =>
-      _decode(await _request('GET', '/v1/dating/status'));
+  Future<Map<String, dynamic>> datingStatus() async {
+    final result=_decode(await _request('GET', '/v1/dating/status'));
+    // Operational eligibility is decided in SQL, not in Flutter.
+    try {
+      final program=await manualDatingStatusB14();
+      result['manual_document_review_ready']=program['enabled']==true;
+    }catch(_){result['manual_document_review_ready']=false;}
+    return result;
+  }
 
   Future<void> acceptDating() async {
     await _request('POST', '/v1/dating/consent',
