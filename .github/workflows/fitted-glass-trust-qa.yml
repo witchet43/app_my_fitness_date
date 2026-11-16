@@ -1,9 +1,9 @@
 # Gated QA for release candidate: NO PRODUCTION DEPLOY, no Cloud Build.
-name: FITTED Glass and Pulso Real - production readiness QA
+name: FITTED B14 ID evidence, moderation and verified-only matching QA
 on:
   push:
-    branches: [feature/fitted-glass-trust-production-20261116]
-    paths: [.build-gates/fitted-glass-gate-request.txt]
+    branches: [feature/fitted-verified-age-production-b14]
+    paths: [.build-gates/fitted-age-b14-request.txt]
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify SaaS Factory governance
         run: python3 scripts/check_saas_factory.py
-      - name: PostgreSQL B11 + Pulso Real B12 private-schema tests
+      - name: PostgreSQL B1-B14 age evidence, matching and reputation privacy tests
         run: |
           set -euo pipefail
           python3 - <<'PY'
