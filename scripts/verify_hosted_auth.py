@@ -21,7 +21,7 @@ class DoNotRedirect(HTTPRedirectHandler):
 
 def public_key():
     workflow = (Path(__file__).resolve().parents[1] /
-                ".github/workflows/cloudflare-pages-production.yml").read_text()
+                ".github/workflows/mfd-canonical-auth-release.yml").read_text()
     match = re.search(r"--dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=(sb_publishable_[A-Za-z0-9_-]+)", workflow)
     if not match:
         raise RuntimeError("Production publishable key is not configured")
