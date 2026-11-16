@@ -97,9 +97,12 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               height:1.5,fontSize:15)),
           SizedBox(height:wide?19:11),
           Wrap(spacing:8,runSpacing:8,children:[
-            _heroPill(Icons.directions_run_rounded,'How I Move'),
-            _heroPill(Icons.wb_twilight_outlined,'How I Live'),
-            _heroPill(Icons.connect_without_contact_outlined,'How I Relate'),
+            _heroPill(Icons.directions_run_rounded,
+              FittedLocaleScope.t(context,'Cómo me muevo','How I Move')),
+            _heroPill(Icons.wb_twilight_outlined,
+              FittedLocaleScope.t(context,'Cómo vivo','How I Live')),
+            _heroPill(Icons.connect_without_contact_outlined,
+              FittedLocaleScope.t(context,'Cómo me relaciono','How I Relate')),
           ]),
           SizedBox(height:wide?24:14),
           FilledButton.icon(

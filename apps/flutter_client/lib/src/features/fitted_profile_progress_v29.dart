@@ -56,8 +56,8 @@ class FittedProfileProgressV29 extends StatelessWidget {
           LinearProgressIndicator(
             key:Key('pillar-progress-$label'),
             value:value/100,minHeight:7,
-            backgroundColor:const Color(0xFF324640),
-            color:const Color(0xFFD5BE8A),
+            backgroundColor:Theme.of(context).colorScheme.outline.withValues(alpha:.2),
+            color:Theme.of(context).colorScheme.primary,
           ),
         ),
       ]),
@@ -82,8 +82,8 @@ class FittedProfileProgressV29 extends StatelessWidget {
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               children:[
                 Text(en?'YOUR PROFILE IS TAKING SHAPE':'TU PERFIL ESTÁ TOMANDO FORMA',
-                  style:const TextStyle(letterSpacing:1.2,
-                    color:Color(0xFFD5BE8A),fontWeight:FontWeight.w700,
+                  style:TextStyle(letterSpacing:1.2,
+                    color:Theme.of(context).colorScheme.primary,fontWeight:FontWeight.w700,
                     fontSize:11)),
                 const SizedBox(height:5),
                 Text(en?'A measure of what you have shared, not your value.':
@@ -95,9 +95,9 @@ class FittedProfileProgressV29 extends StatelessWidget {
               style:Theme.of(context).textTheme.headlineMedium),
           ]),
           const SizedBox(height:8),
-          _track(context,'How I Move',pillar[0]),
-          _track(context,'How I Live',pillar[1]),
-          _track(context,'How I Relate',pillar[2]),
+          _track(context,en?'How I Move':'Cómo me muevo',pillar[0]),
+          _track(context,en?'How I Live':'Cómo vivo',pillar[1]),
+          _track(context,en?'How I Relate':'Cómo me relaciono',pillar[2]),
           const SizedBox(height:13),
           Text(en
             ?'Optional answers do not block your progress.'

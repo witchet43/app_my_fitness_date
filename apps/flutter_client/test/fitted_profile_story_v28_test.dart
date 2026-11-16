@@ -26,9 +26,9 @@ void main(){
     await tester.pumpWidget(view());
     expect(find.byKey(const Key('profile-compact-identity')),findsOneWidget);
     expect(find.byKey(const Key('profile-rhythm-snapshot')),findsOneWidget);
-    expect(find.text('How I Move'),findsWidgets);
-    expect(find.text('How I Live'),findsWidgets);
-    expect(find.text('How I Relate'),findsWidgets);
+    expect(find.text('Cómo me muevo'),findsWidgets);
+    expect(find.text('Cómo vivo'),findsWidgets);
+    expect(find.text('Cómo me relaciono'),findsWidgets);
     expect(find.textContaining('Tu historia se construye con lo que haces'),
       findsOneWidget);
     expect(find.textContaining('No utilizar una biografía cliché'),findsNothing);

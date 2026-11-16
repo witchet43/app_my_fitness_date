@@ -1,5 +1,5 @@
 name: Fitted - canonical unified authentication release
-# Source of truth: main. Motion F icon and midnight aurora design system; B14 safety controls unchanged.
+# Source of truth: main. B16 home redesign, direct bilingual pillar navigation and luminous orbit F favicon.
 # Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
@@ -125,8 +125,8 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-motion-f-b15",
-            "brand_icon":"fitted-motion-f",
+            "visual_revision":"fitted-home-affinity-b16",
+            "brand_icon":"fitted-orbit-f",
             "pulso_real_feedback_enabled":False,
             "manual_age_verification":True,
             "dating_access":"reviewed_adults_with_operator_activation"
@@ -157,13 +157,16 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-motion-f-b15"
-                  assert info["brand_icon"]=="fitted-motion-f"
+                  assert info["visual_revision"]=="fitted-home-affinity-b16"
+                  assert info["brand_icon"]=="fitted-orbit-f"
                   assert info["manual_age_verification"] is True
                   assert info["dating_access"]=="reviewed_adults_with_operator_activation"
                   assert info["pulso_real_feedback_enabled"] is False
                   assert b"flutter" in get("/").lower()
                   assert len(get("/main.dart.js"))>1000
+                  html=get("/").decode("utf-8")
+                  assert "favicon.png?v=orbit-b16" in html
+                  assert "manifest.json?v=orbit-b16" in html
                   assert get("/favicon.png")[:8].hex()=="89504e470d0a1a0a"
                   assert get("/icons/Icon-192.png")[:8].hex()=="89504e470d0a1a0a"
                   assert len(get("/icons/Icon-512.png"))>5000

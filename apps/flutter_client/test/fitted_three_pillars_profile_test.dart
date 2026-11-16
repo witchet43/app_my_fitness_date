@@ -10,9 +10,9 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home:RhythmConceptLabB10(
       profileMode:true,
     )));
-    expect(find.text('How I Move'),findsWidgets);
-    expect(find.text('How I Live'),findsWidgets);
-    expect(find.text('How I Relate'),findsWidgets);
+    expect(find.text('Cómo me muevo'),findsWidgets);
+    expect(find.text('Cómo vivo'),findsWidgets);
+    expect(find.text('Cómo me relaciono'),findsWidgets);
     expect(find.text('Actividad principal'),findsOneWidget);
     expect(find.text('Ritmo de sueño'),findsNothing);
     await tester.tap(find.byKey(const Key('pillar-tab-1')));

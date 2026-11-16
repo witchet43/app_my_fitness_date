@@ -13,9 +13,9 @@ void main() {
     await tester.tap(find.byKey(const Key('preview-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('profile-compact-identity')), findsOneWidget);
-    expect(find.text('How I Move'), findsWidgets);
-    expect(find.text('How I Live'), findsWidgets);
-    expect(find.text('How I Relate'), findsWidgets);
+    expect(find.text('Cómo me muevo'), findsWidgets);
+    expect(find.text('Cómo vivo'), findsWidgets);
+    expect(find.text('Cómo me relaciono'), findsWidgets);
     await tester.tap(find.byKey(const Key('preview-tab-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('v26-profile-editor')), findsOneWidget);

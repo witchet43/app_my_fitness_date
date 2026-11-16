@@ -7,9 +7,10 @@ import 'rhythm_concept_lab_b10.dart';
 import 'fitted_profile_story_v28.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
+import 'fitted_affinity_home_v16.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
-import 'member_dashboard_b8.dart';
+import '../widgets/mfd_branding.dart';
 import 'community_b4.dart';
 import '../theme/fitness_date_theme.dart';
 import '../core/live_brand.dart';
@@ -272,6 +273,7 @@ class MemberProfileHomeV26 extends StatefulWidget {
 
 class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   late final Future<bool> lifestyleConsent;
+  bool consentGrantedInSession=false;
   int selectedArea = 0; // 0 = Inicio, 1 = Mi perfil
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
@@ -298,7 +300,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
         widget.api.loadPlaces(),widget.api.loadPhotos()]);
       if(mounted)setState((){places=result[0];photos=result[1];});
       // Private rhythm answers are fetched ONLY with separate dating consent.
-      final consent=await lifestyleConsent;
+      final consent=consentGrantedInSession || await lifestyleConsent;
       if(consent){
         try{
           final saved=await widget.api.loadRhythmB11();
@@ -325,12 +327,52 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     }
   }
 
-  Future<void> configurePillars() async {
-    final consent=await lifestyleConsent;
+  Future<void> configurePillars([int initialPillar=0]) async {
+    var consent=consentGrantedInSession || await lifestyleConsent;
+    if(!mounted)return;
+    if(!consent){
+      final approved=await showDialog<bool>(context:context,
+        builder:(dialog)=>AlertDialog(
+          title:Text(FittedLocaleScope.t(context,
+            'Tu estilo de vida es privado',
+            'Your lifestyle is private')),
+          content:Text(FittedLocaleScope.t(context,
+            'Para guardar tus tres pilares, acepta el consentimiento '
+            'independiente de FitDating. Tus respuestas permanecen privadas '
+            'y no activan el descubrimiento ni los mensajes automáticamente.',
+            'To save your three pillars, accept the separate FitDating '
+            'consent. Your answers stay private and do not automatically '
+            'enable discovery or messages.')),
+          actions:[
+            TextButton(
+              onPressed:()=>Navigator.of(dialog).pop(false),
+              child:Text(FittedLocaleScope.t(context,'Ahora no','Not now'))),
+            FilledButton(
+              key:const Key('pillars-consent-confirm'),
+              onPressed:()=>Navigator.of(dialog).pop(true),
+              child:Text(FittedLocaleScope.t(context,
+                'Acepto y continúo','I agree and continue'))),
+          ],
+        ),
+      );
+      if(!mounted||approved!=true)return;
+      try{
+        await widget.api.acceptDating();
+        consentGrantedInSession=true;
+        consent=true;
+      }catch(_){
+        if(mounted)ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          content:Text(FittedLocaleScope.t(context,
+            'No se pudo guardar tu consentimiento. Intenta de nuevo.',
+            'Could not save your consent. Try again.'))));
+        return;
+      }
+    }
     if(!mounted)return;
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder:(_)=>RhythmConceptLabB10(
-        repository:widget.api,canSave:consent,profileMode:true)));
+        repository:widget.api,canSave:consent,
+        profileMode:true,initialPillar:initialPillar)));
     if(mounted)await reload();
   }
 
@@ -432,7 +474,22 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     final p=widget.profile;
     return Scaffold(
       appBar:AppBar(
-        title:FittedText(LiveBrandScope.of(context).name),
+        titleSpacing:12,
+        title:Row(
+          mainAxisSize:MainAxisSize.min,
+          children:[
+            const MfdBranding(full:false,width:38),
+            const SizedBox(width:11),
+            Flexible(child:Text(
+              LiveBrandScope.of(context).name,
+              key:const Key('fitted-member-header-name'),
+              maxLines:1,overflow:TextOverflow.ellipsis,
+              style:const TextStyle(
+                fontSize:20,fontWeight:FontWeight.w800,
+                letterSpacing:.2),
+            )),
+          ],
+        ),
         actions:[
           const FittedLanguageSelector(),
           PopupMenuButton<String>(
@@ -441,6 +498,12 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             onSelected:(value) {
               if(value=='profile')setState(()=>selectedArea=1);
               if(value=='edit')widget.onEdit();
+              if(value=='activities')Navigator.of(context).push(
+                MaterialPageRoute<void>(builder:(_)=>
+                  ActivitiesB1(api:widget.api)));
+              if(value=='reservations')Navigator.of(context).push(
+                MaterialPageRoute<void>(builder:(_)=>
+                  MyActivitiesB2(api:widget.api)));
               if(value=='logout')widget.onLogout();
             },
             itemBuilder:(_)=>[
@@ -448,6 +511,11 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 child:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
               PopupMenuItem(value:'edit',
                 child:Text(FittedLocaleScope.t(context,'Editar perfil','Edit profile'))),
+              PopupMenuItem(value:'activities',
+                child:Text(FittedLocaleScope.t(context,'Actividades (opcional)','Activities (optional)'))),
+              PopupMenuItem(value:'reservations',
+                child:Text(FittedLocaleScope.t(context,'Mis reservas','My reservations'))),
+              const PopupMenuDivider(),
               PopupMenuItem(value:'logout',
                 child:Text(FittedLocaleScope.t(context,'Cerrar sesión','Sign out'))),
             ],
@@ -480,9 +548,10 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 FittedRhythmHero(
                   titleEs:'Hola, ' + (p['display_name']??'').toString().split(' ').first + '. Sigue tu ritmo.',
                   titleEn:'Hello, ' + (p['display_name']??'').toString().split(' ').first + '. Find your rhythm.',
-                  subtitleEs:'Conoce personas a tu ritmo y encuentra actividades que van contigo. Una afinidad que empieza en cómo vives.',
-                  subtitleEn:'Meet people at your pace and find activities that fit. Compatibility starts with how you live.',
+                  subtitleEs:'Conoce personas que comparten tu forma de vivir. La afinidad empieza en tu ritmo, tus valores y tus intenciones.',
+                  subtitleEn:'Meet people who share your approach to life. Compatibility starts with your rhythm, values and intentions.',
                   compact:true,
+                  onSelectPillar:(index)=>configurePillars(index),
                 ),
                 Padding(padding:const EdgeInsets.fromLTRB(20,14,20,20),
                   child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -508,16 +577,12 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               ]),
             ),
             const SizedBox(height:16),
-            MemberAgendaB8(
-              api:widget.api,
-              onExplore:()async {
-                await Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder:(_)=>ActivitiesB1(api:widget.api)));
-              },
-              onReservations:()async {
-                await Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder:(_)=>MyActivitiesB2(api:widget.api)));
-              },
+            FittedAffinityHomeV16(
+              rhythm:lifestyle,
+              onConfigurePillar:(index)=>configurePillars(index),
+              onDiscover:()=>Navigator.of(context).push(
+                MaterialPageRoute<void>(builder:(_)=>
+                  DatingV27(api:widget.api))),
             ),
             const SizedBox(height:12),
             OutlinedButton.icon(
@@ -555,7 +620,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               profile:p,rhythm:lifestyle,
               startingPreference:startingRhythm,
               onChooseStarting:setStartingRhythm,
-              onConfigure:configurePillars,
+              onConfigure:()=>configurePillars(),
               onEditIdentity:widget.onEdit,
             ),
           ),

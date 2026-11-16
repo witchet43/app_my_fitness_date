@@ -48,9 +48,9 @@ void main(){
         ))));
       expect(find.byType(FittedRhythmLines),findsOneWidget);
       expect(find.byType(FittedGlassPanel),findsOneWidget);
-      expect(find.text('How I Move'),findsOneWidget);
-      expect(find.text('How I Live'),findsOneWidget);
-      expect(find.text('How I Relate'),findsOneWidget);
+      expect(find.text('Cómo me muevo'),findsOneWidget);
+      expect(find.text('Cómo vivo'),findsOneWidget);
+      expect(find.text('Cómo me relaciono'),findsOneWidget);
       expect(tester.takeException(),isNull);
     });
 

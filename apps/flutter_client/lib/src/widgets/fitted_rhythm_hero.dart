@@ -14,10 +14,14 @@ class FittedRhythmHero extends StatelessWidget {
     required this.subtitleEn,
     this.compact = false,
     this.showPillars = true,
+    this.onSelectPillar,
   });
 
   final String titleEs, titleEn, subtitleEs, subtitleEn;
   final bool compact, showPillars;
+  /// Routes to the corresponding private lifestyle setup when supplied.
+  /// Public/unauthenticated hero has no profile access.
+  final ValueChanged<int>? onSelectPillar;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +36,7 @@ class FittedRhythmHero extends StatelessWidget {
           border: Border.all(color: FitDateColors.aqua.withValues(alpha: .32)),
           gradient: const LinearGradient(
             begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: [Color(0xFF173D45), Color(0xFF182932), Color(0xFF252839)],
+            colors: [Color(0xFF17274A), Color(0xFF181D3E), Color(0xFF282143)],
           ),
           boxShadow: [BoxShadow(
             color: FitDateColors.aqua.withValues(alpha: .09),
@@ -98,12 +102,24 @@ class FittedRhythmHero extends StatelessWidget {
                   if (showPillars) ...[
                     SizedBox(height: compact ? 15 : 22),
                     Wrap(spacing: 8, runSpacing: 9, children: [
-                      _PillarPill(icon: Icons.directions_run_rounded,
-                        text: 'How I Move', color: FitDateColors.aqua),
-                      _PillarPill(icon: Icons.wb_twilight_outlined,
-                        text: 'How I Live', color: FitDateColors.apricot),
-                      _PillarPill(icon: Icons.connect_without_contact_outlined,
-                        text: 'How I Relate', color: FitDateColors.lilac),
+                      _PillarPill(
+                        key:const Key('hero-pillar-move'),
+                        icon:Icons.directions_run_rounded,
+                        text:en?'How I Move':'Cómo me muevo',
+                        color:FitDateColors.aqua,
+                        onTap:onSelectPillar==null?null:()=>onSelectPillar!(0)),
+                      _PillarPill(
+                        key:const Key('hero-pillar-live'),
+                        icon:Icons.wb_twilight_outlined,
+                        text:en?'How I Live':'Cómo vivo',
+                        color:FitDateColors.apricot,
+                        onTap:onSelectPillar==null?null:()=>onSelectPillar!(1)),
+                      _PillarPill(
+                        key:const Key('hero-pillar-relate'),
+                        icon:Icons.connect_without_contact_outlined,
+                        text:en?'How I Relate':'Cómo me relaciono',
+                        color:FitDateColors.lilac,
+                        onTap:onSelectPillar==null?null:()=>onSelectPillar!(2)),
                     ]),
                   ],
                 ],
@@ -117,16 +133,28 @@ class FittedRhythmHero extends StatelessWidget {
 }
 
 class _PillarPill extends StatelessWidget {
-  const _PillarPill({required this.icon, required this.text, required this.color});
+  const _PillarPill({
+    super.key,required this.icon,required this.text,
+    required this.color,this.onTap,
+  });
   final IconData icon;
   final String text;
   final Color color;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => Semantics(
+    button:onTap!=null,
+    enabled:onTap!=null,
+    child:Material(
+      color:Colors.transparent,
+      child:InkWell(
+        borderRadius:BorderRadius.circular(100),
+        onTap:onTap,
+        child:Container(
     padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
     decoration: BoxDecoration(
-      color: const Color(0xFF0D1921).withValues(alpha: .5),
+      color: FitDateColors.inkDeep.withValues(alpha: .7),
       border: Border.all(color: color.withValues(alpha: .38)),
       borderRadius: BorderRadius.circular(100),
     ),
@@ -136,5 +164,8 @@ class _PillarPill extends StatelessWidget {
       Text(text, style: const TextStyle(color: FitDateColors.pearl,
         fontSize: 11, fontWeight: FontWeight.w700)),
     ]),
+      ),
+    ),
+    ),
   );
 }
