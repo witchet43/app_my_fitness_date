@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -392,6 +394,8 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
 
   Future<Map<String, dynamic>> saveProfile(Map<String, dynamic> profile) async {
     final result = _decode(await _request('PUT', '/v1/me/profile', data: profile));
+    // Profile save must remain successful even when external AI is offline.
+    try{await regenerateSummaryB17();}catch(_){/* SQL editorial summary is fresh. */}
     return result['profile'] as Map<String, dynamic>;
   }
 
@@ -431,6 +435,7 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   @override
   Future<void> saveRhythmB11(Map<String,dynamic> draft) async {
     _decode(await _request('PUT','/v1/dating/rhythm',data:draft));
+    try{await regenerateSummaryB17();}catch(_){/* SQL summary remains fresh. */}
   }
 
   @override
@@ -776,25 +781,113 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
         .cast<Map<String, dynamic>>();
   }
 
-  Future<List<Map<String, dynamic>>> loadPhotos() async {
-    final body = _decode(await _request('GET', '/v1/me/photos'));
-    return (body['photos'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
+  // B17: user-owned, private and EXIF-stripped images. No open media links.
+  Future<List<Map<String,dynamic>>> loadPhotos() async {
+    final data=await auth.from('member_media_v26')
+        .select('id,object_key,position,moderation_state,created_at')
+        .order('position');
+    return data.map((e)=>Map<String,dynamic>.from(e)).toList();
   }
 
-  Future<void> uploadPhoto(Uint8List bytes, String contentType) async {
-    await _request('POST', '/v1/me/photos',
-        body: bytes, contentType: contentType);
+  static String _photoUuid(){
+    final rnd=Random.secure();
+    final b=List<int>.generate(16,(_)=>rnd.nextInt(256));
+    b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;
+    final s=b.map((v)=>v.toRadixString(16).padLeft(2,'0')).join();
+    return '${s.substring(0,8)}-${s.substring(8,12)}-${s.substring(12,16)}-${s.substring(16,20)}-${s.substring(20)}';
+  }
+
+  Future<void> uploadPhoto(Uint8List bytes,String contentType) async {
+    final uid=auth.auth.currentUser?.id;
+    if(uid==null||bytes.length>6*1024*1024||bytes.isEmpty||
+       !const ['image/png','image/jpeg'].contains(contentType)){
+      throw const MemberApiException('Foto inválida. Usa JPG o PNG de hasta 6 MB.');
+    }
+    // Decode and export to PNG to remove GPS/EXIF and normalize the image.
+    final codec=await ui.instantiateImageCodec(bytes,targetWidth:1024,
+        targetHeight:1024,allowUpscaling:false);
+    final frame=await codec.getNextFrame();
+    final byteData=await frame.image.toByteData(format:ui.ImageByteFormat.png);
+    frame.image.dispose();codec.dispose();
+    final safe=byteData?.buffer.asUint8List();
+    if(safe==null||safe.isEmpty||safe.length>5242880){
+      throw const MemberApiException('Foto demasiado grande después de quitar metadatos.');
+    }
+    // Position zero is the public-eligible primary photo. Remove old image only
+    // by explicit user action; clients may never self-approve moderation.
+    final current=await loadPhotos();
+    if(current.any((p)=>p['position']==0)){
+      throw const MemberApiException('Elimina la foto anterior antes de reemplazarla.');
+    }
+    final key='$uid/${_photoUuid()}.png';
+    await auth.storage.from('mfd-profile-private').uploadBinary(
+       key,safe,fileOptions:const FileOptions(contentType:'image/png',upsert:false));
+    try{
+      await auth.from('member_media_v26').insert({
+        'user_id':uid,'object_key':key,
+        'alt_text':'Foto principal','position':0,
+      });
+    }catch(_){
+      await auth.storage.from('mfd-profile-private').remove([key]);
+      throw const MemberApiException('No se pudo guardar la foto de forma privada.');
+    }
   }
 
   Future<Uint8List> photoContent(String id) async {
-    final resp = await _request('GET', '/v1/me/photos/$id/content');
-    return resp.bodyBytes;
+    if(!_validActivityId(id))throw const MemberApiException('Fotografía inválida.');
+    final row=await auth.from('member_media_v26')
+      .select('object_key').eq('id',id).maybeSingle();
+    final key=row?['object_key']?.toString();
+    if(key==null)throw const MemberApiException('Foto no disponible.');
+    return auth.storage.from('mfd-profile-private').download(key);
   }
 
   Future<void> removePhoto(String id) async {
-    await _request('DELETE', '/v1/me/photos/$id');
+    if(!_validActivityId(id))throw const MemberApiException('Fotografía inválida.');
+    final row=await auth.from('member_media_v26')
+      .select('object_key').eq('id',id).maybeSingle();
+    if(row==null)return;
+    final key=row['object_key'].toString();
+    await auth.storage.from('mfd-profile-private').remove([key]);
+    await auth.from('member_media_v26').delete().eq('id',id);
   }
+
+  Future<Map<String,dynamic>> mySummaryB17() async =>
+    Map<String,dynamic>.from(await auth.rpc('fitted_my_summary_b17') as Map);
+
+  Future<String> setSummaryConsentB17({
+    required bool ai,required bool share,
+  }) async => (await auth.rpc('fitted_summary_consent_b17',
+    params:{'p_ai':ai,'p_share':share}))?.toString()??'not_available';
+
+  Future<Map<String,dynamic>> regenerateSummaryB17() async =>
+    _decode(await _request('POST','/v1/me/summary/regenerate'));
+
+  Future<Map<String,dynamic>> candidateCardB17(String id) async {
+    if(!_validActivityId(id))return {'visible':false};
+    return Map<String,dynamic>.from(await auth.rpc(
+      'fitted_candidate_card_b17',params:{'p_target':id}) as Map);
+  }
+
+  Future<Uint8List> approvedCandidatePhotoB17(String path) async {
+    if(!RegExp(r'^[0-9a-f-]{36}/[0-9a-f-]{36}[.](jpg|png)$',
+         caseSensitive:false).hasMatch(path)){
+      throw const MemberApiException('Foto no disponible.');
+    }
+    // Storage RLS re-verifies both members, photo moderation and share consent.
+    return auth.storage.from('mfd-profile-private').download(path);
+  }
+
+  Future<List<Map<String,dynamic>>> adminPhotoQueueB17() async {
+    final rows=await auth.rpc('fitted_photo_review_queue_b17');
+    return (rows as List).map((e)=>Map<String,dynamic>.from(e as Map)).toList();
+  }
+  Future<Uint8List> adminPhotoPreviewB17(String key) async =>
+    auth.storage.from('mfd-profile-private').download(key);
+  Future<String> adminPhotoDecideB17(String id,String decision,String reason) async =>
+    (await auth.rpc('fitted_photo_review_b17',params:{
+      'p_photo':id,'p_decision':decision,'p_note':reason.trim(),
+    }))?.toString()??'not_available';
 }
 
 class MemberApiException implements Exception {
