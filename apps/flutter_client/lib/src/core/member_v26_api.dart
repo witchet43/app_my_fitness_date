@@ -620,7 +620,7 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
     Map<String,dynamic>.from(await auth.rpc('age_review_status_b14') as Map);
 
   Future<Map<String,dynamic>> ageBeginB14() async =>
-    Map<String,dynamic>.from(await auth.rpc('age_start_review_b14') as Map);
+    Map<String,dynamic>.from(await auth.rpc('age_start_review_b14',params:{'p_consent':true}) as Map);
 
   Future<String> ageSubmitB14(String requestId) async =>
     (await auth.rpc('age_submit_review_b14',params:{
@@ -649,6 +649,11 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
 
   Future<List<Map<String,dynamic>>> adminAgeQueueB14() async {
     final values=await auth.rpc('admin_age_queue_b14');
+    return (values as List).map((v)=>Map<String,dynamic>.from(v as Map)).toList();
+  }
+
+  Future<List<Map<String,dynamic>>> adminAgeErasureQueueB14() async {
+    final values=await auth.rpc('admin_age_erasure_queue_b14');
     return (values as List).map((v)=>Map<String,dynamic>.from(v as Map)).toList();
   }
 
