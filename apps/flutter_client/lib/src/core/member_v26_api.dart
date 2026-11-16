@@ -543,6 +543,12 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   @override
+  Future<String> setPulseRealConsentB12(bool accepted) async {
+    return _decode(await _request('POST','/v1/dating/b11/pulse/consent',
+      data:{'accepted':accepted}))['status']?.toString()??'not_available';
+  }
+
+  @override
   Future<String> confirmMeetupB12(String matchId) async {
     if(!_validActivityId(matchId)) {
       throw const MemberApiException('Match inválido.');
