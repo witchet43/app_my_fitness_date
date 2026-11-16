@@ -5,3 +5,5 @@ QA retry: respect revoked AI role execution (insufficient_privilege), correct de
 QA retry 2: insert RLS-enforced media metadata permission missing in inherited DB, validated against actual production permission. Re-run SQL+API+Flutter.
 
 QA retry 3: all 34 migrations and SQL privacy tests PASS; TypeScript invalid escaped regex replaced by constructor. Now test AI Edge + full Flutter.
+
+QA retry 4: 34 SQL migrations/test and Deno AI checks PASS. Fix extra Row parenthesis in responsive fits card + remove invalid constant key in test.
