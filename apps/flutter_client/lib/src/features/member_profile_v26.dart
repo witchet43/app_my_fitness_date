@@ -14,6 +14,7 @@ import 'community_b4.dart';
 import '../theme/fitness_date_theme.dart';
 import '../core/live_brand.dart';
 import '../core/fitted_locale.dart';
+import '../widgets/fitted_rhythm_hero.dart';
 
 List<String> _tokens(String text) => text.split(',')
     .map((x) => x.trim()).where((x) => x.isNotEmpty).toSet().toList();
@@ -84,13 +85,46 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
           ?'Completa este campo':null:null,
     ));
 
-  Widget heading(String title, IconData icon, Color color) =>
-    Padding(padding:const EdgeInsets.fromLTRB(0,18,0,12),
-      child:Row(children:[
-        Icon(icon,color:color),const SizedBox(width:10),
-        Flexible(child:FittedText(title,style:const TextStyle(
-          fontSize:21,fontWeight:FontWeight.w900))),
-      ]));
+  Widget heading(String title, IconData icon, Color color) {
+    final number = title == 'Mi historia personal' ? '01'
+      : title == 'Mi mundo fitness' ? '02' : '03';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 26, 0, 13),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(colors: [
+            color.withValues(alpha: .16),
+            FitDateColors.surface.withValues(alpha: .98),
+          ]),
+          border: Border.all(color: color.withValues(alpha: .32)),
+        ),
+        child: Row(children: [
+          Container(
+            width: 42, height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .16),
+              borderRadius: BorderRadius.circular(14)),
+            child: Icon(icon, color: color, size: 21),
+          ),
+          const SizedBox(width: 13),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('FITTED / $number', style: TextStyle(
+                fontSize: 10, letterSpacing: 1.7, fontWeight: FontWeight.w800,
+                color: color)),
+              const SizedBox(height: 3),
+              FittedText(title, style: const TextStyle(
+                fontSize: 19, fontWeight: FontWeight.w700)),
+            ],
+          )),
+          Icon(Icons.arrow_outward_rounded, size: 18,
+            color: color.withValues(alpha: .65)),
+        ]),
+      ),
+    );
+  }
 
   Future<void> save() async {
     if (!form.currentState!.validate()) return;
@@ -129,13 +163,24 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
 
   @override
   Widget build(BuildContext context) => Form(key:form,
-    child:ListView(padding:const EdgeInsets.all(22),children:[
+    child:ListView(padding:const EdgeInsets.symmetric(horizontal:20,vertical:22),children:[
+      const FittedRhythmHero(
+        titleEs:'Lo que te mueve, te conecta.',
+        titleEn:'What moves you, connects you.',
+        subtitleEs:'Construye un perfil que hable de tu energía, tus valores y el espacio que quieres compartir con alguien.',
+        subtitleEn:'Build a profile shaped by your energy, values and the space you want to share with someone.',
+        compact:true,
+      ),
+      const SizedBox(height:23),
       const FittedText('Mi perfil 360°',key:Key('v26-profile-editor'),
-        style:TextStyle(fontSize:31,fontWeight:FontWeight.w900)),
+        style:TextStyle(fontSize:27,fontWeight:FontWeight.w800)),
+      const SizedBox(height:8),
+      const FittedText('Tu historia va más allá del entrenamiento. Tú decides qué compartir; tus datos son privados por defecto.',
+        style:TextStyle(color:FitDateColors.muted,height:1.5)),
       const SizedBox(height:9),
-      const FittedText('Quién eres como persona y cómo disfrutas el movimiento. '
-        'Los datos están privados por defecto.',
-        style:TextStyle(color:FitDateColors.muted)),
+      const FittedText('MOVE  /  LIVE  /  RELATE',
+        style:TextStyle(fontSize:10,letterSpacing:2,
+          fontWeight:FontWeight.w800,color:FitDateColors.aqua)),
       heading('Mi historia personal',Icons.favorite_border,FitDateColors.coral),
       input('display_name','Nombre visible',required:true,maxLength:60),
       input('date_of_birth','Nacimiento privado · AAAA-MM-DD',
