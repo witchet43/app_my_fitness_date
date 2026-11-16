@@ -2,3 +2,5 @@ B16 2026-11-16: run all Flutter regressions and web release for the member-home 
 QA retry: accept optimized generated 160x160 orbit source while producing independent 48/192/512 PNG icons; all Flutter regressions follow.
 
 Final QA rerun: 106 earlier tests passed; English-only assertions updated to true Spanish locale, and cached pillar editor state tracks changed initialPillar target; regenerate oval favicon and execute all web tests.
+
+FINAL release-candidate check after green QA 43953298070: enforce explicit B16 privacy-consent before save while preserving 3 direct pillar routes, full Flutter regression and versioned orbit PWA icons.
