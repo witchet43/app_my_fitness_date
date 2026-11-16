@@ -273,6 +273,7 @@ class MemberProfileHomeV26 extends StatefulWidget {
 
 class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   late final Future<bool> lifestyleConsent;
+  bool consentGrantedInSession=false;
   int selectedArea = 0; // 0 = Inicio, 1 = Mi perfil
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
@@ -299,7 +300,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
         widget.api.loadPlaces(),widget.api.loadPhotos()]);
       if(mounted)setState((){places=result[0];photos=result[1];});
       // Private rhythm answers are fetched ONLY with separate dating consent.
-      final consent=await lifestyleConsent;
+      final consent=consentGrantedInSession || await lifestyleConsent;
       if(consent){
         try{
           final saved=await widget.api.loadRhythmB11();
@@ -327,7 +328,46 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   }
 
   Future<void> configurePillars([int initialPillar=0]) async {
-    final consent=await lifestyleConsent;
+    var consent=consentGrantedInSession || await lifestyleConsent;
+    if(!mounted)return;
+    if(!consent){
+      final approved=await showDialog<bool>(context:context,
+        builder:(dialog)=>AlertDialog(
+          title:Text(FittedLocaleScope.t(context,
+            'Tu estilo de vida es privado',
+            'Your lifestyle is private')),
+          content:Text(FittedLocaleScope.t(context,
+            'Para guardar tus tres pilares, acepta el consentimiento '
+            'independiente de FitDating. Tus respuestas permanecen privadas '
+            'y no activan el descubrimiento ni los mensajes automáticamente.',
+            'To save your three pillars, accept the separate FitDating '
+            'consent. Your answers stay private and do not automatically '
+            'enable discovery or messages.')),
+          actions:[
+            TextButton(
+              onPressed:()=>Navigator.of(dialog).pop(false),
+              child:Text(FittedLocaleScope.t(context,'Ahora no','Not now'))),
+            FilledButton(
+              key:const Key('pillars-consent-confirm'),
+              onPressed:()=>Navigator.of(dialog).pop(true),
+              child:Text(FittedLocaleScope.t(context,
+                'Acepto y continúo','I agree and continue'))),
+          ],
+        ),
+      );
+      if(!mounted||approved!=true)return;
+      try{
+        await widget.api.acceptDating();
+        consentGrantedInSession=true;
+        consent=true;
+      }catch(_){
+        if(mounted)ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          content:Text(FittedLocaleScope.t(context,
+            'No se pudo guardar tu consentimiento. Intenta de nuevo.',
+            'Could not save your consent. Try again.'))));
+        return;
+      }
+    }
     if(!mounted)return;
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder:(_)=>RhythmConceptLabB10(
