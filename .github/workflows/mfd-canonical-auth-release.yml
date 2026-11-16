@@ -1,5 +1,5 @@
 name: Fitted - canonical unified authentication release
-# Source of truth: main. B14 private ID verification, human approval and manual operator release.
+# Source of truth: main. Motion F icon and midnight aurora design system; B14 safety controls unchanged.
 # Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
@@ -42,6 +42,12 @@ jobs:
         run: |
           flutter create --platforms=web . --project-name=my_fitness_date
           flutter pub get
+      - name: Generate Fitted Motion F favicon, PWA and mobile-ready icons
+        run: |
+          python3 -m venv .fitted-brand-venv
+          .fitted-brand-venv/bin/python -m pip install --disable-pip-version-check --quiet Pillow==11.3.0
+          .fitted-brand-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
+          .fitted-brand-venv/bin/python scripts/check_fitted_brand_assets.py --project apps/flutter_client
       - name: Validate source, one canonical URL and legal documents
         run: |
           python3 scripts/verify_hosted_auth.py
@@ -119,7 +125,8 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-verified-dating-b14",
+            "visual_revision":"fitted-motion-f-b15",
+            "brand_icon":"fitted-motion-f",
             "pulso_real_feedback_enabled":False,
             "manual_age_verification":True,
             "dating_access":"reviewed_adults_with_operator_activation"
@@ -150,12 +157,21 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-verified-dating-b14"
+                  assert info["visual_revision"]=="fitted-motion-f-b15"
+                  assert info["brand_icon"]=="fitted-motion-f"
                   assert info["manual_age_verification"] is True
                   assert info["dating_access"]=="reviewed_adults_with_operator_activation"
                   assert info["pulso_real_feedback_enabled"] is False
                   assert b"flutter" in get("/").lower()
                   assert len(get("/main.dart.js"))>1000
+                  assert get("/favicon.png")[:8].hex()=="89504e470d0a1a0a"
+                  assert get("/icons/Icon-192.png")[:8].hex()=="89504e470d0a1a0a"
+                  assert len(get("/icons/Icon-512.png"))>5000
+                  assert get("/icon.webp")[:4]==b"RIFF"
+                  brand_manifest=json.loads(get("/manifest.json"))
+                  assert brand_manifest["name"]=="Fitted"
+                  assert brand_manifest["theme_color"]=="#0D1030"
+                  assert any(item["sizes"]=="512x512" for item in brand_manifest["icons"])
                   for slug in ("terms","privacy"):
                       assert b"<html" in get("/"+slug+"/").lower()
                   print("CANONICAL RELEASE VERIFIED:",home+"/","COMMIT:",sha)
