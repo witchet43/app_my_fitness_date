@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/dating_repository_b11.dart';
 import '../core/fitted_match_engine.dart';
 import '../core/fitted_locale.dart';
+import 'fitted_pulse_real_b12.dart';
 
 /// This UI can ONLY be reached after the server returns enabled=true.
 class DatingDiscoveryB11 extends StatefulWidget {
@@ -360,6 +361,11 @@ class _DatingChatB11State extends State<DatingChatB11>{
         const Padding(
           padding:EdgeInsets.all(8),
           child:FittedText('Active Date: ideas, no reservas ni ubicaciones reales.')),
+        Padding(
+          padding:const EdgeInsets.fromLTRB(12,6,12,14),
+          child:FittedPulseRealPanel(
+            api:widget.api,matchId:widget.matchId),
+        ),
         Row(children:[
           Expanded(child:TextField(
             key:const Key('b11-message-input'),
