@@ -30,6 +30,35 @@ create index if not exists fitted_signals_review_b12
 alter table app_private.fitted_signals_b12 enable row level security;
 revoke all on app_private.fitted_signals_b12 from public,anon,authenticated;
 
+-- Separate opt-in for post-date reputation processing; either participant can
+-- revoke it and erase their own or about-them observations.
+create table if not exists app_private.fitted_pulse_consents_b12 (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  accepted_at timestamptz not null default now(),
+  document_version text not null default 'pulso-real-v1'
+);
+alter table app_private.fitted_pulse_consents_b12 enable row level security;
+revoke all on app_private.fitted_pulse_consents_b12 from public,anon,authenticated;
+
+create or replace function public.fitted_consent_b12(p_accept boolean)
+returns text language plpgsql security definer set search_path=''
+as $
+declare me uuid:=auth.uid();
+begin
+  if me is null or p_accept is null then return 'not_available'; end if;
+  if p_accept then
+    if not app_private.b11_member_eligible(me) then return 'not_available'; end if;
+    insert into app_private.fitted_pulse_consents_b12(user_id)
+      values(me) on conflict(user_id) do update set accepted_at=now();
+    return 'accepted';
+  end if;
+  delete from app_private.fitted_pulse_consents_b12 where user_id=me;
+  delete from app_private.fitted_signals_b12 where author_id=me or subject_id=me;
+  delete from app_private.fitted_meetups_b12 where user_id=me;
+  return 'withdrawn';
+end;
+$;
+
 -- Callers never supply the target identity: derive it from server-side match.
 create or replace function public.fitted_confirm_meetup_b12(p_match uuid)
 returns text language plpgsql security definer set search_path=''
@@ -44,6 +73,8 @@ begin
     or match_at<=app_private.b11_pair_epoch(a,b) then
     return 'not_available';
   end if;
+  if not exists(select 1 from app_private.fitted_pulse_consents_b12
+      where user_id=me) then return 'consent_required'; end if;
   insert into app_private.fitted_meetups_b12(match_id,user_id)
     values(p_match,me) on conflict do nothing;
   if (select count(*) from app_private.fitted_meetups_b12
@@ -72,6 +103,10 @@ begin
       where match_id=p_match),
     'my_observations',(select count(*) from app_private.fitted_signals_b12
       where match_id=p_match and author_id=me),
+    'my_consent',exists(select 1 from app_private.fitted_pulse_consents_b12
+      where user_id=me),
+    'both_consented',(select count(*)=2 from app_private.fitted_pulse_consents_b12
+      where user_id in (a,b)),
     'public_visible',false
   );
 end;
@@ -94,6 +129,8 @@ begin
     or not app_private.b11_pair_allowed(a,b)
     or match_at<=app_private.b11_pair_epoch(a,b)
   then return 'not_available'; end if;
+  if (select count(*) from app_private.fitted_pulse_consents_b12
+      where user_id in(a,b))<>2 then return 'consent_required'; end if;
   if (select count(*) from app_private.fitted_meetups_b12
       where match_id=p_match)<>2 then return 'meeting_not_confirmed'; end if;
   other_id:=case when me=a then b else a end;
@@ -106,11 +143,13 @@ begin
 end;
 $$;
 
-revoke all on function public.fitted_confirm_meetup_b12(uuid),
+revoke all on function public.fitted_consent_b12(boolean),
+ public.fitted_confirm_meetup_b12(uuid),
  public.fitted_signal_status_b12(uuid),
  public.fitted_submit_signal_b12(uuid,text,text)
  from public,anon,authenticated;
-grant execute on function public.fitted_confirm_meetup_b12(uuid),
+grant execute on function public.fitted_consent_b12(boolean),
+ public.fitted_confirm_meetup_b12(uuid),
  public.fitted_signal_status_b12(uuid),
  public.fitted_submit_signal_b12(uuid,text,text) to authenticated;
 comment on table app_private.fitted_signals_b12 is
