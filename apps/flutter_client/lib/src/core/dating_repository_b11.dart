@@ -25,4 +25,9 @@ abstract class DatingRepositoryB11 extends DatingRepositoryB5 {
   /// Private observation, never published as an accusation or unreviewed score.
   Future<String> submitPulseRealB12(String matchId,
       String dimension,String observation);
+  /// Only the profile subject can see reviewed observations about themselves.
+  Future<List<Map<String,dynamic>>> myPulseObservationsB13();
+  Future<String> appealPulseObservationB13(String signalId,String statement);
+  Future<String> retractPulseObservationB13(String signalId);
+
 }
