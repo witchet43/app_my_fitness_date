@@ -614,6 +614,174 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
     }))['status']?.toString()??'not_available';
   }
 
+
+  // B14: age verification never grants permission on client self-declaration.
+  Future<Map<String,dynamic>> ageReviewStatusB14() async =>
+    Map<String,dynamic>.from(await auth.rpc('age_review_status_b14') as Map);
+
+  Future<Map<String,dynamic>> ageBeginB14() async =>
+    Map<String,dynamic>.from(await auth.rpc('age_start_review_b14') as Map);
+
+  Future<String> ageSubmitB14(String requestId) async =>
+    (await auth.rpc('age_submit_review_b14',params:{
+      'p_request':requestId}))?.toString()??'not_available';
+
+  Future<String> ageCancelB14() async =>
+    (await auth.rpc('age_cancel_review_b14'))?.toString()??'not_available';
+
+  Future<void> ageUploadB14({
+    required String requestId,
+    required String slot,
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    final me=auth.auth.currentUser?.id;
+    if(me==null || !_validActivityId(requestId) ||
+       !const ['document','selfie'].contains(slot) ||
+       !const ['image/jpeg','image/png'].contains(contentType) ||
+       bytes.isEmpty || bytes.length>5242880){
+      throw const MemberApiException('Documento inválido. Selecciona JPG o PNG de hasta 5 MB.');
+    }
+    await auth.storage.from('mfd-age-proof')
+      .uploadBinary('$me/$requestId/$slot',bytes,
+        fileOptions:FileOptions(contentType:contentType,upsert:true));
+  }
+
+  Future<List<Map<String,dynamic>>> adminAgeQueueB14() async {
+    final values=await auth.rpc('admin_age_queue_b14');
+    return (values as List).map((v)=>Map<String,dynamic>.from(v as Map)).toList();
+  }
+
+  Future<Uint8List> adminAgeEvidenceB14(String path) async {
+    if(!RegExp(r'^[0-9a-f-]{36}/[0-9a-f-]{36}/(document|selfie)
+      _decode(await _request('GET', '/v1/dating/status'));
+
+  Future<void> acceptDating() async {
+    await _request('POST', '/v1/dating/consent',
+        data: {'opt_in': true});
+  }
+
+  @override
+  Future<String> saveDatingPreferences(Map<String,dynamic> draft) async {
+    final response = _decode(await _request(
+      'POST','/v1/dating/preferences',data:draft,
+    ));
+    if (response['status'] != 'saved') {
+      throw const MemberApiException('No fue posible guardar tus preferencias.');
+    }
+    return 'saved';
+  }
+
+  @override
+  Future<String> disableDating() async {
+    final response = _decode(await _request(
+      'POST','/v1/dating/disable',
+    ));
+    if (response['status'] != 'disabled') {
+      throw const MemberApiException('No pudimos desactivar FitDating.');
+    }
+    return 'disabled';
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> datingCandidates() async {
+    final response = _decode(await _request('GET', '/v1/dating/candidates'));
+    return (response['items'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> loadPhotos() async {
+    final body = _decode(await _request('GET', '/v1/me/photos'));
+    return (body['photos'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+  }
+
+  Future<void> uploadPhoto(Uint8List bytes, String contentType) async {
+    await _request('POST', '/v1/me/photos',
+        body: bytes, contentType: contentType);
+  }
+
+  Future<Uint8List> photoContent(String id) async {
+    final resp = await _request('GET', '/v1/me/photos/$id/content');
+    return resp.bodyBytes;
+  }
+
+  Future<void> removePhoto(String id) async {
+    await _request('DELETE', '/v1/me/photos/$id');
+  }
+}
+
+class MemberApiException implements Exception {
+  const MemberApiException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+,
+          caseSensitive:false).hasMatch(path)){
+      throw const MemberApiException('Referencia de evidencia inválida.');
+    }
+    return auth.storage.from('mfd-age-proof').download(path);
+  }
+
+  Future<String> adminAgeDecideB14({
+    required String requestId,
+    required String decision,
+    DateTime? documentedBirthdate,
+    DateTime? documentExpiry,
+    required bool documentValid,
+    required bool photoMatch,
+    required String reason,
+  }) async {
+    if(!_validActivityId(requestId) ||
+        !const ['approved','rejected'].contains(decision) ||
+        reason.trim().length<10||reason.trim().length>500){
+      throw const MemberApiException('Completa una decisión y justificación válidas.');
+    }
+    String? day(DateTime? d)=>d==null?null:
+      '${d.year.toString().padLeft(4,'0')}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
+    return (await auth.rpc('admin_age_decide_b14',params:{
+      'p_request':requestId,'p_decision':decision,
+      'p_document_birthdate':day(documentedBirthdate),
+      'p_document_valid':documentValid,'p_photo_match':photoMatch,
+      'p_document_expiry':day(documentExpiry),'p_note':reason.trim(),
+    }))?.toString()??'not_available';
+  }
+
+  Future<String> adminAgePurgeB14({
+    required String requestId,
+    required String documentPath,
+    required String selfiePath,
+  }) async {
+    await auth.storage.from('mfd-age-proof')
+      .remove([documentPath,selfiePath]);
+    return (await auth.rpc('admin_age_mark_erased_b14',params:{
+      'p_request':requestId}))?.toString()??'not_available';
+  }
+
+  Future<String> agePurgeOwnB14(String requestId) async {
+    final me=auth.auth.currentUser?.id;
+    if(me==null || !_validActivityId(requestId))return 'not_available';
+    await auth.storage.from('mfd-age-proof')
+      .remove(['$me/$requestId/document','$me/$requestId/selfie']);
+    return 'removed';
+  }
+
+  Future<Map<String,dynamic>> manualDatingStatusB14() async =>
+    Map<String,dynamic>.from(await auth.rpc('dating_manual_status_b14') as Map);
+
+  Future<String> adminDatingLaunchB14({
+    required bool enabled,
+    required bool operatorAck,
+    required bool privacyAck,
+    required bool incidentAck,
+    required String responsibility,
+  }) async =>(await auth.rpc('admin_dating_launch_b14',params:{
+    'p_enabled':enabled,'p_operator_ack':operatorAck,
+    'p_privacy_ack':privacyAck,'p_incident_ack':incidentAck,
+    'p_responsibility':responsibility,
+  }))?.toString()??'not_available';
+
   Future<Map<String, dynamic>> datingStatus() async =>
       _decode(await _request('GET', '/v1/dating/status'));
 
