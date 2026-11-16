@@ -84,11 +84,13 @@ using(bucket_id='mfd-age-proof' and (
         and r.user_id=auth.uid() and r.status in ('draft','cancelled','rejected')))
 ));
 
-create function public.age_start_review_b14()
+create function public.age_start_review_b14(p_consent boolean)
 returns jsonb language plpgsql security definer set search_path=''
 as $$
 declare me uuid:=auth.uid(); id_value uuid; existing text; 
 begin
+ if p_consent is distinct from true then
+    return jsonb_build_object('status','consent_required'); end if;
  if me is null or coalesce(auth.jwt()->>'is_anonymous','false')='true'
    or not app_private.account_is_active(me)
    or exists(select 1 from app_private.brand_administrators a where a.user_id=me and a.active)
@@ -132,7 +134,7 @@ begin
  return jsonb_build_object(
   'status',case when app_private.adult_eligible(me) then 'approved'
            else coalesce(r.status,'not_started') end,
-  'request_id',case when r.status='draft' then r.id else null end,
+  'request_id',r.id,
   'submitted_at',r.submitted_at,
   'approved',app_private.adult_eligible(me));
 end;
@@ -170,7 +172,7 @@ begin
  if me is null then return 'not_available'; end if;
  update app_private.age_review_requests_b14
  set status='cancelled'
- where user_id=me and status in ('draft','pending')
+ where user_id=me and status in ('draft','pending','approved','rejected')
  returning id into r_id;
  update app_private.adult_eligibility set revoked_at=now()
    where user_id=me and revoked_at is null;
@@ -264,6 +266,23 @@ begin
  return 'erased';
 end;
 $$;
+
+
+-- Revisit failed or deferred evidence erasure without exposing image data.
+create function public.admin_age_erasure_queue_b14()
+returns table(request_id uuid,user_id uuid,case_status text,
+ document_path text,selfie_path text,reviewed_at timestamptz)
+language sql stable security definer set search_path=''
+as $
+ select r.id,r.user_id,r.status,
+ r.user_id::text||'/'||r.id::text||'/document',
+ r.user_id::text||'/'||r.id::text||'/selfie',r.reviewed_at
+ from app_private.age_review_requests_b14 r
+ where app_private.is_brand_administrator(true)
+   and r.status in ('approved','rejected','cancelled')
+   and r.evidence_purged_at is null
+ order by coalesce(r.reviewed_at,r.created_at) asc limit 50;
+$;
 
 create table app_private.manual_dating_launch_b14 (
  id boolean primary key default true check(id),
@@ -381,14 +400,14 @@ as $$
  and not exists(select 1 from app_private.account_deletion_requests d where d.user_id=p_id);
 $$;
 
-revoke all on function public.age_start_review_b14(),public.age_review_status_b14(),
+revoke all on function public.age_start_review_b14(boolean),public.age_review_status_b14(),
  public.age_submit_review_b14(uuid),public.age_cancel_review_b14(),
  public.admin_age_queue_b14(),public.admin_age_decide_b14(uuid,text,date,boolean,boolean,date,text),
- public.admin_age_mark_erased_b14(uuid),
+ public.admin_age_mark_erased_b14(uuid),public.admin_age_erasure_queue_b14(),
  public.admin_dating_launch_b14(boolean,boolean,boolean,boolean,text),
  public.dating_manual_status_b14()
  from public,anon,authenticated;
-grant execute on function public.age_start_review_b14(),public.age_review_status_b14(),
+grant execute on function public.age_start_review_b14(boolean),public.age_review_status_b14(),
  public.age_submit_review_b14(uuid),public.age_cancel_review_b14(),
  public.admin_age_queue_b14(),public.admin_age_decide_b14(uuid,text,date,boolean,boolean,date,text),
  public.admin_age_mark_erased_b14(uuid),
