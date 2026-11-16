@@ -14,6 +14,7 @@ class FittedAgeAdminB14 extends StatefulWidget{
 class _FittedAgeAdminB14State extends State<FittedAgeAdminB14>{
   bool loading=true,busy=false,operatorAck=false,privacyAck=false,incidentAck=false;
   List<Map<String,dynamic>> queue=[];
+  List<Map<String,dynamic>> erasures=[];
   Map<String,dynamic> program={};
   String? message;
   final responsibility=TextEditingController();
@@ -28,10 +29,12 @@ class _FittedAgeAdminB14State extends State<FittedAgeAdminB14>{
       final results=await Future.wait<dynamic>([
         widget.api.adminAgeQueueB14(),
         widget.api.manualDatingStatusB14(),
+        widget.api.adminAgeErasureQueueB14(),
       ]);
       if(mounted)setState((){
         queue=(results[0] as List).cast<Map<String,dynamic>>();
         program=results[1] as Map<String,dynamic>;
+        erasures=(results[2] as List).cast<Map<String,dynamic>>();
       });
     }catch(_){if(mounted)setState(()=>
       message='No se pudieron consultar expedientes. Comprueba MFA administrativa.');}
@@ -166,6 +169,22 @@ class _FittedAgeAdminB14State extends State<FittedAgeAdminB14>{
       ?e.message:'No se pudo registrar la resolución. Verifica tu sesión.');}
     finally{if(mounted)setState(()=>busy=false);}
   }
+  Future<void> erase(Map<String,dynamic> item) async {
+    if(busy)return;
+    setState((){busy=true;message=null;});
+    try {
+      final result=await widget.api.adminAgePurgeB14(
+        requestId:item['request_id'].toString(),
+        documentPath:item['document_path'].toString(),
+        selfiePath:item['selfie_path'].toString());
+      await reload();
+      if(mounted)setState(()=>message=result=='erased'
+        ?'Imágenes privadas eliminadas y limpieza registrada.'
+        :'No se pudo confirmar el borrado ($result).');
+    }catch(_){if(mounted)setState(()=>
+      message='La evidencia sigue pendiente de eliminación. Intenta de nuevo.');}
+    finally{if(mounted)setState(()=>busy=false);}
+  }
   Future<void> setLaunch(bool enabled)async{
     if(busy)return;
     if(enabled && (!operatorAck||!privacyAck||!incidentAck||
@@ -229,6 +248,22 @@ class _FittedAgeAdminB14State extends State<FittedAgeAdminB14>{
               trailing:OutlinedButton(
                 onPressed:busy?null:()=>review(item),
                 child:const Text('Examinar evidencia')),
+            )),
+          const Divider(height:36),
+          Text('Eliminación de evidencias pendientes (${erasures.length})',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          if(!loading&&erasures.isEmpty)
+            const Text('No hay expedientes pendientes de eliminación.'),
+          for(final item in erasures)
+            Card(child:ListTile(
+              key:Key('age-evidence-delete-${item['request_id']}'),
+              leading:const Icon(Icons.delete_forever_outlined),
+              title:Text('Expediente ${item['request_id']}'),
+              subtitle:Text('Resolución: ${item['case_status']}'),
+              trailing:OutlinedButton(
+                onPressed:busy?null:()=>erase(item),
+                child:const Text('Eliminar documentos')),
             )),
           const Divider(height:40),
           Text('Apertura controlada de FitDating',
