@@ -4,6 +4,7 @@ import '../core/live_brand.dart';
 import '../core/fitted_locale.dart';
 import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
+import '../widgets/fitted_glass_atmosphere.dart';
 
 /// One canonical public entry: one brand, one clear proposition, one auth
 /// card. Legal consent is collected only by the registration flow.
@@ -139,12 +140,16 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               color:Color(0xFF294A4A),child:Center(
                 child:Icon(Icons.landscape_outlined,color:gold,size:48))),
           ),
+          const Positioned.fill(child:FittedRhythmLines(density:.64)),
           const DecoratedBox(decoration:BoxDecoration(
             gradient:LinearGradient(begin:Alignment.topCenter,
               end:Alignment.bottomCenter,
               colors:[Colors.transparent,Color(0xCC0F1821)],
               stops:[.4,1]))),
-          Positioned(left:20,right:20,bottom:21,child:Row(children:[
+          Positioned(left:14,right:14,bottom:14,child:FittedGlassPanel(
+            padding:const EdgeInsets.symmetric(horizontal:13,vertical:9),
+            radius:20,blur:10,
+            child:Row(children:[
             Container(width:33,height:33,
               decoration:BoxDecoration(shape:BoxShape.circle,
                 color:FitDateColors.aqua.withValues(alpha:.17),
@@ -156,7 +161,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               'GOOD ENERGY · MEANINGFUL CONNECTIONS'),
               style:const TextStyle(color:ivory,fontSize:10,
                 letterSpacing:1.1,fontWeight:FontWeight.w800))),
-          ])),
+          ]))),
         ]),
       ),
     );
