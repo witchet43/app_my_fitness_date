@@ -1,0 +1,76 @@
+# Gated QA for release candidate: NO PRODUCTION DEPLOY, no Cloud Build.
+name: FITTED Glass and Pulso Real - production readiness QA
+on:
+  push:
+    branches: [feature/fitted-glass-trust-production-20261116]
+    paths: [.build-gates/fitted-glass-gate-request.txt]
+
+permissions:
+  contents: read
+
+jobs:
+  app-and-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PGPASSWORD: postgres
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SaaS Factory governance
+        run: python3 scripts/check_saas_factory.py
+      - name: PostgreSQL B11 + Pulso Real B12 private-schema tests
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re,subprocess
+          from pathlib import Path
+          lines=Path('.github/workflows/ci.yml').read_text()
+          paths=re.findall(r'-f (supabase/migrations/[a-zA-Z0-9_]+\.sql)',lines)
+          assert len(paths)==24,f'B11 migration baseline changed: {len(paths)}'
+          for path in [*paths,'supabase/migrations/202611160031_fitted_pulso_real_private_b12.sql',
+                       'supabase/tests/fitted_pulso_real_b12_integration.sql']:
+            result=subprocess.run(['psql','-h','localhost','-U','postgres',
+              '-d','app_test','-v','ON_ERROR_STOP=1','-f',path],
+              text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+            if result.returncode:
+              print('FAIL SQL:',path,result.stdout[-8000:]);raise SystemExit(1)
+            print('PASS',path)
+          PY
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check protected Edge API
+        run: deno check supabase/functions/member-api-v26/index.ts
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Prepare Flutter
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Analyze, full widget regression and responsive trust tests
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded
+      - name: Compile production-mode user interface without changing PROD
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release --dart-define=MFD_V26_ENABLED=true
+          test -s build/web/main.dart.js
