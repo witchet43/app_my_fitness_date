@@ -1,0 +1,4 @@
+FITTED Pulse & Presence | 2026-11-16
+Authorized visual-only Cloudflare Pages preview.
+No PROD, no member auth, no dating, no hosted Supabase changes.
+Run Flutter analysis, widget tests, compile visual showcase, verify exact SHA.
