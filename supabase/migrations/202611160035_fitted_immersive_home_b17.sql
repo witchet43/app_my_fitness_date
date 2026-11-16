@@ -224,7 +224,7 @@ as $fn$
 declare photo public.member_media_v26%rowtype; reviewer uuid:=auth.uid();
 begin
  if not app_private.is_brand_administrator(true) then return 'forbidden'; end if;
- if p_photo is null or p_decision not in ('approved','rejected')
+ if p_photo is null or p_decision is null or p_decision not in ('approved','rejected')
  or char_length(trim(coalesce(p_note,''))) not between 8 and 400 then return 'invalid'; end if;
  select * into photo from public.member_media_v26 where id=p_photo for update;
  if photo.id is null or photo.moderation_state<>'pending' then
@@ -335,4 +335,35 @@ to service_role;
 -- Build honest initial summaries from already consented profile fields.
 select app_private.refresh_profile_summary_b17(user_id)
 from public.member_profiles_v26;
+
+-- Bounded model calls: six regeneration requests/member per UTC day.
+create table app_private.fitted_ai_usage_b17(
+ user_id uuid not null references auth.users(id) on delete cascade,
+ usage_day date not null,
+ requests integer not null default 1 check(requests between 1 and 6),
+ primary key(user_id,usage_day)
+);
+alter table app_private.fitted_ai_usage_b17 enable row level security;
+revoke all on app_private.fitted_ai_usage_b17 from public,anon,authenticated;
+
+create function public.fitted_summary_allow_generate_b17()
+returns boolean language plpgsql security definer set search_path=''
+as $limit$
+declare me uuid:=auth.uid(); permitted uuid;
+begin
+ if me is null or coalesce(auth.jwt()->>'is_anonymous','false')='true'
+    or not exists(select 1 from app_private.member_profile_summaries_b17
+      where user_id=me and ai_consented) then return false; end if;
+ insert into app_private.fitted_ai_usage_b17(user_id,usage_day,requests)
+ values(me,(now() at time zone 'utc')::date,1)
+ on conflict(user_id,usage_day)
+ do update set requests=app_private.fitted_ai_usage_b17.requests+1
+   where app_private.fitted_ai_usage_b17.requests<6
+ returning user_id into permitted;
+ return permitted is not null;
+end;
+$limit$;
+revoke all on function public.fitted_summary_allow_generate_b17() from public,anon;
+grant execute on function public.fitted_summary_allow_generate_b17() to authenticated;
+
 commit;
