@@ -1,0 +1,73 @@
+name: Fitted - publish installable Android APK download
+
+# Consume only the real main-branch Android APK after build+tests succeed.
+# Does not rebuild Flutter, and never touches Cloud Build or Cloudflare.
+on:
+  workflow_run:
+    workflows: ["Fitted B18 - Android installable APK from production source"]
+    types: [completed]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish-apk:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_RUN: ${{ github.event.workflow_run.id }}
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Retrieve signed installable APK from audited production build
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          gh run download "$SOURCE_RUN" -n fitted-b18-android-installable-apk -D dist
+          test -s dist/Fitted-B18-Android.apk
+          cd dist
+          sha256sum -c SHA256SUMS.txt
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('build-info.json'))
+          assert d['source_commit']==os.environ['SOURCE_SHA']
+          assert d['visual_revision']=='fitted-two-panel-b18'
+          assert d['production_backend'] is True
+          assert d['synthetic_preview'] is False
+          assert d['application_id']=='com.fitted.my_fitness_date'
+          print('Verified B18 APK SHA256 and exact source commit')
+          PY
+      - name: Publish public APK direct download as prerelease
+        run: |
+          set -euo pipefail
+          TAG="fitted-b18-android-${SOURCE_SHA:0:12}"
+          cat > /tmp/fitted-apk-notes.md <<'MD'
+          **Fitted B18 para Android** — Instalador Flutter real con API y autenticación
+          Supabase de producción, diseño de dos paneles, perfiles, tres pilares,
+          resumen consentido, Gym Shield y acceso condicionado a adultos verificados.
+
+          **Instalación:** descargar el archivo .apk, abrirlo en Android y permitir
+          instalar desde el origen elegido. Compatible con ARM64, ARM32 y Android x64.
+
+          **Limitaciones:** este instalador se compila con la firma de desarrollo
+          generada por CI, no una clave definitiva de publicación Play Store.
+          El regreso al APK tras iniciar sesión con Google requiere registrar
+          `fitted://auth/callback` en Supabase Auth > Redirect URLs; las pruebas
+          automatizadas no sustituyen pruebas físicas de OAuth y dispositivos.
+          Los controles de edad, consentimiento y moderación permanecen activos.
+          MD
+          gh release create "$TAG" \
+            --repo "$GH_REPO" \
+            --target "$SOURCE_SHA" \
+            --title "Fitted B18 · Android APK (instalación directa)" \
+            --notes-file /tmp/fitted-apk-notes.md \
+            --prerelease \
+            dist/Fitted-B18-Android.apk \
+            dist/SHA256SUMS.txt \
+            dist/build-info.json
+          echo "FITTED APK DIRECT DOWNLOAD:"
+          echo "https://github.com/$GH_REPO/releases/download/$TAG/Fitted-B18-Android.apk"
