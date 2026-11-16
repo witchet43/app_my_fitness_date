@@ -293,14 +293,22 @@ class _FittedImmersiveHomeB17State extends State<FittedImmersiveHomeB17>{
             fontStyle:FontStyle.italic,color:FitDateColors.pearl)),
         const SizedBox(height:13),
         if(!shared)
-          TextButton.icon(
-            key:const Key('b17-summary-ai-consent'),
-            onPressed:busy?null:optInAi,
-            icon:const Icon(Icons.auto_awesome_outlined,size:17),
-            label:Text(aiAvailable?t('Generar con IA y compartir',
-                'Generate with AI and share')
-              :t('Configurar resumen y privacidad',
-                'Set up summary and privacy'))),
+          SizedBox(width:double.infinity,
+            child:TextButton(
+              key:const Key('b17-summary-ai-consent'),
+              onPressed:busy?null:optInAi,
+              child:Row(children:[
+                const Icon(Icons.auto_awesome_outlined,size:17),
+                const SizedBox(width:8),
+                Expanded(child:Text(
+                  aiAvailable?t('Generar con IA y compartir',
+                    'Generate with AI and share')
+                  :t('Configurar resumen y privacidad',
+                    'Set up summary and privacy'),
+                  maxLines:2,overflow:TextOverflow.ellipsis)),
+              ]),
+            ),
+          ),
         if(shared)
           Row(children:[
             const Icon(Icons.verified_user_outlined,
