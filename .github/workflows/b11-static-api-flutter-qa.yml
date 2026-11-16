@@ -1,0 +1,47 @@
+# Lightweight source QA: no Docker, migrations, Cloud Build or release artifact.
+name: MFD B11 — Static API + Flutter QA (no Docker)
+on:
+  push:
+    branches: [qa/b11-static-api-flutter-20261112, qa/b11-static-api-flutter-r2-20261112]
+    paths: [.build-gates/b11-static-qa-request.txt]
+
+permissions:
+  contents: read
+
+jobs:
+  source-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Source and strict environment verification
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          python3 scripts/test_supabase_target.py
+          python3 scripts/check_b11_static.py
+          npm run typecheck
+          npm test
+          bash -n scripts/run_b11_local_preview.sh
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Edge Deno static check (no deployment)
+        run: deno check supabase/functions/member-api-v26/index.ts
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Flutter analyzer and widgets only
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded

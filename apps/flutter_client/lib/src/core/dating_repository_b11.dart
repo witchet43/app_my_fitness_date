@@ -1,0 +1,33 @@
+import 'dating_repository_b5.dart';
+
+/// Business operations use the authenticated member API. Every candidate,
+/// message and mutual match is rechecked server-side; this interface must
+/// never be implemented with local synthetic candidates in production.
+abstract class DatingRepositoryB11 extends DatingRepositoryB5 {
+  Future<Map<String,dynamic>?> loadRhythmB11();
+  Future<void> saveRhythmB11(Map<String,dynamic> draft);
+  /// Released catalog only; returned venue selection is always private.
+  Future<List<Map<String,dynamic>>> gymCatalogB11();
+  Future<String> activateB11(String gymId,List<Map<String,int>> weeklySlots);
+  Future<List<Map<String,dynamic>>> discoverB11();
+  Future<Map<String,dynamic>> compatibilityB11(String userId);
+  Future<String> likeB11(String userId);
+  Future<List<Map<String,dynamic>>> matchesB11();
+  Future<List<Map<String,dynamic>>> messagesB11(String matchId);
+  Future<String> sendB11(String matchId,String message);
+  Future<String> reportB11(String matchId,String reason,{String detail=''});
+  Future<List<String>> ideasB11(String matchId);
+  /// Double confirmation of an offline meeting; server validates both members.
+  Future<Map<String,dynamic>> pulseRealStatusB12(String matchId);
+  Future<String> confirmMeetupB12(String matchId);
+  /// Independent, revocable consent; withdrawal erases associated observations.
+  Future<String> setPulseRealConsentB12(bool accepted);
+  /// Private observation, never published as an accusation or unreviewed score.
+  Future<String> submitPulseRealB12(String matchId,
+      String dimension,String observation);
+  /// Only the profile subject can see reviewed observations about themselves.
+  Future<List<Map<String,dynamic>>> myPulseObservationsB13();
+  Future<String> appealPulseObservationB13(String signalId,String statement);
+  Future<String> retractPulseObservationB13(String signalId);
+
+}

@@ -1,0 +1,91 @@
+# User-requested visual release: separate nonproduction preview, no backend.
+# Deliberate gate-file push only. No Cloud Build minutes consumed.
+name: FITTED Pulse & Presence - visual QA preview
+on:
+  push:
+    branches: [feature/fitted-pulse-presence-ux-20261116]
+    paths: [.build-gates/fitted-visual-preview-request.txt]
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: fitted-pulse-presence-preview
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact source revision
+        uses: actions/checkout@v4
+      - name: Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Prepare Flutter web toolchain
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Dart source analysis
+        working-directory: apps/flutter_client
+        run: flutter analyze --no-fatal-infos
+      - name: Full Flutter regression and visual navigation
+        working-directory: apps/flutter_client
+        run: flutter test --reporter expanded
+      - name: Compile isolated visual showcase (no login or remote backend)
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter build web --release \
+            --dart-define=MFD_VISUAL_SHOWCASE=true \
+            --dart-define=MFD_V26_ENABLED=false
+          cp cloudflare/_headers build/web/_headers
+          cp cloudflare/_redirects build/web/_redirects
+          cp -R cloudflare/terms cloudflare/privacy build/web/
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          result={
+            'commit':os.environ['GITHUB_SHA'],
+            'channel':'fitted_visual_qa',
+            'production':False,
+            'member_access':False,
+            'dating_enabled':False,
+            'real_user_data':False,
+            'synthetic_profile_only':True,
+          }
+          Path('build/web/mfd-release.json').write_text(
+              json.dumps(result,sort_keys=True)+'\n')
+          PY
+          test -s build/web/index.html
+      - name: Assert Cloudflare credential configured
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          test -n "$CF_TOKEN" || { echo 'Cloudflare token missing'; exit 1; }
+      - name: Publish isolated Cloudflare Pages preview
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: d10780918aa05ee5532c754371c60c94
+          command: pages deploy apps/flutter_client/build/web --project-name=my-fitness-date --branch=fitted-visual-qa
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Inspect deployed SHA and no-user gate
+        run: |
+          set -euo pipefail
+          endpoint='https://fitted-visual-qa.my-fitness-date.pages.dev/mfd-release.json'
+          curl -fsSL --retry 5 --retry-delay 3 --max-time 30 "$endpoint" > /tmp/visual-release.json
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('/tmp/visual-release.json'))
+          assert d['commit']==os.environ['GITHUB_SHA'],(d['commit'],os.environ['GITHUB_SHA'])
+          assert d['production'] is False and d['member_access'] is False
+          assert d['dating_enabled'] is False and d['synthetic_profile_only'] is True
+          print('Exact-SHA preview smoke PASS')
+          PY

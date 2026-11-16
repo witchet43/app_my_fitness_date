@@ -1,6 +1,6 @@
 name: Fitted - canonical unified authentication release
-# Production user-interface refresh: Fitted Glass & Pulse Presence B12.
-# Source pinned to reviewed QA commit; no Supabase migration or dating gate changes.
+# Production user-interface refresh: Fitted Glass & Pulse Presence B13 with human-reviewed private trust.
+# Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
 # Runtime ES/EN strings and saved user preference regression tested.
@@ -30,7 +30,7 @@ jobs:
       - name: Checkout verified Fitted bilingual weighted-match application
         uses: actions/checkout@v4
         with:
-          ref: 32fdd33ffd991df94b8cf717ab0f25ffb7441e05
+          ref: main
           persist-credentials: false
       - uses: subosito/flutter-action@v2
         with:
@@ -119,7 +119,7 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-glass-pulse-b12",
+            "visual_revision":"fitted-glass-pulse-b13",
             "pulso_real_feedback_enabled":False
           })+"\n")
           PY
@@ -148,7 +148,7 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-glass-pulse-b12"
+                  assert info["visual_revision"]=="fitted-glass-pulse-b13"
                   assert info["pulso_real_feedback_enabled"] is False
                   assert b"flutter" in get("/").lower()
                   assert len(get("/main.dart.js"))>1000

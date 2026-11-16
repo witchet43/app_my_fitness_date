@@ -1,199 +1,366 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../theme/fitness_date_theme.dart';
-import 'pace_calculator.dart';
+import '../core/live_brand.dart';
+import '../core/fitted_locale.dart';
 import '../widgets/mfd_branding.dart';
+import '../theme/fitness_date_theme.dart';
+import '../widgets/fitted_glass_atmosphere.dart';
 
-/// Marketing is public; member screens require verified authentication.
-/// Actions require configured production Auth and legal policy URLs.
+/// One canonical public entry: one brand, one clear proposition, one auth
+/// card. Legal consent is collected only by the registration flow.
 class PublicEntryShell extends StatefulWidget {
-  const PublicEntryShell({super.key, this.onGoogle, this.onEmail,
-    this.onEmailRegister, this.onEmailSignIn,
-    this.termsUrl = '', this.privacyUrl = ''});
+  const PublicEntryShell({
+    super.key,
+    this.onGoogle,
+    this.onApple,
+    this.onEmail,
+    this.onEmailRegister,
+    this.onEmailSignIn,
+    this.termsUrl = '',
+    this.privacyUrl = '',
+  });
   final VoidCallback? onGoogle;
+  final VoidCallback? onApple;
   final VoidCallback? onEmail;
   final VoidCallback? onEmailRegister;
   final VoidCallback? onEmailSignIn;
   final String termsUrl;
   final String privacyUrl;
+
   @override
   State<PublicEntryShell> createState() => _PublicEntryShellState();
 }
 
 class _PublicEntryShellState extends State<PublicEntryShell> {
-  bool register = true;
-  bool acceptedLegal = false;
-  bool adultDeclared = false;
-  bool get legalConfigured => widget.termsUrl.startsWith('https://') &&
-      widget.privacyUrl.startsWith('https://');
+  bool register = false;
+  final _accessKey = GlobalKey();
+  static const navy = FitDateColors.inkDeep;
+  static const gold = FitDateColors.apricot;
+  static const ivory = FitDateColors.pearl;
+  static const sage = FitDateColors.muted;
+
+  bool get legalConfigured =>
+    widget.termsUrl.startsWith('https://') &&
+    widget.privacyUrl.startsWith('https://');
+
   Future<void> openPolicy(String raw) async {
-    final url=Uri.tryParse(raw);
-    if(url!=null && url.scheme=='https') {
-      await launchUrl(url,mode:LaunchMode.externalApplication);
+    final uri=Uri.tryParse(raw);
+    if(uri!=null && uri.scheme=='https') {
+      await launchUrl(uri,mode:LaunchMode.externalApplication);
     }
   }
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    // Existing members can sign in without re-declaring age or consent.
-    // Registration still requires legal acknowledgement and adult declaration.
-    final canRegister=legalConfigured && acceptedLegal && adultDeclared;
-    final canContinue=register ? canRegister : legalConfigured;
-    final emailAction=register
-        ? (widget.onEmailRegister ?? widget.onEmail)
-        : (widget.onEmailSignIn ?? widget.onEmail);
-    final story = Container(
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(colors: [
-          Color(0xFF3C243F), Color(0xFF1A2430), Color(0xFF1C3227),
-        ]),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const MfdBranding(full: true, width: 275),
-        const SizedBox(height: 18),
-        const Text('ACTIVE CHEMISTRY',
-          style: TextStyle(color: FitDateColors.lime,
-            letterSpacing: 2, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 20),
-        const Text('Tu próxima conexión también puede compartir tu ritmo.',
-          key: Key('landing-headline'),
-          style: TextStyle(fontSize: 34, height: 1.12,
-            color: FitDateColors.pearl, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 14),
-        const Text('Muestra quién eres, lo que te apasiona y cómo vives '
-          'el deporte. Comunidad, actividades y citas opcionales con privacidad.',
-          style: TextStyle(color: FitDateColors.muted, height: 1.5)),
-        const SizedBox(height: 20),
-        const Wrap(spacing: 10, runSpacing: 10, children: [
-          Chip(label: Text('Gym & fuerza')),
-          Chip(label: Text('Running')),
-          Chip(label: Text('Yoga & studios')),
-          Chip(label: Text('Aventuras')),
-        ]),
-      ]),
-    );
-    final access = Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: FitDateColors.surface,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: FitDateColors.outline),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(register ? 'Crea tu cuenta' : 'Bienvenido de nuevo',
-          style: const TextStyle(
-            fontSize: 25, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 10),
-        const Text('Tu perfil comienza privado y tú decides qué compartir.',
-          style: TextStyle(color: FitDateColors.muted)),
-        const SizedBox(height: 20),
-        OutlinedButton(
-          key: const Key('google-signin-entry'),
-          onPressed:canContinue?widget.onGoogle:null,
-          child: const Row(children: [
-            Icon(Icons.account_circle_outlined, size: 20),
-            SizedBox(width: 8),
-            Expanded(child: Text('Continuar con Google',
-              textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
+
+  Widget _compactPromise(IconData icon,String es,String en) =>
+    Row(mainAxisSize:MainAxisSize.min,children:[
+      Icon(icon,color:gold,size:17),
+      const SizedBox(width:7),
+      Text(FittedLocaleScope.t(context,es,en),
+        style:const TextStyle(color:sage,fontSize:12)),
+    ]);
+
+  // Editorial photograph is a real landing asset, not a placeholder card.
+  // A configured administrator cover takes precedence over the licensed default.
+  static const _editorialPhoto =
+    'https://images.pexels.com/photos/8795582/pexels-photo-8795582.jpeg'
+    '?auto=compress&cs=tinysrgb&w=1400';
+
+  Widget _hero(LiveBrandSettings brand,bool wide) {
+    final cover=brand.media[wide?'cover_desktop':'cover_mobile'];
+    final photo=cover!=null && cover.startsWith('https://')
+        ?cover:_editorialPhoto;
+    final message=Padding(
+      padding:EdgeInsets.all(wide?38:16),
+      child:Column(
+        mainAxisAlignment:MainAxisAlignment.center,
+        crossAxisAlignment:CrossAxisAlignment.start,
+        mainAxisSize:MainAxisSize.min,
+        children:[
+          Text(FittedLocaleScope.t(context,
+            'PERSONAS EN MOVIMIENTO','PEOPLE IN MOTION'),
+            style:const TextStyle(color:FitDateColors.aqua,
+              fontSize:11,letterSpacing:1.8,fontWeight:FontWeight.w800)),
+          const SizedBox(height:14),
+          Container(width:42,height:3,decoration:BoxDecoration(
+            color:FitDateColors.apricot,borderRadius:BorderRadius.circular(3))),
+          const SizedBox(height:17),
+          Text(FittedTranslations.translate(
+              brand.title,FittedLocaleScope.languageOf(context)),
+            key:const Key('landing-headline'),
+            style:TextStyle(color:ivory,fontFamily:brand.font,
+              fontSize:wide?46:34,fontWeight:FontWeight.w700,
+              height:1.14,letterSpacing:-.9)),
+          const SizedBox(height:14),
+          Text(FittedTranslations.translate(
+              brand.description,FittedLocaleScope.languageOf(context)),
+            key:const Key('landing-brand-description'),
+            style:const TextStyle(color:Color(0xFFE1E8E0),
+              height:1.5,fontSize:15)),
+          SizedBox(height:wide?19:11),
+          Wrap(spacing:8,runSpacing:8,children:[
+            _heroPill(Icons.directions_run_rounded,'How I Move'),
+            _heroPill(Icons.wb_twilight_outlined,'How I Live'),
+            _heroPill(Icons.connect_without_contact_outlined,'How I Relate'),
           ]),
-        ),
-        const SizedBox(height: 10),
-        OutlinedButton(
-          key: const Key('email-entry'),
-          onPressed:canContinue?emailAction:null,
-          child: Row(children: [
-            const Icon(Icons.mail_outline, size: 20),
-            const SizedBox(width: 8),
-            Expanded(child: Text(
-              register ? 'Registro con correo' : 'Acceso con correo',
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            )),
-          ]),
-        ),
-        const SizedBox(height:14),
-        if(register) Material(color:Colors.transparent,child:CheckboxListTile(
-          value:acceptedLegal,
-          controlAffinity:ListTileControlAffinity.leading,
-          contentPadding:EdgeInsets.zero,
-          title:const Text('Acepto los términos y el aviso de privacidad',
-            style:TextStyle(fontSize:13)),
-          onChanged:legalConfigured
-              ?(v)=>setState(()=>acceptedLegal=v??false):null,
-        )),
-        if(register) Material(color:Colors.transparent,child:CheckboxListTile(
-          value:adultDeclared,
-          controlAffinity:ListTileControlAffinity.leading,
-          contentPadding:EdgeInsets.zero,
-          title:const Text('Declaro ser mayor de 18 años',
-            style:TextStyle(fontSize:13)),
-          onChanged:(v)=>setState(()=>adultDeclared=v??false),
-        )),
-        Wrap(spacing:10,children:[
-          TextButton(onPressed:legalConfigured
-              ?()=>openPolicy(widget.termsUrl):null,
-            child:const Text('Términos')),
-          TextButton(onPressed:legalConfigured
-              ?()=>openPolicy(widget.privacyUrl):null,
-            child:const Text('Privacidad')),
-        ]),
-        if(!legalConfigured || (widget.onGoogle==null && emailAction==null)) ...[
-          const SizedBox(height: 16),
-          const Text('El acceso todavía no está configurado. '
-            'No compartas contraseñas por correo.',
-            key: Key('signup-closed'),
-            style: TextStyle(color: FitDateColors.muted, fontSize: 12)),
+          SizedBox(height:wide?24:14),
+          FilledButton.icon(
+            key:const Key('landing-create-profile'),
+            onPressed:(){
+              setState(()=>register=true);
+              WidgetsBinding.instance.addPostFrameCallback((_){
+                final target=_accessKey.currentContext;
+                if(target!=null)Scrollable.ensureVisible(target,
+                  duration:const Duration(milliseconds:350),
+                  curve:Curves.easeInOut);
+              });
+            },
+            style:FilledButton.styleFrom(
+              backgroundColor:FitDateColors.aqua,
+              foregroundColor:navy,
+              minimumSize:const Size(0,50)),
+            icon:const Icon(Icons.arrow_forward),
+            label:Text(FittedLocaleScope.t(context,
+              'Crear mi perfil','Create my profile'))),
         ],
-        const SizedBox(height: 16),
-        TextButton(
-          key: const Key('switch-entry-mode'),
-          onPressed: () => setState(() => register = !register),
-          child: Text(register ? 'Ya tengo cuenta' : 'Crear cuenta'),
-        ),
-        const Text('Solo adultos. FitDating requiere consentimiento '
-          'independiente y verificación de edad. '
-          'Tus gimnasios y horarios serán privados por defecto.',
-          style: TextStyle(color: FitDateColors.muted, fontSize: 11)),
-      ]),
+      ),
     );
-    return Scaffold(
-      appBar: AppBar(
-        title: const Row(mainAxisSize: MainAxisSize.min, children: [
-          MfdBranding(full: false, width: 52),
-          SizedBox(width: 8),
-          Flexible(child: Text('My Fitness Date',
-            maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontWeight: FontWeight.w800))),
+    final picture=ClipRRect(
+      borderRadius:BorderRadius.circular(22),
+      child:SizedBox(
+        height:wide?460:170,
+        width:double.infinity,
+        child:Stack(fit:StackFit.expand,children:[
+          Image.network(
+            photo,
+            key:const Key('landing-editorial-photo'),
+            fit:BoxFit.cover,
+            semanticLabel:FittedLocaleScope.t(context,
+              'Dos personas activas compartiendo un momento al aire libre',
+              'Two active people sharing a moment outdoors'),
+            errorBuilder:(_,__,___)=>const ColoredBox(
+              color:Color(0xFF294A4A),child:Center(
+                child:Icon(Icons.landscape_outlined,color:gold,size:48))),
+          ),
+          const Positioned.fill(child:FittedRhythmLines(density:.64)),
+          const DecoratedBox(decoration:BoxDecoration(
+            gradient:LinearGradient(begin:Alignment.topCenter,
+              end:Alignment.bottomCenter,
+              colors:[Colors.transparent,Color(0xCC0F1821)],
+              stops:[.4,1]))),
+          Positioned(left:14,right:14,bottom:14,child:FittedGlassPanel(
+            padding:const EdgeInsets.symmetric(horizontal:13,vertical:9),
+            radius:20,blur:10,
+            child:Row(children:[
+            Container(width:33,height:33,
+              decoration:BoxDecoration(shape:BoxShape.circle,
+                color:FitDateColors.aqua.withValues(alpha:.17),
+                border:Border.all(color:FitDateColors.aqua)),
+              child:const Icon(Icons.graphic_eq_rounded,color:FitDateColors.aqua,size:18)),
+            const SizedBox(width:10),
+            Expanded(child:Text(FittedLocaleScope.t(context,
+              'BUENA ENERGÍA · CONEXIONES CON SENTIDO',
+              'GOOD ENERGY · MEANINGFUL CONNECTIONS'),
+              style:const TextStyle(color:ivory,fontSize:10,
+                letterSpacing:1.1,fontWeight:FontWeight.w800))),
+          ]))),
         ]),
       ),
-      body: SafeArea(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1110),
-        child: ListView(padding: const EdgeInsets.all(20), children: [
-          if (width >= 780)
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(flex: 5, child: story),
-              const SizedBox(width: 18),
-              Expanded(flex: 4, child: access),
-            ])
-          else ...[story, const SizedBox(height: 18), access],
-          const SizedBox(height: 25),
-          const Card(child: ExpansionTile(
-            key: Key('anonymous-pace-tool'),
-            title: Text('Calculadora de ritmo · sin registro'),
-            subtitle: Text('Tu herramienta deportiva gratuita sigue disponible'),
-            leading: Icon(Icons.directions_run_outlined),
-            children: [Padding(padding: EdgeInsets.all(12),
-              child: PaceCalculator())],
-          )),
-          const SizedBox(height: 25),
-          const Text('Perfiles y actividades de otras personas '
-            'solo después de iniciar sesión.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: FitDateColors.muted, fontSize: 12)),
+    );
+    return Container(
+      key:const Key('landing-hero'),
+      padding:const EdgeInsets.all(12),
+      decoration:BoxDecoration(
+        borderRadius:BorderRadius.circular(30),
+        gradient:const LinearGradient(
+          colors:[Color(0xFF173B41),Color(0xFF192936),Color(0xFF26283B)],
+          begin:Alignment.topLeft,end:Alignment.bottomRight),
+        border:Border.all(color:FitDateColors.aqua.withValues(alpha:.24))),
+      child:wide
+        ?Row(children:[
+            Expanded(flex:1,child:message),
+            Expanded(flex:1,child:picture),
+          ])
+        :Column(children:[
+            picture,
+            message,
+          ]),
+    );
+  }
+
+  Widget _heroPill(IconData icon,String label) => Container(
+    padding:const EdgeInsets.symmetric(horizontal:10,vertical:8),
+    decoration:BoxDecoration(
+      color:FitDateColors.inkDeep.withValues(alpha:.48),
+      borderRadius:BorderRadius.circular(50),
+      border:Border.all(color:FitDateColors.aqua.withValues(alpha:.3))),
+    child:Row(mainAxisSize:MainAxisSize.min,children:[
+      Icon(icon,color:FitDateColors.aqua,size:14),
+      const SizedBox(width:7),
+      Text(label,style:const TextStyle(color:ivory,fontSize:11,
+        fontWeight:FontWeight.w700)),
+    ]),
+  );
+
+  Widget _access(bool wide) {
+    final action=register
+      ?widget.onEmailRegister??widget.onEmail
+      :widget.onEmailSignIn??widget.onEmail;
+    return KeyedSubtree(
+      key:const Key('landing-access'),
+      child:Container(
+      key:_accessKey,
+      padding:EdgeInsets.all(wide?28:21),
+      decoration:BoxDecoration(
+        color:FitDateColors.surface,
+        borderRadius:BorderRadius.circular(25),
+        border:Border.all(color:FitDateColors.aqua.withValues(alpha:.28))),
+      child:Column(
+        crossAxisAlignment:CrossAxisAlignment.stretch,
+        mainAxisSize:MainAxisSize.min,children:[
+          Text(FittedLocaleScope.t(context,
+              'TU ESPACIO EN FITTED','YOUR FITTED SPACE'),
+            style:const TextStyle(fontSize:10,
+              letterSpacing:1.8,color:gold,fontWeight:FontWeight.w800)),
+          const SizedBox(height:10),
+          Text(register
+            ?FittedLocaleScope.t(context,'Comienza aquí','Start here')
+            :FittedLocaleScope.t(context,'Bienvenido','Welcome'),
+            style:TextStyle(
+              fontFamily:'Georgia',fontSize:wide?29:27,color:ivory)),
+          const SizedBox(height:7),
+          Text(register
+            ?FittedLocaleScope.t(context,
+              'Crea tu cuenta y empieza a construir tu perfil.',
+              'Create an account and start building your profile.')
+            :FittedLocaleScope.t(context,
+              'Entra y continúa donde lo dejaste.',
+              'Sign in and pick up where you left off.'),
+            style:const TextStyle(color:sage,fontSize:13,height:1.45)),
+          const SizedBox(height:21),
+          OutlinedButton.icon(
+            key:const Key('google-signin-entry'),
+            onPressed:legalConfigured?widget.onGoogle:null,
+            style:OutlinedButton.styleFrom(
+              minimumSize:const Size(0,48)),
+            icon:const Icon(Icons.account_circle_outlined),
+            label:Text(FittedLocaleScope.t(context,
+              'Continuar con Google','Continue with Google'))),
+          const SizedBox(height:9),
+          OutlinedButton.icon(
+            key:const Key('apple-signin-entry'),
+            onPressed:legalConfigured?widget.onApple:null,
+            style:OutlinedButton.styleFrom(
+              minimumSize:const Size(0,48)),
+            icon:const Icon(Icons.apple),
+            label:Text(FittedLocaleScope.t(context,
+              'Continuar con Apple','Continue with Apple'))),
+          const SizedBox(height:9),
+          FilledButton.icon(
+            key:const Key('email-entry'),
+            onPressed:legalConfigured?action:null,
+            style:FilledButton.styleFrom(
+              backgroundColor:gold,foregroundColor:navy,
+              minimumSize:const Size(0,52)),
+            icon:const Icon(Icons.mail_outline),
+            label:Text(register
+              ?FittedLocaleScope.t(context,
+                'Crear cuenta con correo','Create account with email')
+              :FittedLocaleScope.t(context,
+                'Entrar con correo','Sign in with email'))),
+          const SizedBox(height:9),
+          TextButton(
+            key:const Key('switch-entry-mode'),
+            onPressed:()=>setState(()=>register=!register),
+            child:Text(register
+              ?FittedLocaleScope.t(context,
+                '¿Ya tienes cuenta? Inicia sesión',
+                'Already have an account? Sign in')
+              :FittedLocaleScope.t(context,
+                '¿Aún no tienes cuenta? Regístrate',
+                'New here? Sign up'),
+              style:const TextStyle(color:gold))),
+          const Divider(color:Color(0xFF425150),height:24),
+          Center(child:Wrap(
+            alignment:WrapAlignment.center,spacing:19,runSpacing:0,
+            children:[
+              TextButton(
+                onPressed:legalConfigured
+                  ?()=>openPolicy(widget.termsUrl):null,
+                child:Text(FittedLocaleScope.t(context,
+                  'Términos','Terms'),
+                  style:const TextStyle(color:ivory))),
+              TextButton(
+                onPressed:legalConfigured
+                  ?()=>openPolicy(widget.privacyUrl):null,
+                child:Text(FittedLocaleScope.t(context,
+                  'Privacidad','Privacy'),
+                  style:const TextStyle(color:ivory))),
+            ])),
         ]),
-      ))),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context){
+    final brand=LiveBrandScope.of(context);
+    final width=MediaQuery.sizeOf(context).width;
+    final wide=width>=900;
+    return Scaffold(
+      backgroundColor:navy,
+      appBar:AppBar(
+        backgroundColor:navy,
+        titleSpacing:wide?32:16,
+        title:Row(mainAxisSize:MainAxisSize.min,children:[
+          const MfdBranding(full:false,width:38),
+          const SizedBox(width:11),
+          Flexible(child:Text(brand.name,maxLines:1,
+            overflow:TextOverflow.ellipsis,
+            style:const TextStyle(fontSize:19,color:ivory,
+              fontWeight:FontWeight.w700))),
+        ]),
+        actions:[
+          const Padding(
+            padding:EdgeInsets.only(right:16),
+            child:Center(child:FittedLanguageSelector())),
+        ]),
+      body:SafeArea(child:ListView(
+        padding:EdgeInsets.symmetric(
+          horizontal:wide?28:14,vertical:wide?22:12),
+        children:[
+          Center(child:ConstrainedBox(
+            constraints:const BoxConstraints(maxWidth:1180),
+            child:Column(children:[
+              _hero(brand,wide),
+              const SizedBox(height:20),
+              ConstrainedBox(
+                constraints:const BoxConstraints(maxWidth:570),
+                child:_access(wide)),
+
+              const SizedBox(height:18),
+              Wrap(
+                alignment:WrapAlignment.center,
+                spacing:20,runSpacing:12,
+                children:[
+                  _compactPromise(Icons.people_outline,
+                    'Personas auténticas','Authentic people'),
+                  _compactPromise(Icons.auto_awesome_outlined,
+                    'Afinidad real','Meaningful affinity'),
+                  _compactPromise(Icons.shield_outlined,
+                    'Protección','Protection'),
+                ]),
+              
+              const Divider(color:Color(0xFF425150),height:26),
+              Padding(padding:const EdgeInsets.only(bottom:14),
+                child:Text(FittedLocaleScope.t(context,
+                  'Las funciones de citas se habilitarán cuando concluyan '
+                  'las verificaciones de seguridad.',
+                  'Dating features will open once the safety checks are complete.'),
+                  textAlign:TextAlign.center,
+                  style:const TextStyle(color:sage,fontSize:11.5,height:1.5))),
+            ]),
+          )),
+        ]),
+      ),
     );
   }
 }

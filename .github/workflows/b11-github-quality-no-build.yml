@@ -1,0 +1,101 @@
+# No Flutter release build, no Cloudflare, NO Google Cloud Build.
+# Runs only on a deliberate gate-file commit; never on PRs or main.
+name: MFD B11 — GitHub QA only (NO Cloud Build)
+on:
+  push:
+    branches: [feature/b11-one-final-real-product-20261112, qa/b11-github-quality-no-cloudbuild-20261112, qa/b11-github-quality-no-cloudbuild-r2-20261112, qa/b11-github-quality-no-cloudbuild-r3-20261112]
+    paths: [.build-gates/b11-github-qa-request.txt]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mfd-b11-github-qa-no-build
+  cancel-in-progress: false
+
+jobs:
+  offline-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PGPASSWORD: postgres
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install only reproducible Node dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Contracts, prior regressions and release-gate preflight
+        run: |
+          set -euo pipefail
+          npm run typecheck
+          npm test
+          npm run candidate:audit
+          python3 scripts/check_b1_static.py
+          python3 scripts/check_b2_static.py
+          python3 scripts/check_b3_static.py
+          python3 scripts/check_b4_static.py
+          python3 scripts/check_b5_static.py
+          python3 scripts/check_b8_static.py
+          python3 scripts/check_b9_static.py
+          python3 scripts/check_b10_static.py
+          python3 scripts/check_b11_static.py
+      - name: PostgreSQL 24 migrations and ALL 21 ordered SQL integration checks
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re, subprocess
+          from pathlib import Path
+          workflow = Path('.github/workflows/ci.yml').read_text()
+          paths = re.findall(
+              r'-f (supabase/(?:migrations|tests)/[A-Za-z0-9_]+\.sql)',workflow)
+          migrations = [p for p in paths if '/migrations/' in p]
+          assert len(paths)==45, f'Expected 45 ordered SQL files, got {len(paths)}'
+          assert len(migrations)==24, f'Expected 24 migrations, got {len(migrations)}'
+          assert paths[-1]=='supabase/tests/fitted_activation_b11_e2e.sql'
+          for file in paths:
+              result = subprocess.run(
+                  ['psql','-h','localhost','-U','postgres','-d','app_test',
+                    '-v','ON_ERROR_STOP=1','-f',file],
+                  text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+              if result.returncode:
+                  print('FAILED SQL FILE:',file)
+                  print(result.stdout[-6000:])
+                  raise SystemExit(result.returncode)
+              print('PASS',file)
+          print('B11 FULL POSTGRES PASS (ephemeral GitHub runner only)')
+          PY
+      - name: Gym Shield privacy and 30-minute tests
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet -r services/gym_shield/requirements.txt pytest
+          cd services/gym_shield
+          python3 -m pytest -q tests/test_gym_shield.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Flutter static analysis and widget tests ONLY (NO build)
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded

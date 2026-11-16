@@ -1,0 +1,5 @@
+B1 consolidated QA request
+Owner-authorized new B1 plan. Budget unit B1/10.
+Single job, no production deploy, no Supabase hosted mutation.
+Triggered exactly once after static/source review on feature branch.
+2026-11-12

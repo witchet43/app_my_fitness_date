@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "note": "Exact Supabase project references from Supabase list_projects, 2026-11-13. Empty DEV means MUST NOT deploy DEV to an existing production ref.",
+  "environments": {
+    "production": {
+      "project_id": "jtrdvnwbxpfdnbzasvcj",
+      "project_name": "my_fitness_date_prod"
+    },
+    "development": {
+      "project_id": null,
+      "project_name": "my_fitness_date_dev",
+      "status": "blocked_free_project_limit"
+    }
+  },
+  "required_release_gate": "fitdating_gate_b5",
+  "require_explicit_owner_approval_for_production": true
+}

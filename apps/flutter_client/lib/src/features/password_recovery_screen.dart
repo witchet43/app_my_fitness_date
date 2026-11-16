@@ -1,3 +1,4 @@
+import '../core/fitted_locale.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/password_recovery.dart';
@@ -73,7 +74,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('My Fitness Date')),
+    appBar: AppBar(title: const FittedText('My Fitness Date')),
     body: SafeArea(child: Center(child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 480),
       child: ListView(
@@ -82,11 +83,11 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
         children: [
           const Icon(Icons.lock_reset_outlined, size: 54),
           const SizedBox(height: 16),
-          Text(saved ? 'Contraseña establecida' : 'Crea tu contraseña',
+          FittedText(saved ? 'Contraseña establecida' : 'Crea tu contraseña',
             style: Theme.of(context).textTheme.headlineMedium,
             textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text(saved
+          FittedText(saved
             ? 'La contraseña se actualizó. Vuelve a iniciar sesión. '
               'Si eres administrador, también deberás completar tu segundo factor.'
             : 'Estás en My Fitness Date. El enlace recibido por correo '
@@ -110,20 +111,20 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
             ),
             if (error != null) Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: Text(error!, style: const TextStyle(color: Colors.redAccent)),
+              child: FittedText(error!, style: const TextStyle(color: Colors.redAccent)),
             ),
             const SizedBox(height: 20),
             FilledButton(
               key: const Key('recovery-save-password'),
               onPressed: busy ? null : _save,
-              child: Text(busy ? 'Guardando...' : 'Guardar contraseña'),
+              child: FittedText(busy ? 'Guardando...' : 'Guardar contraseña'),
             ),
             if (existingPassword) ...[
               const SizedBox(height: 12),
               TextButton(
                 key: const Key('recovery-existing-password-login'),
                 onPressed: busy ? null : () => widget.onFinished(),
-                child: const Text('Ya tengo contraseña: iniciar sesión'),
+                child: const FittedText('Ya tengo contraseña: iniciar sesión'),
               ),
             ],
           ] else ...[
@@ -131,11 +132,11 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
             FilledButton(
               key: const Key('recovery-return-login'),
               onPressed: busy ? null : () => widget.onFinished(),
-              child: const Text('Volver a iniciar sesión'),
+              child: const FittedText('Volver a iniciar sesión'),
             ),
           ],
           const SizedBox(height: 12),
-          const Text('No compartas tu contraseña ni el enlace de recuperación.',
+          const FittedText('No compartas tu contraseña ni el enlace de recuperación.',
             textAlign: TextAlign.center),
         ],
       ),

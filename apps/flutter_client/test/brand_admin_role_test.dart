@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_fitness_date/src/core/account_role.dart';
 import 'package:my_fitness_date/src/core/brand_admin_repository.dart';
+import 'package:my_fitness_date/src/core/live_brand.dart';
 import 'package:my_fitness_date/src/features/brand_admin_home.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,6 +19,16 @@ class FakeBrandRepository extends BrandAdminRepository {
   Future<List<Map<String, dynamic>>> loadAssets() async => [];
   @override
   Future<List<Map<String, dynamic>>> loadDrafts() async => [];
+}
+
+class FakeLiveBrand extends LiveBrandController {
+  FakeLiveBrand(super.client) {
+    loaded=true;
+    current=LiveBrandSettings.fallback;
+    version=0;
+  }
+  @override
+  Future<void> refresh() async {}
 }
 
 void main() {
@@ -54,8 +65,11 @@ void main() {
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200,900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    final repository=FakeBrandRepository();
+    final liveBrand=FakeLiveBrand(repository.client);
     await tester.pumpWidget(MaterialApp(home:BrandAdminHome(
-      repository:FakeBrandRepository(),
+      repository:repository,
+      liveBrand:liveBrand,
       email:'admin@example.invalid',
       onSignOut:() async {},
     )));
@@ -63,11 +77,11 @@ void main() {
     expect(find.byKey(const Key('brand-admin-flutter-shell')),findsOneWidget);
     expect(find.text('Panel de Administración'),findsOneWidget);
     expect(find.text('FitDating'),findsNothing);
-    await tester.tap(find.text('Configurar identidad'));
+    await tester.tap(find.text('Editar marca en vivo'));
     await tester.pumpAndSettle();
-    expect(find.text('Identidad de marca'),findsOneWidget);
+    expect(find.text('Marca global en vivo'),findsOneWidget);
     expect(find.byKey(const Key('admin-logo-0')),findsOneWidget);
     expect(find.byKey(const Key('admin-logo-9')),findsOneWidget);
-    expect(find.byKey(const Key('admin-save-brand-draft')),findsOneWidget);
+    expect(find.byKey(const Key('b3-auto-publish-label')),findsOneWidget);
   });
 }

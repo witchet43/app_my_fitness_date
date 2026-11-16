@@ -1,0 +1,5 @@
+B8 one-shot integrated QA validation request
+Date: 2026-11-12
+Budget: 8 of max 10 remote builds
+Scope: B1-B5 regressions, B8 agenda widget, Gym Shield, QA API and isolated Cloudflare preview
+No production deploy; no auto retry.

@@ -1,9 +1,20 @@
 import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
-import '../widgets/mfd_branding.dart';
+import 'rhythm_concept_lab_b10.dart';
+import 'fitted_profile_story_v28.dart';
+import '../core/fitted_profile_insights_v29.dart';
+import 'fitted_gym_shield_v28.dart';
+import 'activities_b1.dart';
+import 'my_activities_b2.dart';
+import 'member_dashboard_b8.dart';
+import 'community_b4.dart';
 import '../theme/fitness_date_theme.dart';
+import '../core/live_brand.dart';
+import '../core/fitted_locale.dart';
+import '../widgets/fitted_rhythm_hero.dart';
 
 List<String> _tokens(String text) => text.split(',')
     .map((x) => x.trim()).where((x) => x.isNotEmpty).toSet().toList();
@@ -67,19 +78,53 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
     child:TextFormField(
       key:Key('profile-$field'),controller:fields[field],
       maxLines:lines,maxLength:maxLength,
-      decoration:InputDecoration(labelText:label,hintText:hint,
+      decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,label),
+        hintText:hint==null?null:FittedLocaleScope.translate(context,hint),
         alignLabelWithHint:lines>1),
       validator:required?(s)=>s==null||s.trim().length<2
           ?'Completa este campo':null:null,
     ));
 
-  Widget heading(String title, IconData icon, Color color) =>
-    Padding(padding:const EdgeInsets.fromLTRB(0,18,0,12),
-      child:Row(children:[
-        Icon(icon,color:color),const SizedBox(width:10),
-        Flexible(child:Text(title,style:const TextStyle(
-          fontSize:21,fontWeight:FontWeight.w900))),
-      ]));
+  Widget heading(String title, IconData icon, Color color) {
+    final number = title == 'Mi historia personal' ? '01'
+      : title == 'Mi mundo fitness' ? '02' : '03';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 26, 0, 13),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(colors: [
+            color.withValues(alpha: .16),
+            FitDateColors.surface.withValues(alpha: .98),
+          ]),
+          border: Border.all(color: color.withValues(alpha: .32)),
+        ),
+        child: Row(children: [
+          Container(
+            width: 42, height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .16),
+              borderRadius: BorderRadius.circular(14)),
+            child: Icon(icon, color: color, size: 21),
+          ),
+          const SizedBox(width: 13),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('FITTED / $number', style: TextStyle(
+                fontSize: 10, letterSpacing: 1.7, fontWeight: FontWeight.w800,
+                color: color)),
+              const SizedBox(height: 3),
+              FittedText(title, style: const TextStyle(
+                fontSize: 19, fontWeight: FontWeight.w700)),
+            ],
+          )),
+          Icon(Icons.arrow_outward_rounded, size: 18,
+            color: color.withValues(alpha: .65)),
+        ]),
+      ),
+    );
+  }
 
   Future<void> save() async {
     if (!form.currentState!.validate()) return;
@@ -118,18 +163,29 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
 
   @override
   Widget build(BuildContext context) => Form(key:form,
-    child:ListView(padding:const EdgeInsets.all(22),children:[
-      const Text('Mi perfil 360°',key:Key('v26-profile-editor'),
-        style:TextStyle(fontSize:31,fontWeight:FontWeight.w900)),
+    child:ListView(padding:const EdgeInsets.symmetric(horizontal:20,vertical:22),children:[
+      const FittedRhythmHero(
+        titleEs:'Lo que te mueve, te conecta.',
+        titleEn:'What moves you, connects you.',
+        subtitleEs:'Construye un perfil que hable de tu energía, tus valores y el espacio que quieres compartir con alguien.',
+        subtitleEn:'Build a profile shaped by your energy, values and the space you want to share with someone.',
+        compact:true,
+      ),
+      const SizedBox(height:23),
+      const FittedText('Mi perfil 360°',key:Key('v26-profile-editor'),
+        style:TextStyle(fontSize:27,fontWeight:FontWeight.w800)),
+      const SizedBox(height:8),
+      const FittedText('Tu historia va más allá del entrenamiento. Tú decides qué compartir; tus datos son privados por defecto.',
+        style:TextStyle(color:FitDateColors.muted,height:1.5)),
       const SizedBox(height:9),
-      const Text('Quién eres como persona y cómo disfrutas el movimiento. '
-        'Los datos están privados por defecto.',
-        style:TextStyle(color:FitDateColors.muted)),
+      const FittedText('MOVE  /  LIVE  /  RELATE',
+        style:TextStyle(fontSize:10,letterSpacing:2,
+          fontWeight:FontWeight.w800,color:FitDateColors.aqua)),
       heading('Mi historia personal',Icons.favorite_border,FitDateColors.coral),
       input('display_name','Nombre visible',required:true,maxLength:60),
       input('date_of_birth','Nacimiento privado · AAAA-MM-DD',
         required:true,hint:'1995-06-15'),
-      const Text('La fecha no se publica y no constituye una verificación '
+      const FittedText('La fecha no se publica y no constituye una verificación '
         'independiente de mayoría de edad.',
         style:TextStyle(color:FitDateColors.muted,fontSize:12)),
       const SizedBox(height:10),
@@ -145,14 +201,14 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
       heading('Mi mundo fitness',Icons.directions_run,FitDateColors.lime),
       input('sports','Mis disciplinas',hint:'Running, fuerza, yoga, ciclismo'),
       DropdownButtonFormField<String>(
-        initialValue:frequency,decoration:const InputDecoration(
-          labelText:'Frecuencia de entrenamiento'),
+        initialValue:frequency,decoration:InputDecoration(
+          labelText:FittedLocaleScope.translate(context,'Frecuencia de entrenamiento')),
         items:const [
-          DropdownMenuItem(value:'starting',child:Text('Estoy empezando')),
-          DropdownMenuItem(value:'one_to_two',child:Text('1–2 días')),
-          DropdownMenuItem(value:'three_to_four',child:Text('3–4 días')),
-          DropdownMenuItem(value:'five_plus',child:Text('5 o más días')),
-          DropdownMenuItem(value:'flexible',child:Text('Flexible')),
+          DropdownMenuItem(value:'starting',child:FittedText('Estoy empezando')),
+          DropdownMenuItem(value:'one_to_two',child:FittedText('1–2 días')),
+          DropdownMenuItem(value:'three_to_four',child:FittedText('3–4 días')),
+          DropdownMenuItem(value:'five_plus',child:FittedText('5 o más días')),
+          DropdownMenuItem(value:'flexible',child:FittedText('Flexible')),
         ],
         onChanged:(v)=>setState(()=>frequency=v??'flexible')),
       const SizedBox(height:13),
@@ -167,37 +223,37 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
         input('a$i','Mi respuesta',lines:2,maxLength:280),
       ],
       DropdownButtonFormField<String>(
-        initialValue:intent,decoration:const InputDecoration(
-          labelText:'Tipo de conexión (privado)'),
+        initialValue:intent,decoration:InputDecoration(
+          labelText:FittedLocaleScope.translate(context,'Tipo de conexión (privado)')),
         items:const [
-          DropdownMenuItem(value:'unknown',child:Text('Prefiero decidir después')),
-          DropdownMenuItem(value:'relationship',child:Text('Relación estable')),
-          DropdownMenuItem(value:'companionship',child:Text('Compañía o amistad')),
-          DropdownMenuItem(value:'open_to_explore',child:Text('Explorar con respeto')),
+          DropdownMenuItem(value:'unknown',child:FittedText('Prefiero decidir después')),
+          DropdownMenuItem(value:'relationship',child:FittedText('Relación estable')),
+          DropdownMenuItem(value:'companionship',child:FittedText('Compañía o amistad')),
+          DropdownMenuItem(value:'open_to_explore',child:FittedText('Explorar con respeto')),
         ],
         onChanged:(v)=>setState(()=>intent=v??'unknown')),
       heading('Privacidad',Icons.shield_outlined,FitDateColors.lime),
       DropdownButtonFormField<String>(
-        initialValue:visibility,decoration:const InputDecoration(
-          labelText:'Preferencia social futura'),
+        initialValue:visibility,decoration:InputDecoration(
+          labelText:FittedLocaleScope.translate(context,'Preferencia social futura')),
         items:const [
-          DropdownMenuItem(value:'private',child:Text('Solo yo')),
-          DropdownMenuItem(value:'members',child:Text('Miembros, al habilitarse')),
+          DropdownMenuItem(value:'private',child:FittedText('Solo yo')),
+          DropdownMenuItem(value:'members',child:FittedText('Miembros, al habilitarse')),
         ],
         onChanged:(v)=>setState(()=>visibility=v??'private')),
       const SizedBox(height:10),
-      const Text('Guardar esta preferencia NO publica tu perfil ni '
+      const FittedText('Guardar esta preferencia NO publica tu perfil ni '
         'activa FitDating. Los gimnasios, studios y horarios siguen privados.',
         style:TextStyle(color:FitDateColors.muted,fontSize:12)),
       if(warning!=null)Padding(padding:const EdgeInsets.all(10),
-        child:Text(warning!,style:const TextStyle(color:Colors.redAccent))),
+        child:FittedText(warning!,style:const TextStyle(color:Colors.redAccent))),
       const SizedBox(height:16),
       FilledButton.icon(
         key:const Key('v26-save-profile'),onPressed:saving?null:save,
         icon:const Icon(Icons.save_outlined),
-        label:Text(saving?'Guardando...':'Guardar mi perfil')),
+        label:FittedText(saving?'Guardando...':'Guardar mi perfil')),
       if(widget.onCancel!=null)TextButton(
-        onPressed:widget.onCancel,child:const Text('Cancelar')),
+        onPressed:widget.onCancel,child:const FittedText('Cancelar')),
     ]));
 
 }
@@ -215,21 +271,74 @@ class MemberProfileHomeV26 extends StatefulWidget {
 }
 
 class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
+  late final Future<bool> lifestyleConsent;
+  int selectedArea = 0; // 0 = Inicio, 1 = Mi perfil
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
+  Map<String,dynamic>? lifestyle;
+  String? startingRhythm;
   String? problem;
   bool loading=true;
   @override
-  void initState(){super.initState(); reload();}
+  void initState(){
+    super.initState();
+    final hint=widget.api.auth.auth.currentUser?.userMetadata?['fitted_starting_rhythm'];
+    if(FittedProfileInsights.segments.contains(hint)){
+      startingRhythm=hint as String;
+    }
+    lifestyleConsent=widget.api.loadConsents().then((records)=>records.any(
+      (r)=>r['consent_kind']=='dating' &&
+        r['document_version']=='dating-v1')).catchError((Object _)=>false);
+    reload();
+  }
   Future<void> reload() async {
     setState((){loading=true;problem=null;});
     try {
       final result=await Future.wait([
         widget.api.loadPlaces(),widget.api.loadPhotos()]);
       if(mounted)setState((){places=result[0];photos=result[1];});
+      // Private rhythm answers are fetched ONLY with separate dating consent.
+      final consent=await lifestyleConsent;
+      if(consent){
+        try{
+          final saved=await widget.api.loadRhythmB11();
+          if(mounted)setState(()=>lifestyle=saved);
+        }catch(_){if(mounted)setState(()=>lifestyle=null);}
+      } else if(mounted){setState(()=>lifestyle=null);}
     } catch (_) {
       if(mounted)setState(()=>problem='No se pudieron cargar los datos privados.');
     } finally {if(mounted)setState(()=>loading=false);}
+  }
+
+  Future<void> setStartingRhythm(String? value) async {
+    if(value!=null&&!FittedProfileInsights.segments.contains(value))return;
+    try{
+      await widget.api.auth.auth.updateUser(UserAttributes(
+        data:{'fitted_starting_rhythm':value},
+      ));
+      if(mounted)setState(()=>startingRhythm=value);
+    }catch(_){
+      if(mounted)ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content:Text(FittedLocaleScope.t(context,
+          'No se pudo guardar tu selección inicial.',
+          'Could not save your starting preference.'))));
+    }
+  }
+
+  Future<void> configurePillars() async {
+    final consent=await lifestyleConsent;
+    if(!mounted)return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>RhythmConceptLabB10(
+        repository:widget.api,canSave:consent,profileMode:true)));
+    if(mounted)await reload();
+  }
+
+  Future<void> configureShield() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>FittedGymShieldV28(
+        api:widget.api,onAddPlace:addPlace)));
+    if(mounted)await reload();
   }
 
   Future<void> addPlace() async {
@@ -239,43 +348,43 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     var kind='gym';
     final result=await showDialog<Map<String,String>>(context:context,
       builder:(dialog)=>StatefulBuilder(builder:(dialog,setDialog)=>
-        AlertDialog(title:const Text('Mi lugar de entrenamiento'),
+        AlertDialog(title:const FittedText('Mi lugar de entrenamiento'),
           content:SingleChildScrollView(child:Column(
             mainAxisSize:MainAxisSize.min,children:[
               DropdownButtonFormField<String>(initialValue:kind,
-                decoration:const InputDecoration(labelText:'Tipo'),
+                decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Tipo')),
                 items:const [
-                  DropdownMenuItem(value:'gym',child:Text('Gimnasio')),
-                  DropdownMenuItem(value:'studio',child:Text('Studio')),
-                  DropdownMenuItem(value:'running_club',child:Text('Club de running')),
-                  DropdownMenuItem(value:'park',child:Text('Parque')),
-                  DropdownMenuItem(value:'box',child:Text('Box')),
-                  DropdownMenuItem(value:'other',child:Text('Otro')),
+                  DropdownMenuItem(value:'gym',child:FittedText('Gimnasio')),
+                  DropdownMenuItem(value:'studio',child:FittedText('Studio')),
+                  DropdownMenuItem(value:'running_club',child:FittedText('Club de running')),
+                  DropdownMenuItem(value:'park',child:FittedText('Parque')),
+                  DropdownMenuItem(value:'box',child:FittedText('Box')),
+                  DropdownMenuItem(value:'other',child:FittedText('Otro')),
                 ],
                 onChanged:(v)=>setDialog(()=>kind=v??'gym')),
               const SizedBox(height:10),
               TextField(controller:name,onChanged:(_)=>setDialog((){}),
-                decoration:const InputDecoration(labelText:'Nombre')),
+                decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Nombre'))),
               const SizedBox(height:10),
               TextField(controller:city,onChanged:(_)=>setDialog((){}),
-                decoration:const InputDecoration(labelText:'Ciudad')),
+                decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Ciudad'))),
               const SizedBox(height:10),
               TextField(controller:zone,
-                decoration:const InputDecoration(
-                  labelText:'Zona general (opcional)')),
+                decoration:InputDecoration(
+                  labelText:FittedLocaleScope.translate(context,'Zona general (opcional)'))),
               const SizedBox(height:10),
-              const Text('El gimnasio y los horarios no se compartirán.',
+              const FittedText('El gimnasio y los horarios no se compartirán.',
                 style:TextStyle(fontSize:12)),
             ])),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog),
-              child:const Text('Cancelar')),
+              child:const FittedText('Cancelar')),
             FilledButton(
               onPressed:name.text.trim().length<2||city.text.trim().length<2
                 ?null:()=>Navigator.pop(dialog,{
                   'venue_kind':kind,'place_name':name.text.trim(),
                   'city':city.text.trim(),'general_zone':zone.text.trim()}),
-              child:const Text('Guardar')),
+              child:const FittedText('Guardar')),
           ])));
     name.dispose();city.dispose();zone.dispose();
     if(result==null)return;
@@ -287,17 +396,17 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     Card(child:Padding(padding:const EdgeInsets.all(20),
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[Icon(icon,color:color),const SizedBox(width:9),
-          Expanded(child:Text(title,style:const TextStyle(
+          Expanded(child:FittedText(title,style:const TextStyle(
             fontWeight:FontWeight.w900,fontSize:19)))]),
         const SizedBox(height:12),child,
       ])));
   Widget tags(dynamic value) {
     final items=value is List?value:[];
     return items.isEmpty
-      ?const Text('Aún sin información',
+      ?const FittedText('Aún sin información',
         style:TextStyle(color:FitDateColors.muted))
       :Wrap(spacing:7,runSpacing:6,
-        children:items.map<Widget>((x)=>Chip(label:Text(x.toString()))).toList());
+        children:items.map<Widget>((x)=>Chip(label:FittedText(x.toString()))).toList());
   }
   Widget photoTile(Map<String,dynamic> photo)=>SizedBox(width:140,
     child:Card(child:Padding(padding:const EdgeInsets.all(9),
@@ -308,9 +417,9 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             builder:(context,snapshot)=>snapshot.hasData
               ?Image.memory(snapshot.data!,fit:BoxFit.cover)
               :const Center(child:Icon(Icons.image_outlined)))),
-        Text((photo['moderation_state']??'pending').toString(),
+        FittedText((photo['moderation_state']??'pending').toString(),
           style:const TextStyle(color:FitDateColors.muted,fontSize:11)),
-        IconButton(tooltip:'Eliminar mi foto',
+        IconButton(tooltip:FittedLocaleScope.translate(context,'Eliminar mi foto'),
           icon:const Icon(Icons.delete_outline),
           onPressed:()async{
             try{await widget.api.removePhoto(photo['id'].toString());await reload();}
@@ -322,102 +431,213 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   Widget build(BuildContext context) {
     final p=widget.profile;
     return Scaffold(
-      appBar:AppBar(title:const Text('My Fitness Date'),
+      appBar:AppBar(
+        title:FittedText(LiveBrandScope.of(context).name),
         actions:[
-          IconButton(tooltip:'Editar',onPressed:widget.onEdit,
-            icon:const Icon(Icons.edit_outlined)),
-          IconButton(tooltip:'Cerrar sesión',onPressed:widget.onLogout,
-            icon:const Icon(Icons.logout)),
+          const FittedLanguageSelector(),
+          PopupMenuButton<String>(
+            tooltip:FittedLocaleScope.t(context,'Cuenta','Account'),
+            icon:const Icon(Icons.account_circle_outlined),
+            onSelected:(value) {
+              if(value=='profile')setState(()=>selectedArea=1);
+              if(value=='edit')widget.onEdit();
+              if(value=='logout')widget.onLogout();
+            },
+            itemBuilder:(_)=>[
+              PopupMenuItem(value:'profile',
+                child:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
+              PopupMenuItem(value:'edit',
+                child:Text(FittedLocaleScope.t(context,'Editar perfil','Edit profile'))),
+              PopupMenuItem(value:'logout',
+                child:Text(FittedLocaleScope.t(context,'Cerrar sesión','Sign out'))),
+            ],
+          ),
         ]),
       body:Center(child:ConstrainedBox(
         constraints:const BoxConstraints(maxWidth:980),
         child:ListView(padding:const EdgeInsets.all(16),children:[
-          Container(padding:const EdgeInsets.all(22),
-            decoration:BoxDecoration(
-              borderRadius:BorderRadius.circular(24),
-              gradient:const LinearGradient(colors:[
-                Color(0xFF38233D),Color(0xFF1B3029)])),
-            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              const MfdBranding(full:false,width:80),
-              const SizedBox(height:12),
-              const Text('MI PERFIL · PRIVADO',style:TextStyle(
-                color:FitDateColors.lime,letterSpacing:2,fontSize:11)),
-              const SizedBox(height:10),
-              Text((p['display_name']??'').toString(),
-                key:const Key('v26-member-name'),
-                style:const TextStyle(fontSize:30,fontWeight:FontWeight.w900)),
-              Text((p['city']??'').toString(),style:const TextStyle(
-                color:FitDateColors.muted)),
-              const SizedBox(height:10),
-              Text((p['headline']??'').toString()),
-            ])),
-          section('Yo como persona',Icons.favorite,FitDateColors.coral,
+          SegmentedButton<int>(
+            key:const Key('fitted-home-navigation'),
+            showSelectedIcon:false,
+            segments:[
+              ButtonSegment(value:0,icon:const Icon(Icons.home_outlined),
+                label:Text(FittedLocaleScope.t(context,'Inicio','Home'))),
+              ButtonSegment(value:1,icon:const Icon(Icons.person_outline),
+                label:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
+            ],
+            selected:{selectedArea},
+            onSelectionChanged:(value)=>setState(()=>selectedArea=value.first),
+          ),
+          const SizedBox(height:18),
+          if(selectedArea==0)...[
+            Container(
+              key:const Key('fitted-member-dashboard'),
+              decoration:BoxDecoration(
+                color:FitDateColors.surface,
+                borderRadius:BorderRadius.circular(27),
+                border:Border.all(color:FitDateColors.outline.withValues(alpha:.65))),
+              child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                FittedRhythmHero(
+                  titleEs:'Hola, ' + (p['display_name']??'').toString().split(' ').first + '. Sigue tu ritmo.',
+                  titleEn:'Hello, ' + (p['display_name']??'').toString().split(' ').first + '. Find your rhythm.',
+                  subtitleEs:'Conoce personas a tu ritmo y encuentra actividades que van contigo. Una afinidad que empieza en cómo vives.',
+                  subtitleEn:'Meet people at your pace and find activities that fit. Compatibility starts with how you live.',
+                  compact:true,
+                ),
+                Padding(padding:const EdgeInsets.fromLTRB(20,14,20,20),
+                  child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                    FilledButton.icon(
+                      key:const Key('fitted-discover-primary'),
+                      onPressed:()=>Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder:(_)=>DatingV27(api:widget.api))),
+                      icon:const Icon(Icons.explore_outlined),
+                      label:Text(FittedLocaleScope.t(context,
+                        'Descubrir conexiones','Discover connections'))),
+                    const SizedBox(height:10),
+                    Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                      const Icon(Icons.verified_user_outlined,
+                        size:16,color:FitDateColors.aqua),
+                      const SizedBox(width:8),
+                      Expanded(child:Text(FittedLocaleScope.t(context,
+                        'FitDating requiere verificaciones de seguridad antes de mostrar perfiles.',
+                        'FitDating requires safety checks before profiles are shown.'),
+                        style:const TextStyle(fontSize:11,
+                          color:FitDateColors.muted,height:1.4))),
+                    ]),
+                  ])),
+              ]),
+            ),
+            const SizedBox(height:16),
+            MemberAgendaB8(
+              api:widget.api,
+              onExplore:()async {
+                await Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder:(_)=>ActivitiesB1(api:widget.api)));
+              },
+              onReservations:()async {
+                await Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder:(_)=>MyActivitiesB2(api:widget.api)));
+              },
+            ),
+            const SizedBox(height:12),
+            OutlinedButton.icon(
+              key:const Key('b4-member-community'),
+              onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+                builder:(_)=>CommunityB4(api:widget.api))),
+              icon:const Icon(Icons.groups_outlined),
+              label:Text(FittedLocaleScope.t(context,
+                'Explorar comunidad','Explore community'))),
+            const SizedBox(height:12),
+            ListTile(
+              contentPadding:const EdgeInsets.symmetric(horizontal:8),
+              leading:const Icon(Icons.tune_outlined),
+              title:Text(FittedLocaleScope.t(context,
+                'Personaliza tu perfil','Personalize your profile')),
+              subtitle:Text(FittedLocaleScope.t(context,
+                'Intereses, valores y privacidad en un solo lugar',
+                'Interests, values and privacy in one place')),
+              trailing:const Icon(Icons.chevron_right),
+              onTap:()=>setState(()=>selectedArea=1),
+            ),
+          ]else...[
+            Row(children:[
+              Expanded(child:Text(FittedLocaleScope.t(context,
+                'Mi perfil privado','My private profile'),
+                style:const TextStyle(fontSize:24,fontWeight:FontWeight.w800))),
+              IconButton(
+                tooltip:FittedLocaleScope.t(context,'Editar','Edit'),
+                onPressed:widget.onEdit,icon:const Icon(Icons.edit_outlined)),
+            ]),
+            const SizedBox(height:12),
+          KeyedSubtree(
+            key:const Key('fitted-profile-three-pillars-card'),
+            child:FittedProfileStoryV28(
+              profile:p,rhythm:lifestyle,
+              startingPreference:startingRhythm,
+              onChooseStarting:setStartingRhythm,
+              onConfigure:configurePillars,
+              onEditIdentity:widget.onEdit,
+            ),
+          ),
+
+          if((lifestyle!=null &&
+                (lifestyle!['challenge']??'').toString().trim().isNotEmpty) ||
+              (p['achievements'] is List &&
+                (p['achievements'] as List).isNotEmpty))
+            section(FittedLocaleScope.t(context,
+                'Mis retos y logros','My challenges and milestones'),
+              Icons.flag_outlined,FitDateColors.lime,
+              Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                if(lifestyle!=null &&
+                    (lifestyle!['challenge']??'').toString().trim().isNotEmpty)
+                  ListTile(
+                    contentPadding:EdgeInsets.zero,
+                    leading:const Icon(Icons.track_changes_outlined),
+                    title:Text(FittedLocaleScope.t(context,
+                      'En lo que estoy trabajando','What I am working on')),
+                    subtitle:Text(lifestyle!['challenge'].toString())),
+                if(p['achievements'] is List &&
+                    (p['achievements'] as List).isNotEmpty)
+                  tags(p['achievements']),
+              ])),
+          section('Gym Shield',Icons.shield_outlined,
+            FitDateColors.lime,
             Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              Text((p['about_me']??'').toString()),
-              const SizedBox(height:12),tags(p['hobbies']),
+              Text(FittedLocaleScope.t(context,
+                'Protege dónde y cuándo entrenas. Decide si aceptas '
+                'personas de tu mismo gimnasio o de horarios compartidos, '
+                'sin publicar tu rutina.',
+                'Protect when and where you train. Choose whether to '
+                'allow people from your gym or overlapping times, '
+                'without publishing your schedule.')),
               const SizedBox(height:12),
-              Text('Valores: ${_list(p['life_values'])}'),
-              for(final answer in (p['prompts'] is List?p['prompts'] as List:[]))
-                if(answer is Map)
-                  ListTile(title:Text((answer['question']??'').toString()),
-                    subtitle:Text((answer['answer']??'').toString())),
+              Wrap(spacing:7,runSpacing:7,children:[
+                for(final place in places.take(3))
+                  Chip(avatar:const Icon(Icons.lock_outline,size:16),
+                    label:Text((place['place_name']??'').toString())),
+              ]),
+              if(places.isEmpty)
+                Text(FittedLocaleScope.t(context,
+                  'Añade tus lugares y ventanas generales para personalizar '
+                  'la protección.',
+                  'Add places and broad time windows to customize protection.')),
+              const SizedBox(height:13),
+              FilledButton.icon(
+                key:const Key('fitted-open-gym-shield'),
+                onPressed:configureShield,
+                icon:const Icon(Icons.admin_panel_settings_outlined),
+                label:Text(FittedLocaleScope.t(context,
+                  'Configurar Gym Shield','Configure Gym Shield'))),
             ])),
-          section('Mi lado deportivo',Icons.directions_run,FitDateColors.lime,
-            Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              tags(p['sports']),const SizedBox(height:8),
-              const Text('Mis objetivos',style:TextStyle(fontWeight:FontWeight.bold)),
-              tags(p['fitness_goals']),const SizedBox(height:10),
-              const Text('Mis logros',style:TextStyle(fontWeight:FontWeight.bold)),
-              tags(p['achievements']),
-            ])),
-          section('Fotografías privadas',Icons.photo_library_outlined,
+          if(photos.isNotEmpty)section(FittedLocaleScope.t(context,'Fotografías privadas','Private photos'),Icons.photo_library_outlined,
             FitDateColors.lilac,Column(
               crossAxisAlignment:CrossAxisAlignment.start,children:[
-                const Text('Hasta ocho fotos. Se eliminan metadatos y '
-                  'no se muestran a otras personas sin aprobación.',
-                  style:TextStyle(color:FitDateColors.muted,fontSize:12)),
+                Text(FittedLocaleScope.t(context,
+                  'Tus fotos permanecen privadas hasta su aprobación.',
+                  'Your photos remain private until approved.'),
+                  style:const TextStyle(color:FitDateColors.muted,fontSize:12)),
                 const SizedBox(height:12),
-                const Text('Carga de fotos suspendida hasta completar la sanitización y moderación del servicio.',
-                  style:TextStyle(color:FitDateColors.muted,fontSize:12)),
                 if(loading)const LinearProgressIndicator(),
                 Wrap(spacing:8,runSpacing:8,
                   children:photos.map(photoTile).toList()),
             ])),
-          section('Gimnasios, studios y zonas privadas',
-            Icons.shield_outlined,FitDateColors.lime,Column(
-              crossAxisAlignment:CrossAxisAlignment.start,children:[
-                const Text('Solo tú ves estos lugares. Nunca mostramos '
-                  'ubicaciones exactas ni horarios de asistencia.',
-                  style:TextStyle(color:FitDateColors.muted,fontSize:12)),
-                const SizedBox(height:12),
-                FilledButton.icon(onPressed:addPlace,
-                  icon:const Icon(Icons.add_location_alt_outlined),
-                  label:const Text('Añadir lugar privado')),
-                for(final place in places)
-                  ListTile(
-                    title:Text((place['place_name']??'').toString()),
-                    subtitle:Text((place['city']??'').toString()),
-                    trailing:IconButton(
-                      icon:const Icon(Icons.delete_outline),
-                      onPressed:()async{
-                        try{await widget.api.removePlace(place['id'].toString());await reload();}
-                        catch(_){if(mounted)setState(()=>problem='No se pudo eliminar.');}
-                      },
-                    )),
-            ])),
-          section('FitDating y seguridad',Icons.verified_user_outlined,
-            FitDateColors.coral,
+          section(FittedLocaleScope.t(context,'Compatibilidad y seguridad',
+              'Compatibility and safety'),Icons.verified_user_outlined,
+            FitDateColors.lime,
             Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
-              const Text('Revisa tu elegibilidad, registra el consentimiento separado y consulta personas compatibles cuando se apruebe tu verificación de edad.'),
+              Text(FittedLocaleScope.t(context,
+                'Consulta las protecciones de tu cuenta. Las funciones de citas se habilitarán después de las verificaciones de seguridad.',
+                'Review your account protections. Dating features will open after safety checks.' )),
               const SizedBox(height:12),
               FilledButton.icon(
                 key:const Key('fitdating-open'),
                 onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
                   builder:(_)=>DatingV27(api:widget.api))),
                 icon:const Icon(Icons.favorite_outline),
-                label:const Text('Explorar FitDating')),
+                label:const FittedText('Explorar FitDating')),
             ])),
-          if(problem!=null)Text(problem!,
+          ],
+          if(problem!=null)FittedText(problem!,
             style:const TextStyle(color:Colors.redAccent)),
         ]),
       )),

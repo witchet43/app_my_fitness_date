@@ -1,0 +1,13 @@
+B5 single controlled consolidated validation.
+Plan budget: B1=1, B2=1, B3=2 (including B9 contingency), B4=1, B5=1 => 6/10.
+B4's previous six widget failures must be retested in this single job.
+B5 adds private FitDating preferences, consent withdrawal and fail-closed
+independent-age and moderation gates, plus Gym Shield tests.
+NO production deploy, NO automatic retry, QA preview branch only.
+2026-11-12.
+Contingency B10 critical recovery: first B5 run #43332154861 passed
+Node, Gym Shield, QA API and Flutter analyze plus all B4 widget tests,
+but two newly authored B5 widget cases failed due offscreen lazy list and
+23px dropdown overflow. Corrected both in source commits be8852c and bd829c4.
+One more consolidated job; total 7/10 and NO further contingencies.
+No production deploy. No automatic rerun.

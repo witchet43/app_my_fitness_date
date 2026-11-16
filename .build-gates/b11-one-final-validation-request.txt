@@ -1,0 +1,4 @@
+MY FITNESS DATE — B11 ONE FINAL OWNER-REQUESTED BUILD
+Scope: full FITTED three-rhythm profile persisted owner-only, explainable romantic discovery, bilateral likes/matches, 1:1 chat, safety report/block, Active Date, 24 SQL migrations and 20 tests in isolated PostgreSQL, Node contracts, Gym Shield, Dart analyzer + Flutter test, SHA-verified Cloudflare isolated b11-preview.
+One CI execution only; no automated second build, no merge and no production when external adult verification/moderation/legal flags are false.
+Preview uses isolated member-api-b11-preview, not production member-api-v26. No privileged keys in client.

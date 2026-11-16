@@ -1,0 +1,57 @@
+# Explicit test-only trigger. NO Google Cloud Build or app compilation.
+name: MFD B11 — local email Auth QA (no builds)
+on:
+  push:
+    branches:
+      - qa/b11-local-auth-email-qa-20261112
+    paths:
+      - .build-gates/b11-local-email-qa.txt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b11-local-email-only
+  cancel-in-progress: false
+
+jobs:
+  verify-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned project dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Start ephemeral local GoTrue and Mailpit
+        run: |
+          set -euo pipefail
+          npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler
+          python3 - <<'PY'
+          import time,urllib.request
+          for attempt in range(20):
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:54324/api/v1/messages',timeout=3) as r:
+                      if r.status==200:
+                          print('Mailpit ready')
+                          break
+              except Exception:
+                  time.sleep(.5)
+          else:
+              raise RuntimeError('Mailpit unavailable')
+          PY
+      - name: Verify local email confirmation and reset codes only
+        env:
+          MFD_LOCAL_AUTH_E2E: LOCAL_ONLY
+        run: |
+          set -euo pipefail
+          set -a
+          eval "$(npx --yes supabase@latest status -o env)"
+          set +a
+          npm run test:auth:email:local
+      - name: Clean up ephemeral local Auth completely
+        if: always()
+        run: npx --yes supabase@latest stop --no-backup || true

@@ -22,6 +22,36 @@ class BrandAdminRepository {
   Future<bool> hasVerifiedMfa() async =>
       await client.rpc('brand_admin_session') == true;
 
+  /// Gym Shield catalog curation: same authenticated AAL2 role as branding.
+  /// The SQL RPC checks is_brand_owner() again and records an audit entry.
+  Future<List<Map<String,dynamic>>> loadCuratedGymsB11() async {
+    final rows=await client.from('gyms').select('id,name,city')
+      .order('name',ascending:true).limit(200);
+    return List<Map<String,dynamic>>.from(rows)
+      .where((gym)=>!gym['name'].toString()
+        .toLowerCase().startsWith('gym demo'))
+      .toList();
+  }
+
+  Future<String> registerGymB11(String name,String city) async {
+    final cleanName=name.trim();
+    final cleanCity=city.trim();
+    if(cleanName.length<3||cleanName.length>120||
+        cleanCity.length<2||cleanCity.length>100){
+      throw const FormatException('Nombre o ciudad inválidos.');
+    }
+    if(!await hasVerifiedMfa()){
+      throw StateError('Se requiere MFA del administrador.');
+    }
+    final result=await client.rpc('admin_b11_register_gym',params:{
+      'p_name':cleanName,'p_city':cleanCity,
+    });
+    if(result is! String || result.isEmpty){
+      throw StateError('El registro no fue confirmado.');
+    }
+    return result;
+  }
+
   Future<List<Map<String, dynamic>>> loadPalettes() async =>
       List<Map<String, dynamic>>.from(
           await client.from('brand_palettes').select().order('created_at', ascending: false));
@@ -159,6 +189,44 @@ class BrandAdminRepository {
     }).select();
     if (rows.length != 1) throw StateError('No se pudo registrar el recurso');
     return Map<String, dynamic>.from(rows.first);
+  }
+
+
+  /// B3: the owner selects an image to become PUBLIC. The new immutable copy
+  /// is served to all devices with no future build. Private draft files stay
+  /// private. AAL2/owner checks are enforced by the storage bucket policy.
+  Future<String> uploadPublicBrandAsset({
+    required String kind,
+    required String name,
+    required Uint8List bytes,
+  }) async {
+    if (!const ['logo','cover_desktop','cover_mobile','app_image'].contains(kind)) {
+      throw const FormatException('Solo imágenes públicas aprobadas.');
+    }
+    if (bytes.length > 4194304) {
+      throw const FormatException('Las imágenes públicas admiten máximo 4 MB.');
+    }
+    final mime = mimeForFile(name,bytes,kind);
+    if (mime == null || mime == 'font/woff2') {
+      throw const FormatException('Solo PNG, WebP y JPG válidos.');
+    }
+    final ext = mime == 'image/png' ? 'png'
+        : mime == 'image/webp' ? 'webp' : 'jpg';
+    final nonce = Random.secure().nextInt(1 << 32).toRadixString(16)
+        .padLeft(8, '0');
+    final path = '$ownerId/'
+        '${DateTime.now().microsecondsSinceEpoch}-$nonce.$ext';
+    await client.storage.from('mfd-brand-live').uploadBinary(
+      path,bytes,
+      fileOptions:FileOptions(contentType:mime,upsert:false),
+    );
+    final url = client.storage.from('mfd-brand-live').getPublicUrl(path);
+    if (!url.startsWith(
+      'https://jtrdvnwbxpfdnbzasvcj.supabase.co/storage/v1/object/public/mfd-brand-live/'
+    )) {
+      throw StateError('Destino de publicación de imagen no confiable.');
+    }
+    return url;
   }
 
   Future<Uint8List> loadPrivateAsset(Map<String, dynamic> asset) async {

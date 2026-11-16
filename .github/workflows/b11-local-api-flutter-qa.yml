@@ -1,0 +1,83 @@
+# Deliberate GitHub QA-only run; not a Flutter build or cloud deployment.
+name: MFD B11 — Local API + Flutter QA (no cloud build)
+on:
+  push:
+    branches: [qa/b11-local-api-flutter-integration-20261112, qa/b11-local-api-flutter-integration-r2-20261112, qa/b11-local-api-flutter-integration-r3-20261112, qa/b11-local-api-flutter-integration-r4-20261112]
+    paths: [.build-gates/b11-local-api-qa-request.txt]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b11-local-runtime-qa-no-deploy
+  cancel-in-progress: false
+
+jobs:
+  integrated-local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies and verify environment target
+        run: |
+          npm ci --no-audit --no-fund
+          python3 scripts/test_supabase_target.py
+      - name: Local Supabase and Edge function (ephemeral Docker)
+        run: |
+          set -euo pipefail
+          npx --yes supabase@latest start --exclude studio,realtime,storage,functions,analytics,pooler
+          nohup npx --yes supabase@latest functions serve member-api-v26 \
+            --no-verify-jwt --env-file supabase/local-preview.env \
+            > /tmp/mfd-b11-local-edge.log 2>&1 < /dev/null &
+          echo "Edge bootstrap started"
+          for i in $(seq 1 70); do
+            code=$(curl -sS --max-time 4 -o /dev/null -w '%{http_code}' \
+              -X OPTIONS \
+              -H 'Origin: http://127.0.0.1:5173' \
+              http://127.0.0.1:54321/functions/v1/member-api-v26/v1/dating/rhythm || true)
+            if [ "$code" = "204" ]; then
+              echo "Exact loopback Edge CORS ready"
+              break
+            fi
+            sleep 2
+          done
+          if [ "$code" != "204" ]; then
+            tail -c 5000 /tmp/mfd-b11-local-edge.log || true
+            exit 1
+          fi
+      - name: Verified real HTTP Edge, two Auth JWTs, PostgREST and RLS
+        env:
+          MFD_LOCAL_AUTH_E2E: LOCAL_ONLY
+        run: |
+          set -euo pipefail
+          set -a
+          eval "$(npx --yes supabase@latest status -o env)"
+          set +a
+          npm run test:edge:b11:local
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Flutter static and widget suite (NO release build)
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded
+      - name: Local Edge diagnostics on failure (no credentials)
+        if: failure()
+        run: |
+          if [ -f /tmp/mfd-b11-local-edge.log ]; then
+            echo "Last local Edge diagnostic lines:"
+            tail -n 90 /tmp/mfd-b11-local-edge.log
+          fi
+      - name: Destroy all local QA resources
+        if: always()
+        run: npx --yes supabase@latest stop --no-backup || true

@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 
-/// Brand system: athletic energy (lime) + human connection (coral).
+/// Fitted Pulse & Presence: deep ocean, luminous mint, warm apricot and iris.
+/// Designed for confident adults 35–50, not a neon or teen dating aesthetic.
 /// Static tokens support Flutter Web, Android and iOS without external fonts.
 abstract final class FitDateColors {
-  static const ink = Color(0xFF10121E);
-  static const inkDeep = Color(0xFF0A0D16);
-  static const surface = Color(0xFF191D2C);
-  static const surfaceRaised = Color(0xFF23283A);
-  static const coral = Color(0xFFFF617B);
-  static const coralDark = Color(0xFF361B30);
-  static const lime = Color(0xFFC8FF6B);
-  static const lilac = Color(0xFFA995FF);
-  static const pearl = Color(0xFFF6F5F7);
-  static const muted = Color(0xFFC3C6D3);
-  static const outline = Color(0xFF3A4054);
+  static const ink = Color(0xFF1B3038);
+  static const inkDeep = Color(0xFF0F1821);
+  static const surface = Color(0xFF182830);
+  static const surfaceRaised = Color(0xFF233942);
+  static const coral = Color(0xFFFFB59E);
+  static const coralDark = Color(0xFF3F3540);
+  static const lime = Color(0xFF58DEBA);
+  static const aqua = Color(0xFF58DEBA);
+  static const apricot = Color(0xFFFFB59E);
+  static const lilac = Color(0xFFC5B7F6);
+  static const pearl = Color(0xFFF9F4EC);
+  static const muted = Color(0xFFC3D1D0);
+  static const outline = Color(0xFF476069);
 }
 
 abstract final class FitDateTheme {
@@ -38,21 +41,40 @@ abstract final class FitDateTheme {
       scaffoldBackgroundColor: FitDateColors.inkDeep,
       canvasColor: FitDateColors.inkDeep,
       splashFactory: InkRipple.splashFactory,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: FitDateColors.inkDeep,
+        foregroundColor: FitDateColors.pearl,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: FitDateColors.aqua,
+        selectionColor: FitDateColors.aqua.withValues(alpha: .29),
+        selectionHandleColor: FitDateColors.aqua,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: FitDateColors.surfaceRaised,
+        selectedColor: FitDateColors.aqua.withValues(alpha: .18),
+        side: const BorderSide(color: FitDateColors.outline),
+        labelStyle: const TextStyle(color: FitDateColors.pearl, fontSize: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
-          fontSize: 56, fontWeight: FontWeight.w900,
+          fontSize: 56, fontFamily: 'Georgia', fontWeight: FontWeight.w700,
           color: FitDateColors.pearl, height: 1.08, letterSpacing: -1.8,
         ),
         displayMedium: TextStyle(
-          fontSize: 40, fontWeight: FontWeight.w900,
+          fontSize: 40, fontFamily: 'Georgia', fontWeight: FontWeight.w700,
           color: FitDateColors.pearl, height: 1.10, letterSpacing: -1.3,
         ),
         headlineMedium: TextStyle(
-          fontSize: 28, fontWeight: FontWeight.w800,
+          fontSize: 28, fontFamily: 'Georgia', fontWeight: FontWeight.w700,
           color: FitDateColors.pearl, height: 1.15,
         ),
         titleLarge: TextStyle(
-          fontSize: 21, fontWeight: FontWeight.w800,
+          fontSize: 21, fontWeight: FontWeight.w700,
           color: FitDateColors.pearl,
         ),
         bodyLarge: TextStyle(
@@ -66,7 +88,7 @@ abstract final class FitDateTheme {
         color: FitDateColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(26),
           side: const BorderSide(color: FitDateColors.outline, width: .65),
         ),
       ),
@@ -74,16 +96,16 @@ abstract final class FitDateTheme {
         filled: true,
         fillColor: FitDateColors.ink,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: FitDateColors.outline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: FitDateColors.outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: FitDateColors.lime, width: 2),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: FitDateColors.aqua, width: 2),
         ),
         labelStyle: const TextStyle(color: FitDateColors.muted),
       ),
@@ -95,7 +117,7 @@ abstract final class FitDateTheme {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
       ),
@@ -106,13 +128,13 @@ abstract final class FitDateTheme {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           side: const BorderSide(color: FitDateColors.outline),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: FitDateColors.inkDeep,
-        indicatorColor: const Color(0xFF3A263F),
+        indicatorColor: const Color(0xFF1B4D4D),
         selectedIconTheme: const IconThemeData(
           color: FitDateColors.coral, size: 26,
         ),
@@ -129,7 +151,7 @@ abstract final class FitDateTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: FitDateColors.surface,
-        indicatorColor: const Color(0xFF3A263F),
+        indicatorColor: const Color(0xFF285150),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             color: states.contains(WidgetState.selected)

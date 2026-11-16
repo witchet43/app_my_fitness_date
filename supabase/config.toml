@@ -8,7 +8,7 @@ extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54322
+port = 54352
 major_version = 17
 
 [db.seed]
@@ -16,8 +16,8 @@ enabled = false
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["http://127.0.0.1:3000"]
+site_url = "http://127.0.0.1:5173"
+additional_redirect_urls = ["http://127.0.0.1:5173", "http://127.0.0.1:5173/recover/", "http://127.0.0.1:3000"]
 
 [auth.email]
 enable_signup = true
@@ -31,6 +31,12 @@ content_path = "./supabase/templates/confirmation.html"
 [auth.email.template.recovery]
 subject = "my_fitness_date QA recovery"
 content_path = "./supabase/templates/recovery.html"
+
+# Keep a dedicated local email capture; never send real mail in CI.
+[local_smtp]
+enabled = true
+port = 54324
+smtp_port = 54325
 
 # Public read-only database readiness endpoint; no credentials or PII.
 [functions.heartbeat]

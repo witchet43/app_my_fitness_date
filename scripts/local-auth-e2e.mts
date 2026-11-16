@@ -132,7 +132,8 @@ try{
  assert.equal((statusBefore.data as {approved:boolean}).approved,false,
   'A real new GoTrue account must not receive implicit adult eligibility');
  const deniedDiscover=await a.rpc('discover_dating_candidates',{p_limit:10});
- assert.ok(deniedDiscover.error,'Dating discovery should reject users awaiting age review');
+ assert.ifError(deniedDiscover.error);
+ assert.deepEqual(deniedDiscover.data,[], 'Discovery must stay closed before external release');
 
  // Controlled local-only operator fixture. The hosted DEV service key must
  // never be used here: the caller verifies a strict loopback API URL.
@@ -157,16 +158,104 @@ try{
  assert.equal(gyms.data?.length,2);
  const gymA=required(gyms.data?.[0]?.id,'gym A');
  const gymB=required(gyms.data?.[1]?.id,'gym B');
+ // Even if an old authenticated RPC still saves an enabled dating profile,
+ // the independently audited B5 gate MUST keep all candidates private.
  await saveDating(a,'QA Runner A',gymA,'same_gym_other_time',420,510);
- await saveDating(b,'QA Runner B',gymA,'same_gym_other_time',539,620);
- assert.equal((await candidateIds(a)).includes(uidB),false,'29-min gap prohibited');
- await saveDating(b,'QA Runner B',gymA,'same_gym_other_time',540,620);
- assert.equal((await candidateIds(a)).includes(uidB),true,'30-min gap permitted');
- await saveDating(b,'QA Runner B',gymA,'other_gyms',0,0);
- assert.equal((await candidateIds(a)).includes(uidB),false,'reciprocal consent required');
  await saveDating(b,'QA Runner B',gymB,'other_gyms',0,0);
- assert.equal((await candidateIds(a)).includes(uidB),true,'different gym candidate allowed');
- checks.push('real JWT Gym Shield same-gym 29/30m, reciprocity, different gym');
+ assert.deepEqual(await candidateIds(a),[],
+   'Legacy dating_enabled cannot bypass independent release approval');
+ assert.deepEqual(await candidateIds(b),[],
+   'No real candidate should appear to the second account');
+ const state=await rpc(a,'fitdating_status_b5') as {
+   enabled:boolean;discovery_release_ready:boolean;
+ };
+ assert.equal(state.enabled,false);
+ assert.equal(state.discovery_release_ready,false);
+ const attempt=await a.rpc('fitdating_activate_b11',{
+   p_gym_id:gymA,p_weekly_slots:[],
+ });
+ assert.ifError(attempt.error);
+ assert.equal(attempt.data,'not_eligible');
+ const anonymous=await anon.rpc('fitdating_activate_b11',{
+   p_gym_id:gymA,p_weekly_slots:[],
+ });
+ assert.ok(anonymous.error,'Anon must not have activation access');
+ const crossRead=await a.from('member_rhythm_b11').select('user_id')
+   .eq('user_id',uidB);
+ assert.ifError(crossRead.error);
+ assert.deepEqual(crossRead.data,[],
+   'Another member lifestyle record is never readable');
+ checks.push('legacy JWT profile bypass denied; B11 activation gated; lifestyle RLS private');
+
+ // Owner-only profile lifecycle, using real JWTs issued by local GoTrue.
+ // Dating lifestyle can be PREPARED with consent before external release,
+ // but is NEVER discoverable until independent approvals and Gym Shield.
+ const lifestyle={
+   answers:{
+     sport:'running',frequency:'two_three',sleep:'early_bird',
+     weekday:'home',intent:'long_term',together:'balanced',
+   },
+   additional_sports:['yoga'],weekends:['brunch','recovery'],
+   interests:['books','music'],challenge:'Train my first 21K',
+   weeknight:'Quiet dinner',support:'Respect for recovery days',
+ };
+ const premature=await a.from('member_rhythm_b11').upsert(
+   {user_id:uidA,...lifestyle},{onConflict:'user_id'});
+ assert.ok(premature.error,
+   'A dating rhythm must not persist without separate dating consent');
+ const consentA=await a.from('member_consents_v26').insert({
+   user_id:uidA,consent_kind:'dating',
+   document_version:'dating-v1',source:'profile_settings',
+ });
+ assert.ifError(consentA.error);
+ const consentB=await b.from('member_consents_v26').insert({
+   user_id:uidB,consent_kind:'dating',
+   document_version:'dating-v1',source:'profile_settings',
+ });
+ assert.ifError(consentB.error);
+ const saved=await a.from('member_rhythm_b11').upsert(
+   {user_id:uidA,...lifestyle},{onConflict:'user_id'})
+   .select('answers,additional_sports,weekends,interests,challenge,weeknight,support')
+   .single();
+ assert.ifError(saved.error);
+ assert.deepEqual(saved.data?.answers,lifestyle.answers);
+ const blockedRead=await b.from('member_rhythm_b11')
+   .select('user_id,answers').eq('user_id',uidA);
+ assert.ifError(blockedRead.error);
+ assert.deepEqual(blockedRead.data,[],
+   'B with consent must never see A lifestyle data');
+ const blockedWrite=await b.from('member_rhythm_b11').upsert({
+   user_id:uidA,...lifestyle,
+ },{onConflict:'user_id'});
+ assert.ok(blockedWrite.error,
+   'B cannot overwrite A lifestyle profile even with its own consent');
+ const blockedAnon=await anon.from('member_rhythm_b11').select('user_id');
+ assert.ok(blockedAnon.error,
+   'Anonymous access to lifestyle table must be forbidden');
+ await a.auth.signOut({scope:'local'});
+ assert.equal(await login(a,addr('a')),uidA);
+ const restoredRhythm=await a.from('member_rhythm_b11')
+   .select('answers,weekends,support').eq('user_id',uidA).single();
+ assert.ifError(restoredRhythm.error);
+ assert.deepEqual(restoredRhythm.data?.answers,lifestyle.answers,
+   'Lifestyle preferences must survive a real logout and login');
+ assert.deepEqual(restoredRhythm.data?.weekends,lifestyle.weekends);
+ const withdrawn=await a.rpc('fitdating_disable_b5');
+ assert.ifError(withdrawn.error);
+ assert.equal(withdrawn.data,'disabled');
+ const goneRhythm=await a.from('member_rhythm_b11')
+   .select('user_id').eq('user_id',uidA);
+ assert.ifError(goneRhythm.error);
+ assert.deepEqual(goneRhythm.data,[],
+   'Separate consent withdrawal must remove persisted lifestyle immediately');
+ const oldConsent=await a.from('member_consents_v26').select('id')
+   .eq('user_id',uidA).eq('consent_kind','dating');
+ assert.ifError(oldConsent.error);
+ assert.deepEqual(oldConsent.data,[],
+   'Withdrawal must remove the active dating consent event');
+ checks.push('real JWT profile consent, durable save and reload, BOLA read/write denied, optout purges rhythm');
+
+
 
  await rpc(b,'request_account_deletion');
  assert.equal(readPendingFlag(await rpc(b,'my_account_status')),true);

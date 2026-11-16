@@ -31,16 +31,13 @@ void main() {
         },
       ),
     ));
-    await tester.ensureVisible(find.byKey(const Key('switch-entry-mode')));
-    await tester.pump();
-    await tester.tap(find.byKey(const Key('switch-entry-mode')));
-    await tester.pump();
-    expect(find.text('Bienvenido de nuevo'), findsOneWidget);
+    expect(find.text('Bienvenido'), findsOneWidget);
 
-    final signInButton = tester.widget<OutlinedButton>(
+    final signInButton = tester.widget<FilledButton>(
         find.byKey(const Key('email-entry')));
     expect(signInButton.onPressed, isNotNull);
     await tester.ensureVisible(find.byKey(const Key('email-entry')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('email-entry')));
     await tester.pump();
     expect(find.byType(AlertDialog), findsOneWidget);
