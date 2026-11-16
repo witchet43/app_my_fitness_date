@@ -168,6 +168,9 @@ begin
 end;
 $fn$;
 
+-- RLS already limits INSERT to the JWT owner; authenticated previously had
+-- SELECT/DELETE grants but no INSERT, making the photo upload UI inert.
+grant insert on public.member_media_v26 to authenticated;
 -- Existing metadata table was owner-only, but the client previously had no
 -- functional media API. Harden it before exposing the new upload path.
 alter table public.member_media_v26 drop constraint member_media_v26_check;
