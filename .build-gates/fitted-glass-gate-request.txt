@@ -1,2 +1,4 @@
 2026-11-16 FITTED Glass + Pulso Real B12
 Run: Flutter, Deno, isolated PostgreSQL, no production changes, no Google Cloud Build.
+
+Retry: correct expected canonical migration count from 24 to 30. No source safety gate changes.
