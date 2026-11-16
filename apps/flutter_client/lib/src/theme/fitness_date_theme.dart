@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 
-/// Fitted Pulse & Presence: deep ocean, luminous mint, warm apricot and iris.
-/// Designed for confident adults 35–50, not a neon or teen dating aesthetic.
+/// Fitted Motion F: midnight navy, ice-blue rhythm, violet glass and a restrained fuchsia pulse.
+/// Designed for confident adults 35–50. Accents are used selectively, never as saturated full-screen fills.
 /// Static tokens support Flutter Web, Android and iOS without external fonts.
 abstract final class FitDateColors {
-  static const ink = Color(0xFF1B3038);
-  static const inkDeep = Color(0xFF0F1821);
-  static const surface = Color(0xFF182830);
-  static const surfaceRaised = Color(0xFF233942);
-  static const coral = Color(0xFFFFB59E);
-  static const coralDark = Color(0xFF3F3540);
-  static const lime = Color(0xFF58DEBA);
-  static const aqua = Color(0xFF58DEBA);
-  static const apricot = Color(0xFFFFB59E);
-  static const lilac = Color(0xFFC5B7F6);
-  static const pearl = Color(0xFFF9F4EC);
-  static const muted = Color(0xFFC3D1D0);
-  static const outline = Color(0xFF476069);
+  static const ink = Color(0xFF18234C);
+  static const inkDeep = Color(0xFF0D1030);
+  static const surface = Color(0xFF151B3E);
+  static const surfaceRaised = Color(0xFF202953);
+  // Keep semantic tokens compatible with existing components while
+  // shifting the Fitted design system to the Motion F visual identity.
+  static const coral = Color(0xFFD9C3FF); // accessible lavender CTA
+  static const coralDark = Color(0xFF35224F);
+  static const lime = Color(0xFF65D3FA);
+  static const aqua = Color(0xFF65D3FA);  // rhythm / focus
+  static const apricot = Color(0xFFF385C5); // restrained pulse
+  static const lilac = Color(0xFFC4ACFF);
+  static const pearl = Color(0xFFF7F6FF);
+  static const muted = Color(0xFFBCC8E4);
+  static const outline = Color(0xFF424B7D);
+  static const pulseViolet = Color(0xFF8A63EE);
+  static const pulsePink = Color(0xFFF15FAB);
+  static const pulseBlue = Color(0xFF50C8FF);
 }
 
 abstract final class FitDateTheme {
@@ -26,7 +31,7 @@ abstract final class FitDateTheme {
       onPrimary: FitDateColors.inkDeep,
       secondary: FitDateColors.lime,
       onSecondary: FitDateColors.inkDeep,
-      tertiary: FitDateColors.lilac,
+      tertiary: FitDateColors.apricot,
       onTertiary: FitDateColors.inkDeep,
       surface: FitDateColors.surface,
       onSurface: FitDateColors.pearl,
@@ -134,7 +139,7 @@ abstract final class FitDateTheme {
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: FitDateColors.inkDeep,
-        indicatorColor: const Color(0xFF1B4D4D),
+        indicatorColor: const Color(0xFF30245F),
         selectedIconTheme: const IconThemeData(
           color: FitDateColors.coral, size: 26,
         ),
@@ -151,7 +156,7 @@ abstract final class FitDateTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: FitDateColors.surface,
-        indicatorColor: const Color(0xFF285150),
+        indicatorColor: const Color(0xFF36265C),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             color: states.contains(WidgetState.selected)
