@@ -14,6 +14,7 @@ import '../core/community_repository.dart';
 import '../core/member_v26_api.dart';
 import 'fitted_pulse_moderation_b13.dart';
 import 'fitted_age_admin_b14.dart';
+import 'fitted_photo_moderation_b17.dart';
 import 'community_moderation_b4.dart';
 import 'gym_catalog_admin_b11.dart';
 import 'match_calculator_admin.dart';
@@ -613,6 +614,27 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   api:widget.communityAdmin as MemberV26Api))),
             icon:const Icon(Icons.verified_user_outlined),
             label:const FittedText('Revisar identidades y habilitación')),
+        ]))),
+    ],
+    if(widget.communityAdmin is MemberV26Api)...[
+      const SizedBox(height:14),
+      Card(child:Padding(padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          FittedText('Fotografías de perfil · revisión',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          const FittedText('Revisa imágenes privadas de los miembros. '
+            'Solo fotografías aprobadas aparecen a personas elegibles '
+            'y con permiso de visibilidad. MFA y auditoría obligatorias.'),
+          const SizedBox(height:12),
+          OutlinedButton.icon(
+            key:const Key('b17-admin-photo-moderation'),
+            onPressed:()=>Navigator.of(context).push(
+              MaterialPageRoute<void>(builder:(_)=>
+                FittedPhotoModerationB17(
+                  api:widget.communityAdmin as MemberV26Api))),
+            icon:const Icon(Icons.photo_camera_back_outlined),
+            label:const FittedText('Revisar fotos pendientes')),
         ]))),
     ],
     if(widget.communityAdmin is MemberV26Api)...[
