@@ -13,6 +13,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
     super.key,required this.name,required this.rhythm,
     required this.summary,required this.onPillar,
     required this.onEdit,required this.onSummaryConsent,
+    this.onManualEdit,
     required this.photo,required this.summaryBusy,
     this.profileVisibleToMembers=false,
   });
@@ -20,6 +21,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
   final Map<String,dynamic>? rhythm,summary;
   final ValueChanged<int> onPillar;
   final VoidCallback onEdit,onSummaryConsent;
+  final VoidCallback? onManualEdit;
   final Future<Uint8List>? photo;
   final bool summaryBusy,profileVisibleToMembers;
 
@@ -50,101 +52,127 @@ class FittedIdentityPanelB18 extends StatelessWidget {
     ],
   );
 
+  /// Quiet three-pillar progress navigation at the upper-right of the hero.
   Widget _pillars(BuildContext context,bool en){
     final progress=FittedProfileInsights.pillarProgress(rhythm);
-    final titles=en?const ['How I Move','How I Live','How I Relate']:
+    final names=en?const ['How I Move','How I Live','How I Relate']:
       const ['Cómo me muevo','Cómo vivo','Cómo me relaciono'];
-    const symbols=[Icons.directions_run_rounded,Icons.wb_twilight_outlined,
+    const icons=[Icons.directions_run_rounded,Icons.wb_twilight_outlined,
       Icons.connect_without_contact_outlined];
     const colors=[FitDateColors.aqua,FitDateColors.apricot,FitDateColors.lilac];
-    return Column(mainAxisSize:MainAxisSize.min,children:[
-      for(var i=0;i<3;i++)...[
-        InkWell(
-          key:Key('b18-pillar-$i'),onTap:()=>onPillar(i),
-          borderRadius:BorderRadius.circular(18),
-          child:Padding(padding:const EdgeInsets.symmetric(vertical:8),
-            child:Row(children:[
-              SizedBox(width:190,
-                child:Container(padding:const EdgeInsets.symmetric(
-                  horizontal:10,vertical:11),
-                  decoration:BoxDecoration(
-                    color:FitDateColors.inkDeep.withValues(alpha:.58),
-                    borderRadius:BorderRadius.circular(32),
-                    border:Border.all(color:colors[i].withValues(alpha:.5))),
-                  child:Row(children:[
-                    Icon(symbols[i],color:colors[i],size:20),
-                    const SizedBox(width:8),
-                    Expanded(child:Text(titles[i],maxLines:1,
-                      overflow:TextOverflow.ellipsis,
-                      style:const TextStyle(fontWeight:FontWeight.w700))),
-                  ]))),
-              const SizedBox(width:12),
-              Expanded(child:Column(
-                crossAxisAlignment:CrossAxisAlignment.end,children:[
-                  Text('${progress[i]}%',
-                    style:const TextStyle(fontWeight:FontWeight.w700)),
-                  const SizedBox(height:5),
-                  ClipRRect(borderRadius:BorderRadius.circular(6),
-                    child:LinearProgressIndicator(
-                      key:Key('b18-pillar-progress-$i'),
-                      minHeight:6,value:progress[i]/100,
-                      backgroundColor:FitDateColors.pearl.withValues(alpha:.15),
-                      color:colors[i])),
-                ])),
-              const SizedBox(width:5),
-            ]))),
-        if(i<2)Divider(color:FitDateColors.pearl.withValues(alpha:.10)),
-      ],
-    ]);
+    return Container(
+      key:const Key('b19-compact-pillars'),
+      width:292,
+      padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),
+      decoration:BoxDecoration(
+        borderRadius:BorderRadius.circular(18),
+        color:FitDateColors.inkDeep.withValues(alpha:.34),
+        border:Border.all(color:FitDateColors.lilac.withValues(alpha:.22))),
+      child:Column(mainAxisSize:MainAxisSize.min,children:[
+        for(var i=0;i<3;i++)...[
+          InkWell(
+            key:Key('b18-pillar-$i'),
+            onTap:()=>onPillar(i),
+            borderRadius:BorderRadius.circular(10),
+            child:Padding(
+              padding:const EdgeInsets.symmetric(vertical:7),
+              child:Row(children:[
+                Icon(icons[i],size:16,color:colors[i]),
+                const SizedBox(width:8),
+                Expanded(child:Text(names[i],maxLines:1,
+                  overflow:TextOverflow.ellipsis,
+                  style:const TextStyle(fontSize:12.5,
+                    color:FitDateColors.pearl,fontWeight:FontWeight.w600))),
+                const SizedBox(width:6),
+                SizedBox(width:58,
+                  child:LinearProgressIndicator(
+                    key:Key('b18-pillar-progress-$i'),
+                    value:progress[i]/100,
+                    minHeight:4,
+                    borderRadius:BorderRadius.circular(5),
+                    color:colors[i],
+                    backgroundColor:FitDateColors.pearl.withValues(alpha:.13))),
+                const SizedBox(width:6),
+                SizedBox(width:34,child:Text('${progress[i]}%',
+                  textAlign:TextAlign.right,
+                  style:TextStyle(fontSize:11,color:colors[i],
+                    fontWeight:FontWeight.w700))),
+              ]),
+            )),
+        ],
+      ]),
+    );
   }
 
+  /// The hero is a personal editorial story, not a truncated short caption.
   Widget _summary(BuildContext context,bool en){
     final s=summary??const <String,dynamic>{};
-    final consent=s['ai_consented']==true;
-    final publish=s['share_consented']==true && profileVisibleToMembers;
-    final mode=(s['mode']??'editorial').toString();
+    final aiEnabled=s['ai_consented']==true;
+    final published=s['share_consented']==true && profileVisibleToMembers;
+    final actualAi=aiEnabled && s['mode']=='ai';
     final value=(s[en?'summary_en':'summary_es']??'').toString().trim();
+    final empty= value.isEmpty;
     return FittedGlassPanel(
-      radius:23,blur:8,padding:const EdgeInsets.all(17),
+      radius:23,blur:8,padding:const EdgeInsets.all(22),
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[
-          const Icon(Icons.auto_awesome,color:FitDateColors.lilac,size:23),
-          const SizedBox(width:8),
-          Expanded(child:Text(en?'Your profile, in a nutshell':
-            'Tu perfil, en resumen',
-            style:Theme.of(context).textTheme.titleMedium?.copyWith(
+          const Icon(Icons.auto_stories_outlined,color:FitDateColors.lilac,size:24),
+          const SizedBox(width:10),
+          Expanded(child:Text(en?'Your rhythm, in words':'Tu ritmo, en palabras',
+            key:const Key('b19-story-title'),
+            style:Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight:FontWeight.w800))),
-          Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:3),
-            decoration:BoxDecoration(
-              borderRadius:BorderRadius.circular(20),
-              border:Border.all(color:FitDateColors.lilac)),
-            child:Text(mode=='ai'?'IA':'Perfil',
-              style:const TextStyle(fontSize:10,color:FitDateColors.lilac))),
+          Container(
+            padding:const EdgeInsets.symmetric(horizontal:9,vertical:4),
+            decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),
+              border:Border.all(color:FitDateColors.lilac.withValues(alpha:.65))),
+            child:Text(actualAi?'IA':aiEnabled
+              ?(en?'Editorial':'Editorial')
+              :(en?'Written by you':'Tu historia'),
+              style:const TextStyle(fontSize:11,color:FitDateColors.lilac,
+                fontWeight:FontWeight.w700))),
+          if(!aiEnabled)...[
+            const SizedBox(width:5),
+            IconButton(
+              key:const Key('b19-edit-manual-story'),
+              tooltip:en?'Edit my story':'Editar mi historia',
+              onPressed:summaryBusy?null:onManualEdit,
+              icon:const Icon(Icons.edit_outlined,
+                color:FitDateColors.lilac,size:22)),
+          ],
         ]),
-        const SizedBox(height:12),
-        if(summaryBusy)const LinearProgressIndicator(minHeight:2),
-        Text(value.isNotEmpty?value:
-          (en?'Complete your profile to create your personal story.':
-              'Completa tu perfil para construir tu historia personal.'),
+        const SizedBox(height:19),
+        if(summaryBusy)const LinearProgressIndicator(minHeight:3),
+        Text(empty?(aiEnabled
+            ?(en?'Complete your lifestyle profile to build your story.':
+              'Completa tu perfil para construir tu historia con IA.')
+            :(en?'Write your personal introduction in your own words.':
+              'Escribe tu historia con tus propias palabras.'))
+          :value,
           key:const Key('b18-profile-summary'),
-          maxLines:8,overflow:TextOverflow.ellipsis,
           style:Theme.of(context).textTheme.bodyLarge?.copyWith(
-            height:1.53,fontStyle:FontStyle.italic)),
-        const SizedBox(height:9),
-        Text(publish?(en?'Visible to verified members.':
-          'Visible para miembros verificados.'):
-          (en?'Private until you choose to share.':
-          'Privado hasta que autorices compartirlo y actives la visibilidad para miembros.'),
+            height:1.64,fontSize:17.5,
+            fontWeight:FontWeight.w400,
+            color:empty?FitDateColors.muted:FitDateColors.pearl)),
+        const SizedBox(height:19),
+        Divider(color:FitDateColors.pearl.withValues(alpha:.15)),
+        Text(published
+            ?(en?'Visible to eligible verified members.':
+                'Visible para miembros elegibles y verificados.')
+            :(en?'Private until you authorize sharing and member visibility.':
+              'Privado hasta que autorices compartirlo y actives la visibilidad para miembros.'),
           style:Theme.of(context).textTheme.bodySmall?.copyWith(
             color:FitDateColors.muted)),
         const SizedBox(height:7),
         TextButton.icon(
           key:const Key('b18-summary-consent'),
           onPressed:summaryBusy?null:onSummaryConsent,
-          icon:const Icon(Icons.auto_awesome_outlined,size:18),
-          label:Text(consent?(en?'Manage AI and sharing':
-            'Gestionar IA y visibilidad'):(en?'Enable AI summary':
-              'Activar resumen con IA')),
+          icon:Icon(aiEnabled?Icons.auto_awesome_outlined:
+            Icons.verified_user_outlined,size:18),
+          label:Text(aiEnabled?(en?'Manage AI and visibility':
+              'Gestionar IA y visibilidad'):
+              (en?'Privacy and visibility':
+                'Privacidad y visibilidad')),
         ),
       ]),
     );
@@ -196,8 +224,8 @@ class FittedIdentityPanelB18 extends StatelessWidget {
   Widget build(BuildContext context){
     final en=FittedLocaleScope.languageOf(context)=='en';
     return LayoutBuilder(builder:(context,box){
-      final wide=box.maxWidth>=880;
-      final middle=box.maxWidth>=590;
+      final wide=box.maxWidth>=900;
+      final medium=box.maxWidth>=600;
       return Container(
         key:const Key('b18-unified-identity-panel'),
         clipBehavior:Clip.antiAlias,
@@ -208,39 +236,45 @@ class FittedIdentityPanelB18 extends StatelessWidget {
             colors:[Color(0xFF162A4B),Color(0xFF191D40),Color(0xFF292046)])),
         child:Stack(children:[
           const Positioned.fill(child:FittedRhythmLines(density:.8)),
-          Padding(padding:EdgeInsets.all(wide?24:16),
+          Padding(
+            padding:EdgeInsets.all(wide?25:17),
             child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-              _heading(context,en),
-              const SizedBox(height:21),
               if(wide) Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                Expanded(flex:40,child:_pillars(context,en)),
-                const SizedBox(width:20),
-                Expanded(flex:40,child:_summary(context,en)),
-                const SizedBox(width:15),
-                SizedBox(width:165,child:_portrait(context,en)),
-              ]) else if(middle) Column(children:[
-                Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  Expanded(child:_pillars(context,en)),
-                  const SizedBox(width:14),
-                  SizedBox(width:155,child:_portrait(context,en)),
-                ]),
-                const SizedBox(height:12),_summary(context,en),
-              ]) else Column(children:[
-                _pillars(context,en),const SizedBox(height:12),
+                Expanded(child:_heading(context,en)),
+                const SizedBox(width:18),
+                _pillars(context,en),
+              ]) else Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                _heading(context,en),
+                const SizedBox(height:14),
+                Align(alignment:Alignment.centerRight,child:_pillars(context,en)),
+              ]),
+              const SizedBox(height:22),
+              if(wide) Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Expanded(flex:75,child:ConstrainedBox(
+                  constraints:const BoxConstraints(minHeight:290),
+                  child:_summary(context,en))),
+                const SizedBox(width:17),
+                SizedBox(width:200,child:_portrait(context,en)),
+              ]) else if(medium)
                 Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
                   Expanded(child:_summary(context,en)),
-                  const SizedBox(width:9),
-                  SizedBox(width:115,child:_portrait(context,en)),
-                ]),
+                  const SizedBox(width:12),
+                  SizedBox(width:150,child:_portrait(context,en)),
+                ])
+              else Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                _summary(context,en),
+                const SizedBox(height:15),
+                Align(alignment:Alignment.centerRight,
+                  child:SizedBox(width:175,child:_portrait(context,en))),
               ]),
-              const SizedBox(height:12),
-              Divider(color:FitDateColors.pearl.withValues(alpha:.2)),
+              const SizedBox(height:16),
+              Divider(color:FitDateColors.pearl.withValues(alpha:.18)),
               Row(children:[
                 const Icon(Icons.info_outline,color:FitDateColors.aqua,size:17),
                 const SizedBox(width:9),
                 Expanded(child:Text(en
-                  ?'Your story refreshes when you save your profile. Only shared information is visible to other members.'
-                  :'Tu historia se actualiza al guardar. Solo la información autorizada será visible para otras personas.',
+                  ?'Your story stays yours: AI updates only with your consent; manual text changes only when you edit it.'
+                  :'Tu historia te pertenece: la IA se actualiza solo con tu autorización; el texto manual cambia únicamente cuando tú lo editas.',
                   style:Theme.of(context).textTheme.bodySmall?.copyWith(
                     color:FitDateColors.muted))),
               ]),
@@ -392,7 +426,7 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
           Align(alignment:Alignment.centerRight,
             child:TextButton.icon(
               onPressed:busy==null?()=>like(person):null,
-              icon:const Icon(Icons.favorite_border),
+              icon:const Icon(Icons.explore_outlined),
               label:Text(en?'Interested':'Me interesa'))),
         ]),
       ),
@@ -436,7 +470,7 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
             decoration:BoxDecoration(
               color:FitDateColors.lilac.withValues(alpha:.17),
               borderRadius:BorderRadius.circular(16)),
-            child:const Icon(Icons.favorite_border,color:FitDateColors.lilac,size:28)),
+            child:const Icon(Icons.hub_outlined,color:FitDateColors.lilac,size:28)),
           const SizedBox(width:13),
           Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
             children:[
