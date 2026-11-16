@@ -12,3 +12,5 @@ Retry: Dart line opacity ternary and legacy fake contract corrected after SQL an
 Retry after glass-eyebrow 375px overflow fix. SQL, Deno and 103 other widgets were passing.
 
 2026-11-16 B13 full-prod request: run 32 migrations, private moderation appeal test, Deno API, 105+ Flutter tests, release web build. Source changes include administrator AAL2 queue and member appeal UX.
+
+Final B13 release candidate: full Flutter + Deno + 32 SQL migrations, updated public terms/privacy Pulso Real. After success integrate main and Cloudflare production.
