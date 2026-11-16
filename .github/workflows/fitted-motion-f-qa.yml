@@ -1,0 +1,52 @@
+name: FITTED Motion F - icon, palette and mobile-ready brand QA
+on:
+  push:
+    branches: [feature/fitted-motion-f-brand-20261116]
+    paths: [.build-gates/fitted-motion-f-request.txt]
+permissions:
+  contents: read
+jobs:
+  visual-and-flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SaaS Factory governance
+        run: python3 scripts/check_saas_factory.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Prepare web and Flutter dependencies
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Generate and validate Motion F app icons
+        run: |
+          python3 -m venv .fitted-brand-venv
+          .fitted-brand-venv/bin/python -m pip install --disable-pip-version-check --quiet Pillow==11.3.0
+          .fitted-brand-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
+          .fitted-brand-venv/bin/python scripts/check_fitted_brand_assets.py --project apps/flutter_client
+      - name: Analyze and test all Flutter features, colors and brand
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Compile production-mode app and verify favicon/PWA output
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release --dart-define=MFD_V26_ENABLED=true
+          test -s build/web/main.dart.js
+          test -s build/web/favicon.png
+          test -s build/web/icons/Icon-512.png
+          test -s build/web/icon.webp
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=json.loads(Path('build/web/manifest.json').read_text())
+          assert manifest['name']=='Fitted'
+          assert manifest['theme_color']=='#0D1030'
+          print('PASS Fitted Motion F production-ready web icon and palette')
+          PY
