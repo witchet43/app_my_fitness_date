@@ -1,0 +1,1 @@
+QA 2026-11-16: verify real generated F Motion icon, consistent Flutter/LiveBrand color tokens, web favicon/manifest, full Flutter regression and release build. No Cloud Build, no Supabase data changes. Deploy once green.
