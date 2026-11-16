@@ -1,0 +1,89 @@
+# Production safety gate; does not deploy or enable matching.
+name: FITTED B17 immersive real-data home, AI and photo privacy QA
+on:
+  push:
+    branches: [feature/fitted-b17-immersive-home-real-ai-and-fits]
+    paths: [.build-gates/fitted-b17-request.txt]
+permissions:
+  contents: read
+jobs:
+  b17-release-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PGPASSWORD: postgres
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SaaS Factory governance
+        run: python3 scripts/check_saas_factory.py
+      - name: Execute 34 migrations and B11–B17 security/reputation/age/media regressions
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re,subprocess
+          from pathlib import Path
+          ci=Path('.github/workflows/ci.yml').read_text()
+          paths=re.findall(r'-f (supabase/migrations/[a-zA-Z0-9_]+\.sql)',ci)
+          assert len(paths)==34,f'Unexpected canonical migration count: {len(paths)}'
+          for path in [
+            'supabase/tests/bootstrap.sql',
+            'supabase/tests/storage_bootstrap_v26.sql',
+            *paths,
+            'supabase/tests/fitted_pulso_real_b12_integration.sql',
+            'supabase/tests/fitted_pulso_real_moderation_b13_integration.sql',
+            'supabase/tests/fitted_manual_age_review_b14_integration.sql',
+            'supabase/tests/fitted_manual_age_review_b14_e2e.sql',
+            'supabase/tests/fitted_immersive_home_b17_integration.sql',
+          ]:
+            proc=subprocess.run(['psql','-h','localhost','-U','postgres',
+              '-d','app_test','-v','ON_ERROR_STOP=1','-f',path],
+              stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+            if proc.returncode:
+              print('FAIL',path,proc.stdout[-10000:]);raise SystemExit(1)
+            print('PASS',path)
+          PY
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Typecheck authenticated API and opt-in AI generator
+        run: deno check supabase/functions/member-api-v26/index.ts
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Prepare Flutter Web
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Validate Fitted icons and Aurora theme
+        run: |
+          python3 -m venv .fitted-brand-venv
+          .fitted-brand-venv/bin/python -m pip install --quiet Pillow==11.3.0
+          .fitted-brand-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
+          .fitted-brand-venv/bin/python scripts/check_fitted_brand_assets.py --project apps/flutter_client
+      - name: Flutter static analysis and all responsive widget tests
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded
+      - name: Release build of actual immersive screenshot-inspired home
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release --dart-define=MFD_V26_ENABLED=true
+          test -s build/web/main.dart.js
+          test -s build/web/favicon.png
