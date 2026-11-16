@@ -1,3 +1,5 @@
 Fitted B18 QA: two-panel real layout, saved profile photo, three-pillar progress, private AI consented bilingual summary, server-only candidate disclosure, real matches with next/previous, 390px mobile layout, no synthetic user accounts, Flutter test/analyze/web release, Deno check. No Google Cloud Build.
 
 Rerun: strict Deno principal typing fixed, verify AI function and then entire Flutter suite and Cloudflare-ready web compile.
+
+Final B18 release candidate: include simulated test fixtures only in Flutter tests to prove verified-only candidate carousel with next/previous, 390px privacy layout, and canonical production manifest version.
