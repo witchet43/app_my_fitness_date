@@ -28,7 +28,7 @@ class _RhythmPainter extends CustomPainter {
     final paint=Paint()..style=PaintingStyle.stroke
       ..strokeCap=StrokeCap.round;
     final center=Offset(w*.93,h*.14);
-    final limit=density.clamp(.3,1.8);
+    final limit=density.clamp(.3,1.8).toDouble();
     for(var i=0;i<5;i++){
       paint.color=(i.isEven?FitDateColors.aqua:FitDateColors.lilac)
         .withValues(alpha:.14-(i*.014));
