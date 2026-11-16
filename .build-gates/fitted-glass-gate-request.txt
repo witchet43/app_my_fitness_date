@@ -4,3 +4,5 @@ Run: Flutter, Deno, isolated PostgreSQL, no production changes, no Google Cloud 
 Retry: correct expected canonical migration count from 24 to 30. No source safety gate changes.
 
 Retry: add auth/storage bootstrap to PostgreSQL isolated QA.
+
+Retry: correct SQL function body dollar quoting and validate updated profile lines.
