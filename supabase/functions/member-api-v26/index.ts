@@ -589,7 +589,7 @@ async function handleRequest(req: Request): Promise<Response> {
         if(typeof summary.es!=="string"||typeof summary.en!=="string"||
           summary.es.length<70||summary.en.length<70||
           summary.es.length>500||summary.en.length>500||
-          /(https?:\\/\\/|www\\.|@[a-z0-9_]+|[0-9]{3}[- .][0-9]{3}[- .][0-9]{4})/i.test(summary.es+" "+summary.en)){
+          new RegExp("(https?://|www[.]|@[a-z0-9_]+|[0-9]{3}[- .][0-9]{3}[- .][0-9]{4})","i").test(summary.es+" "+summary.en)){
           return json({status:"ai_output_rejected"});
         }
         const service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
