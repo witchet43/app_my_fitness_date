@@ -82,7 +82,7 @@ class FittedProfileProgressV29 extends StatelessWidget {
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               children:[
                 Text(en?'YOUR PROFILE IS TAKING SHAPE':'TU PERFIL ESTÁ TOMANDO FORMA',
-                  style:const TextStyle(letterSpacing:1.2,
+                  style:TextStyle(letterSpacing:1.2,
                     color:Theme.of(context).colorScheme.primary,fontWeight:FontWeight.w700,
                     fontSize:11)),
                 const SizedBox(height:5),
