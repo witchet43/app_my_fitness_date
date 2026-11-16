@@ -1,8 +1,8 @@
-name: FITTED Motion F - icon, palette and mobile-ready brand QA
+name: FITTED B16 - direct profile pillars and orbit favicon quality gate
 on:
   push:
-    branches: [feature/fitted-motion-f-brand-20261116]
-    paths: [.build-gates/fitted-motion-f-request.txt]
+    branches: [feature/fitted-home-ux-pillar-routing-favicon-b16]
+    paths: [.build-gates/fitted-home-ux-b16-request.txt]
 permissions:
   contents: read
 jobs:
@@ -29,7 +29,7 @@ jobs:
           .fitted-brand-venv/bin/python -m pip install --disable-pip-version-check --quiet Pillow==11.3.0
           .fitted-brand-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
           .fitted-brand-venv/bin/python scripts/check_fitted_brand_assets.py --project apps/flutter_client
-      - name: Analyze and test all Flutter features, colors and brand
+      - name: Analyze and test Flutter, three profile pillars, private affinity home and mobile UX
         working-directory: apps/flutter_client
         run: |
           flutter analyze --no-fatal-infos
