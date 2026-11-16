@@ -30,7 +30,7 @@ begin
  then raise exception 'Age status leaked to anon'; end if;
  if public.age_submit_review_b14(null::uuid)<>'not_available'
  then raise exception 'Anonymous request submission'; end if;
- if public.admin_age_decide_b14(null,'approved',current_date-interval '30 years',true,true,
+ if public.admin_age_decide_b14(null,'approved',(current_date-interval '30 years')::date,true,true,
    null,'No se permite')<>'forbidden'
  then raise exception 'Anonymous decision on an identity'; end if;
  if public.admin_dating_launch_b14(true,true,true,true,
