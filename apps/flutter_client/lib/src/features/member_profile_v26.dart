@@ -335,6 +335,89 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     } finally {if(mounted)setState(()=>loading=false);}
   }
 
+  /// Member-authored biography: stored as their words, never submitted to AI.
+  /// Both the UI and the SQL RPC reject edits while AI mode is enabled.
+  Future<void> editManualStoryB19() async {
+    if(summary?['ai_consented']==true || !mounted)return;
+    final en=FittedLocaleScope.languageOf(context)=='en';
+    final locale=en?'en':'es';
+    final original=(summary?[en?'manual_summary_en':'manual_summary_es']??'')
+      .toString();
+    final controller=TextEditingController(text:original);
+    try{
+      final text=await showDialog<String>(context:context,
+        builder:(dialog)=>StatefulBuilder(
+          builder:(dialog,update)=>AlertDialog(
+            title:Row(children:[
+              const Icon(Icons.edit_outlined,color:FitDateColors.lilac),
+              const SizedBox(width:8),
+              Expanded(child:Text(en?'Write my story':'Escribir mi historia')),
+            ]),
+            content:SizedBox(width:590,child:SingleChildScrollView(
+              child:Column(mainAxisSize:MainAxisSize.min,children:[
+                Text(en
+                  ?'Write what you want another Fitted member to know about '
+                    'your lifestyle, values and what you are looking for. '
+                    'Your words are never sent to an AI model.'
+                  :'Describe con tus palabras tu estilo de vida, tus valores '
+                    'y lo que buscas. Este texto no se envía a ningún modelo de IA.'),
+                const SizedBox(height:13),
+                TextField(
+                  key:const Key('b19-manual-story-field'),
+                  controller:controller,minLines:7,maxLines:13,
+                  maxLength:1600,
+                  onChanged:(_)=>update((){}),
+                  decoration:InputDecoration(
+                    labelText:en?'My story':'Mi historia personal',
+                    hintText:en
+                      ?'I enjoy... I value... I am interested in meeting...'
+                      :'Disfruto... Valoro... Me gustaría conocer...',
+                    border:const OutlineInputBorder(),
+                    helperText:en?'80–1600 characters.':
+                      'Entre 80 y 1600 caracteres.')),
+                const SizedBox(height:8),
+                Text(en
+                  ?'Sharing requires separate authorization and a profile '
+                    'visible to eligible members.'
+                  :'Compartirlo requiere autorización independiente y '
+                    'visibilidad habilitada para miembros elegibles.',
+                  style:Theme.of(dialog).textTheme.bodySmall),
+              ]),
+            )),
+            actions:[
+              TextButton(onPressed:()=>Navigator.of(dialog).pop(),
+                child:Text(en?'Cancel':'Cancelar')),
+              FilledButton.icon(
+                key:const Key('b19-save-manual-story'),
+                onPressed:controller.text.trim().length>=80 &&
+                  controller.text.trim().length<=1600
+                    ?()=>Navigator.of(dialog).pop(controller.text.trim())
+                    :null,
+                icon:const Icon(Icons.check),
+                label:Text(en?'Save my story':'Guardar mi historia'),
+              ),
+            ],
+          )));
+      if(text==null||!mounted)return;
+      setState(()=>summaryBusy=true);
+      try{
+        final result=await widget.api.saveManualStoryB19(
+          text:text,locale:locale);
+        if(result!='saved'){
+          throw MemberApiException(result=='ai_active'
+            ?'La IA está activa. Desactívala antes de editar.'
+            :'El texto no pudo guardarse. Evita datos de contacto.');
+        }
+        await reload();
+      }catch(_){
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:Text(en
+            ?'Could not save your story. Check length and contact details.'
+            :'No pudimos guardar tu historia. Revisa la extensión y evita datos de contacto.')));
+      }finally{if(mounted)setState(()=>summaryBusy=false);}
+    }finally{controller.dispose();}
+  }
+
   Future<void> configureSummaryB18() async {
     final en=FittedLocaleScope.languageOf(context)=='en';
     var ai=summary?['ai_consented']==true;
@@ -345,11 +428,14 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
         content:SizedBox(width:440,child:Column(
           mainAxisSize:MainAxisSize.min,children:[
             Text(en
-              ?'AI can create a short profile story from your chosen interests. '
-                'Your full identity, photos, gym and exact times are excluded.'
-              :'La IA puede redactar una presentación a partir de tus '
-                'intereses. No se envían documentos, fotos, gimnasios '
-                'ni horarios exactos.'),
+              ?'With your permission, AI can summarize your interests, goals, '
+                'values and all three lifestyle pillars in a longer personal '
+                'story. IDs, photos, gyms, exact schedules and contacts are excluded. '
+                'When AI is off, your own written text stays unchanged.'
+              :'Con tu permiso, la IA puede integrar intereses, objetivos, '
+                'valores y los tres pilares en una descripción más completa. '
+                'No se envían documentos, fotos, gimnasios, horarios exactos '
+                'ni contactos. Con IA apagada, conservarás tu texto manual.'),
             CheckboxListTile(
               key:const Key('b18-ai-consent'),
               value:ai,onChanged:(v)=>update(()=>ai=v??false),
@@ -657,6 +743,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               onPillar:(index)=>configurePillars(index),
               onEdit:widget.onEdit,
               onSummaryConsent:configureSummaryB18,
+              onManualEdit:editManualStoryB19,
             ),
             const SizedBox(height:16),
             FittedFitsPanelB18(

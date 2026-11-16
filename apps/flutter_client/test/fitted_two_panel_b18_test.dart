@@ -59,7 +59,7 @@ void main(){
       ))));
     await tester.pumpAndSettle();
     expect(find.text('Privado hasta que autorices compartirlo y actives la visibilidad para miembros.'),findsOneWidget);
-    expect(find.text('Completa tu perfil para construir tu historia personal.'),
+    expect(find.text('Escribe tu historia con tus propias palabras.'),
       findsOneWidget);
     expect(find.text('0%'),findsNWidgets(3));
     expect(tester.takeException(),isNull);

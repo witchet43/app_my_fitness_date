@@ -1,0 +1,71 @@
+name: FITTED B19 - AI editorial and manual profile story QA
+on:
+  push:
+    branches: [feature/fitted-editorial-story-manual-b19-20261116]
+    paths: [.build-gates/fitted-editorial-b19-request.txt]
+permissions:
+  contents: read
+jobs:
+  b19-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SaaS Factory baseline
+        run: python3 scripts/check_saas_factory.py
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Deno typecheck and B19 manual/AI privacy source audit
+        run: |
+          deno check supabase/functions/fitted-ai-summary-b18/index.ts
+          python3 - <<'PY'
+          from pathlib import Path
+          sql=Path('supabase/migrations/202611160037_fitted_editorial_manual_story_b19.sql').read_text()
+          ui=Path('apps/flutter_client/lib/src/features/fitted_two_panel_home_b18.dart').read_text()
+          api=Path('apps/flutter_client/lib/src/core/member_v26_api.dart').read_text()
+          member=Path('apps/flutter_client/lib/src/features/member_profile_v26.dart').read_text()
+          edge=Path('supabase/functions/fitted-ai-summary-b18/index.ts').read_text()
+          for pattern in (
+            'fitted_save_manual_summary_b19','manual_summary_es',
+            'b11_member_eligible(viewer)','fitted_photo_viewable_b17',
+            's.share_consented','ai_consented','summary_mode',
+            'fitted_summary_context_b17','fitted_summary_save_ai_b17'
+          ): assert pattern in sql,pattern
+          assert 'b19-compact-pillars' in ui
+          assert 'b19-edit-manual-story' in ui
+          assert 'Tu ritmo, en palabras' in ui
+          assert 'Icons.favorite_border' not in ui
+          assert 'saveManualStoryB19' in api
+          assert 'onManualEdit:editManualStoryB19' in member
+          assert 'max_tokens:1250' in edge
+          print('B19 source privacy and mode contracts verified')
+          PY
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Restore Flutter SDK project
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Regenerate authentic Fitted orbital favicon
+        run: |
+          python3 -m venv .fitted-brand-venv
+          .fitted-brand-venv/bin/python -m pip install --quiet Pillow==11.3.0
+          .fitted-brand-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
+          .fitted-brand-venv/bin/python scripts/check_fitted_brand_assets.py --project apps/flutter_client
+      - name: Analyze and run full Flutter widget regression
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Compile release web application with live account features
+        working-directory: apps/flutter_client
+        run: |
+          flutter build web --release --dart-define=MFD_V26_ENABLED=true
+          test -s build/web/main.dart.js
+          test -s build/web/favicon.png
+          test -s build/web/icons/Icon-512.png
