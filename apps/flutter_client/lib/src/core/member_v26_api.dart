@@ -533,7 +533,6 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   @override
-  @override
   Future<Map<String,dynamic>> pulseRealStatusB12(String matchId) async {
     if(!_validActivityId(matchId)) {
       throw const MemberApiException('Match inválido.');
@@ -570,6 +569,49 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       '/v1/dating/b11/matches/$matchId/pulse/observe',
       data:{'dimension':dimension,'observation':observation}))['status']
         ?.toString()??'not_available';
+  }
+
+
+  @override
+  Future<List<Map<String,dynamic>>> myPulseObservationsB13() async =>
+    _items(_decode(await _request('GET',
+      '/v1/dating/pulse/my-observations')));
+
+  @override
+  Future<String> appealPulseObservationB13(
+      String signalId,String statement) async {
+    if(!_validActivityId(signalId) ||
+        statement.trim().length<10 || statement.trim().length>500) {
+      throw const MemberApiException('Explica tu apelación (10–500 caracteres).');
+    }
+    return _decode(await _request('POST','/v1/dating/pulse/appeal',
+      data:{'signal_id':signalId,'statement':statement.trim()}))
+      ['status']?.toString()??'not_available';
+  }
+
+  @override
+  Future<String> retractPulseObservationB13(String signalId) async {
+    if(!_validActivityId(signalId)){
+      throw const MemberApiException('Evaluación inválida.');
+    }
+    return _decode(await _request('POST','/v1/dating/pulse/retract',
+      data:{'signal_id':signalId}))['status']?.toString()??'not_available';
+  }
+
+  Future<List<Map<String,dynamic>>> adminPulseReviewQueueB13() async =>
+    _items(_decode(await _request('GET','/v1/admin/pulse/reviews')));
+
+  Future<String> adminResolvePulseSignalB13({
+    required String signalId,required String decision,required String note,
+  }) async {
+    if(!_validActivityId(signalId) ||
+        !const ['approve','reject','remove'].contains(decision) ||
+        note.trim().length<5 || note.trim().length>500){
+      throw const MemberApiException('Revisa la decisión y el motivo.');
+    }
+    return _decode(await _request('POST','/v1/admin/pulse/review',data:{
+      'signal_id':signalId,'decision':decision,'note':note.trim(),
+    }))['status']?.toString()??'not_available';
   }
 
   Future<Map<String, dynamic>> datingStatus() async =>
