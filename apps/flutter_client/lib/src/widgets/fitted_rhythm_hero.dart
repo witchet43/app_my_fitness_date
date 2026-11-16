@@ -166,5 +166,6 @@ class _PillarPill extends StatelessWidget {
     ]),
       ),
     ),
+    ),
   );
 }
