@@ -8,7 +8,6 @@ import 'rhythm_concept_lab_b10.dart';
 import 'fitted_profile_story_v28.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
-import 'fitted_affinity_home_v16.dart';
 import 'fitted_immersive_home_b17.dart';
 import 'fitted_age_verification_b14.dart';
 import 'activities_b1.dart';
