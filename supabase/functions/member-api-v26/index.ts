@@ -699,6 +699,49 @@ async function handleRequest(req: Request): Promise<Response> {
       if(!r.ok)return error(403);
       return json({items:await r.json()});
     }
+    // Pulso Real B12: optional post-meeting observational trust feedback.
+    // Both meeting confirmations, active mutual match and eligibility are
+    // enforced within security-definer SQL, never by client input.
+    const pulseRoute=/^\/v1\/dating\/b11\/matches\/([0-9a-f-]{36})\/pulse\/(status|confirm|observe)$/i.exec(route);
+    if(pulseRoute){
+      const matchId=pulseRoute[1],kind=pulseRoute[2];
+      const state=await datingStatus(token,identity.id);
+      if(state.enabled!==true)return error(403);
+      if(kind==="status" && req.method==="GET"){
+        const r=await endpoint("POST",
+          "/rest/v1/rpc/fitted_signal_status_b12",token,{p_match:matchId});
+        if(!r.ok)return error(r.status===403?403:503);
+        const detail=await r.json() as Record<string,unknown>;
+        if(detail.available!==true)return error(403);
+        return json(detail);
+      }
+      if(kind==="confirm" && req.method==="POST"){
+        const r=await endpoint("POST",
+          "/rest/v1/rpc/fitted_confirm_meetup_b12",token,{p_match:matchId});
+        if(!r.ok)return error(403);
+        const status=await r.json();
+        return status==="waiting_other"||status==="both_confirmed"
+          ?json({status}):error(403);
+      }
+      if(kind==="observe" && req.method==="POST"){
+        const value=await body(req);
+        const dimension=value?.dimension,observation=value?.observation;
+        if(typeof dimension!=="string" ||
+          !["move","live","relate"].includes(dimension) ||
+          typeof observation!=="string" ||
+          !["aligned","unclear","not_aligned"].includes(observation))return error(400);
+        const r=await endpoint("POST",
+          "/rest/v1/rpc/fitted_submit_signal_b12",token,
+          {p_match:matchId,p_dimension:dimension,p_observation:observation});
+        if(!r.ok)return error(403);
+        const status=await r.json();
+        return status==="pending_moderation" ?json({status},201)
+          :status==="already_submitted" ?json({status},409)
+          :status==="meeting_not_confirmed" ?json({status},409)
+          :error(403);
+      }
+      return error(405);
+    }
     // Scope every chat access to a UUID match. Ownership, mutual consent,
     // blocking and moderation are rechecked inside each SECURITY DEFINER.
     const b11Match=/^\/v1\/dating\/b11\/matches\/([0-9a-f-]{36})\/(messages|report|ideas)$/i.exec(route);
