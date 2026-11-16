@@ -14,13 +14,14 @@ class FittedIdentityPanelB18 extends StatelessWidget {
     required this.summary,required this.onPillar,
     required this.onEdit,required this.onSummaryConsent,
     required this.photo,required this.summaryBusy,
+    this.profileVisibleToMembers=false,
   });
   final String name;
   final Map<String,dynamic>? rhythm,summary;
   final ValueChanged<int> onPillar;
   final VoidCallback onEdit,onSummaryConsent;
   final Future<Uint8List>? photo;
-  final bool summaryBusy;
+  final bool summaryBusy,profileVisibleToMembers;
 
   Widget _heading(BuildContext context, bool en) => Column(
     crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -100,7 +101,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
   Widget _summary(BuildContext context,bool en){
     final s=summary??const <String,dynamic>{};
     final consent=s['ai_consented']==true;
-    final publish=s['share_consented']==true;
+    final publish=s['share_consented']==true && profileVisibleToMembers;
     final mode=(s['mode']??'editorial').toString();
     final value=(s[en?'summary_en':'summary_es']??'').toString().trim();
     return FittedGlassPanel(
@@ -133,7 +134,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
         Text(publish?(en?'Visible to verified members.':
           'Visible para miembros verificados.'):
           (en?'Private until you choose to share.':
-          'Privado hasta que autorices compartirlo.'),
+          'Privado hasta que autorices compartirlo y actives la visibilidad para miembros.'),
           style:Theme.of(context).textTheme.bodySmall?.copyWith(
             color:FitDateColors.muted)),
         const SizedBox(height:7),
