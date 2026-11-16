@@ -51,11 +51,11 @@ def web_assets(image: Image.Image, web: Path, source: Path):
         "theme_color": NAVY,
         "display": "standalone",
         "icons": [
-            {"src": f"icons/Icon-{size}.png",
+            {"src": f"icons/Icon-{size}.png?v=orbit-b16",
              "sizes": f"{size}x{size}", "type": "image/png"}
             for size in (192, 512)
         ] + [
-            {"src": f"icons/Icon-maskable-{size}.png",
+            {"src": f"icons/Icon-maskable-{size}.png?v=orbit-b16",
              "sizes": f"{size}x{size}", "type": "image/png",
              "purpose": "maskable"}
             for size in (192, 512)
@@ -69,11 +69,12 @@ def web_assets(image: Image.Image, web: Path, source: Path):
     html = re.sub(r'<link[^>]*rel="icon"[^>]*>', "", html)
     html = re.sub(r'<link[^>]*rel="apple-touch-icon"[^>]*>', "", html)
     html = re.sub(r'<meta[^>]*name="theme-color"[^>]*>', "", html)
+    html = html.replace('href="manifest.json"','href="manifest.json?v=orbit-b16"')
     html = re.sub(r"<title>.*?</title>", "<title>Fitted</title>", html,
                   count=1, flags=re.DOTALL)
     addition = ('<meta name="theme-color" content="' + NAVY + '">\n'
-                '<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">\n'
-                '<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">\n')
+                '<link rel="icon" type="image/png" sizes="48x48" href="favicon.png?v=orbit-b16">\n'
+                '<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=orbit-b16">\n')
     assert "</head>" in html, "Flutter index must contain a head"
     html_path.write_text(html.replace("</head>", addition + "</head>", 1))
     assert (web / "icons" / "Icon-512.png").stat().st_size > 5000
