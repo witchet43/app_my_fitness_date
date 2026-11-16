@@ -653,6 +653,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               name:(p['display_name']??'').toString().trim().split(' ').first,
               rhythm:lifestyle,summary:summary,
               photo:profilePortrait,summaryBusy:summaryBusy,
+              profileVisibleToMembers:p['social_visibility']=='members',
               onPillar:(index)=>configurePillars(index),
               onEdit:widget.onEdit,
               onSummaryConsent:configureSummaryB18,
