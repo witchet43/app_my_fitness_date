@@ -413,6 +413,21 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
     }catch(_){return false;}
   }
 
+  /// Manually authored text is only accepted while AI consent is off.
+  /// It is never sent to any AI service.
+  Future<String> saveManualStoryB19({
+    required String text, required String locale,
+  }) async {
+    if(!const ['es','en'].contains(locale) ||
+       text.trim().length<80 || text.trim().length>1600){
+      throw const MemberApiException(
+        'Escribe entre 80 y 1600 caracteres en tu presentación.');
+    }
+    return (await auth.rpc('fitted_save_manual_summary_b19',params:{
+      'p_text':text.trim(),'p_locale':locale,
+    }))?.toString()??'not_available';
+  }
+
   Future<Map<String,dynamic>> candidateShowcaseB18(String id) async {
     if(!_validActivityId(id))return <String,dynamic>{'available':false};
     final raw=await auth.rpc('fitted_candidate_showcase_b18',
