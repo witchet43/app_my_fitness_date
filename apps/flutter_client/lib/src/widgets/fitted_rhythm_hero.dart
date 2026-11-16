@@ -79,9 +79,11 @@ class FittedRhythmHero extends StatelessWidget {
                       decoration: BoxDecoration(color: FitDateColors.aqua,
                         borderRadius: BorderRadius.circular(3))),
                     const SizedBox(width: 9),
-                    Text(en ? 'LIFESTYLE COMPATIBILITY' : 'AFINIDAD DE ESTILO DE VIDA',
+                    Flexible(child:Text(
+                      en ? 'LIFESTYLE COMPATIBILITY' : 'AFINIDAD DE ESTILO DE VIDA',
+                      maxLines:2,softWrap:true,
                       style: const TextStyle(color: FitDateColors.aqua,
-                        letterSpacing: 1.5, fontSize: 10, fontWeight: FontWeight.w800)),
+                        letterSpacing: 1.1, fontSize: 10, fontWeight: FontWeight.w800))),
                   ])),
                   const SizedBox(height: 17),
                   Text(en ? titleEn : titleEs,
