@@ -46,7 +46,7 @@ class _RhythmPainter extends CustomPainter {
         ..cubicTo(w*.73,origin-h*.26*limit,
           w*.83,origin+h*.07,w*1.1,origin-h*.24);
       paint.color=(i==1?FitDateColors.apricot:FitDateColors.aqua)
-        .withValues(alpha:i==1?.22:.14);
+        .withValues(alpha:i == 1 ? .22 : .14);
       paint.strokeWidth=i==1?1.65:1.0;
       canvas.drawPath(path,paint);
     }
