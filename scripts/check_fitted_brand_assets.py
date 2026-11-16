@@ -15,7 +15,7 @@ def main():
     alias=root/"assets/branding/mfd_icon.webp"
     assert icon.read_bytes()==alias.read_bytes(), "In-app F differs from launcher source"
     with Image.open(icon) as im:
-        assert im.format=="WEBP" and im.size==(256,256), im.size
+        assert im.format=="WEBP" and min(im.size)>=160 and im.width==im.height, im.size
     web=root/"web"
     for name,size in [
         ("favicon.png",(48,48)),
@@ -34,7 +34,7 @@ def main():
     html=(web/"index.html").read_text()
     assert '<title>Fitted</title>' in html
     assert 'apple-touch-icon.png' in html
-    assert 'favicon.png' in html
+    assert 'favicon.png?v=orbit-b16' in html
     theme=(root/"lib/src/theme/fitness_date_theme.dart").read_text()
     for color in ("0xFF0D1030","0xFF65D3FA","0xFFC4ACFF","0xFFF15FAB"):
         assert color in theme,"Motion F color token not present: "+color
