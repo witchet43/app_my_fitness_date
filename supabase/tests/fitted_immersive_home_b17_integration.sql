@@ -71,9 +71,12 @@ begin
    raise exception 'Owner AI consent not saved'; end if;
  if public.fitted_summary_context_b17()->>'available'<>'true' then
    raise exception 'Whitelisted AI context denied to owner'; end if;
- if public.fitted_summary_save_ai_b17(auth.uid(),
-   repeat('English safe test. ',10),repeat('English safe test. ',10),now())
-   <>'forbidden' then raise exception 'User forged AI summary'; end if;
+ begin
+   perform public.fitted_summary_save_ai_b17(auth.uid(),
+     repeat('English safe test. ',10),repeat('English safe test. ',10),now());
+   raise exception 'User forged AI summary';
+ exception when insufficient_privilege then null;
+ end;
  if public.fitted_photo_review_b17(null,'approved','Member attempt')<>'forbidden'
  then raise exception 'User approved another image'; end if;
 end;
