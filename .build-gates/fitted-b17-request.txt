@@ -7,3 +7,5 @@ QA retry 2: insert RLS-enforced media metadata permission missing in inherited D
 QA retry 3: all 34 migrations and SQL privacy tests PASS; TypeScript invalid escaped regex replaced by constructor. Now test AI Edge + full Flutter.
 
 QA retry 4: 34 SQL migrations/test and Deno AI checks PASS. Fix extra Row parenthesis in responsive fits card + remove invalid constant key in test.
+
+QA retry 5: SQL and Deno PASS, 110 Flutter other tests PASS. Fix mock auth timer, mobile AI consent button overflow. Verify all three B17 screenshot tests plus web.
