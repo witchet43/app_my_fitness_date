@@ -129,6 +129,15 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   }
 
   @override
+  void didUpdateWidget(covariant RhythmConceptLabB10 oldWidget){
+    super.didUpdateWidget(oldWidget);
+    if(oldWidget.initialPillar!=widget.initialPillar){
+      // The page may be reused during navigation/restoration.
+      activePillar=widget.initialPillar;
+    }
+  }
+
+  @override
   void didChangeDependencies(){
     super.didChangeDependencies();
     if(widget.profileMode)english=FittedLocaleScope.languageOf(context)=='en';
