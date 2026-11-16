@@ -7,7 +7,8 @@ import 'rhythm_concept_lab_b10.dart';
 import 'fitted_profile_story_v28.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
-import 'fitted_affinity_home_v16.dart';
+import 'fitted_two_panel_home_b18.dart';
+import 'fitted_age_verification_b14.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
@@ -278,6 +279,10 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   List<Map<String,dynamic>> photos=[];
   List<Map<String,dynamic>> places=[];
   Map<String,dynamic>? lifestyle;
+  Map<String,dynamic>? summary;
+  Map<String,dynamic>? matchStatus;
+  Future<Uint8List>? profilePortrait;
+  bool summaryBusy=false;
   String? startingRhythm;
   String? problem;
   bool loading=true;
@@ -298,7 +303,25 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     try {
       final result=await Future.wait([
         widget.api.loadPlaces(),widget.api.loadPhotos()]);
-      if(mounted)setState((){places=result[0];photos=result[1];});
+      if(mounted)setState((){
+        places=result[0];photos=result[1];
+        final featured=result[1].where((photo)=>
+          photo['position']==0 || photo['position']=='0').toList();
+        final pick=featured.isNotEmpty?featured.first:
+          (result[1].isNotEmpty?result[1].first:null);
+        profilePortrait=pick==null?null:
+          widget.api.photoContent(pick['id'].toString());
+      });
+      try{
+        final current=await Future.wait<Map<String,dynamic>>([
+          widget.api.myFittedSummaryB18(),
+          widget.api.datingStatus(),
+        ]);
+        if(mounted)setState((){
+          summary=current[0];matchStatus=current[1];
+        });
+      }catch(_){if(mounted)setState(()=>matchStatus=null);}
+
       // Private rhythm answers are fetched ONLY with separate dating consent.
       final consent=consentGrantedInSession || await lifestyleConsent;
       if(consent){
@@ -310,6 +333,70 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     } catch (_) {
       if(mounted)setState(()=>problem='No se pudieron cargar los datos privados.');
     } finally {if(mounted)setState(()=>loading=false);}
+  }
+
+  Future<void> configureSummaryB18() async {
+    final en=FittedLocaleScope.languageOf(context)=='en';
+    var ai=summary?['ai_consented']==true;
+    var share=summary?['share_consented']==true;
+    final decision=await showDialog<(bool,bool)>(context:context,
+      builder:(dialog)=>StatefulBuilder(builder:(dialog,update)=>AlertDialog(
+        title:Text(en?'AI story & privacy':'Mi historia con IA y privacidad'),
+        content:SizedBox(width:440,child:Column(
+          mainAxisSize:MainAxisSize.min,children:[
+            Text(en
+              ?'AI can create a short profile story from your chosen interests. '
+                'Your full identity, photos, gym and exact times are excluded.'
+              :'La IA puede redactar una presentación a partir de tus '
+                'intereses. No se envían documentos, fotos, gimnasios '
+                'ni horarios exactos.'),
+            CheckboxListTile(
+              key:const Key('b18-ai-consent'),
+              value:ai,onChanged:(v)=>update(()=>ai=v??false),
+              title:Text(en?'Allow AI to write my story':
+                'Permitir que IA redacte mi resumen')),
+            CheckboxListTile(
+              key:const Key('b18-share-consent'),
+              value:share,onChanged:(v)=>update(()=>share=v??false),
+              title:Text(en?'Share my approved story with eligible members':
+                'Mostrar mi resumen a miembros verificados')),
+            Text(en?'You can change these permissions any time.':
+              'Puedes cambiar estos permisos cuando quieras.',
+              style:Theme.of(dialog).textTheme.bodySmall),
+          ])),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(dialog),
+            child:Text(en?'Cancel':'Cancelar')),
+          FilledButton(
+            key:const Key('b18-summary-consent-save'),
+            onPressed:()=>Navigator.pop(dialog,(ai,share)),
+            child:Text(en?'Save preferences':'Guardar preferencias')),
+        ],
+      )));
+    if(decision==null||!mounted)return;
+    setState(()=>summaryBusy=true);
+    try{
+      final state=await widget.api.fittedSummaryConsentB18(
+        ai:decision.$1,share:decision.$2);
+      if(state!='updated')throw const MemberApiException('Not saved');
+      if(decision.$1)await widget.api.refreshFittedAiSummaryB18();
+      await reload();
+    }catch(_){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content:Text(en?'Could not save AI preferences.':
+          'No se pudieron guardar las preferencias de IA.')));
+    }finally{if(mounted)setState(()=>summaryBusy=false);}
+  }
+
+  Future<void> openFitdatingB18() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>DatingV27(api:widget.api)));
+    if(mounted)await reload();
+  }
+  Future<void> openAgeVerificationB18() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>FittedAgeVerificationB14(api:widget.api)));
+    if(mounted)await reload();
   }
 
   Future<void> setStartingRhythm(String? value) async {
@@ -498,6 +585,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             onSelected:(value) {
               if(value=='profile')setState(()=>selectedArea=1);
               if(value=='edit')widget.onEdit();
+              if(value=='community')Navigator.of(context).push(
+                MaterialPageRoute<void>(builder:(_)=>CommunityB4(api:widget.api)));
               if(value=='activities')Navigator.of(context).push(
                 MaterialPageRoute<void>(builder:(_)=>
                   ActivitiesB1(api:widget.api)));
@@ -511,6 +600,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 child:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
               PopupMenuItem(value:'edit',
                 child:Text(FittedLocaleScope.t(context,'Editar perfil','Edit profile'))),
+              PopupMenuItem(value:'community',
+                child:Text(FittedLocaleScope.t(context,'Comunidad','Community'))),
               PopupMenuItem(value:'activities',
                 child:Text(FittedLocaleScope.t(context,'Actividades (opcional)','Activities (optional)'))),
               PopupMenuItem(value:'reservations',
@@ -538,71 +629,21 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
           ),
           const SizedBox(height:18),
           if(selectedArea==0)...[
-            Container(
-              key:const Key('fitted-member-dashboard'),
-              decoration:BoxDecoration(
-                color:FitDateColors.surface,
-                borderRadius:BorderRadius.circular(27),
-                border:Border.all(color:FitDateColors.outline.withValues(alpha:.65))),
-              child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-                FittedRhythmHero(
-                  titleEs:'Hola, ' + (p['display_name']??'').toString().split(' ').first + '. Sigue tu ritmo.',
-                  titleEn:'Hello, ' + (p['display_name']??'').toString().split(' ').first + '. Find your rhythm.',
-                  subtitleEs:'Conoce personas que comparten tu forma de vivir. La afinidad empieza en tu ritmo, tus valores y tus intenciones.',
-                  subtitleEn:'Meet people who share your approach to life. Compatibility starts with your rhythm, values and intentions.',
-                  compact:true,
-                  onSelectPillar:(index)=>configurePillars(index),
-                ),
-                Padding(padding:const EdgeInsets.fromLTRB(20,14,20,20),
-                  child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-                    FilledButton.icon(
-                      key:const Key('fitted-discover-primary'),
-                      onPressed:()=>Navigator.of(context).push(
-                        MaterialPageRoute<void>(builder:(_)=>DatingV27(api:widget.api))),
-                      icon:const Icon(Icons.explore_outlined),
-                      label:Text(FittedLocaleScope.t(context,
-                        'Descubrir conexiones','Discover connections'))),
-                    const SizedBox(height:10),
-                    Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                      const Icon(Icons.verified_user_outlined,
-                        size:16,color:FitDateColors.aqua),
-                      const SizedBox(width:8),
-                      Expanded(child:Text(FittedLocaleScope.t(context,
-                        'FitDating requiere verificaciones de seguridad antes de mostrar perfiles.',
-                        'FitDating requires safety checks before profiles are shown.'),
-                        style:const TextStyle(fontSize:11,
-                          color:FitDateColors.muted,height:1.4))),
-                    ]),
-                  ])),
-              ]),
+            FittedIdentityPanelB18(
+              name:(p['display_name']??'').toString().trim().split(' ').first,
+              rhythm:lifestyle,summary:summary,
+              photo:profilePortrait,summaryBusy:summaryBusy,
+              onPillar:(index)=>configurePillars(index),
+              onEdit:widget.onEdit,
+              onSummaryConsent:configureSummaryB18,
             ),
             const SizedBox(height:16),
-            FittedAffinityHomeV16(
-              rhythm:lifestyle,
-              onConfigurePillar:(index)=>configurePillars(index),
-              onDiscover:()=>Navigator.of(context).push(
-                MaterialPageRoute<void>(builder:(_)=>
-                  DatingV27(api:widget.api))),
-            ),
-            const SizedBox(height:12),
-            OutlinedButton.icon(
-              key:const Key('b4-member-community'),
-              onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
-                builder:(_)=>CommunityB4(api:widget.api))),
-              icon:const Icon(Icons.groups_outlined),
-              label:Text(FittedLocaleScope.t(context,
-                'Explorar comunidad','Explore community'))),
-            const SizedBox(height:12),
-            ListTile(
-              contentPadding:const EdgeInsets.symmetric(horizontal:8),
-              leading:const Icon(Icons.tune_outlined),
-              title:Text(FittedLocaleScope.t(context,
-                'Personaliza tu perfil','Personalize your profile')),
-              subtitle:Text(FittedLocaleScope.t(context,
-                'Intereses, valores y privacidad en un solo lugar',
-                'Interests, values and privacy in one place')),
-              trailing:const Icon(Icons.chevron_right),
-              onTap:()=>setState(()=>selectedArea=1),
+            FittedFitsPanelB18(
+              api:widget.api,
+              pillarProgress:FittedProfileInsights.pillarProgress(lifestyle),
+              status:matchStatus,
+              onPrepare:openFitdatingB18,
+              onVerifyAge:openAgeVerificationB18,
             ),
           ]else...[
             Row(children:[
