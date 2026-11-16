@@ -410,7 +410,7 @@ revoke all on function public.age_start_review_b14(boolean),public.age_review_st
 grant execute on function public.age_start_review_b14(boolean),public.age_review_status_b14(),
  public.age_submit_review_b14(uuid),public.age_cancel_review_b14(),
  public.admin_age_queue_b14(),public.admin_age_decide_b14(uuid,text,date,boolean,boolean,date,text),
- public.admin_age_mark_erased_b14(uuid),
+ public.admin_age_mark_erased_b14(uuid),public.admin_age_erasure_queue_b14(),
  public.admin_dating_launch_b14(boolean,boolean,boolean,boolean,text),
  public.dating_manual_status_b14()
  to authenticated;
