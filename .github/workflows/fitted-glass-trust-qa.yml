@@ -39,11 +39,12 @@ jobs:
           from pathlib import Path
           lines=Path('.github/workflows/ci.yml').read_text()
           paths=re.findall(r'-f (supabase/migrations/[a-zA-Z0-9_]+\.sql)',lines)
-          assert len(paths)==32,f'FITTED canonical migration baseline changed: {len(paths)}'
+          assert len(paths)==33,f'FITTED canonical migration baseline changed: {len(paths)}'
           for path in ['supabase/tests/bootstrap.sql','supabase/tests/storage_bootstrap_v26.sql',
                        *paths,
                        'supabase/tests/fitted_pulso_real_b12_integration.sql',
-                       'supabase/tests/fitted_pulso_real_moderation_b13_integration.sql']:
+                       'supabase/tests/fitted_pulso_real_moderation_b13_integration.sql',
+                       'supabase/tests/fitted_manual_age_review_b14_integration.sql']:
             result=subprocess.run(['psql','-h','localhost','-U','postgres',
               '-d','app_test','-v','ON_ERROR_STOP=1','-f',path],
               text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
