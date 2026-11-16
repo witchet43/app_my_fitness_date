@@ -1,5 +1,5 @@
 name: Fitted - canonical unified authentication release
-# Production user-interface refresh: Fitted Glass & Pulse Presence B13 with human-reviewed private trust.
+# Source of truth: main. B13 private reviews and appeals deploy; public reputation remains blocked.
 # Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
@@ -64,7 +64,7 @@ jobs:
           python3 - <<'PY'
           import json,re,os,urllib.request,urllib.error
           from pathlib import Path
-          text=Path(".github/workflows/cloudflare-pages-production.yml").read_text()
+          text=Path(".github/workflows/mfd-canonical-auth-release.yml").read_text()
           m=re.search(r'MFD_PROD_SUPABASE_PUBLISHABLE_KEY=(sb_publishable_[A-Za-z0-9_-]+)',text)
           assert m, "Publishable key unavailable"
           base="https://jtrdvnwbxpfdnbzasvcj.supabase.co"
