@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
@@ -8,6 +9,8 @@ import 'fitted_profile_story_v28.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
 import 'fitted_affinity_home_v16.dart';
+import 'fitted_immersive_home_b17.dart';
+import 'fitted_age_verification_b14.dart';
 import 'activities_b1.dart';
 import 'my_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
@@ -434,6 +437,65 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     catch(_){if(mounted)setState(()=>problem='No se pudo guardar el lugar.');}
   }
 
+  Future<void> uploadMainPhoto() async {
+    try{
+      final picked=await FilePicker.pickFile(
+        type:FileType.custom,allowedExtensions:['jpg','jpeg','png']);
+      if(picked==null)return;
+      final bytes=await picked.readAsBytes();
+      final name=picked.name.toLowerCase();
+      final kind=name.endsWith('.png')?'image/png':'image/jpeg';
+      if(bytes.isEmpty||bytes.length>6*1024*1024){
+        throw const MemberApiException('La foto debe pesar menos de 6 MB.');
+      }
+      final existing=photos.where((p)=>p['position']==0).toList();
+      if(existing.isNotEmpty){
+        if(!mounted)return;
+        final confirm=await showDialog<bool>(context:context,builder:(ctx)=>
+          AlertDialog(
+            title:Text(FittedLocaleScope.t(context,
+              'Cambiar foto de perfil','Replace profile photo')),
+            content:Text(FittedLocaleScope.t(context,
+              'La foto anterior se eliminará. La nueva permanecerá privada '
+              'hasta que un administrador la revise.',
+              'Your previous photo will be deleted. The new one remains '
+              'private until a moderator approves it.')),
+            actions:[
+              TextButton(onPressed:()=>Navigator.pop(ctx,false),
+                child:const Text('Cancelar')),
+              FilledButton(onPressed:()=>Navigator.pop(ctx,true),
+                child:const Text('Continuar')),
+            ]));
+        if(confirm!=true)return;
+        await widget.api.removePhoto(existing.first['id'].toString());
+      }
+      await widget.api.uploadPhoto(bytes,kind);
+      await reload();
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content:Text(FittedLocaleScope.t(context,
+          'Foto guardada en privado. Pendiente de moderación.',
+          'Photo stored privately and awaiting moderation.'))));
+    }catch(_){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content:Text(FittedLocaleScope.t(context,
+          'No fue posible guardar la foto. Usa JPG o PNG.',
+          'Unable to save photo. Please use JPG or PNG.'))));
+    }
+  }
+
+  void openFittedDiscovery(){
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>DatingV27(api:widget.api))).then((_){
+        if(mounted)reload();
+      });
+  }
+  void openAgeReview(){
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder:(_)=>FittedAgeVerificationB14(api:widget.api))).then((_){
+        if(mounted)reload();
+      });
+  }
+
   Widget section(String title,IconData icon,Color color,Widget child)=>
     Card(child:Padding(padding:const EdgeInsets.all(20),
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -491,6 +553,20 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
           ],
         ),
         actions:[
+          if(MediaQuery.sizeOf(context).width>=950)...[
+            TextButton.icon(onPressed:()=>setState(()=>selectedArea=0),
+              icon:const Icon(Icons.home_outlined,size:18),
+              label:Text(FittedLocaleScope.t(context,'Inicio','Home'))),
+            TextButton.icon(onPressed:openFittedDiscovery,
+              icon:const Icon(Icons.people_outline,size:18),
+              label:Text(FittedLocaleScope.t(context,'Buscar fits','Find fits'))),
+            TextButton.icon(onPressed:()=>setState(()=>selectedArea=1),
+              icon:const Icon(Icons.person_outline,size:18),
+              label:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
+            TextButton.icon(onPressed:widget.onEdit,
+              icon:const Icon(Icons.settings_outlined,size:18),
+              label:Text(FittedLocaleScope.t(context,'Configuración','Settings'))),
+          ],
           const FittedLanguageSelector(),
           PopupMenuButton<String>(
             tooltip:FittedLocaleScope.t(context,'Cuenta','Account'),
@@ -522,9 +598,9 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
           ),
         ]),
       body:Center(child:ConstrainedBox(
-        constraints:const BoxConstraints(maxWidth:980),
+        constraints:const BoxConstraints(maxWidth:1440),
         child:ListView(padding:const EdgeInsets.all(16),children:[
-          SegmentedButton<int>(
+          if(MediaQuery.sizeOf(context).width<950)SegmentedButton<int>(
             key:const Key('fitted-home-navigation'),
             showSelectedIcon:false,
             segments:[
@@ -538,72 +614,32 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
           ),
           const SizedBox(height:18),
           if(selectedArea==0)...[
-            Container(
-              key:const Key('fitted-member-dashboard'),
-              decoration:BoxDecoration(
-                color:FitDateColors.surface,
-                borderRadius:BorderRadius.circular(27),
-                border:Border.all(color:FitDateColors.outline.withValues(alpha:.65))),
-              child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-                FittedRhythmHero(
-                  titleEs:'Hola, ' + (p['display_name']??'').toString().split(' ').first + '. Sigue tu ritmo.',
-                  titleEn:'Hello, ' + (p['display_name']??'').toString().split(' ').first + '. Find your rhythm.',
-                  subtitleEs:'Conoce personas que comparten tu forma de vivir. La afinidad empieza en tu ritmo, tus valores y tus intenciones.',
-                  subtitleEn:'Meet people who share your approach to life. Compatibility starts with your rhythm, values and intentions.',
-                  compact:true,
-                  onSelectPillar:(index)=>configurePillars(index),
-                ),
-                Padding(padding:const EdgeInsets.fromLTRB(20,14,20,20),
-                  child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-                    FilledButton.icon(
-                      key:const Key('fitted-discover-primary'),
-                      onPressed:()=>Navigator.of(context).push(
-                        MaterialPageRoute<void>(builder:(_)=>DatingV27(api:widget.api))),
-                      icon:const Icon(Icons.explore_outlined),
-                      label:Text(FittedLocaleScope.t(context,
-                        'Descubrir conexiones','Discover connections'))),
-                    const SizedBox(height:10),
-                    Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                      const Icon(Icons.verified_user_outlined,
-                        size:16,color:FitDateColors.aqua),
-                      const SizedBox(width:8),
-                      Expanded(child:Text(FittedLocaleScope.t(context,
-                        'FitDating requiere verificaciones de seguridad antes de mostrar perfiles.',
-                        'FitDating requires safety checks before profiles are shown.'),
-                        style:const TextStyle(fontSize:11,
-                          color:FitDateColors.muted,height:1.4))),
-                    ]),
-                  ])),
-              ]),
+            FittedImmersiveHomeB17(
+              api:widget.api,profile:p,rhythm:lifestyle,photos:photos,
+              onConfigurePillar:configurePillars,
+              onEditProfile:widget.onEdit,
+              onUploadPhoto:uploadMainPhoto,
+              onDiscover:openFittedDiscovery,
+              onVerifyAge:openAgeReview,
             ),
-            const SizedBox(height:16),
-            FittedAffinityHomeV16(
-              rhythm:lifestyle,
-              onConfigurePillar:(index)=>configurePillars(index),
-              onDiscover:()=>Navigator.of(context).push(
-                MaterialPageRoute<void>(builder:(_)=>
-                  DatingV27(api:widget.api))),
-            ),
-            const SizedBox(height:12),
-            OutlinedButton.icon(
-              key:const Key('b4-member-community'),
-              onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
-                builder:(_)=>CommunityB4(api:widget.api))),
-              icon:const Icon(Icons.groups_outlined),
-              label:Text(FittedLocaleScope.t(context,
-                'Explorar comunidad','Explore community'))),
-            const SizedBox(height:12),
-            ListTile(
-              contentPadding:const EdgeInsets.symmetric(horizontal:8),
-              leading:const Icon(Icons.tune_outlined),
-              title:Text(FittedLocaleScope.t(context,
-                'Personaliza tu perfil','Personalize your profile')),
-              subtitle:Text(FittedLocaleScope.t(context,
-                'Intereses, valores y privacidad en un solo lugar',
-                'Interests, values and privacy in one place')),
-              trailing:const Icon(Icons.chevron_right),
-              onTap:()=>setState(()=>selectedArea=1),
-            ),
+            const SizedBox(height:17),
+            Row(children:[
+              Expanded(child:OutlinedButton.icon(
+                key:const Key('b4-member-community'),
+                onPressed:()=>Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder:(_)=>
+                    CommunityB4(api:widget.api))),
+                icon:const Icon(Icons.groups_outlined),
+                label:Text(FittedLocaleScope.t(context,
+                  'Explorar comunidad','Explore community')))),
+              const SizedBox(width:12),
+              Expanded(child:OutlinedButton.icon(
+                key:const Key('b17-edit-profile-shortcut'),
+                onPressed:widget.onEdit,
+                icon:const Icon(Icons.person_outline),
+                label:Text(FittedLocaleScope.t(context,
+                  'Editar mi perfil','Edit my profile')))),
+            ]),
           ]else...[
             Row(children:[
               Expanded(child:Text(FittedLocaleScope.t(context,
