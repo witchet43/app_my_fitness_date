@@ -472,39 +472,40 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
           if(selectedArea==0)...[
             Container(
               key:const Key('fitted-member-dashboard'),
-              padding:const EdgeInsets.all(24),
               decoration:BoxDecoration(
-                borderRadius:BorderRadius.circular(23),
-                gradient:const LinearGradient(colors:[
-                  Color(0xFF243A39),Color(0xFF142329)])),
-              child:Column(
-                crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  Text(FittedLocaleScope.t(context,
-                    'TU ESPACIO PARA CONECTAR','YOUR SPACE TO CONNECT'),
-                    style:const TextStyle(color:Color(0xFFD5BE8A),
-                      letterSpacing:1.5,fontSize:11,fontWeight:FontWeight.w800)),
-                  const SizedBox(height:12),
-                  Text(FittedLocaleScope.t(context,
-                    'Hola, ${(p['display_name']??'').toString().split(' ').first}',
-                    'Hello, ${(p['display_name']??'').toString().split(' ').first}'),
-                    style:const TextStyle(fontSize:29,fontWeight:FontWeight.w800)),
-                  const SizedBox(height:8),
-                  Text(FittedLocaleScope.t(context,
-                    'Conoce personas a tu ritmo y encuentra actividades que van contigo.',
-                    'Meet people at your pace and find activities that fit your lifestyle.'),
-                    style:const TextStyle(fontSize:14,height:1.5)),
-                  const SizedBox(height:17),
-                  FilledButton.icon(
-                    key:const Key('fitted-discover-primary'),
-                    onPressed:()=>Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder:(_)=>DatingV27(api:widget.api))),
-                    icon:const Icon(Icons.explore_outlined),
-                    label:Text(FittedLocaleScope.t(context,
-                      'Descubrir conexiones','Discover connections'))),
-                  const SizedBox(height:9),
-                  const Text('FitDating requiere verificaciones de seguridad antes de mostrar perfiles.',
-                    style:TextStyle(fontSize:11,color:Color(0xFFB9CBC1))),
-                ]),
+                color:FitDateColors.surface,
+                borderRadius:BorderRadius.circular(27),
+                border:Border.all(color:FitDateColors.outline.withValues(alpha:.65))),
+              child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                FittedRhythmHero(
+                  titleEs:'Hola, ' + (p['display_name']??'').toString().split(' ').first + '. Sigue tu ritmo.',
+                  titleEn:'Hello, ' + (p['display_name']??'').toString().split(' ').first + '. Find your rhythm.',
+                  subtitleEs:'Conoce personas a tu ritmo y encuentra actividades que van contigo. Una afinidad que empieza en cómo vives.',
+                  subtitleEn:'Meet people at your pace and find activities that fit. Compatibility starts with how you live.',
+                  compact:true,
+                ),
+                Padding(padding:const EdgeInsets.fromLTRB(20,14,20,20),
+                  child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                    FilledButton.icon(
+                      key:const Key('fitted-discover-primary'),
+                      onPressed:()=>Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder:(_)=>DatingV27(api:widget.api))),
+                      icon:const Icon(Icons.explore_outlined),
+                      label:Text(FittedLocaleScope.t(context,
+                        'Descubrir conexiones','Discover connections'))),
+                    const SizedBox(height:10),
+                    Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                      const Icon(Icons.verified_user_outlined,
+                        size:16,color:FitDateColors.aqua),
+                      const SizedBox(width:8),
+                      Expanded(child:Text(FittedLocaleScope.t(context,
+                        'FitDating requiere verificaciones de seguridad antes de mostrar perfiles.',
+                        'FitDating requires safety checks before profiles are shown.'),
+                        style:const TextStyle(fontSize:11,
+                          color:FitDateColors.muted,height:1.4))),
+                    ]),
+                  ])),
+              ]),
             ),
             const SizedBox(height:16),
             MemberAgendaB8(
