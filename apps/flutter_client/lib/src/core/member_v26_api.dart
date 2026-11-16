@@ -863,6 +863,9 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   Future<Map<String,dynamic>> regenerateSummaryB17() async =>
     _decode(await _request('POST','/v1/me/summary/regenerate'));
 
+  Future<Map<String,dynamic>> summaryAiCapabilityB17() async =>
+    _decode(await _request('GET','/v1/me/summary/capabilities'));
+
   Future<Map<String,dynamic>> candidateCardB17(String id) async {
     if(!_validActivityId(id))return {'visible':false};
     return Map<String,dynamic>.from(await auth.rpc(
