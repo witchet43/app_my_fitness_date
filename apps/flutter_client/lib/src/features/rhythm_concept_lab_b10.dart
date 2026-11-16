@@ -7,7 +7,10 @@ import '../core/dating_repository_b11.dart';
 /// Never treated as onboarding, a saved lifestyle profile or a real match.
 class RhythmConceptLabB10 extends StatefulWidget {
   const RhythmConceptLabB10({super.key,this.repository,this.canSave=false,
-    this.profileMode=false});
+    this.profileMode=false,this.initialPillar=0})
+    :assert(initialPillar>=0 && initialPillar<=2);
+  /// Open the requested real saved-profile section, not a preview.
+  final int initialPillar;
   final DatingRepositoryB11? repository;
   final bool canSave;
   final bool profileMode;
@@ -119,6 +122,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   @override
   void initState() {
     super.initState();
+    activePillar=widget.initialPillar;
     // Saved answers are user declarations; never count preview defaults as facts.
     answers=widget.profileMode?<String,String>{}:emptyRhythmB10();
     if(widget.repository!=null && widget.canSave) loadSaved();
@@ -229,7 +233,9 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
   }
 
   Widget profileProgress(){
-    const identifiers=['How I Move','How I Live','How I Relate'];
+    final identifiers=english
+      ?const ['How I Move','How I Live','How I Relate']
+      :const ['Cómo me muevo','Cómo vivo','Cómo me relaciono'];
     const icons=[Icons.directions_run_outlined,Icons.wb_sunny_outlined,
       Icons.people_outline];
     return Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -329,7 +335,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
             Text(tr('Tu semana en movimiento',
               'Your week in motion'),
               style:Theme.of(context).textTheme.bodyMedium),
-            heading('How I Move · Training DNA',
+            heading('Cómo me muevo · Mi actividad',
               'How I Move · Training DNA',Icons.directions_run_outlined),
             profileSelect('sport','Actividad principal','Primary activity'),
             multi('sport',additionalSports,'Otras actividades que disfruto',
@@ -347,7 +353,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
             Text(tr('Lo que haces con tus mañanas, tus descansos y tus fines de semana cuenta más que una bio.',
               'What you do with mornings, recovery and weekends matters more than a bio.'),
               style:Theme.of(context).textTheme.bodyMedium),
-            heading('How I Live · Life Rhythm',
+            heading('Cómo vivo · Mi ritmo',
               'How I Live · Life Rhythm',Icons.wb_sunny_outlined),
             profileSelect('weekday','Entre semana suelo…','On weekdays I usually…'),
             multi('weekend',weekends,'Mi fin de semana puede incluir',
@@ -365,7 +371,7 @@ class _RhythmConceptLabB10State extends State<RhythmConceptLabB10> {
             Text(tr('Muestra cómo compartes tiempo y cómo acompañas el entrenamiento de otra persona.',
               'Show how you share time and support someone through training.'),
               style:Theme.of(context).textTheme.bodyMedium),
-            heading('How I Relate · Relationship Rhythm',
+            heading('Cómo me relaciono · Mi manera de conectar',
               'How I Relate · Relationship Rhythm',Icons.people_outline),
             profileSelect('intent','Qué busco','What I am looking for'),
             profileSelect('together','Tiempo juntos e independencia',
