@@ -1,5 +1,5 @@
 name: Fitted - canonical unified authentication release
-# Source of truth: main. B16 home redesign, direct bilingual pillar navigation and luminous orbit F favicon.
+# Source of truth: main. B18 approved two-panel FITTED identity + safe matching experience.
 # Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
@@ -48,6 +48,22 @@ jobs:
           .fitted-brand-venv/bin/python -m pip install --disable-pip-version-check --quiet Pillow==11.3.0
           .fitted-brand-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
           .fitted-brand-venv/bin/python scripts/check_fitted_brand_assets.py --project apps/flutter_client
+      - name: Check B18 two-panel UI, owner privacy and genuine candidate gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          ui=Path('apps/flutter_client/lib/src/features/fitted_two_panel_home_b18.dart').read_text()
+          home=Path('apps/flutter_client/lib/src/features/member_profile_v26.dart').read_text()
+          ai=Path('supabase/functions/fitted-ai-summary-b18/index.ts').read_text()
+          assert 'b18-unified-identity-panel' in ui
+          assert 'b18-fits-matching-panel' in ui
+          assert 'b18-fit-next' in ui and 'b18-fit-previous' in ui
+          assert 'FittedIdentityPanelB18(' in home and 'FittedFitsPanelB18(' in home
+          assert 'FittedAffinityHomeV16(' not in home
+          assert "share_consented" in ui and "summary_es" in ui
+          assert '/auth/v1/user' in ai and 'fitted_summary_allow_generate_b17' in ai
+          print('FITTED B18 UI, verified candidates and separate summary consent PASS')
+          PY
       - name: Validate source, one canonical URL and legal documents
         run: |
           python3 scripts/verify_hosted_auth.py
@@ -125,8 +141,10 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-home-affinity-b16",
+            "visual_revision":"fitted-two-panel-b18",
             "brand_icon":"fitted-orbit-f",
+            "ai_summary":"opt_in_with_editorial_fallback",
+            "candidate_feed":"verified_real_members_only",
             "pulso_real_feedback_enabled":False,
             "manual_age_verification":True,
             "dating_access":"reviewed_adults_with_operator_activation"
@@ -157,7 +175,9 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-home-affinity-b16"
+                  assert info["visual_revision"]=="fitted-two-panel-b18"
+                  assert info["ai_summary"]=="opt_in_with_editorial_fallback"
+                  assert info["candidate_feed"]=="verified_real_members_only"
                   assert info["brand_icon"]=="fitted-orbit-f"
                   assert info["manual_age_verification"] is True
                   assert info["dating_access"]=="reviewed_adults_with_operator_activation"
