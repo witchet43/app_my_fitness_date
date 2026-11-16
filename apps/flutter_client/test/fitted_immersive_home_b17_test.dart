@@ -130,7 +130,11 @@ void main(){
     await tester.tap(find.byKey(const Key('b17-readiness-1')));
     await tester.pump();
     expect(openAge,1);
-    expect(tester.takeException(),isNull);
+    final mobileError=tester.takeException();
+    if(mobileError!=null){
+      debugDumpRenderTree();
+      fail('B17 mobile RenderFlex issue: '+mobileError.toString());
+    }
   });
 
   testWidgets('B17 carousel navigates ONLY true API candidates',
