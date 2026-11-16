@@ -3,3 +3,4 @@ QA retry: corrected PostgreSQL erasure-queue dollar-quoting; rerun all B14 migra
 QA retry #3: SQL B14 all migration DDL passes; correct typed date in security regression fixture; now full Flutter.
 QA retry #4: B14 SQL type corrected; complete Flutter B14 API reconstructed from stable main with no duplicated methods or regex source injection.
 QA retry #5: API corruption fixed, pinned FilePicker 13 static pickFile used for owner document and selfie submissions.
+QA retry #6: now also prove B14 full human reviewer happy-path with disposable auth accounts and Storage metadata; validate complete production Flutter build.
