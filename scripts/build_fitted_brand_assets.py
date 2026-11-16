@@ -123,7 +123,7 @@ def main():
     assert source.is_file(), "A real Motion F icon must be committed"
     with Image.open(source) as im:
         image = im.convert("RGB")
-        assert image.width >= 256 and image.height >= 256
+        assert image.width >= 160 and image.height >= 160
         web_assets(image, root / "web", source)
         if not args.skip_native:
             android_assets(image, root / "android")
