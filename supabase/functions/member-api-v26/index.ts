@@ -699,6 +699,18 @@ async function handleRequest(req: Request): Promise<Response> {
       if(!r.ok)return error(403);
       return json({items:await r.json()});
     }
+    if(route==="/v1/dating/b11/pulse/consent" && req.method==="POST"){
+      const state=await datingStatus(token,identity.id);
+      if(state.enabled!==true)return error(403);
+      const value=await body(req);
+      if(typeof value?.accepted!=="boolean")return error(400);
+      const r=await endpoint("POST",
+        "/rest/v1/rpc/fitted_consent_b12",token,
+        {p_accept:value.accepted});
+      if(!r.ok)return error(403);
+      const status=await r.json();
+      return status==="accepted"||status==="withdrawn"?json({status}):error(403);
+    }
     // Pulso Real B12: optional post-meeting observational trust feedback.
     // Both meeting confirmations, active mutual match and eligibility are
     // enforced within security-definer SQL, never by client input.
