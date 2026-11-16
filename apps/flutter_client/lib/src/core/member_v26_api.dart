@@ -615,12 +615,13 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
 
-  // B14: age verification never grants permission on client self-declaration.
+  // B14: age requests use the authenticated user's JWT and private Storage RLS.
   Future<Map<String,dynamic>> ageReviewStatusB14() async =>
     Map<String,dynamic>.from(await auth.rpc('age_review_status_b14') as Map);
 
   Future<Map<String,dynamic>> ageBeginB14() async =>
-    Map<String,dynamic>.from(await auth.rpc('age_start_review_b14',params:{'p_consent':true}) as Map);
+    Map<String,dynamic>.from(await auth.rpc('age_start_review_b14',
+      params:{'p_consent':true}) as Map);
 
   Future<String> ageSubmitB14(String requestId) async =>
     (await auth.rpc('age_submit_review_b14',params:{
@@ -640,7 +641,8 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
        !const ['document','selfie'].contains(slot) ||
        !const ['image/jpeg','image/png'].contains(contentType) ||
        bytes.isEmpty || bytes.length>5242880){
-      throw const MemberApiException('Documento inválido. Selecciona JPG o PNG de hasta 5 MB.');
+      throw const MemberApiException(
+        'Documento inválido. Selecciona JPG o PNG de hasta 5 MB.');
     }
     await auth.storage.from('mfd-age-proof')
       .uploadBinary('$me/$requestId/$slot',bytes,
@@ -658,72 +660,8 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   Future<Uint8List> adminAgeEvidenceB14(String path) async {
-    if(!RegExp(r'^[0-9a-f-]{36}/[0-9a-f-]{36}/(document|selfie)
-      _decode(await _request('GET', '/v1/dating/status'));
-
-  Future<void> acceptDating() async {
-    await _request('POST', '/v1/dating/consent',
-        data: {'opt_in': true});
-  }
-
-  @override
-  Future<String> saveDatingPreferences(Map<String,dynamic> draft) async {
-    final response = _decode(await _request(
-      'POST','/v1/dating/preferences',data:draft,
-    ));
-    if (response['status'] != 'saved') {
-      throw const MemberApiException('No fue posible guardar tus preferencias.');
-    }
-    return 'saved';
-  }
-
-  @override
-  Future<String> disableDating() async {
-    final response = _decode(await _request(
-      'POST','/v1/dating/disable',
-    ));
-    if (response['status'] != 'disabled') {
-      throw const MemberApiException('No pudimos desactivar FitDating.');
-    }
-    return 'disabled';
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> datingCandidates() async {
-    final response = _decode(await _request('GET', '/v1/dating/candidates'));
-    return (response['items'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-  }
-
-  Future<List<Map<String, dynamic>>> loadPhotos() async {
-    final body = _decode(await _request('GET', '/v1/me/photos'));
-    return (body['photos'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-  }
-
-  Future<void> uploadPhoto(Uint8List bytes, String contentType) async {
-    await _request('POST', '/v1/me/photos',
-        body: bytes, contentType: contentType);
-  }
-
-  Future<Uint8List> photoContent(String id) async {
-    final resp = await _request('GET', '/v1/me/photos/$id/content');
-    return resp.bodyBytes;
-  }
-
-  Future<void> removePhoto(String id) async {
-    await _request('DELETE', '/v1/me/photos/$id');
-  }
-}
-
-class MemberApiException implements Exception {
-  const MemberApiException(this.message);
-  final String message;
-  @override
-  String toString() => message;
-}
-,
-          caseSensitive:false).hasMatch(path)){
+    if(!RegExp(r'^[0-9a-f-]{36}/[0-9a-f-]{36}/(document|selfie)$',
+       caseSensitive:false).hasMatch(path)){
       throw const MemberApiException('Referencia de evidencia inválida.');
     }
     return auth.storage.from('mfd-age-proof').download(path);
@@ -739,12 +677,18 @@ class MemberApiException implements Exception {
     required String reason,
   }) async {
     if(!_validActivityId(requestId) ||
-        !const ['approved','rejected'].contains(decision) ||
-        reason.trim().length<10||reason.trim().length>500){
-      throw const MemberApiException('Completa una decisión y justificación válidas.');
+       !const ['approved','rejected'].contains(decision) ||
+       reason.trim().length<10||reason.trim().length>500){
+      throw const MemberApiException(
+        'Completa una decisión y justificación válidas.');
     }
-    String? day(DateTime? d)=>d==null?null:
-      '${d.year.toString().padLeft(4,'0')}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
+    String? day(DateTime? d){
+      if(d==null)return null;
+      final y=d.year.toString().padLeft(4,'0');
+      final m=d.month.toString().padLeft(2,'0');
+      final day=d.day.toString().padLeft(2,'0');
+      return '$y-$m-$day';
+    }
     return (await auth.rpc('admin_age_decide_b14',params:{
       'p_request':requestId,'p_decision':decision,
       'p_document_birthdate':day(documentedBirthdate),
@@ -789,13 +733,14 @@ class MemberApiException implements Exception {
 
   Future<Map<String, dynamic>> datingStatus() async {
     final result=_decode(await _request('GET', '/v1/dating/status'));
-    // Operational eligibility is decided in SQL, not in Flutter.
-    try {
+    // The manual program is read from the server and never faked locally.
+    try{
       final program=await manualDatingStatusB14();
       result['manual_document_review_ready']=program['enabled']==true;
     }catch(_){result['manual_document_review_ready']=false;}
     return result;
   }
+
 
   Future<void> acceptDating() async {
     await _request('POST', '/v1/dating/consent',
