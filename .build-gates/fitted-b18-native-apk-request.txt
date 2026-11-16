@@ -1,0 +1,1 @@
+Fitted B18 owner requested a real installable Android APK on 2026-11-16. Run one GitHub Actions Android release build using CURRENT main Flutter B18 source, production Supabase, real account, three pillars, AI summary and verified-match gate, F orbit icon, native PKCE redirect, tests and SHA256 artifact. Do not use Cloud Build. Do not use synthetic Expo V20 demo.

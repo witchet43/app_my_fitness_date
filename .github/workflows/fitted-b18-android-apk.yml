@@ -1,0 +1,136 @@
+name: Fitted B18 - Android installable APK from production source
+
+# Explicit owner-requested APK; uses GitHub Actions, never Google Cloud Build.
+# Uploads actual Flutter Android executable, not a visual preview.
+on:
+  push:
+    branches: [main]
+    paths: [.build-gates/fitted-b18-native-apk-request.txt]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fitted-b18-native-android-release
+  cancel-in-progress: false
+
+jobs:
+  build-real-android-apk:
+    name: Flutter Android release APK with live Fitted account
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      FITHUB_SUPABASE_URL: https://jtrdvnwbxpfdnbzasvcj.supabase.co
+    steps:
+      - name: Checkout exact production application
+        uses: actions/checkout@v4
+      - name: Java 17 Android build toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Flutter stable pinned toolchain
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Verify Android SDK and production functionality
+        run: |
+          set -euo pipefail
+          test -d "$ANDROID_HOME"
+          python3 scripts/check_saas_factory.py
+          python3 scripts/verify_hosted_auth.py
+          python3 scripts/check_public_legal.py
+          python3 - <<'PY'
+          from pathlib import Path
+          main=Path('apps/flutter_client/lib/main.dart').read_text()
+          home=Path('apps/flutter_client/lib/src/features/member_profile_v26.dart').read_text()
+          assert "fitted://auth/callback" in main
+          assert "FittedIdentityPanelB18(" in home
+          assert "FittedFitsPanelB18(" in home
+          assert "MFD_VISUAL_SHOWCASE" in main
+          assert "MFD_V26_ENABLED" in main
+          print("Production account app selected, not mock visual preview")
+          PY
+      - name: Generate real Flutter Android project
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter create --platforms=android . --org com.fitted --project-name=my_fitness_date
+          flutter pub get
+      - name: Configure branded Android launcher and native authentication callback
+        run: |
+          set -euo pipefail
+          python3 scripts/configure_fitted_android.py
+          python3 -m venv .fitted-native-venv
+          .fitted-native-venv/bin/python -m pip install --quiet --disable-pip-version-check Pillow==11.3.0
+          .fitted-native-venv/bin/python scripts/build_fitted_brand_assets.py --project apps/flutter_client
+          .fitted-native-venv/bin/python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          for dpi in ('mdpi','hdpi','xhdpi','xxhdpi','xxxhdpi'):
+            path=Path('apps/flutter_client/android/app/src/main/res')/('mipmap-'+dpi)/'ic_launcher.png'
+            assert path.is_file(),f'Missing branded launcher: {path}'
+            with Image.open(path) as image:
+              assert image.format=='PNG'
+          print('Brand-owned elliptical Motion F Android launcher icons PASS')
+          PY
+      - name: Dart analyze and full component security regression
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Compile installable release APK against real production API
+        working-directory: apps/flutter_client
+        run: |
+          set -euo pipefail
+          flutter build apk --release \
+            --target-platform android-arm,android-arm64,android-x64 \
+            --dart-define=MFD_V26_ENABLED=true \
+            --dart-define=MFD_GOOGLE_PROVIDER_VERIFIED=true \
+            --dart-define=MFD_APPLE_PROVIDER_VERIFIED=false \
+            --dart-define=MFD_PROD_SUPABASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co \
+            --dart-define=MFD_PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_IAPJ1C1EdLg155iMOgRNfg_i6OWuJkk \
+            --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
+            --dart-define=MFD_TERMS_URL=https://my-fitness-date.pages.dev/terms/ \
+            --dart-define=MFD_PRIVACY_URL=https://my-fitness-date.pages.dev/privacy/ \
+            --dart-define=MFD_TERMS_VERSION=v28-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v28-privacy-1 \
+            --dart-define=MFD_OAUTH_REDIRECT_URL=fitted://auth/callback
+          test -s build/app/outputs/flutter-apk/app-release.apk
+      - name: Produce verifiable distributable and SHA-256
+        run: |
+          set -euo pipefail
+          mkdir -p dist/fitted-b18-android
+          cp apps/flutter_client/build/app/outputs/flutter-apk/app-release.apk \
+            dist/fitted-b18-android/Fitted-B18-Android.apk
+          cd dist/fitted-b18-android
+          sha256sum Fitted-B18-Android.apk > SHA256SUMS.txt
+          python3 - <<'PY'
+          import json,os,pathlib
+          d={
+            'application':'Fitted',
+            'application_id':'com.fitted.my_fitness_date',
+            'channel':'android-release-build',
+            'source_commit':os.environ['GITHUB_SHA'],
+            'visual_revision':'fitted-two-panel-b18',
+            'production_backend':True,
+            'synthetic_preview':False,
+            'authentication_redirect':'fitted://auth/callback',
+            'oauth_note':'Supabase Auth must allowlist fitted://auth/callback for Google OAuth to return to the APK',
+            'signing':'CI Flutter-generated debug certificate in release APK; not Play Store production-signing',
+          }
+          pathlib.Path('build-info.json').write_text(
+            json.dumps(d,indent=2,ensure_ascii=False)+'\n')
+          print('APK size:',pathlib.Path('Fitted-B18-Android.apk').stat().st_size)
+          print('SHA256:',pathlib.Path('SHA256SUMS.txt').read_text().strip())
+          PY
+      - name: Upload actual installable Fitted APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitted-b18-android-installable-apk
+          path: dist/fitted-b18-android/
+          if-no-files-found: error
+          retention-days: 30
