@@ -44,7 +44,7 @@ Deno.serve(async(req)=>{
     const verified=await fetch(base+"/auth/v1/user",{
       headers:{apikey:anon,authorization:"Bearer "+token}});
     if(!verified.ok)return respond(401,{status:"unauthorized"});
-    principal=await verified.json() as typeof principal;
+    principal=await verified.json() as {id:string;is_anonymous?:boolean};
   }catch(_){return respond(401,{status:"unauthorized"});}
   if(!principal?.id||principal.is_anonymous===true)
     return respond(401,{status:"unauthorized"});
