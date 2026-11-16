@@ -5,3 +5,4 @@ QA retry #4: B14 SQL type corrected; complete Flutter B14 API reconstructed from
 QA retry #5: API corruption fixed, pinned FilePicker 13 static pickFile used for owner document and selfie submissions.
 QA retry #6: now also prove B14 full human reviewer happy-path with disposable auth accounts and Storage metadata; validate complete production Flutter build.
 QA retry #7: verified positive lifecycle uses an authorized applicant ID fixture, never accesses private tables as authenticated operator.
+QA retry #8: genuine AAL2-only evidence erasure RPC was not GRANTed to authenticated; fixed DB grant, retesting real approval+deletion lifecycle.
