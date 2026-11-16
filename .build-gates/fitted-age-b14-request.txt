@@ -1,1 +1,2 @@
 Release gate B14, 2026-11-16: verify all 33 canonical PostgreSQL migrations, Supabase storage RLS, ID file authorization, manual review/admin governance, full Flutter analyzer/tests and web compile. NEVER enable dating as a test shortcut. No Cloud Build.
+QA retry: corrected PostgreSQL erasure-queue dollar-quoting; rerun all B14 migrations and Flutter.
