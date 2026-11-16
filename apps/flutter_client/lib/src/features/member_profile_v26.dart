@@ -8,6 +8,8 @@ import 'fitted_profile_story_v28.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
 import 'fitted_affinity_home_v16.dart';
+import 'activities_b1.dart';
+import 'my_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
 import 'community_b4.dart';
 import '../theme/fitness_date_theme.dart';
@@ -456,6 +458,12 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             onSelected:(value) {
               if(value=='profile')setState(()=>selectedArea=1);
               if(value=='edit')widget.onEdit();
+              if(value=='activities')Navigator.of(context).push(
+                MaterialPageRoute<void>(builder:(_)=>
+                  ActivitiesB1(api:widget.api)));
+              if(value=='reservations')Navigator.of(context).push(
+                MaterialPageRoute<void>(builder:(_)=>
+                  MyActivitiesB2(api:widget.api)));
               if(value=='logout')widget.onLogout();
             },
             itemBuilder:(_)=>[
@@ -463,6 +471,11 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 child:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
               PopupMenuItem(value:'edit',
                 child:Text(FittedLocaleScope.t(context,'Editar perfil','Edit profile'))),
+              PopupMenuItem(value:'activities',
+                child:Text(FittedLocaleScope.t(context,'Actividades (opcional)','Activities (optional)'))),
+              PopupMenuItem(value:'reservations',
+                child:Text(FittedLocaleScope.t(context,'Mis reservas','My reservations'))),
+              const PopupMenuDivider(),
               PopupMenuItem(value:'logout',
                 child:Text(FittedLocaleScope.t(context,'Cerrar sesión','Sign out'))),
             ],
