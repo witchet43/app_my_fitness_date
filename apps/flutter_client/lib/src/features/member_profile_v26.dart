@@ -578,6 +578,26 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
           ],
         ),
         actions:[
+          if(MediaQuery.sizeOf(context).width>=1020)...[
+            TextButton.icon(
+              onPressed:()=>setState(()=>selectedArea=0),
+              icon:const Icon(Icons.home_outlined,size:19),
+              label:Text(FittedLocaleScope.t(context,'Inicio','Home'))),
+            TextButton.icon(
+              key:const Key('b18-header-fits'),
+              onPressed:openFitdatingB18,
+              icon:const Icon(Icons.people_alt_outlined,size:19),
+              label:Text(FittedLocaleScope.t(context,'Buscar fits','Find fits'))),
+            TextButton.icon(
+              onPressed:()=>setState(()=>selectedArea=1),
+              icon:const Icon(Icons.person_outline,size:19),
+              label:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
+            TextButton.icon(
+              onPressed:widget.onEdit,
+              icon:const Icon(Icons.settings_outlined,size:19),
+              label:Text(FittedLocaleScope.t(context,
+                'Configuración','Settings'))),
+          ],
           const FittedLanguageSelector(),
           PopupMenuButton<String>(
             tooltip:FittedLocaleScope.t(context,'Cuenta','Account'),
@@ -615,7 +635,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
       body:Center(child:ConstrainedBox(
         constraints:const BoxConstraints(maxWidth:980),
         child:ListView(padding:const EdgeInsets.all(16),children:[
-          SegmentedButton<int>(
+          if(MediaQuery.sizeOf(context).width<1020)SegmentedButton<int>(
             key:const Key('fitted-home-navigation'),
             showSelectedIcon:false,
             segments:[
