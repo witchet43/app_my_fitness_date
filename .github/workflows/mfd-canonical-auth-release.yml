@@ -1,5 +1,5 @@
 name: Fitted - canonical unified authentication release
-# Source of truth: main. B16 home redesign, direct bilingual pillar navigation and luminous orbit F favicon.
+# Source of truth: main. B17 immersive two-panel Fitted home, consented AI summary and audited real-photo profiles.
 # Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
@@ -111,8 +111,8 @@ jobs:
             --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
             --dart-define=MFD_TERMS_URL=https://my-fitness-date.pages.dev/terms/ \
             --dart-define=MFD_PRIVACY_URL=https://my-fitness-date.pages.dev/privacy/ \
-            --dart-define=MFD_TERMS_VERSION=v28-terms-1 \
-            --dart-define=MFD_PRIVACY_VERSION=v28-privacy-1 \
+            --dart-define=MFD_TERMS_VERSION=v29-terms-1 \
+            --dart-define=MFD_PRIVACY_VERSION=v29-privacy-1 \
             --dart-define=MFD_OAUTH_REDIRECT_URL=https://my-fitness-date.pages.dev/
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
@@ -125,8 +125,10 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-home-affinity-b16",
+            "visual_revision":"fitted-immersive-fits-b17",
             "brand_icon":"fitted-orbit-f",
+            "profile_summary":"private-editorial-or-consented-ai",
+            "candidate_profiles":"verified-real-only",
             "pulso_real_feedback_enabled":False,
             "manual_age_verification":True,
             "dating_access":"reviewed_adults_with_operator_activation"
@@ -157,7 +159,9 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-home-affinity-b16"
+                  assert info["visual_revision"]=="fitted-immersive-fits-b17"
+                  assert info["profile_summary"]=="private-editorial-or-consented-ai"
+                  assert info["candidate_profiles"]=="verified-real-only"
                   assert info["brand_icon"]=="fitted-orbit-f"
                   assert info["manual_age_verification"] is True
                   assert info["dating_access"]=="reviewed_adults_with_operator_activation"
