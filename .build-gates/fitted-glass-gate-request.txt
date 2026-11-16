@@ -1,0 +1,2 @@
+2026-11-16 FITTED Glass + Pulso Real B12
+Run: Flutter, Deno, isolated PostgreSQL, no production changes, no Google Cloud Build.
