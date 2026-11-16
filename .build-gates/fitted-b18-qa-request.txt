@@ -1,0 +1,1 @@
+Fitted B18 QA: two-panel real layout, saved profile photo, three-pillar progress, private AI consented bilingual summary, server-only candidate disclosure, real matches with next/previous, 390px mobile layout, no synthetic user accounts, Flutter test/analyze/web release, Deno check. No Google Cloud Build.
