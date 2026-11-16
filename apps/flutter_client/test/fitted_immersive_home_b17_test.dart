@@ -13,7 +13,11 @@ const ids=[
 class FakeB17MemberApi extends MemberV26Api {
   FakeB17MemberApi({this.eligible=false}):super(
     gatewayUrl:'https://example.invalid',
-    auth:SupabaseClient('https://example.supabase.co','fake-publishable'));
+    auth:SupabaseClient('https://example.supabase.co','fake-publishable')){
+    // Supabase enables a periodic auto-refresh timer by default; never let
+    // mock auth leak that production timer into widget-test fake_async.
+    auth.auth.stopAutoRefresh();
+  }
   final bool eligible;
   int interest=0;
   bool shared=false;
