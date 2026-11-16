@@ -44,7 +44,8 @@ jobs:
                        *paths,
                        'supabase/tests/fitted_pulso_real_b12_integration.sql',
                        'supabase/tests/fitted_pulso_real_moderation_b13_integration.sql',
-                       'supabase/tests/fitted_manual_age_review_b14_integration.sql']:
+                       'supabase/tests/fitted_manual_age_review_b14_integration.sql',
+                       'supabase/tests/fitted_manual_age_review_b14_e2e.sql']:
             result=subprocess.run(['psql','-h','localhost','-U','postgres',
               '-d','app_test','-v','ON_ERROR_STOP=1','-f',path],
               text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
