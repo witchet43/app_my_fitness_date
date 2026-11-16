@@ -94,13 +94,13 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             key:const Key('landing-brand-description'),
             style:const TextStyle(color:Color(0xFFE1E8E0),
               height:1.5,fontSize:15)),
-          const SizedBox(height:19),
+          SizedBox(height:wide?19:11),
           Wrap(spacing:8,runSpacing:8,children:[
             _heroPill(Icons.directions_run_rounded,'How I Move'),
             _heroPill(Icons.wb_twilight_outlined,'How I Live'),
             _heroPill(Icons.connect_without_contact_outlined,'How I Relate'),
           ]),
-          const SizedBox(height:24),
+          SizedBox(height:wide?24:14),
           FilledButton.icon(
             key:const Key('landing-create-profile'),
             onPressed:(){
@@ -125,7 +125,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     final picture=ClipRRect(
       borderRadius:BorderRadius.circular(22),
       child:SizedBox(
-        height:wide?460:245,
+        height:wide?460:170,
         width:double.infinity,
         child:Stack(fit:StackFit.expand,children:[
           Image.network(
