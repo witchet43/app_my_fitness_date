@@ -3,3 +3,5 @@ Fitted B18 QA: two-panel real layout, saved profile photo, three-pillar progress
 Rerun: strict Deno principal typing fixed, verify AI function and then entire Flutter suite and Cloudflare-ready web compile.
 
 Final B18 release candidate: include simulated test fixtures only in Flutter tests to prove verified-only candidate carousel with next/previous, 390px privacy layout, and canonical production manifest version.
+
+B18 final QA retry: remove Supabase SDK auth timers from isolated carousel tests via pure fake client; verify complete Flutter suite + web compile + explicit shared-profile visibility.
