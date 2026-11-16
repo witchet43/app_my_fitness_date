@@ -751,7 +751,7 @@ class _FittedImmersiveHomeB17State extends State<FittedImmersiveHomeB17>{
                 style:const TextStyle(fontSize:12.5,
                   color:FitDateColors.muted,height:1.45)),
             ]),
-          )),
+          ),
         ]),
         const SizedBox(height:20),
         if(wide) Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
