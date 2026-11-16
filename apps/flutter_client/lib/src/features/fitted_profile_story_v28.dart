@@ -151,13 +151,13 @@ class FittedProfileStoryV28 extends StatelessWidget {
               fontSize:11,letterSpacing:1.7,fontWeight:FontWeight.bold)),
           const SizedBox(height:10),
           _rhythmTile(context,Icons.directions_run_outlined,
-            'How I Move',en?'How I train':'Cómo me muevo',moves),
+            en?'How I Move':'Cómo me muevo',en?'How I train':'Mi actividad',moves),
           const SizedBox(height:8),
           _rhythmTile(context,Icons.nights_stay_outlined,
-            'How I Live',en?'How I organize my life':'Cómo organizo mi vida',lives),
+            en?'How I Live':'Cómo vivo',en?'How I organize my life':'Mi ritmo',lives),
           const SizedBox(height:8),
           _rhythmTile(context,Icons.people_outline,
-            'How I Relate',en?'How I make room for someone':'Cómo comparto mi vida',relates),
+            en?'How I Relate':'Cómo me relaciono',en?'How I make room for someone':'Mis conexiones',relates),
           const SizedBox(height:12),
           FittedProfileProgressV29(
             rhythm:rhythm,startingPreference:startingPreference,
@@ -175,8 +175,8 @@ class FittedProfileStoryV28 extends StatelessWidget {
   Widget _rhythmTile(BuildContext context,IconData icon,String title,
       String subtitle,List<String> lines){
     final theme=Theme.of(context);
-    final accent=title=='How I Move'?FitDateColors.aqua:
-      title=='How I Live'?FitDateColors.apricot:FitDateColors.lilac;
+    final accent=icon==Icons.directions_run_outlined?FitDateColors.aqua:
+      icon==Icons.nights_stay_outlined?FitDateColors.apricot:FitDateColors.lilac;
     return Container(
       padding:const EdgeInsets.symmetric(horizontal:16,vertical:17),
       decoration:BoxDecoration(
