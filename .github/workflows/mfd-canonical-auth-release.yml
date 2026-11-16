@@ -1,5 +1,5 @@
 name: Fitted - canonical unified authentication release
-# Source of truth: main. B18 approved two-panel FITTED identity + safe matching experience.
+# Source of truth: main. B19 editorial-long AI summary, private manual story and compact Fitted pillars.
 # Source is canonical main; B12 and B13 are deployed in Supabase with dating release gate unchanged.
 # QA run 43921764127: PostgreSQL, Deno, Flutter regressions and Web release PASS.
 # Unified editorial logo and multilingual compatibility interface verified.
@@ -62,7 +62,14 @@ jobs:
           assert 'FittedAffinityHomeV16(' not in home
           assert "share_consented" in ui and "summary_es" in ui
           assert '/auth/v1/user' in ai and 'fitted_summary_allow_generate_b17' in ai
-          print('FITTED B18 UI, verified candidates and separate summary consent PASS')
+          assert 'b19-compact-pillars' in ui
+          assert 'b19-edit-manual-story' in ui
+          assert 'Icons.favorite_border' not in ui
+          assert 'onManualEdit:editManualStoryB19' in home
+          assert 'max_tokens:1250' in ai
+          sql=Path('supabase/migrations/202611160037_fitted_editorial_manual_story_b19.sql').read_text()
+          assert 'fitted_save_manual_summary_b19' in sql
+          print('FITTED B19 two-panel UI, AI/manual narrative and privacy PASS')
           PY
       - name: Validate source, one canonical URL and legal documents
         run: |
@@ -141,9 +148,10 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-two-panel-b18",
+            "visual_revision":"fitted-editorial-story-b19",
             "brand_icon":"fitted-orbit-f",
             "ai_summary":"opt_in_with_editorial_fallback",
+            "story_modes":"manual_owner_text_or_opt_in_ai",
             "candidate_feed":"verified_real_members_only",
             "pulso_real_feedback_enabled":False,
             "manual_age_verification":True,
@@ -175,7 +183,8 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-two-panel-b18"
+                  assert info["visual_revision"]=="fitted-editorial-story-b19"
+                  assert info["story_modes"]=="manual_owner_text_or_opt_in_ai"
                   assert info["ai_summary"]=="opt_in_with_editorial_fallback"
                   assert info["candidate_feed"]=="verified_real_members_only"
                   assert info["brand_icon"]=="fitted-orbit-f"
