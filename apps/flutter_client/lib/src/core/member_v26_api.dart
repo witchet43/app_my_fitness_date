@@ -427,7 +427,7 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       throw const MemberApiException('Fotografía no autorizada.');
     }
     // Storage RLS verifies eligible audience and approval again.
-    return auth.storage.from('member-media').download(path);
+    return auth.storage.from('mfd-profile-private').download(path);
   }
 
   Future<Map<String, dynamic>?> loadProfile() async {
