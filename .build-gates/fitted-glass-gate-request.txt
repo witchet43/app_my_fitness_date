@@ -10,3 +10,5 @@ Retry: correct SQL function body dollar quoting and validate updated profile lin
 Retry: Dart line opacity ternary and legacy fake contract corrected after SQL and Deno PASS.
 
 Retry after glass-eyebrow 375px overflow fix. SQL, Deno and 103 other widgets were passing.
+
+2026-11-16 B13 full-prod request: run 32 migrations, private moderation appeal test, Deno API, 105+ Flutter tests, release web build. Source changes include administrator AAL2 queue and member appeal UX.
