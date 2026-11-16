@@ -6,3 +6,5 @@ Retry: correct expected canonical migration count from 24 to 30. No source safet
 Retry: add auth/storage bootstrap to PostgreSQL isolated QA.
 
 Retry: correct SQL function body dollar quoting and validate updated profile lines.
+
+Retry: Dart line opacity ternary and legacy fake contract corrected after SQL and Deno PASS.
