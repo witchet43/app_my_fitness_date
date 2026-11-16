@@ -367,6 +367,26 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
                     style:Theme.of(context).textTheme.bodySmall),
                 ]);
             }),
+          const SizedBox(height:9),
+          FutureBuilder<Map<String,dynamic>>(
+            future:widget.api.compatibilityB11(id),
+            builder:(context,score){
+              final result=score.data;
+              final percent=result?['percent'];
+              if(result?['available']!=true || percent is! num){
+                return const SizedBox.shrink();
+              }
+              return Container(
+                padding:const EdgeInsets.symmetric(horizontal:10,vertical:6),
+                decoration:BoxDecoration(
+                  border:Border.all(color:FitDateColors.aqua),
+                  borderRadius:BorderRadius.circular(20)),
+                child:Text(en?'Lifestyle affinity · ${percent.round()}%':
+                  'Ritmo afín · ${percent.round()}%',
+                  style:const TextStyle(fontSize:12,
+                    fontWeight:FontWeight.w700,color:FitDateColors.aqua)),
+              );
+            }),
           const Spacer(),
           Align(alignment:Alignment.centerRight,
             child:TextButton.icon(
@@ -505,7 +525,7 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
                   onPressed:cursor>0?()=>setState(()=>cursor--):null,
                   tooltip:en?'Previous':'Anterior',
                   icon:const Icon(Icons.chevron_left)),
-                Expanded(child:SizedBox(height:245,child:Row(children:[
+                Expanded(child:SizedBox(height:320,child:Row(children:[
                   _candidate(context,candidates[cursor]),
                   if(wide&&cursor+1<candidates.length)
                     _candidate(context,candidates[cursor+1]),
