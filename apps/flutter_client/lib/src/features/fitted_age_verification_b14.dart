@@ -32,15 +32,16 @@ class _FittedAgeVerificationB14State extends State<FittedAgeVerificationB14>{
   }
   Future<void> choose(bool isSelfie)async{
     try{
-      final result=await FilePicker.platform.pickFiles(
-        type:FileType.image,allowMultiple:false,withData:true);
-      if(result==null||result.files.isEmpty)return;
-      final file=result.files.single;
-      final bytes=file.bytes;
+      // FilePicker 13 returns an XFile; use the pinned API and read bytes
+      // only in memory, never persist a document in the browser cache.
+      final file=await FilePicker.pickFile(
+        type:FileType.custom,allowedExtensions:['jpg','jpeg','png']);
+      if(file==null)return;
+      final bytes=await file.readAsBytes();
       final name=file.name.toLowerCase();
       final mime=name.endsWith('.png')?'image/png':
         (name.endsWith('.jpg')||name.endsWith('.jpeg'))?'image/jpeg':null;
-      if(bytes==null||bytes.isEmpty||bytes.length>5242880||mime==null){
+      if(bytes.isEmpty||bytes.length>5242880||mime==null){
         if(mounted)setState(()=>
           message='Usa una imagen JPG o PNG de hasta 5 MB.');
         return;
