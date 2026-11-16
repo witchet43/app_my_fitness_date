@@ -48,7 +48,7 @@ abstract final class FitDateTheme {
         elevation: 0,
         centerTitle: false,
       ),
-      selectionTheme: TextSelectionThemeData(
+      textSelectionTheme: TextSelectionThemeData(
         cursorColor: FitDateColors.aqua,
         selectionColor: FitDateColors.aqua.withValues(alpha: .29),
         selectionHandleColor: FitDateColors.aqua,
