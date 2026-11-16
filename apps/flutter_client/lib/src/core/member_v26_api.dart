@@ -533,6 +533,39 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   @override
+  @override
+  Future<Map<String,dynamic>> pulseRealStatusB12(String matchId) async {
+    if(!_validActivityId(matchId)) {
+      throw const MemberApiException('Match inválido.');
+    }
+    return _decode(await _request('GET',
+      '/v1/dating/b11/matches/$matchId/pulse/status'));
+  }
+
+  @override
+  Future<String> confirmMeetupB12(String matchId) async {
+    if(!_validActivityId(matchId)) {
+      throw const MemberApiException('Match inválido.');
+    }
+    return _decode(await _request('POST',
+      '/v1/dating/b11/matches/$matchId/pulse/confirm'))['status']?.toString()
+      ?? 'not_available';
+  }
+
+  @override
+  Future<String> submitPulseRealB12(
+      String matchId,String dimension,String observation) async {
+    if(!_validActivityId(matchId) ||
+       !const ['move','live','relate'].contains(dimension) ||
+       !const ['aligned','unclear','not_aligned'].contains(observation)) {
+      throw const MemberApiException('Selecciona una evaluación válida.');
+    }
+    return _decode(await _request('POST',
+      '/v1/dating/b11/matches/$matchId/pulse/observe',
+      data:{'dimension':dimension,'observation':observation}))['status']
+        ?.toString()??'not_available';
+  }
+
   Future<Map<String, dynamic>> datingStatus() async =>
       _decode(await _request('GET', '/v1/dating/status'));
 
