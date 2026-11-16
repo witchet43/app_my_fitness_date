@@ -147,8 +147,8 @@ class _DatingV27State extends State<DatingV27> {
     final active=data['enabled']==true;
     final age=data['age_verified']==true;
     final consent=data['dating_consent']==true;
-    final pilot=data['pilot_member']==true;
-    final verifiedProvider=data['independent_provider_ready']==true;
+    final pilot=data['pilot_member']==true || data['manual_document_review_ready']==true;
+    final verifiedProvider=data['independent_provider_ready']==true || data['manual_document_review_ready']==true;
     final released=data['discovery_release_ready']==true;
     final available=data['status']=='available';
     final setupGym=data['gym_setup_required']==true &&
@@ -259,7 +259,7 @@ class _DatingV27State extends State<DatingV27> {
                       style:Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height:10),
                     const FittedText('No se muestran perfiles ni se envían mensajes '
-                      'hasta aprobar verificación independiente de edad, '
+                      'hasta aprobar la verificación documental de edad, '
                       'moderación y los controles de privacidad.'),
                   ]))),
               if(!active && setupGym)...[
