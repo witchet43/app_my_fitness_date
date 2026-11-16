@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'src/core/member_v26_api.dart';
@@ -68,7 +69,9 @@ Future<void> main() async {
       apiUrl.startsWith('https://') &&
       termsUrl.startsWith('https://') &&
       privacyUrl.startsWith('https://') &&
-      redirectUrl.startsWith('https://');
+      (redirectUrl.startsWith('https://') ||
+        (!kIsWeb && defaultTargetPlatform==TargetPlatform.android &&
+          redirectUrl=='fitted://auth/callback'));
   final localQaReady=
       localQa &&
       Uri.base.scheme == 'http' &&
