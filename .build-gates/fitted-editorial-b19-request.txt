@@ -1,0 +1,1 @@
+B19 2026-11-16: verify 3-pillar upper-right compact profile, large untruncated editorial narrative, handwritten story only when AI OFF with edit pen, longer AI ES/EN only after opt-in, privacy and age gates, heartless fit icons, SQL migration source, full Flutter and Deno typecheck, web release and orbital logo. No Google Cloud Build.
