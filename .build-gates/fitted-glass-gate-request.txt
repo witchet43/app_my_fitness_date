@@ -8,3 +8,5 @@ Retry: add auth/storage bootstrap to PostgreSQL isolated QA.
 Retry: correct SQL function body dollar quoting and validate updated profile lines.
 
 Retry: Dart line opacity ternary and legacy fake contract corrected after SQL and Deno PASS.
+
+Retry after glass-eyebrow 375px overflow fix. SQL, Deno and 103 other widgets were passing.
