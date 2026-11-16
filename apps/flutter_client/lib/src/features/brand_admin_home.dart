@@ -11,6 +11,8 @@ import '../core/fitted_locale.dart';
 import '../core/curator_repository.dart';
 import '../core/activity_repository.dart';
 import '../core/community_repository.dart';
+import '../core/member_v26_api.dart';
+import 'fitted_pulse_moderation_b13.dart';
 import 'community_moderation_b4.dart';
 import 'gym_catalog_admin_b11.dart';
 import 'match_calculator_admin.dart';
@@ -590,6 +592,26 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           label:const FittedText('Administrar gimnasios'),
         ),
       ]))),
+    if(widget.communityAdmin is MemberV26Api)...[
+      const SizedBox(height:14),
+      Card(child:Padding(padding:const EdgeInsets.all(20),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          FittedText('Pulso Real · confianza y revisión',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:8),
+          const FittedText('Revisión humana de la coherencia percibida tras '
+            'un encuentro, con apelaciones y auditoría. '
+            'Nada se publica como una acusación automática.'),
+          const SizedBox(height:12),
+          OutlinedButton.icon(
+            key:const Key('admin-open-pulse-moderation'),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>FittedPulseModerationB13(
+                api:widget.communityAdmin as MemberV26Api))),
+            icon:const Icon(Icons.fact_check_outlined),
+            label:const FittedText('Revisar señales y apelaciones')),
+        ]))),
+    ],
     if(widget.communityAdmin!=null)...[
       const SizedBox(height:14),
       Card(child:Padding(padding:const EdgeInsets.all(20),
