@@ -103,7 +103,7 @@ void main(){
     expect(find.text('Cómo me relaciono'),findsOneWidget);
     expect(find.byKey(const Key('b17-dating-checklist')),findsOneWidget);
     expect(find.byKey(const Key('b17-fits-empty-real')),findsOneWidget);
-    expect(find.byKey(const Key('b17-real-fit-'+ids[0])),findsNothing);
+    expect(find.byKey(Key('b17-real-fit-'+ids[0])),findsNothing);
     expect(find.text('Tu próxima actividad'),findsNothing);
     await tester.tap(find.byKey(const Key('b17-pillar-1')));
     await tester.pump();
