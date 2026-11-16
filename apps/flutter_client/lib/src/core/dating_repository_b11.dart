@@ -17,4 +17,10 @@ abstract class DatingRepositoryB11 extends DatingRepositoryB5 {
   Future<String> sendB11(String matchId,String message);
   Future<String> reportB11(String matchId,String reason,{String detail=''});
   Future<List<String>> ideasB11(String matchId);
+  /// Double confirmation of an offline meeting; server validates both members.
+  Future<Map<String,dynamic>> pulseRealStatusB12(String matchId);
+  Future<String> confirmMeetupB12(String matchId);
+  /// Private observation, never published as an accusation or unreviewed score.
+  Future<String> submitPulseRealB12(String matchId,
+      String dimension,String observation);
 }
