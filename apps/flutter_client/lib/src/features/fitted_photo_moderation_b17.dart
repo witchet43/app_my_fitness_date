@@ -72,7 +72,7 @@ class _FittedPhotoModerationB17State
                     maxLength:400,maxLines:3,
                     decoration:const InputDecoration(
                       labelText:'Motivo auditado (mínimo 8 caracteres)'),
-                    onChanged:(v)=>reason=v),
+                    onChanged:(v)=>setDialog(()=>reason=v)),
                 ]))),
             actions:[
               TextButton(onPressed:()=>Navigator.pop(dialog),
