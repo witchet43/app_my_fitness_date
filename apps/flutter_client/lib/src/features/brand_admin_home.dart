@@ -68,7 +68,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     Icons.history_outlined
   ];
   static const _logoNames = <String>[
-    'Monograma', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
+    'F · Movimiento', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
     'Brújula', 'Trayectoria', 'Horizonte', 'Geometría', 'Movimiento',
   ];
   static const _logoIcons = <IconData>[
@@ -78,6 +78,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     Icons.auto_graph_outlined,
   ];
   static const _paletteSeeds = <Map<String, String>>[
+    {'name':'Fitted Motion · Midnight Aurora','primary':'#D9C3FF','accent':'#65D3FA','background':'#0D1030'},
     {'name':'Bosque', 'primary':'#D5BE8A','accent':'#9FB5A9','background':'#101B21'},
     {'name':'Azul noche', 'primary':'#152D3D','accent':'#859EA3','background':'#F4F5F2'},
     {'name':'Tierra', 'primary':'#5A4838','accent':'#B2936A','background':'#FAF5EB'},
@@ -90,10 +91,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   final headline = TextEditingController(text:'Personas afines a tu forma de vivir.');
   final description = TextEditingController(
     text:'Una comunidad para personas que valoran la vida activa y las relaciones serias.');
-  final paletteName = TextEditingController(text:'Editorial Obsidian');
-  final primary = TextEditingController(text:'#D5BE8A');
-  final accent = TextEditingController(text:'#9FB5A9');
-  final background = TextEditingController(text:'#101B21');
+  final paletteName = TextEditingController(text:'Fitted Motion · Midnight Aurora');
+  final primary = TextEditingController(text:'#D9C3FF');
+  final accent = TextEditingController(text:'#65D3FA');
+  final background = TextEditingController(text:'#0D1030');
   final draftTitle = TextEditingController(text:'Propuesta elegante 40+');
   int tab = 0;
   int logoIndex = 0;
@@ -772,7 +773,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             for(var i=0;i<_logoNames.length;i++)
               ChoiceChip(
                 key:Key('admin-logo-$i'),
-                avatar:Icon(_logoIcons[i],size:19),
+                avatar:i==0
+                  ?Image.asset('assets/branding/mfd_icon.webp',
+                    width:22,height:22,fit:BoxFit.contain)
+                  :Icon(_logoIcons[i],size:19),
                 label:FittedText(_logoNames[i]),
                 selected:selectedLogoAsset==null&&logoIndex==i,
                 onSelected:(_){setState((){

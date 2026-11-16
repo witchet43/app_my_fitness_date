@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import '../core/live_brand.dart';
+import '../theme/fitness_date_theme.dart';
 
-/// Reusable global logo on marketing, administration and member routes.
-/// Only approved public-bucket assets are ever rendered on anonymous screens.
+/// Motion F: one mark on welcome, member screens and admin. Brand Lab custom
+/// uploaded logos remain supported and can override this canonical default.
 class MfdBranding extends StatelessWidget {
   const MfdBranding({
     super.key,
     this.full = true,
     this.width = 240,
   });
-
   final bool full;
   final double width;
-
   static const _catalog = <IconData>[
     Icons.diamond_outlined,
     Icons.graphic_eq,
@@ -31,47 +30,79 @@ class MfdBranding extends StatelessWidget {
     final brand = LiveBrandScope.of(context);
     final index = brand.logo.startsWith('catalog:')
         ? int.tryParse(brand.logo.substring(8)) : null;
-    final isNetwork = LiveBrandSettings.safeAssetUrl(brand.logo);
+    final networkLogo = LiveBrandSettings.safeAssetUrl(brand.logo);
+    // catalog:0 = brand-owned icon; user-uploaded logo wins.
+    final bundledMark = !networkLogo && (index == null || index == 0);
     Widget image;
-    if (isNetwork) {
+    if (networkLogo) {
       image = Image.network(
         brand.logo,
-        key: const Key('mfd-public-logo-network'),
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
+        key:const Key('mfd-public-logo-network'),
+        fit:BoxFit.contain,
+        filterQuality:FilterQuality.high,
         errorBuilder:(context,error,stackTrace)=>Icon(
-          Icons.diamond_outlined,color:brand.primaryColor,size:32),
+          Icons.auto_awesome,color:brand.primaryColor,size:32),
       );
     } else if (index != null && index > 0 && index < _catalog.length) {
-      image = FittedBox(child:Icon(
-        _catalog[index], color:brand.primaryColor, size:64,
-      ));
+      image = FittedBox(child:Icon(_catalog[index],
+        color:brand.primaryColor,size:64));
     } else {
       image = Image.asset(
-        full ? 'assets/branding/mfd_logo_full.webp'
-             : 'assets/branding/mfd_icon.webp',
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
+        'assets/branding/mfd_icon.webp',
+        key:const Key('fitted-motion-f-mark'),
+        fit:BoxFit.contain,
+        filterQuality:FilterQuality.high,
         errorBuilder:(context,error,stackTrace)=>Icon(
-          Icons.diamond_outlined,color:brand.primaryColor,size:32),
+          Icons.auto_awesome,color:brand.primaryColor,size:32),
       );
     }
+    final markSize = full && bundledMark ? 63.0 : width;
+    final mark = Container(
+      key:Key(full ? 'mfd-brand-full' : 'mfd-brand-icon'),
+      width:markSize,
+      height:markSize,
+      padding:EdgeInsets.all(bundledMark ? 1 : 5),
+      decoration:BoxDecoration(
+        color:bundledMark ? FitDateColors.inkDeep : brand.backgroundColor,
+        border:bundledMark ? null : Border.all(
+          color:brand.primaryColor.withValues(alpha:.4)),
+        borderRadius:BorderRadius.circular(full ? 19 : 14),
+      ),
+      child:ClipRRect(
+        borderRadius:BorderRadius.circular(full ? 18 : 13),
+        child:image,
+      ),
+    );
     return Semantics(
       label:'Logotipo ${brand.name}',
       image:true,
-      child:Container(
-        key:Key(full ? 'mfd-brand-full' : 'mfd-brand-icon'),
-        width:width,
-        height:full ? null : width,
-        constraints:BoxConstraints(minHeight:full ? 75 : 0),
-        padding:const EdgeInsets.all(5),
-        decoration:BoxDecoration(
-          color:brand.backgroundColor,
-          border:Border.all(color:brand.primaryColor.withValues(alpha:.55)),
-          borderRadius:BorderRadius.circular(full ? 18 : 14),
-        ),
-        child:image,
-      ),
+      child:full && bundledMark
+        ? SizedBox(width:width,child:Row(
+            mainAxisSize:MainAxisSize.min,
+            children:[
+              mark,
+              const SizedBox(width:12),
+              Flexible(child:Column(
+                mainAxisSize:MainAxisSize.min,
+                crossAxisAlignment:CrossAxisAlignment.start,
+                children:[
+                  Text(brand.name.toUpperCase(),
+                    key:const Key('fitted-motion-wordmark'),
+                    maxLines:1,overflow:TextOverflow.ellipsis,
+                    style:const TextStyle(
+                      fontSize:23,fontWeight:FontWeight.w800,
+                      letterSpacing:2.5,color:FitDateColors.pearl)),
+                  const SizedBox(height:2),
+                  const Text('RITMO · CONEXIÓN',
+                    maxLines:1,overflow:TextOverflow.ellipsis,
+                    style:TextStyle(fontSize:8.5,letterSpacing:1.2,
+                      color:FitDateColors.lilac,
+                      fontWeight:FontWeight.w700)),
+                ],
+              )),
+            ],
+          ))
+        :mark,
     );
   }
 }

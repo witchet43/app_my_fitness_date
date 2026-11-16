@@ -35,7 +35,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
   bool register = false;
   final _accessKey = GlobalKey();
   static const navy = FitDateColors.inkDeep;
-  static const gold = FitDateColors.apricot;
+  static const gold = FitDateColors.lilac;
   static const ivory = FitDateColors.pearl;
   static const sage = FitDateColors.muted;
 
@@ -137,14 +137,14 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               'Dos personas activas compartiendo un momento al aire libre',
               'Two active people sharing a moment outdoors'),
             errorBuilder:(_,__,___)=>const ColoredBox(
-              color:Color(0xFF294A4A),child:Center(
+              color:Color(0xFF202953),child:Center(
                 child:Icon(Icons.landscape_outlined,color:gold,size:48))),
           ),
           const Positioned.fill(child:FittedRhythmLines(density:.64)),
           const DecoratedBox(decoration:BoxDecoration(
             gradient:LinearGradient(begin:Alignment.topCenter,
               end:Alignment.bottomCenter,
-              colors:[Colors.transparent,Color(0xCC0F1821)],
+              colors:[Colors.transparent,Color(0xCC0D1030)],
               stops:[.4,1]))),
           Positioned(left:14,right:14,bottom:14,child:FittedGlassPanel(
             padding:const EdgeInsets.symmetric(horizontal:13,vertical:9),
@@ -171,7 +171,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       decoration:BoxDecoration(
         borderRadius:BorderRadius.circular(30),
         gradient:const LinearGradient(
-          colors:[Color(0xFF173B41),Color(0xFF192936),Color(0xFF26283B)],
+          colors:[Color(0xFF12204B),Color(0xFF1A1D46),Color(0xFF2B1B50)],
           begin:Alignment.topLeft,end:Alignment.bottomRight),
         border:Border.all(color:FitDateColors.aqua.withValues(alpha:.24))),
       child:wide
@@ -278,7 +278,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
                 '¿Aún no tienes cuenta? Regístrate',
                 'New here? Sign up'),
               style:const TextStyle(color:gold))),
-          const Divider(color:Color(0xFF425150),height:24),
+          const Divider(color:FitDateColors.outline,height:24),
           Center(child:Wrap(
             alignment:WrapAlignment.center,spacing:19,runSpacing:0,
             children:[
