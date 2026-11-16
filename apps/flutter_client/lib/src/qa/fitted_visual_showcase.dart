@@ -29,7 +29,7 @@ class _FittedVisualShowcaseState extends State<FittedVisualShowcase> {
     'training_frequency': 'three_to_four',
     'fitness_goals': ['Correr 21K'],
     'achievements': ['Mi primera carrera'],
-    'dating_intent': 'long_term',
+    'dating_intent': 'relationship',
     'social_visibility': 'private',
   };
   final rhythm = <String,dynamic>{
