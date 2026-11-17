@@ -26,5 +26,5 @@ create table app_private.member_profile_summaries_b17(
   manual_summary_en text not null default ''
 );
 create function app_private.refresh_profile_summary_b17(p_user uuid)
-returns void language sql security definer set search_path=''
-as $$select null::void$$;
+returns void language plpgsql security definer set search_path=''
+as $begin return; end$;
