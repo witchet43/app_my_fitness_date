@@ -15,6 +15,7 @@ name: Fitted - canonical unified authentication release
 # Public smoke now validates the Slate Mint launcher, HTML cache keys and theme.
 # Approved photo edition: original couple reference locally bundled; no stock photo substitutions.
 # Verify SHA256 of the exact user-approved artwork in source and public deployment.
+# Dart parser delimiter correction, no design changes.
 on:
   push:
     branches: [main]
