@@ -1,1 +1,1 @@
-Run QA after fixing HSV AlertDialog intrinsic layout and verifying legal catalogue logos.
+Full regression after narrow-screen HSV picker tap coordinates and scroll-to-swatch fix.
