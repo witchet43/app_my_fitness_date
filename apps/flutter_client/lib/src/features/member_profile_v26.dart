@@ -263,11 +263,13 @@ class _ProfileEditorV26State extends State<ProfileEditorV26> {
 /// Owner-only home; no real dating/discovery feed until independent gates pass.
 class MemberProfileHomeV26 extends StatefulWidget {
   const MemberProfileHomeV26({super.key,required this.profile,
-    required this.api,required this.onEdit,required this.onLogout});
+    required this.api,required this.onEdit,required this.onLogout,
+    this.onSettings});
   final Map<String,dynamic> profile;
   final MemberV26Api api;
   final VoidCallback onEdit;
   final VoidCallback onLogout;
+  final Future<void> Function()? onSettings;
   @override
   State<MemberProfileHomeV26> createState()=>_MemberProfileHomeV26State();
 }
@@ -441,68 +443,77 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     }finally{controller.dispose();}
   }
 
+  /// Single account-wide AI preference; profile sharing is independently
+  /// configurable and never implied by enabling generative features.
+  Future<void> accountSettings() async{
+    if(widget.onSettings==null){widget.onEdit();return;}
+    try{
+      await widget.onSettings!();
+      if(mounted)await reload();
+    }catch(_){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content:Text(
+          'No se pudo actualizar la configuración de IA.')));
+    }
+  }
+
   Future<void> configureSummaryB18() async {
     final en=FittedLocaleScope.languageOf(context)=='en';
-    var ai=summary?['ai_consented']==true;
     var share=summary?['share_consented']==true;
-    final decision=await showDialog<(bool,bool)>(context:context,
+    final decision=await showDialog<bool>(context:context,
       builder:(dialog)=>StatefulBuilder(builder:(dialog,update)=>AlertDialog(
-        title:Text(en?'AI story & privacy':'Mi historia con IA y privacidad'),
+        title:Text(en?'My story & privacy':'Mi historia y privacidad'),
         content:SizedBox(width:440,child:Column(
           mainAxisSize:MainAxisSize.min,children:[
             Text(en
-              ?'With your permission, AI can summarize your interests, goals, '
-                'values and all three lifestyle pillars in a longer personal '
-                'story. IDs, photos, gyms, exact schedules and contacts are excluded. '
-                'When AI is off, your own written text stays unchanged.'
-              :'Con tu permiso, la IA puede integrar intereses, objetivos, '
-                'valores y los tres pilares en una descripción más completa. '
-                'No se envían documentos, fotos, gimnasios, horarios exactos '
-                'ni contactos. Con IA apagada, conservarás tu texto manual.'),
+              ?'AI is managed globally for your account. Private AI-generated '
+                'stories are never shared without separate permission.'
+              :'La IA se controla globalmente desde Configuración. '
+                'Los resúmenes con IA son privados hasta que autorices '
+                'explícitamente compartirlos.'),
+            const SizedBox(height:10),
+            TextButton.icon(
+              key:const Key('b18-manage-global-ai'),
+              icon:const Icon(Icons.auto_awesome_outlined),
+              onPressed:(){
+                Navigator.pop(dialog);
+                accountSettings();
+              },
+              label:Text(en?'Configure AI for my account':
+                'Configurar IA de mi cuenta'),
+            ),
             CheckboxListTile(
-              key:Key('b18-ai-consent'),
-              value:ai,onChanged:(v)=>update(()=>ai=v??false),
-              title:Text(en?'Allow AI to write my story':
-                'Permitir que IA redacte mi resumen')),
-            CheckboxListTile(
-              key:Key('b18-share-consent'),
+              key:const Key('b18-share-consent'),
               value:share,onChanged:(v)=>update(()=>share=v??false),
               title:Text(en?'Share my approved story with eligible members':
                 'Mostrar mi resumen a miembros verificados')),
-            Text(en?'You can change these permissions any time. '
-              'Turning AI off here also disables external AI replies in Fit-IA, '
-              'without deleting your saved conversations.':
-              'Puedes cambiar estos permisos cuando quieras. '
-              'Al apagar la IA aquí también se desactiva la IA externa '
-              'de Fit-IA sin borrar tus conversaciones guardadas.',
+            Text(en?'Sharing is separate from enabling AI and dating.':
+              'Compartir es independiente de activar la IA y las citas.',
               style:Theme.of(dialog).textTheme.bodySmall),
           ])),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog),
             child:Text(en?'Cancel':'Cancelar')),
           FilledButton(
-            key:Key('b18-summary-consent-save'),
-            onPressed:()=>Navigator.pop(dialog,(ai,share)),
-            child:Text(en?'Save preferences':'Guardar preferencias')),
+            key:const Key('b18-summary-consent-save'),
+            onPressed:()=>Navigator.pop(dialog,share),
+            child:Text(en?'Save visibility':'Guardar visibilidad')),
         ],
       )));
     if(decision==null||!mounted)return;
     setState(()=>summaryBusy=true);
     try{
-      final state=await widget.api.fittedSummaryConsentB18(
-        ai:decision.$1,share:decision.$2);
-      if(state!='updated')throw MemberApiException('Not saved');
-      // Disabling AI from the main privacy control must also stop
-      // Fit-IA model calls, while keeping the private guided conversation.
-      if(!decision.$1 && fitIaOverview?['ai_enabled']==true){
-        await widget.api.fitIaConsent(false);
-      }
-      if(decision.$1)await widget.api.refreshFittedAiSummaryB18();
+      final preference=await widget.api.fittedAiAccountPreference();
+      if(preference['configured']!=true)
+        throw const MemberApiException('AI preference not configured');
+      final status=await widget.api.fittedSummaryConsentB18(
+        ai:preference['enabled']==true,share:decision);
+      if(status!='updated')throw const MemberApiException('Not saved');
       await reload();
     }catch(_){
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content:Text(en?'Could not save AI preferences.':
-          'No se pudieron guardar las preferencias de IA.')));
+        content:Text(en?'Could not save visibility preferences.':
+          'No se pudo guardar la visibilidad de tu resumen.')));
     }finally{if(mounted)setState(()=>summaryBusy=false);}
   }
 
@@ -671,7 +682,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               icon:Icon(Icons.person_outline,size:19),
               label:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
             TextButton.icon(
-              onPressed:widget.onEdit,
+              onPressed:accountSettings,
               icon:Icon(Icons.settings_outlined,size:19),
               label:Text(FittedLocaleScope.t(context,
                 'Configuración','Settings'))),
@@ -683,6 +694,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             onSelected:(value) {
               if(value=='profile')setState(()=>selectedArea=1);
               if(value=='edit')widget.onEdit();
+              if(value=='settings')accountSettings();
               if(value=='community')Navigator.of(context).push(
                 MaterialPageRoute<void>(builder:(_)=>CommunityB4(api:widget.api)));
               if(value=='activities')Navigator.of(context).push(
@@ -698,6 +710,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
                 child:Text(FittedLocaleScope.t(context,'Mi perfil','My profile'))),
               PopupMenuItem(value:'edit',
                 child:Text(FittedLocaleScope.t(context,'Editar perfil','Edit profile'))),
+              PopupMenuItem(value:'settings',
+                child:Text(FittedLocaleScope.t(context,'Configuración','Settings'))),
               PopupMenuItem(value:'community',
                 child:Text(FittedLocaleScope.t(context,'Comunidad','Community'))),
               PopupMenuItem(value:'activities',
