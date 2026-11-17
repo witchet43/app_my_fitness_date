@@ -33,12 +33,12 @@ class _PaceCalculatorState extends State<PaceCalculator> {
     return TextField(
       key: key,
       controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      keyboardType: TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
       ],
       onChanged: (_) => setState(() {}),
-      style: const TextStyle(
+      style: TextStyle(
         color: FitDateColors.pearl,
         fontSize: 17, fontWeight: FontWeight.w700,
       ),
@@ -70,7 +70,7 @@ class _PaceCalculatorState extends State<PaceCalculator> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
             Icon(Icons.bolt_rounded, color: FitDateColors.lime),
             SizedBox(width: 9),
@@ -86,8 +86,8 @@ class _PaceCalculatorState extends State<PaceCalculator> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        const Text(
+        SizedBox(height: 16),
+        Text(
           'Calculadora de ritmo de carrera',
           style: TextStyle(
             color: FitDateColors.pearl,
@@ -95,8 +95,8 @@ class _PaceCalculatorState extends State<PaceCalculator> {
             height: 1.18,
           ),
         ),
-        const SizedBox(height: 9),
-        const Text(
+        SizedBox(height: 9),
+        Text(
           'Cada kilómetro cuenta. Descubre tu ritmo, '
           'define tus metas y disfruta el movimiento.',
           style: TextStyle(
@@ -104,44 +104,44 @@ class _PaceCalculatorState extends State<PaceCalculator> {
             color: FitDateColors.muted,
           ),
         ),
-        const SizedBox(height: 21),
+        SizedBox(height: 21),
         LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 440;
             final distanceInput = _numericInput(
-              key: const Key('pace-distance'),
+              key: Key('pace-distance'),
               controller: _distance,
               label: 'Distancia (km)',
             );
             final durationInput = _numericInput(
-              key: const Key('pace-duration'),
+              key: Key('pace-duration'),
               controller: _duration,
               label: 'Tiempo (minutos)',
             );
             return compact
                 ? Column(children: [
                     distanceInput,
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     durationInput,
                   ])
                 : Row(children: [
                     Expanded(child: distanceInput),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(child: durationInput),
                   ]);
           },
         ),
-        const SizedBox(height: 19),
+        SizedBox(height: 19),
         if (!valid)
           Container(
-            key: const Key('pace-validation'),
+            key: Key('pace-validation'),
             width: double.infinity,
-            padding: const EdgeInsets.all(15),
+            padding: EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: const Color(0xFF41262E),
+              color: Color(0xFF41262E),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Text(
+            child: Text(
               'Ingresa una distancia entre 0.1 y 200 km y un '
               'tiempo entre 1 y 1440 minutos.',
               style: TextStyle(color: Color(0xFFFFC2C2)),
@@ -152,13 +152,13 @@ class _PaceCalculatorState extends State<PaceCalculator> {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(21),
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [Color(0xFF273A29), Color(0xFF252E39)],
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
               ),
-              border: Border.all(color: const Color(0xFF455840)),
+              border: Border.all(color: Color(0xFF455840)),
             ),
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             child: Wrap(
               spacing: 35,
               runSpacing: 15,
@@ -166,22 +166,22 @@ class _PaceCalculatorState extends State<PaceCalculator> {
                 _Result(
                   label: 'TU RITMO PROMEDIO',
                   value: '$pace min/km',
-                  resultKey: const Key('pace-result'),
+                  resultKey: Key('pace-result'),
                   icon: Icons.speed_rounded,
                   color: FitDateColors.lime,
                 ),
                 _Result(
                   label: 'VELOCIDAD PROMEDIO',
                   value: '$speed km/h',
-                  resultKey: const Key('pace-speed'),
+                  resultKey: Key('pace-speed'),
                   icon: Icons.trending_up_rounded,
                   color: FitDateColors.pearl,
                 ),
               ],
             ),
           ),
-        const SizedBox(height: 16),
-        const Row(
+        SizedBox(height: 16),
+        Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(Icons.lock_outline_rounded,
@@ -228,10 +228,10 @@ class _Result extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 17, color: color),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: FitDateColors.muted,
                 letterSpacing: .8,
                 fontSize: 10,
@@ -240,7 +240,7 @@ class _Result extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 9),
+        SizedBox(height: 9),
         Text(
           value,
           key: resultKey,
