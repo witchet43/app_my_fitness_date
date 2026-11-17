@@ -514,23 +514,33 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
       margin:EdgeInsets.zero,clipBehavior:Clip.antiAlias,
       child:Column(children:[
         Padding(padding:const EdgeInsets.fromLTRB(18,16,18,14),
-          child:Row(children:[
-            CircleAvatar(
-              radius:23,
-              backgroundColor:theme.colorScheme.primaryContainer,
-              child:Icon(Icons.auto_awesome_rounded,
-                color:theme.colorScheme.onPrimaryContainer)),
-            const SizedBox(width:12),
-            Expanded(child:Column(
-              crossAxisAlignment:CrossAxisAlignment.start,children:[
-                Text('Fit-IA',style:theme.textTheme.titleLarge?.copyWith(
-                  fontWeight:FontWeight.w800)),
-                Text(en?FitIaDepth.labelsEn[current]:FitIaDepth.labelsEs[current],
-                  style:theme.textTheme.bodySmall),
-              ]),
-            ),
-            Flexible(child:_modeSelector()),
-          ]),
+          child:LayoutBuilder(builder:(context,limits){
+            final heading=Row(children:[
+              CircleAvatar(
+                radius:22,
+                backgroundColor:theme.colorScheme.primaryContainer,
+                child:Icon(Icons.auto_awesome_rounded,
+                  color:theme.colorScheme.onPrimaryContainer)),
+              const SizedBox(width:12),
+              Expanded(child:Column(
+                crossAxisAlignment:CrossAxisAlignment.start,children:[
+                  Text('Fit-IA',style:theme.textTheme.titleLarge?.copyWith(
+                    fontWeight:FontWeight.w800)),
+                  Text(en?FitIaDepth.labelsEn[current]:FitIaDepth.labelsEs[current],
+                    style:theme.textTheme.bodySmall),
+                ]),
+              ),
+            ]);
+            return limits.maxWidth<540
+              ?Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                  heading,const SizedBox(height:13),
+                  _modeSelector(),
+                ])
+              :Row(children:[
+                  Expanded(child:heading),
+                  Flexible(child:_modeSelector()),
+                ]);
+          }),
         ),
         const Divider(height:1),
         if(error!=null)
