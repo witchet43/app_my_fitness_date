@@ -16,6 +16,7 @@ name: Fitted - canonical unified authentication release
 # Approved photo edition: original couple reference locally bundled; no stock photo substitutions.
 # Verify SHA256 of the exact user-approved artwork in source and public deployment.
 # Dart parser delimiter correction, no design changes.
+# Supersede blocked image codec QA run with an IHDR-only image integrity check.
 on:
   push:
     branches: [main]
@@ -27,7 +28,7 @@ permissions:
   deployments: write
 concurrency:
   group: mfd-canonical-cloudflare-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   canonical-release:
     runs-on: ubuntu-latest
