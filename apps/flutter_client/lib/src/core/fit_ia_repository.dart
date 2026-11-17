@@ -4,6 +4,10 @@ abstract class FitIaRepository {
   Future<Map<String,dynamic>> fitIaAnswer(
     String pillar,String questionId,String choiceKey,{String locale='es'});
   Future<Map<String,dynamic>> fitIaOverview();
+  Future<Map<String,dynamic>> fitIaChatState(String pillar,{String locale='es'});
+  Future<Map<String,dynamic>> fitIaChatSend(
+      String pillar,String text,String clientId,{String locale='es'});
+  Future<Map<String,dynamic>> fitIaChatRetry(String pillar,{String locale='es'});
   Future<Map<String,dynamic>> fitIaForm(String pillar);
   Future<Map<String,dynamic>> fitIaSubmitForm(
     String pillar,List<Map<String,String>> answers);
