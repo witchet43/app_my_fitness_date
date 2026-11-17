@@ -84,7 +84,9 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
         locale:english?'en':'es');
       // A member's existing account-wide opt-in is sufficient. Repair the
       // legacy per-pillar flag without another permission dialog.
-      if(result['ai_enabled']!=true && widget.repository is FitIaAccountConsentSync){
+      if(result['ai_enabled']!=true &&
+        result['status']=='consent_required' &&
+        widget.repository is FitIaAccountConsentSync){
         final synced=await (widget.repository as FitIaAccountConsentSync)
           .fitIaSyncAccountConsent();
         if(synced){
@@ -386,7 +388,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
             const SizedBox(height:11),
             OutlinedButton.icon(
               key:const Key('fit-ia-reload-consent'),
-              onPressed:loading||providerUnavailable?null:_load,
+              onPressed:loading?null:_load,
               icon:const Icon(Icons.refresh_outlined),
               label:Text(tr('Recargar conversación','Reload chat'))),
           ]),
