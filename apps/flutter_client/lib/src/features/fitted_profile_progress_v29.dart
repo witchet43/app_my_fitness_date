@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/fitted_locale.dart';
 import '../core/fitted_profile_insights_v29.dart';
+import '../theme/fitness_date_theme.dart';
 
 /// Pure presentation: caller supplies saved, consented rhythm; no network.
 /// A voluntary starting preference is NOT copied into behavioral answers.
@@ -111,7 +112,7 @@ class FittedProfileProgressV29 extends StatelessWidget {
           ],
           if(showRhythm)...[
           Text(en?'MY CURRENT MOVEMENT RHYTHM':'MI RITMO ACTUAL',
-            style:const TextStyle(color:Color(0xFFD5BE8A),
+            style:TextStyle(color:FitDateColors.lilac,
               fontSize:11,letterSpacing:1.2,fontWeight:FontWeight.w700)),
           const SizedBox(height:9),
           if(segment==null)...[
