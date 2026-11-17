@@ -114,7 +114,6 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   List<Map<String, dynamic>> palettes = [];
   List<Map<String, dynamic>> assets = [];
   List<Map<String, dynamic>> drafts = [];
-  List<Map<String, dynamic>> revisions = [];
   final Map<String, String> selectedImages = {};
   final Map<String, Uint8List> downloaded = {};
 
@@ -641,15 +640,6 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     }
   }
 
-  Future<void> _fetchRevisions() async {
-    if(draft==null)return;
-    try {
-      final rows=await widget.repository.loadRevisions(draft!['id'] as String);
-      if(mounted)setState(()=>revisions=rows);
-    } catch (_) {
-      _notice('No fue posible consultar las revisiones.',bad:true);
-    }
-  }
 
   Future<void> _upload() async {
     if(busy)return;
