@@ -90,7 +90,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   final primary = TextEditingController(text:'#8EF0D5');
   final accent = TextEditingController(text:'#68D4C7');
   final background = TextEditingController(text:'#1A2D38');
-  final draftTitle = TextEditingController(text:'Propuesta elegante 40+');
+  final draftTitle = TextEditingController(text:'Diseño sin publicar');
   int tab = 0;
   int logoIndex = 0;
   String? selectedLogoAsset;
@@ -518,7 +518,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       await widget.liveBrand.restore(version);
       _hydrateLiveBrand();
       await _fetchBrandHistory();
-      _notice('Versión restaurada. El cambio es visible en toda la app.');
+      _notice('Versión restaurada y publicada en toda Fitted.');
     } catch (_) {
       _notice('No se pudo restaurar. Comprueba tu sesión MFA.',bad:true);
     }
@@ -545,6 +545,35 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     'mode':dark ? 'dark' : 'light',
   };
 
+  Future<void> _saveNamedDraft()async{
+    final input=TextEditingController(text:draft==null
+      ?'${name.text} · ${paletteName.text}' : draftTitle.text);
+    final chosen=await showDialog<String>(context:context,
+      builder:(ctx)=>AlertDialog(
+        title:const Text('Guardar diseño para después'),
+        content:Column(mainAxisSize:MainAxisSize.min,
+          crossAxisAlignment:CrossAxisAlignment.stretch,
+          children:[
+            const Text('Se guarda en tus diseños privados. '
+              'NO modifica la marca que ven los usuarios.'),
+            const SizedBox(height:14),
+            TextField(controller:input,autofocus:true,maxLength:100,
+              decoration:const InputDecoration(labelText:'Nombre del diseño')),
+          ]),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancelar')),
+          FilledButton(key:const Key('brand-save-design-only'),
+            onPressed:()=>Navigator.pop(ctx,input.text.trim()),
+            child:const Text('Guardar diseño')),
+        ]));
+    // Extract value before disposing controller. Widgets of the dismissed
+    // dialog are no longer allowed to read disposed state.
+    input.dispose();
+    if(chosen==null||chosen.length<2||!mounted)return;
+    draftTitle.text=chosen;
+    await _saveDraft();
+  }
+
   Future<void> _saveDraft() async {
     if (!validPalette || name.text.trim().isEmpty) {
       _notice('Revisa el nombre y los colores HEX de la identidad.',bad:true);
@@ -559,8 +588,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       );
       draft=updated;
       await _reload();
-      _notice('Borrador guardado en Supabase · revisión ${updated['revision']}. '
-        'No modifica la marca pública.');
+      _notice('Diseño «${draftTitle.text}» guardado para después. '
+        'La marca publicada sigue intacta.');
     } catch (_) {
       _notice('No fue posible guardar. Recarga si otro administrador cambió la versión.',bad:true);
     } finally {
@@ -570,6 +599,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
 
   Future<void> _loadDraft(Map<String, dynamic> item) async {
     try {
+      _brandHydrating=true;
       final settings=Map<String,dynamic>.from(item['settings'] as Map);
       final c=Map<String,dynamic>.from(settings['colors'] as Map);
       if (!c.values.every((x)=>x is String &&
@@ -587,7 +617,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         primary.text=c['primary'].toString();
         accent.text=c['accent'].toString();
         background.text=c['background'].toString();
-        font=(settings['font']??'Georgia').toString();
+        final selectedFont=(settings['font']??'Arial').toString();
+        font=FittedFontCatalog.accepts(selectedFont)?selectedFont:'Arial';
         final logo=(settings['logo']??'catalog:0').toString();
         selectedLogoAsset=LiveBrandSettings.safeAssetUrl(logo)?logo:null;
         final parsed=int.tryParse(logo.replaceFirst('catalog:',''));
@@ -599,9 +630,14 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           ..addAll(Map<String,String>.from(settings['media']??{}));
         tab=1;
       });
-      _notice('Borrador cargado para edición. No hay cambios publicados.');
+      _brandHydrating=false;
+      _markPreviewDirty();
+      _notice('Diseño cargado únicamente en vista previa. '
+        'Pulsa Guardar y publicar para aplicarlo a toda Fitted.');
     } catch (_) {
-      _notice('El borrador contiene datos no compatibles.',bad:true);
+      _notice('El diseño guardado contiene datos no compatibles.',bad:true);
+    } finally {
+      _brandHydrating=false;
     }
   }
 
@@ -640,7 +676,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           else selectedImages[kind]=url;
         });
         _markPreviewDirty();
-        _notice('Imagen seleccionada. Guardando para todos los usuarios.');
+        _notice('Imagen preparada para tu vista previa. '
+          'No aparecerá en la app hasta pulsar Guardar y publicar.');
       } else {
         final saved=await widget.repository.uploadAsset(
           kind:kind,name:file.name,bytes:bytes,license:license);
@@ -685,7 +722,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         _notice('Esta clase de recurso todavía permanece privada.');
       }
     } catch (_) {
-      _notice('No fue posible usar este recurso públicamente.',bad:true);
+      _notice('No se pudo preparar este recurso para la vista previa.',bad:true);
     } finally {
       if(mounted)setState(()=>busy=false);
     }
@@ -1294,45 +1331,82 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       child:FittedText('Aún no hay recursos privados.')),
   ]);
 
-  Widget _drafts()=>ListView(padding:const EdgeInsets.all(22),children:[
-    _header('Borradores y versiones',
-      'Guarda, consulta y recupera configuraciones. Ninguna cambia la marca pública.'),
-    _field(draftTitle,'Título del borrador'),
-    FilledButton.icon(
-      onPressed:busy?null:_saveDraft,
-      icon:const Icon(Icons.save_outlined),
-      label:FittedText(draft==null?'Crear borrador':'Guardar nueva revisión'),
-    ),
-    const SizedBox(height:12),
-    OutlinedButton(
-      onPressed:()=>setState((){
-        draft=null;revisions=[];draftTitle.text='Nueva propuesta';
-      }),
-      child:const FittedText('Comenzar una propuesta nueva'),
-    ),
-    if(draft!=null) ...[
-      const SizedBox(height:14),
-      OutlinedButton.icon(onPressed:_fetchRevisions,
-        icon:const Icon(Icons.history),
-        label:const FittedText('Ver historial del borrador')),
-      for(final rev in revisions)
-        ListTile(
-          leading:const Icon(Icons.history_toggle_off),
-          title:FittedText('Revisión ${rev['revision']}'),
-          subtitle:FittedText(rev['recorded_at'].toString()),
-        ),
-    ],
-    const SizedBox(height:20),
-    FittedText('Diseños guardados',style:Theme.of(context).textTheme.titleLarge),
-    for(final item in drafts)
-      Card(child:ListTile(
-        title:FittedText(item['title'].toString()),
-        subtitle:FittedText('Revisión ${item['revision']} · ${item['updated_at']}'),
-        trailing:const Icon(Icons.edit_outlined),
-        onTap:()=>_loadDraft(item),
+  Widget _drafts()=>ListView(
+    key:const Key('brand-saved-designs'),
+    padding:const EdgeInsets.all(22),
+    children:[
+      _header('Mis diseños guardados',
+        'Aquí guardas propuestas para retomarlas otro día. '
+        'Ninguna se publica al guardarla ni al abrirla.'),
+      Card(child:Padding(
+        padding:const EdgeInsets.all(17),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          FittedText('Así funciona',style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:10),
+          const Text('1. Personaliza colores, fuentes o logotipos en Diseñador de Marca.'),
+          const SizedBox(height:7),
+          const Text('2. Pulsa «Guardar diseño para después» si quieres conservar la propuesta.'),
+          const SizedBox(height:7),
+          const Text('3. Aquí puedes volver a abrirla. Solo se hará pública '
+            'cuando pulses «Guardar y publicar» en el diseñador.'),
+          const SizedBox(height:14),
+          FilledButton.icon(
+            key:const Key('brand-designs-go-editor'),
+            onPressed:()=>setState(()=>tab=1),
+            icon:const Icon(Icons.brush_outlined),
+            label:const Text('Ir al Diseñador de Marca')),
+        ]),
       )),
-    if(drafts.isEmpty)const FittedText('No se han creado borradores.'),
-  ]);
+      const SizedBox(height:17),
+      Row(children:[
+        Expanded(child:FittedText('Propuestas guardadas (${drafts.length})',
+          style:Theme.of(context).textTheme.titleLarge)),
+        IconButton(
+          tooltip:'Actualizar diseños guardados',
+          onPressed:_reload,
+          icon:const Icon(Icons.refresh)),
+      ]),
+      if(drafts.isEmpty)
+        const Padding(
+          padding:EdgeInsets.symmetric(vertical:20),
+          child:Text('Todavía no hay diseños guardados. '
+            'Empieza probando una paleta en el diseñador.')),
+      for(final item in drafts)
+        Card(child:Padding(
+          padding:const EdgeInsets.all(13),
+          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Row(children:[
+              const Icon(Icons.bookmark_added_outlined),
+              const SizedBox(width:9),
+              Expanded(child:FittedText(item['title'].toString(),
+                maxLines:2,overflow:TextOverflow.ellipsis,
+                style:Theme.of(context).textTheme.titleMedium)),
+            ]),
+            const SizedBox(height:11),
+            Wrap(spacing:6,runSpacing:6,children:[
+              for(final key in const ['primary','accent','background'])
+                Container(width:32,height:32,
+                  decoration:BoxDecoration(
+                    color:_color((item['settings'] is Map &&
+                      (item['settings'] as Map)['colors'] is Map)
+                        ?((item['settings'] as Map)['colors'] as Map)[key]
+                          ?.toString()??'#FFFFFF':'#FFFFFF',Colors.white),
+                    borderRadius:BorderRadius.circular(8),
+                    border:Border.all(color:Theme.of(context).dividerColor))),
+            ]),
+            const SizedBox(height:10),
+            FittedText('Guardado: ${item['updated_at']??'Fecha no disponible'}',
+              style:Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height:13),
+            OutlinedButton.icon(
+              key:Key('brand-load-design-${item['id']}'),
+              onPressed:()=>_loadDraft(item),
+              icon:const Icon(Icons.visibility_outlined),
+              label:const Text('Abrir en vista previa')),
+          ]),
+        )),
+    ],
+  );
 
   Widget _publication() => ListView(
     key:const Key('b3-brand-history'),
