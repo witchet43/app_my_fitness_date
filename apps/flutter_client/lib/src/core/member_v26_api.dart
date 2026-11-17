@@ -11,7 +11,7 @@ import 'fit_ia_repository.dart';
 
 /// Business data travels through our authenticated Supabase Edge gateway,
 /// using the member JWT and RLS, never a privileged database key.
-class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11, FitIaRepository {
+class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11, FitIaRepository, FitIaAccountConsentSync {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
