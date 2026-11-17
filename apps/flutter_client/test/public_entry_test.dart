@@ -19,7 +19,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('switch-entry-mode')));
     await tester.pump();
-    expect(find.text('Comienza aquí'), findsOneWidget);
+    expect(find.text('Crear cuenta con correo'), findsOneWidget);
   });
   testWidgets('Small devices render the entry shell', (tester) async {
     await tester.binding.setSurfaceSize(const Size(375, 812));
