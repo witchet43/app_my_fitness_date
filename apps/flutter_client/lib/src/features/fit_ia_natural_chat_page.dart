@@ -41,7 +41,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
     return [...older,...recent];
   }
   bool get hasEarlier=>older.isEmpty
-    ?data?['has_more']==true:olderHasMore;
+    ?(data?['has_more']==true):olderHasMore;
   List<String> get options{
     final raw=data?['quick_options'];
     if(!enabled||awaiting||raw is! List)return <String>[];
