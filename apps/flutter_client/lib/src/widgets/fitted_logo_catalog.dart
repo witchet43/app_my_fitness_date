@@ -130,11 +130,11 @@ class _BrandedLogoPainter extends CustomPainter {
     while(i<tokens.length){
       final cmd=tokens[i++];
       switch(cmd){
-        case 'M':path.moveTo(number(),number());
-        case 'L':path.lineTo(number(),number());
-        case 'Q':path.quadraticBezierTo(number(),number(),number(),number());
-        case 'C':path.cubicTo(number(),number(),number(),number(),number(),number());
-        case 'Z':path.close();
+        case 'M':path.moveTo(number(),number());break;
+        case 'L':path.lineTo(number(),number());break;
+        case 'Q':path.quadraticBezierTo(number(),number(),number(),number());break;
+        case 'C':path.cubicTo(number(),number(),number(),number(),number(),number());break;
+        case 'Z':path.close();break;
         default:throw FormatException('Unexpected vector path command');
       }
     }
