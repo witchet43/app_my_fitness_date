@@ -60,7 +60,7 @@ void main() {
     expect(find.text('YOUR FITTED SPACE'),findsOneWidget);
     expect(find.text('Welcome'),findsOneWidget);
     expect(find.text('Sign in with email'),findsOneWidget);
-    expect(find.text('People in motion. Connections that go further.'),findsOneWidget);
+    expect(find.text('Connections that go further.'),findsOneWidget);
     expect(find.text('Meaningful affinity'),findsOneWidget);
     expect(find.text('Protection'),findsOneWidget);
     expect(find.text('Términos'),findsNothing);
