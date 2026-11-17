@@ -17,5 +17,13 @@ for slug, title in (("privacy", "Aviso de privacidad"), ("terms", "Términos y c
     assert f'https://my-fitness-date.pages.dev/{slug}/' in body, slug
     assert len(body) > 3000, slug
     assert not re.search(r"\[(PENDIENTE|TODO|TBD)", body, flags=re.I), slug
-    assert "<script" not in body.lower(), slug
-print("Legal pages static integrity: OK (no assertion of legal certification).")
+    assert '<script defer src="/brand-legal.js"></script>' in body, slug
+    assert "data-brand-name" in body and "data-brand-vector" in body, slug
+    assert "My Fitness Date es un nombre comercial" not in body, slug
+    assert "♥" not in body and "#c8ff6b" not in body, slug
+brand_js=(ROOT/"apps/flutter_client/cloudflare/brand-legal.js").read_text()
+assert "mfd_brand_live" in brand_js and "textContent=s.name" in brand_js
+assert "'__FITTED_PUBLIC_BRAND_KEY__'" in brand_js
+assert "innerHTML" not in brand_js
+assert "safeLogo.test(s.logo)" in brand_js
+print("Legal pages, safe dynamic brand client and unchanged legal identity: OK (not legal certification).")
