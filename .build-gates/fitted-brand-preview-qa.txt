@@ -1,1 +1,1 @@
-Run Flutter QA after pinning Google Fonts 8.2.1 to avoid material_ui TextTheme mismatch and simplifying draft menu.
+Full QA after removing offscreen status expectation; assert global brand truly unchanged before explicit Save. Include responsive fonts.
