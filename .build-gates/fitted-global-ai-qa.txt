@@ -1,1 +1,1 @@
-Final Fitted account AI QA: Postgres 16 RLS + first-choice + revocation + cross-user tests, Flutter and legal docs.
+Run PostgreSQL contract tests with corrected dollar-quoted function fixture, followed by Flutter web.
