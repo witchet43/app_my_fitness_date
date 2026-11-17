@@ -169,12 +169,22 @@ Deno.serve(async(req)=>{
   if((action==="state"||action==="answer")&&!validPillar(body.pillar))
     return respond(400,{status:"invalid_pillar"});
   try{
+    // Single owner-level switch for EVERY external model call. Guided
+    // questions remain usable without AI, but never send data externally.
+    let accountAiEnabled=false;
+    if(action!=="consent"&&action!=="delete"){
+      const preference=await rpc<Json>(
+        "fitted_ai_account_preference_v1",{},bearer);
+      accountAiEnabled=preference.configured===true&&
+        preference.enabled===true;
+    }
     if(action==="state"){
       const state=await rpc<Json>("fit_ia_next_v1",{
         p_pillar:body.pillar,p_reaction:"",
       },bearer);
       return respond(200,{status:"ok",...state,
-        conversation_mode:state.ai_enabled&&openAi?"ai":"guided"});
+        ai_enabled:accountAiEnabled&&state.ai_enabled===true,
+        conversation_mode:accountAiEnabled&&state.ai_enabled&&openAi?"ai":"guided"});
     }
     if(action==="answer"){
       if(!validId(body.question_id)||!validChoice(body.choice_key)||
@@ -188,13 +198,14 @@ Deno.serve(async(req)=>{
       const language=body.locale==="en"?"en":"es";
       const comment=await reaction(String(body.pillar),
         String(language==="en"?answer.chosen_en:answer.chosen_es??""),
-        before.ai_enabled===true,language);
+        accountAiEnabled&&before.ai_enabled===true,language);
       const next=await rpc<Json>("fit_ia_next_v1",{
         p_pillar:body.pillar,p_reaction:comment,
       },bearer);
       // Summary update is explicitly requested by client between turns.
       return respond(200,{status:"saved",...next,
-        conversation_mode:next.ai_enabled&&openAi?"ai":"guided"});
+        ai_enabled:accountAiEnabled&&next.ai_enabled===true,
+        conversation_mode:accountAiEnabled&&next.ai_enabled&&openAi?"ai":"guided"});
     }
     if(action==="consent"){
       if(typeof body.enabled!=="boolean")return respond(400,{status:"invalid_consent"});
@@ -208,9 +219,11 @@ Deno.serve(async(req)=>{
       const overview=await rpc<Json>("fit_ia_overview_v1",{},bearer);
       const state=await rpc<Json>("fit_ia_state_v1",{p_pillar:"move"},bearer);
       return respond(200,{status:"ok",...overview,summary:state.summary,
-        conversation_mode:state.ai_enabled&&openAi?"ai":"guided"});
+        ai_enabled:accountAiEnabled&&state.ai_enabled===true,
+        conversation_mode:accountAiEnabled&&state.ai_enabled&&openAi?"ai":"guided"});
     }
     if(action==="summary"){
+      if(!accountAiEnabled)return respond(403,{status:"consent_required"});
       const summary=await createSummary(bearer,userId,true);
       return respond(200,summary);
     }

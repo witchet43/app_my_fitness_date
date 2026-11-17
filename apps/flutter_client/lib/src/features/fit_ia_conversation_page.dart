@@ -150,18 +150,18 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     if(!aiEnabled){
       final allowed=await showDialog<bool>(context:context,
         builder:(dialog)=>AlertDialog(
-          title:const Text('Activar Fit-IA'),
-          content:Text(tr('Con tu permiso, Fit-IA enviará sólo tus respuestas '
-            'seleccionadas y sus temas generales a OpenAI para generar '
-            'comentarios y un resumen. No envía nombre, gimnasio, rutas, '
-            'dirección, horarios exactos ni contactos. Ninguna respuesta '
-            'se hace pública automáticamente. Puedes desactivarla y borrar '
-            'los datos cuando quieras.',
-            'With your permission, Fit-IA sends only selected answers and '
-            'general topics to OpenAI for comments and a summary. It does '
-            'not send your name, gym, routes, address, exact schedule or '
-            'contacts. Nothing becomes public automatically. You can '
-            'disable AI and erase data whenever you want.')),
+          title:const Text('Activar IA en toda mi cuenta'),
+          content:Text(tr('Esta decisión habilita todas las herramientas de IA '
+            'de tu cuenta, incluidos Fit-IA y los resúmenes privados. '
+            'Se pueden procesar respuestas y datos seleccionados del '
+            'perfil mediante OpenAI, nunca documentos de identidad, '
+            'gimnasios u horarios exactos. No publica contenido '
+            'automáticamente. Puedes apagarla en Configuración.',
+            'This choice enables AI across your entire account, '
+            'including Fit-IA and private stories. Selected profile '
+            'details and answers may be processed by OpenAI, never '
+            'identity documents, gyms or exact schedules. '
+            'Nothing is shared automatically. Disable it in Settings.')),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog,false),
               child:Text(tr('Ahora no','Not now'))),
@@ -369,8 +369,8 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
             },
             itemBuilder:(_)=>[
               PopupMenuItem(value:'consent',
-                child:Text(aiEnabled?tr('Desactivar IA externa',
-                  'Disable external AI'):tr('Activar IA externa','Enable AI'))),
+                child:Text(aiEnabled?tr('Desactivar IA en toda la cuenta',
+                  'Disable AI for my account'):tr('Activar IA en mi cuenta','Enable AI for my account'))),
               PopupMenuItem(value:'delete',child:Text(tr(
                 'Eliminar mis conversaciones','Delete my conversations'))),
             ],
@@ -414,8 +414,8 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
                 key:const Key('fit-ia-enable-ai'),
                 onPressed:consentBusy?null:_consent,
                 icon:const Icon(Icons.auto_awesome_outlined,size:18),
-                label:Text(tr('Habilitar comentarios con IA',
-                  'Enable AI comments'))),
+                label:Text(tr('Activar IA en mi cuenta',
+                  'Enable AI for my account'))),
             ]),
           ),
           if(error!=null)MaterialBanner(

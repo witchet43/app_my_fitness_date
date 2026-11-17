@@ -445,6 +445,29 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   // B18 safe summary: direct, authenticated owner-only RPC.
+  /// One auditable account-level preference shared by every generative AI tool.
+  Future<Map<String,dynamic>> fittedAiAccountPreference() async{
+    final value=await auth.rpc('fitted_ai_account_preference_v1')
+      .timeout(const Duration(seconds:12));
+    return Map<String,dynamic>.from(value as Map);
+  }
+
+  Future<Map<String,dynamic>> setFittedAiAccountPreference(bool enabled,
+      {required String source}) async{
+    if(!const ['onboarding','settings'].contains(source)){
+      throw const MemberApiException('Origen de preferencia IA inválido.');
+    }
+    final value=await auth.rpc('fitted_set_ai_account_preference_v1',
+      params:{'p_enabled':enabled,'p_source':source})
+      .timeout(const Duration(seconds:12));
+    final result=Map<String,dynamic>.from(value as Map);
+    if(result['configured']!=true || result['status']!='saved'&&
+       result['status']!='already_configured'){
+      throw const MemberApiException('No fue posible guardar la preferencia.');
+    }
+    return result;
+  }
+
   Future<Map<String,dynamic>> myFittedSummaryB18() async {
     final raw=await auth.rpc('fitted_my_summary_b17');
     return raw is Map?Map<String,dynamic>.from(raw):<String,dynamic>{};
