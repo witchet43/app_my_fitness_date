@@ -52,7 +52,7 @@ void main() {
     final coverTop=tester.getTopLeft(
       find.byKey(const Key('landing-hero'))).dy;
     final portraitTop=tester.getTopLeft(
-      find.byKey(const Key('landing-editorial-photo'))).dy;
+      find.byKey(const Key('landing-approved-image-source'))).dy;
     expect(portraitTop,lessThan(coverTop),
       reason:'Portrait hair must float above the top edge of the panel');
     expect(tester.takeException(),isNull);
