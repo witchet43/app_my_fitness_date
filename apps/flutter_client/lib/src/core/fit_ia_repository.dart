@@ -8,6 +8,9 @@ abstract class FitIaRepository {
   Future<Map<String,dynamic>> fitIaChatSend(
       String pillar,String text,String clientId,{String locale='es'});
   Future<Map<String,dynamic>> fitIaChatRetry(String pillar,{String locale='es'});
+  /// The conversation stays on the server even beyond the most recent 120 messages.
+  Future<Map<String,dynamic>> fitIaChatOlder(String pillar,int before)async=>
+      {'messages':<Map<String,dynamic>>[],'has_more':false};
   Future<Map<String,dynamic>> fitIaForm(String pillar);
   Future<Map<String,dynamic>> fitIaSubmitForm(
     String pillar,List<Map<String,String>> answers);
