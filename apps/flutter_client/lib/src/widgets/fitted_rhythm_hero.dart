@@ -29,22 +29,22 @@ class FittedRhythmHero extends StatelessWidget {
     return LayoutBuilder(builder: (context, bounds) {
       final isWide = bounds.maxWidth >= 650;
       return Container(
-        key: const Key('fitted-rhythm-hero'),
+        key: Key('fitted-rhythm-hero'),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
           border: Border.all(color: FitDateColors.aqua.withValues(alpha: .32)),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft, end: Alignment.bottomRight,
             colors: [Color(0xFF17274A), Color(0xFF181D3E), Color(0xFF282143)],
           ),
           boxShadow: [BoxShadow(
             color: FitDateColors.aqua.withValues(alpha: .09),
-            blurRadius: 32, offset: const Offset(0, 16),
+            blurRadius: 32, offset: Offset(0, 16),
           )],
         ),
         child: Stack(children: [
-          const Positioned.fill(child:FittedRhythmLines()),
+          Positioned.fill(child:FittedRhythmLines()),
           Positioned(
             top: compact ? -80 : -95, right: isWide ? -35 : -120,
             child: ExcludeSemantics(child: Container(
@@ -77,45 +77,45 @@ class FittedRhythmHero extends StatelessWidget {
                 children: [
                   FittedGlassPanel(
                     blur:6,radius:50,
-                    padding:const EdgeInsets.symmetric(horizontal:12,vertical:8),
+                    padding:EdgeInsets.symmetric(horizontal:12,vertical:8),
                     child:Row(mainAxisSize: MainAxisSize.min, children: [
                     Container(width: 18, height: 3,
                       decoration: BoxDecoration(color: FitDateColors.aqua,
                         borderRadius: BorderRadius.circular(3))),
-                    const SizedBox(width: 9),
+                    SizedBox(width: 9),
                     Flexible(child:Text(
                       en ? 'LIFESTYLE COMPATIBILITY' : 'AFINIDAD DE ESTILO DE VIDA',
                       maxLines:2,softWrap:true,
-                      style: const TextStyle(color: FitDateColors.aqua,
+                      style: TextStyle(color: FitDateColors.aqua,
                         letterSpacing: 1.1, fontSize: 10, fontWeight: FontWeight.w800))),
                   ])),
-                  const SizedBox(height: 17),
+                  SizedBox(height: 17),
                   Text(en ? titleEn : titleEs,
                     style: TextStyle(fontFamily: 'Georgia',
                       fontSize: compact ? (isWide ? 30 : 27) : (isWide ? 43 : 33),
                       height: 1.13, letterSpacing: -.7,
                       color: FitDateColors.pearl, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(en ? subtitleEn : subtitleEs,
-                    style: const TextStyle(color: FitDateColors.muted,
+                    style: TextStyle(color: FitDateColors.muted,
                       fontSize: 14, height: 1.55)),
                   if (showPillars) ...[
                     SizedBox(height: compact ? 15 : 22),
                     Wrap(spacing: 8, runSpacing: 9, children: [
                       _PillarPill(
-                        key:const Key('hero-pillar-move'),
+                        key:Key('hero-pillar-move'),
                         icon:Icons.directions_run_rounded,
                         text:en?'How I Move':'Cómo me muevo',
                         color:FitDateColors.aqua,
                         onTap:onSelectPillar==null?null:()=>onSelectPillar!(0)),
                       _PillarPill(
-                        key:const Key('hero-pillar-live'),
+                        key:Key('hero-pillar-live'),
                         icon:Icons.wb_twilight_outlined,
                         text:en?'How I Live':'Cómo vivo',
                         color:FitDateColors.apricot,
                         onTap:onSelectPillar==null?null:()=>onSelectPillar!(1)),
                       _PillarPill(
-                        key:const Key('hero-pillar-relate'),
+                        key:Key('hero-pillar-relate'),
                         icon:Icons.connect_without_contact_outlined,
                         text:en?'How I Relate':'Cómo me relaciono',
                         color:FitDateColors.lilac,
@@ -152,7 +152,7 @@ class _PillarPill extends StatelessWidget {
         borderRadius:BorderRadius.circular(100),
         onTap:onTap,
         child:Container(
-    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+    padding: EdgeInsets.symmetric(horizontal: 11, vertical: 8),
     decoration: BoxDecoration(
       color: FitDateColors.inkDeep.withValues(alpha: .7),
       border: Border.all(color: color.withValues(alpha: .38)),
@@ -160,8 +160,8 @@ class _PillarPill extends StatelessWidget {
     ),
     child: Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(icon, size: 15, color: color),
-      const SizedBox(width: 7),
-      Text(text, style: const TextStyle(color: FitDateColors.pearl,
+      SizedBox(width: 7),
+      Text(text, style: TextStyle(color: FitDateColors.pearl,
         fontSize: 11, fontWeight: FontWeight.w700)),
     ]),
       ),
