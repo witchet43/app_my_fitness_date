@@ -171,14 +171,19 @@ Deno.serve(async(req)=>{
   try{
     // Single owner-level switch for EVERY external model call. Guided
     // questions remain usable without AI, but never send data externally.
-    const preference=await rpc<Json>("fitted_ai_account_preference_v1",{},bearer);
-    const accountAiEnabled=preference.configured===true&&
-      preference.enabled===true;
+    let accountAiEnabled=false;
+    if(action!=="consent"&&action!=="delete"){
+      const preference=await rpc<Json>(
+        "fitted_ai_account_preference_v1",{},bearer);
+      accountAiEnabled=preference.configured===true&&
+        preference.enabled===true;
+    }
     if(action==="state"){
       const state=await rpc<Json>("fit_ia_next_v1",{
         p_pillar:body.pillar,p_reaction:"",
       },bearer);
       return respond(200,{status:"ok",...state,
+        ai_enabled:accountAiEnabled&&state.ai_enabled===true,
         conversation_mode:accountAiEnabled&&state.ai_enabled&&openAi?"ai":"guided"});
     }
     if(action==="answer"){
@@ -199,6 +204,7 @@ Deno.serve(async(req)=>{
       },bearer);
       // Summary update is explicitly requested by client between turns.
       return respond(200,{status:"saved",...next,
+        ai_enabled:accountAiEnabled&&next.ai_enabled===true,
         conversation_mode:accountAiEnabled&&next.ai_enabled&&openAi?"ai":"guided"});
     }
     if(action==="consent"){
@@ -213,6 +219,7 @@ Deno.serve(async(req)=>{
       const overview=await rpc<Json>("fit_ia_overview_v1",{},bearer);
       const state=await rpc<Json>("fit_ia_state_v1",{p_pillar:"move"},bearer);
       return respond(200,{status:"ok",...overview,summary:state.summary,
+        ai_enabled:accountAiEnabled&&state.ai_enabled===true,
         conversation_mode:accountAiEnabled&&state.ai_enabled&&openAi?"ai":"guided"});
     }
     if(action==="summary"){
