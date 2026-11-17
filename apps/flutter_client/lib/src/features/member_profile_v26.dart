@@ -468,8 +468,12 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               value:share,onChanged:(v)=>update(()=>share=v??false),
               title:Text(en?'Share my approved story with eligible members':
                 'Mostrar mi resumen a miembros verificados')),
-            Text(en?'You can change these permissions any time.':
-              'Puedes cambiar estos permisos cuando quieras.',
+            Text(en?'You can change these permissions any time. '
+              'Turning AI off here also disables external AI replies in Fit-IA, '
+              'without deleting your saved conversations.':
+              'Puedes cambiar estos permisos cuando quieras. '
+              'Al apagar la IA aquí también se desactiva la IA externa '
+              'de Fit-IA sin borrar tus conversaciones guardadas.',
               style:Theme.of(dialog).textTheme.bodySmall),
           ])),
         actions:[
@@ -487,6 +491,11 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
       final state=await widget.api.fittedSummaryConsentB18(
         ai:decision.$1,share:decision.$2);
       if(state!='updated')throw MemberApiException('Not saved');
+      // Disabling AI from the main privacy control must also stop
+      // Fit-IA model calls, while keeping the private guided conversation.
+      if(!decision.$1 && fitIaOverview?['ai_enabled']==true){
+        await widget.api.fitIaConsent(false);
+      }
       if(decision.$1)await widget.api.refreshFittedAiSummaryB18();
       await reload();
     }catch(_){
