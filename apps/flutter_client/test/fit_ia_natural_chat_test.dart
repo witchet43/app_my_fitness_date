@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:my_fitness_date/src/core/fit_ia_repository.dart';
 import 'package:my_fitness_date/src/features/fit_ia_natural_chat_page.dart';
 
-class FakeNatural implements FitIaRepository{
+class FakeNatural implements FitIaRepository, FitIaAccountConsentSync{
   final Map<String,List<Map<String,dynamic>>> chats={
     for(final key in FitIaDepth.keys)key:[],
   };
@@ -16,6 +16,13 @@ class FakeNatural implements FitIaRepository{
     'relate':'',
   };
   bool consent=true;
+  bool accountOptedIn=false;
+  @override
+  Future<bool> fitIaSyncAccountConsent()async{
+    if(!accountOptedIn)return false;
+    consent=true;
+    return true;
+  }
   bool fakeOutage=false;
   int sent=0,reads=0,retries=0,consentActions=0;
   FakeNatural(){
@@ -200,7 +207,21 @@ void main(){
     expect(tester.takeException(),isNull);
   });
 
-  testWidgets('AI-only gate requires explicit permission, then resumes',
+  testWidgets('Existing account opt-in restores chat without a second dialog',
+    (tester)async{
+    await tester.binding.setSurfaceSize(const Size(420,880));
+    addTearDown(()=>tester.binding.setSurfaceSize(null));
+    final api=FakeNatural()..consent=false..accountOptedIn=true;
+    await tester.pumpWidget(MaterialApp(
+      home:FitIaNaturalChatPage(repository:api)));
+    await tester.pumpAndSettle();
+    expect(api.consent,true);
+    expect(find.byKey(const Key('fit-ia-message-input')),findsOneWidget);
+    expect(find.byKey(const Key('fit-ia-enable-ai')),findsNothing);
+    expect(tester.takeException(),isNull);
+  });
+
+  testWidgets('No account opt-in cannot silently activate the assistant',
     (tester)async{
     await tester.binding.setSurfaceSize(const Size(420,880));
     addTearDown(()=>tester.binding.setSurfaceSize(null));
@@ -208,16 +229,9 @@ void main(){
     await tester.pumpWidget(MaterialApp(
       home:FitIaNaturalChatPage(repository:api)));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('fit-ia-enable-ai')),findsOneWidget);
+    expect(api.consent,false);
+    expect(find.byKey(const Key('fit-ia-reload-consent')),findsOneWidget);
     expect(find.byKey(const Key('fit-ia-message-input')),findsNothing);
-    await tester.tap(find.byKey(const Key('fit-ia-enable-ai')));
-    await tester.pumpAndSettle();
-    expect(api.consentActions,0,
-      reason:'Opening consent dialog cannot enable AI');
-    await tester.tap(find.byKey(const Key('fit-ia-confirm-consent')));
-    await tester.pumpAndSettle();
-    expect(api.consentActions,1);
-    expect(find.byKey(const Key('fit-ia-message-input')),findsOneWidget);
     expect(tester.takeException(),isNull);
   });
 
