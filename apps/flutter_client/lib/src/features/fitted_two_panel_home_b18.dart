@@ -108,7 +108,8 @@ class FittedIdentityPanelB18 extends StatelessWidget {
   Widget _summary(BuildContext context,bool en){
     final s=summary??const <String,dynamic>{};
     final aiEnabled=s['ai_consented']==true;
-    final published=s['share_consented']==true && profileVisibleToMembers;
+    final fitIaPrivate=s['fit_ia_private_only']==true;
+    final published=!fitIaPrivate && s['share_consented']==true && profileVisibleToMembers;
     final actualAi=aiEnabled && s['mode']=='ai';
     final value=(s[en?'summary_en':'summary_es']??'').toString().trim();
     final empty= value.isEmpty;
@@ -156,7 +157,10 @@ class FittedIdentityPanelB18 extends StatelessWidget {
             color:empty?FitDateColors.muted:FitDateColors.pearl)),
         SizedBox(height:19),
         Divider(color:FitDateColors.pearl.withValues(alpha:.15)),
-        Text(published
+        Text(fitIaPrivate
+            ?(en?'This Fit-IA story is private. A previously shared version, if any, remains separately governed by your visibility settings.':
+                'Este resumen de Fit-IA es privado. Una versión anterior compartida, si existe, conserva sus permisos de visibilidad.')
+            :published
             ?(en?'Visible to eligible verified members.':
                 'Visible para miembros elegibles y verificados.')
             :(en?'Private until you authorize sharing and member visibility.':
