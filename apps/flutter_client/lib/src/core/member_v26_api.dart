@@ -444,6 +444,20 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   @override
   Future<Map<String,dynamic>> fitIaOverview()=>_fitIa('overview');
   @override
+  Future<Map<String,dynamic>> fitIaChatState(String pillar,
+      {String locale='es'})=>
+      _fitIa('chat_state',{'pillar':pillar,'locale':locale});
+  @override
+  Future<Map<String,dynamic>> fitIaChatSend(
+      String pillar,String text,String clientId,{String locale='es'})=>
+      _fitIa('chat_send',{
+        'pillar':pillar,'text':text,'client_id':clientId,'locale':locale,
+      });
+  @override
+  Future<Map<String,dynamic>> fitIaChatRetry(String pillar,
+      {String locale='es'})=>
+      _fitIa('chat_retry',{'pillar':pillar,'locale':locale});
+  @override
   Future<Map<String,dynamic>> fitIaForm(String pillar)=>
       _fitIa('form',{'pillar':pillar});
   @override
