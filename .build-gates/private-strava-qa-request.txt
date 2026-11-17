@@ -1,1 +1,2 @@
 Private Strava export local-only Dart analyze + targeted tests; single QA run.
+Rerun after correcting QA assertion against comment text.
