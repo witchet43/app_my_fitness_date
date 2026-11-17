@@ -568,7 +568,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         ]));
     // Extract value before disposing controller. Widgets of the dismissed
     // dialog are no longer allowed to read disposed state.
-    input.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_){input.dispose();});
     if(chosen==null||chosen.length<2||!mounted)return;
     draftTitle.text=chosen;
     await _saveDraft();
@@ -1209,9 +1209,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   const SizedBox(width:8),
                   Expanded(child:FittedText(name.text.isEmpty?'Mi marca':name.text,
                     maxLines:2,overflow:TextOverflow.ellipsis,
-                    style:TextStyle(color:foreground,fontSize:19,
-                      fontWeight:FontWeight.w600,
-                      fontFamily:FittedFontCatalog.legacy.contains(font)?font:null))),
+                    style:FittedFontCatalog.preview(font,base:TextStyle(
+                      color:foreground,fontSize:19,fontWeight:FontWeight.w600)))),
                 ])),
               Stack(children:[
                 Container(
@@ -1230,12 +1229,11 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                       fontSize:11,color:foreground.withValues(alpha:.7),letterSpacing:2)),
                     const SizedBox(height:15),
                     FittedText(headline.text,
-                      style:TextStyle(fontFamily:FittedFontCatalog.legacy.contains(font)?font:null,
-                        fontSize:mobilePreview?28:34,
-                        color:foreground,height:1.22)),
+                      style:FittedFontCatalog.preview(font,base:TextStyle(
+                        fontSize:mobilePreview?28:34,color:foreground,height:1.22))),
                     const SizedBox(height:16),
-                    FittedText(description.text,style:TextStyle(
-                      color:foreground,fontSize:15,height:1.5)),
+                    FittedText(description.text,style:FittedFontCatalog.preview(font,base:TextStyle(
+                      color:foreground,fontSize:15,height:1.5))),
                     const SizedBox(height:18),
                     Container(
                       decoration:BoxDecoration(
@@ -1249,11 +1247,11 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               Container(
                 padding:const EdgeInsets.all(20),
                 child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  FittedText(tagline.text,style:TextStyle(
-                    color:foreground,fontWeight:FontWeight.bold,fontSize:18)),
+                  FittedText(tagline.text,style:FittedFontCatalog.preview(font,base:TextStyle(
+                    color:foreground,fontWeight:FontWeight.bold,fontSize:18))),
                   const SizedBox(height:7),
                   FittedText('Cómo me muevo · Cómo vivo · Cómo me relaciono',
-                    style:TextStyle(color:foreground)),
+                    style:FittedFontCatalog.preview(font,base:TextStyle(color:foreground))),
                 ]),
               ),
             ]),
@@ -1261,7 +1259,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         )),
         const SizedBox(height:12),
         FittedText('El diseño de la portada ya usa esta marca global. '
-          'Versión activa: ${widget.liveBrand.version}.',
+          'Versión publicada: ${widget.liveBrand.version}. La composición se prueba aquí sin publicarse.',
           style:const TextStyle(fontSize:12)),
       ])));
   }
