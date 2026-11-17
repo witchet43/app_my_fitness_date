@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../core/fitted_locale.dart';
-import '../core/fitted_profile_insights_v29.dart';
 import '../core/fit_ia_repository.dart';
 import '../core/member_v26_api.dart';
 import '../theme/fitness_date_theme.dart';
