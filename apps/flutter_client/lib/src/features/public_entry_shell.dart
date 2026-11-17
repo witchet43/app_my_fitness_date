@@ -343,17 +343,18 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               'Protección','Protection',brand,scale),
           ]),
         SizedBox(height:14*scale),
-        Row(mainAxisAlignment:MainAxisAlignment.center,children:[
+        Wrap(alignment:WrapAlignment.center,
+          crossAxisAlignment:WrapCrossAlignment.center,
+          spacing:wide?21*scale:1,runSpacing:4,
+          children:[
           TextButton(
             onPressed:legalConfigured
               ?()=>openPolicy(widget.termsUrl):null,
             child:Text(FittedLocaleScope.t(context,'Términos','Terms'),
               style:TextStyle(color:FitDateColors.pearl,
                 fontSize:17.5*scale))),
-          SizedBox(width:21*scale),
           Text('|',style:TextStyle(
             color:FitDateColors.pearl,fontSize:17*scale)),
-          SizedBox(width:21*scale),
           TextButton(
             onPressed:legalConfigured
               ?()=>openPolicy(widget.privacyUrl):null,
@@ -366,7 +367,10 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
 
   Widget _hero(LiveBrandSettings brand,bool wide,double panelWidth) {
     final scale=(panelWidth/1616).clamp(.73,1.09).toDouble();
-    final heroHeight=520*scale;
+    // Keep the approved 1672px composition exactly; below that width,
+    // grant editorial copy enough room to wrap without RenderFlex overflow.
+    final heroHeight=520*scale +
+      math.max(0.0,1616.0-panelWidth)*.57;
     return Stack(
       key:const Key('landing-hero'),
       clipBehavior:Clip.none,
@@ -421,7 +425,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
   Widget build(BuildContext context) {
     final brand=LiveBrandScope.of(context);
     final width=MediaQuery.sizeOf(context).width;
-    final wide=width>=920;
+    final wide=width>=1120;
     return Scaffold(
       backgroundColor:brand.backgroundColor,
       appBar:AppBar(
