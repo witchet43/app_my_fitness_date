@@ -158,7 +158,6 @@ class LiveBrandSettings {
       primaryColor:p,
       scaffoldBackgroundColor:bg,
       canvasColor:bg,
-      fontFamily:font,
       appBarTheme:AppBarTheme(
         backgroundColor:bg,foregroundColor:body,
         surfaceTintColor:Colors.transparent,elevation:0,
