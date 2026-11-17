@@ -21,6 +21,8 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
   final drafts=<String,String>{};
   late int active;
   Map<String,dynamic>? data,insights;
+  final older=<Map<String,dynamic>>[];
+  bool olderHasMore=false,olderLoading=false;
   bool loading=true,sending=false,busyConsent=false;
   String? issue,notice;
   static const keys=['move','live','relate'];
@@ -34,9 +36,12 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
   bool get unavailable=>data?['status']=='ai_unavailable';
   List<Map<String,dynamic>> get history{
     final raw=data?['messages'];
-    return raw is List?raw.whereType<Map>()
-      .map((x)=>Map<String,dynamic>.from(x)).toList():[];
+    final recent=raw is List?raw.whereType<Map>()
+      .map((x)=>Map<String,dynamic>.from(x)).toList():<Map<String,dynamic>>[];
+    return [...older,...recent];
   }
+  bool get hasEarlier=>older.isEmpty
+    ?data?['has_more']==true:olderHasMore;
   List<String> get options{
     final raw=data?['quick_options'];
     return !enabled||awaiting||raw is! List?[]:
@@ -77,6 +82,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       if(!mounted||pillar!=selected)return;
       setState((){
         data=result;loading=false;
+        older.clear();olderHasMore=false;
       });
       _scrollBottom();
       unawaited(_refreshInsights());
@@ -95,6 +101,36 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       final details=await widget.repository.fitIaInsights(selected);
       if(mounted&&selected==pillar)setState(()=>insights=details);
     }catch(_){/* A sidebar failure must not block the conversation. */}
+  }
+  Future<void> _loadEarlier()async{
+    if(olderLoading||!hasEarlier||history.isEmpty)return;
+    final oldest=history.first['id'];
+    if(oldest is! int)return;
+    final key=pillar,oldMax=scroll.hasClients?scroll.position.maxScrollExtent:0.0;
+    final oldOffset=scroll.hasClients?scroll.offset:0.0;
+    setState(()=>olderLoading=true);
+    try{
+      final result=await widget.repository.fitIaChatOlder(key,oldest);
+      if(!mounted||pillar!=key)return;
+      final raw=result['messages'];
+      final previous=raw is List?raw.whereType<Map>()
+        .map((x)=>Map<String,dynamic>.from(x)).toList():<Map<String,dynamic>>[];
+      setState((){
+        older.insertAll(0,previous);
+        olderHasMore=result['has_more']==true;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_){
+        if(mounted&&scroll.hasClients){
+          final added=scroll.position.maxScrollExtent-oldMax;
+          scroll.jumpTo((oldOffset+added).clamp(
+            0.0,scroll.position.maxScrollExtent));
+        }
+      });
+    }catch(_){
+      if(mounted)setState(()=>issue=tr(
+        'No pudimos cargar los mensajes anteriores.',
+        'Unable to load older messages.'));
+    }finally{if(mounted)setState(()=>olderLoading=false);}
   }
   Future<void> _switch(int index)async{
     if(index==active||sending||loading)return;
@@ -312,6 +348,12 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       key:const Key('fit-ia-chat-history'),
       controller:scroll,padding:const EdgeInsets.all(15),
       children:[
+        if(hasEarlier)Center(child:TextButton.icon(
+          key:const Key('fit-ia-load-earlier'),
+          onPressed:olderLoading?null:_loadEarlier,
+          icon:const Icon(Icons.history_outlined),
+          label:Text(tr('Mostrar mensajes anteriores',
+            'Load earlier messages')))),
         for(final entry in history)_bubble(entry),
         if(sending)
           Padding(padding:const EdgeInsets.all(12),
