@@ -34,6 +34,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
   String tr(String es,String en)=>english?en:es;
   String get pillar=>keys[active];
   bool get enabled=>data?['ai_enabled']==true;
+  bool get providerUnavailable=>data?['status']=='provider_unavailable';
   bool get awaiting=>data?['needs_response']==true;
   bool get unavailable=>data?['status']=='ai_unavailable';
   List<Map<String,dynamic>> get history{
@@ -83,7 +84,9 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
         locale:english?'en':'es');
       // A member's existing account-wide opt-in is sufficient. Repair the
       // legacy per-pillar flag without another permission dialog.
-      if(result['ai_enabled']!=true && widget.repository is FitIaAccountConsentSync){
+      if(result['ai_enabled']!=true &&
+        result['status']=='consent_required' &&
+        widget.repository is FitIaAccountConsentSync){
         final synced=await (widget.repository as FitIaAccountConsentSync)
           .fitIaSyncAccountConsent();
         if(synced){
@@ -363,14 +366,24 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       return Padding(padding:const EdgeInsets.all(16),
         child:Column(mainAxisSize:MainAxisSize.min,
           crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-            Text(tr('Conversación con IA no disponible',
-              'AI conversation unavailable'),
+            Text(providerUnavailable
+              ?tr('El servicio de IA no está disponible',
+                'The AI service is unavailable')
+              :tr('Conversación con IA no disponible',
+                'AI conversation unavailable'),
               style:theme.textTheme.titleMedium),
             const SizedBox(height:8),
-            Text(tr('Comprueba en Cuenta → Configuración que autorizaste '
-              'la IA durante el registro. Si ya la autorizaste, recarga.',
-              'Check your account settings for the AI choice made during '
-              'registration. If already enabled, reload.'),
+            Text(providerUnavailable
+              ?tr('Tu autorización ya está registrada. El servidor de IA '
+                'necesita ser configurado por el administrador. Recargar '
+                'no resolverá el problema hasta restaurar el servicio.',
+                'Your AI permission is recorded. The administrator must '
+                'restore the AI provider. Reloading will not fix this '
+                'until the service is available.')
+              :tr('Comprueba en Cuenta → Configuración que autorizaste '
+                'la IA durante el registro. Si ya la autorizaste, recarga.',
+                'Check your account settings for the AI choice made during '
+                'registration. If already enabled, reload.'),
               style:theme.textTheme.bodySmall),
             const SizedBox(height:11),
             OutlinedButton.icon(

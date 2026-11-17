@@ -330,13 +330,18 @@ Deno.serve(async(req)=>{
       const active=await rpc<Json>("fit_ia_state_v1",{
         p_pillar:body.pillar,
       },bearer);
-      const allowed=accountAiEnabled&&active.ai_enabled===true&&!!openAi;
+      const consented=accountAiEnabled&&active.ai_enabled===true;
       const pillar=String(body.pillar);
       const language=body.locale==="en"?"en":"es";
-      if(!allowed){
+      if(!consented || !openAi){
         const prior=await getChatState(pillar,bearer);
-        return respond(200,{status:"consent_required",
-          ai_enabled:false,conversation_mode:"ai_only",...prior});
+        // A missing provider credential must never be presented as a user's
+        // refusal to consent. Do not process or persist a chat_send in this case.
+        const problem=!consented?"consent_required":"provider_unavailable";
+        if(consented&&!openAi)console.error("Fit-IA AI provider is not configured");
+        return respond(200,{...prior,status:problem,
+          ai_enabled:false,account_ai_consented:consented,
+          conversation_mode:"ai_only"});
       }
       if(action==="chat_send"){
         const message=typeof body.text==="string"?body.text.trim():"";

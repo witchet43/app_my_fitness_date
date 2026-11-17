@@ -17,6 +17,7 @@ class FakeNatural implements FitIaRepository, FitIaAccountConsentSync{
   };
   bool consent=true;
   bool accountOptedIn=false;
+  bool providerIsDown=false;
   @override
   Future<bool> fitIaSyncAccountConsent()async{
     if(!accountOptedIn)return false;
@@ -37,8 +38,9 @@ class FakeNatural implements FitIaRepository, FitIaAccountConsentSync{
   }
   Map<String,dynamic> chat(String pillar)=>{
     'status':!consent?'consent_required':
+      providerIsDown?'provider_unavailable':
       fakeOutage?'ai_unavailable':'ok',
-    'pillar':pillar,'ai_enabled':consent,
+    'pillar':pillar,'ai_enabled':consent&&!providerIsDown,
     'conversation_mode':'ai_only',
     'messages':chats[pillar],
     'quick_options':[
@@ -232,6 +234,22 @@ void main(){
     expect(api.consent,false);
     expect(find.byKey(const Key('fit-ia-reload-consent')),findsOneWidget);
     expect(find.byKey(const Key('fit-ia-message-input')),findsNothing);
+    expect(tester.takeException(),isNull);
+  });
+
+  testWidgets('Missing provider reports service outage, not missing consent',
+    (tester)async{
+    await tester.binding.setSurfaceSize(const Size(420,880));
+    addTearDown(()=>tester.binding.setSurfaceSize(null));
+    final api=FakeNatural()..providerIsDown=true;
+    await tester.pumpWidget(MaterialApp(
+      home:FitIaNaturalChatPage(repository:api)));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Tu autorización ya está registrada'),
+      findsOneWidget);
+    expect(find.byKey(const Key('fit-ia-reload-consent')),findsOneWidget);
+    expect(find.byKey(const Key('fit-ia-message-input')),findsNothing);
+    expect(find.byKey(const Key('fit-ia-enable-ai')),findsNothing);
     expect(tester.takeException(),isNull);
   });
 
