@@ -471,6 +471,13 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   Future<Map<String,dynamic>> fitIaInsights(String pillar)=>
       _fitIa('insights',{'pillar':pillar});
   @override
+  Future<bool> fitIaSyncAccountConsent()async{
+    final choice=await fittedAiAccountPreference();
+    if(choice['configured']!=true||choice['enabled']!=true)return false;
+    final result=await _fitIa('consent',{'enabled':true});
+    return result['ai_enabled']==true || result['status']=='saved';
+  }
+  @override
   Future<Map<String,dynamic>> fitIaConsent(bool enabled)async{
     // Both gates must agree: the account-wide AI permission and Fit-IA's
     // separate private conversation permission. Neither is inferred.
