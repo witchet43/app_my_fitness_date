@@ -22,6 +22,7 @@ import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
 import '../widgets/fitted_logo_catalog.dart';
 import '../widgets/fitted_color_picker.dart';
+import '../widgets/fitted_font_catalog.dart';
 
 /// Administration lives in the SAME Flutter application / MaterialApp as
 /// member screens. Only the server-backed role gate may construct this view.
@@ -51,11 +52,11 @@ class BrandAdminHome extends StatefulWidget {
 
 class _BrandAdminHomeState extends State<BrandAdminHome> {
   static const _tabs = <String>[
-    'Resumen', 'Diseñador de Marca', 'Calculadora del match', 'Biblioteca', 'Borradores', 'Historial'
+    'Resumen', 'Diseñador de Marca', 'Calculadora del match', 'Biblioteca', 'Mis diseños', 'Historial'
   ];
   static const _englishTabs = <String>[
     'Overview', 'Brand Designer', 'Match Calculator',
-    'Library', 'Drafts', 'History',
+    'Library', 'My Designs', 'History',
   ];
   String tabLabel(int index) =>
     FittedLocaleScope.languageOf(context)=='en'
@@ -89,7 +90,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   final primary = TextEditingController(text:'#8EF0D5');
   final accent = TextEditingController(text:'#68D4C7');
   final background = TextEditingController(text:'#1A2D38');
-  final draftTitle = TextEditingController(text:'Propuesta elegante 40+');
+  final draftTitle = TextEditingController(text:'Diseño sin publicar');
   int tab = 0;
   int logoIndex = 0;
   String? selectedLogoAsset;
@@ -102,7 +103,6 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   bool busy = false;
   bool loading = true;
   String? error;
-  Timer? _brandTimer;
   bool _brandReady=false;
   bool _brandHydrating=true;
   bool _brandSaving=false;
@@ -114,7 +114,6 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   List<Map<String, dynamic>> palettes = [];
   List<Map<String, dynamic>> assets = [];
   List<Map<String, dynamic>> drafts = [];
-  List<Map<String, dynamic>> revisions = [];
   final Map<String, String> selectedImages = {};
   final Map<String, Uint8List> downloaded = {};
 
@@ -138,12 +137,11 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
 
   void _redraw() {
     if(mounted)setState(() {});
-    if(!_brandHydrating)_queueBrandSave();
+    if(!_brandHydrating)_markPreviewDirty();
   }
 
   @override
   void dispose() {
-    _brandTimer?.cancel();
     widget.liveBrand.removeListener(_observeBrand);
     for (final c in [name,tagline,headline,description,paletteName,
       primary,accent,background,draftTitle]) {
@@ -351,7 +349,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         selectedLogoAsset=null;
         logoIndex=index;
       });
-      _queueBrandSave();
+      _markPreviewDirty();
     }
   }
 
@@ -372,105 +370,136 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   }
 
 
-  void _observeBrand() {
-    if(!mounted || !widget.liveBrand.loaded) return;
-    if(!_brandReady || (!_brandSaving && _brandTimer==null &&
-        widget.liveBrand.version>_brandHydratedVersion)) {
-      _hydrateLiveBrand();
+
+  // The editable controls are a local sandbox. No change is pushed until
+  // Save & publish is tapped. Remote updates never overwrite unsaved edits.
+  void _observeBrand(){
+    if(!mounted||!widget.liveBrand.loaded)return;
+    if(!_brandReady){_hydrateLiveBrand();return;}
+    if(_brandSaving)return;
+    if(widget.liveBrand.version>_brandHydratedVersion){
+      if(_brandDirty){
+        setState(()=>brandStatus='Otra sesión publicó una versión nueva. '
+          'Tus pruebas están intactas; descarta para cargar esa versión.');
+      }else{_hydrateLiveBrand();}
     }
   }
 
-  void _hydrateLiveBrand() {
-    if(!mounted) return;
+  void _hydrateLiveBrand(){
+    if(!mounted)return;
     _brandHydrating=true;
-    _brandTimer?.cancel();
-    _brandTimer=null;
-    final s=widget.liveBrand.current;
+    final settings=widget.liveBrand.current;
     setState((){
-      name.text=s.name;
-      tagline.text=s.tagline;
-      headline.text=s.title;
-      description.text=s.description;
-      paletteName.text=s.paletteName;
-      primary.text=s.primary;
-      accent.text=s.accent;
-      background.text=s.background;
-      font=s.font;
-      dark=s.dark;
-      layout=s.layout;
-      if(s.logo.startsWith('catalog:')) {
-        logoIndex=(int.tryParse(s.logo.substring(8))??0).clamp(0,20);
+      name.text=settings.name;
+      tagline.text=settings.tagline;
+      headline.text=settings.title;
+      description.text=settings.description;
+      paletteName.text=settings.paletteName;
+      primary.text=settings.primary;
+      accent.text=settings.accent;
+      background.text=settings.background;
+      font=settings.font;
+      dark=settings.dark;
+      layout=settings.layout;
+      if(settings.logo.startsWith('catalog:')){
+        logoIndex=(int.tryParse(settings.logo.substring(8))??0).clamp(0,20);
         selectedLogoAsset=null;
-      } else {
-        selectedLogoAsset=s.logo;
-      }
-      selectedImages
-        ..clear()
-        ..addAll(s.media);
+      }else{selectedLogoAsset=settings.logo;}
+      selectedImages..clear()..addAll(settings.media);
       _brandHydratedVersion=widget.liveBrand.version;
       _brandReady=true;
-      brandStatus='Configuración global activa · versión ${widget.liveBrand.version}';
+      _brandDirty=false;
+      brandStatus='Versión publicada ${widget.liveBrand.version} · '
+        'Seleccionar opciones sólo modifica la vista previa';
     });
     _brandHydrating=false;
   }
 
-  void _queueBrandSave() {
-    if(!_brandReady || _brandHydrating || !mounted)return;
-    _brandTimer?.cancel();
-    setState(() => brandStatus='Cambios pendientes de guardar…');
-    _brandTimer=Timer(const Duration(milliseconds:850),(){
-      _brandTimer=null;
-      unawaited(_saveBrandGlobally());
-    });
+  void _markPreviewDirty(){
+    if(!_brandReady||_brandHydrating||!mounted)return;
+    if(!_brandDirty){
+      setState((){
+        _brandDirty=true;
+        brandStatus='Cambios sin publicar · Sólo visibles en la vista previa';
+      });
+    }
   }
 
-  Future<void> _saveBrandGlobally() async {
-    if(!_brandReady || !mounted)return;
-    if(_brandSaving){
-      _brandDirty=true;
+  Future<void> _discardPreviewChanges()async{
+    if(!_brandDirty){_hydrateLiveBrand();return;}
+    final yes=await showDialog<bool>(context:context,
+      builder:(ctx)=>AlertDialog(
+        title:const Text('Descartar cambios de prueba'),
+        content:const Text('Regresarás a la identidad publicada. '
+          'Los cambios sin guardar se perderán.'),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx,false),
+            child:const Text('Seguir editando')),
+          FilledButton(onPressed:()=>Navigator.pop(ctx,true),
+            child:const Text('Descartar cambios')),
+        ]));
+    if(yes==true&&mounted){
+      _hydrateLiveBrand();
+      draft=null;
+    }
+  }
+
+  Future<void> _saveBrandGlobally()async{
+    if(!_brandReady||!mounted||_brandSaving)return;
+    if(_brandHydratedVersion!=widget.liveBrand.version){
+      setState(()=>brandStatus='Otra sesión publicó cambios. '
+        'Descarta la vista previa para obtener la nueva versión antes de guardar.');
       return;
     }
-    final logo=_settings()['logo'].toString();
+    final pending=_settings();
+    final selectedLogo=pending['logo'].toString();
     if(!validPalette ||
        name.text.trim().length<2 || name.text.trim().length>60 ||
        tagline.text.trim().length<2 || tagline.text.trim().length>120 ||
        headline.text.trim().length<8 || headline.text.trim().length>180 ||
        description.text.trim().length<10 || description.text.trim().length>600 ||
        paletteName.text.trim().length<2 ||
-       !const ['Georgia','Palatino','Garamond','Arial'].contains(font) ||
+       !FittedFontCatalog.accepts(font) ||
        (selectedLogoAsset!=null &&
          !LiveBrandSettings.safeAssetUrl(selectedLogoAsset!)) ||
-       (logo.startsWith('https://') &&
-        !LiveBrandSettings.safeAssetUrl(logo)) ||
-       selectedImages.values.any((v)=>!LiveBrandSettings.safeAssetUrl(v))) {
-      setState(()=>brandStatus='Completa campos válidos y usa imágenes públicas.');
+       (selectedLogo.startsWith('https://') &&
+         !LiveBrandSettings.safeAssetUrl(selectedLogo)) ||
+       selectedImages.values.any((v)=>!LiveBrandSettings.safeAssetUrl(v))){
+      setState(()=>brandStatus='Revisa nombre, colores, fuente y archivos. '
+        'No se publicó ningún cambio.');
       return;
     }
-    final proposed=LiveBrandSettings.fromMap(_settings());
-    if(widget.liveBrand.asJson == 
-       const JsonEncoder().convert(proposed.toMap())) {
-      setState(()=>brandStatus='Guardado y visible para todos · versión ${widget.liveBrand.version}');
+    final snapshot=const JsonEncoder().convert(pending);
+    final proposed=LiveBrandSettings.fromMap(pending);
+    if(widget.liveBrand.asJson==const JsonEncoder().convert(proposed.toMap())){
+      setState((){
+        _brandDirty=false;
+        brandStatus='Ya es la versión publicada · ${widget.liveBrand.version}';
+      });
       return;
     }
     _brandSaving=true;
-    if(mounted)setState(()=>brandStatus='Guardando para todos…');
-    try {
+    setState(()=>brandStatus='Guardando y publicando en toda Fitted…');
+    try{
       await widget.liveBrand.save(proposed);
-      _brandHydratedVersion=widget.liveBrand.version;
-      if(mounted)setState(()=>brandStatus=
-        'Guardado y visible para todos · versión ${widget.liveBrand.version}');
-    } catch (_) {
       if(!mounted)return;
-      _hydrateLiveBrand();
-      setState(()=>brandStatus=
-        'No se guardó. Se restauró la última versión publicada. Verifica MFA o conexión.');
-    } finally {
-      _brandSaving=false;
-      if(_brandDirty){
-        _brandDirty=false;
-        _queueBrandSave();
-      }
-    }
+      _brandHydratedVersion=widget.liveBrand.version;
+      final continued=const JsonEncoder().convert(_settings())!=snapshot;
+      setState((){
+        _brandDirty=continued;
+        brandStatus=continued
+          ?'Versión ${widget.liveBrand.version} publicada. '
+            'Aún tienes pruebas sin publicar.'
+          :'Guardado y publicado para todos · versión ${widget.liveBrand.version}';
+      });
+      if(!continued)_notice('Cambios publicados correctamente en toda Fitted.');
+    }catch(_){
+      if(mounted)setState((){
+        _brandDirty=true;
+        brandStatus='No se publicó. Tu vista previa sigue intacta. '
+          'Verifica MFA, conexión o conflictos con otra sesión.';
+      });
+    }finally{_brandSaving=false;}
   }
 
   Future<void> _fetchBrandHistory() async {
@@ -485,12 +514,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   Future<void> _restoreBrandVersion(int version) async {
     if(_brandSaving)return;
     try {
-      _brandTimer?.cancel();
-      _brandTimer=null;
       await widget.liveBrand.restore(version);
       _hydrateLiveBrand();
       await _fetchBrandHistory();
-      _notice('Versión restaurada. El cambio es visible en toda la app.');
+      _notice('Versión restaurada y publicada en toda Fitted.');
     } catch (_) {
       _notice('No se pudo restaurar. Comprueba tu sesión MFA.',bad:true);
     }
@@ -517,6 +544,33 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     'mode':dark ? 'dark' : 'light',
   };
 
+  Future<void> _saveNamedDraft()async{
+    var typed=draft==null
+      ?'${name.text} · ${paletteName.text}' : draftTitle.text;
+    final chosen=await showDialog<String>(context:context,
+      builder:(ctx)=>AlertDialog(
+        title:const Text('Guardar diseño para después'),
+        content:Column(mainAxisSize:MainAxisSize.min,
+          crossAxisAlignment:CrossAxisAlignment.stretch,
+          children:[
+            const Text('Se guarda en tus diseños privados. '
+              'NO modifica la marca que ven los usuarios.'),
+            const SizedBox(height:14),
+            TextFormField(initialValue:typed,onChanged:(v)=>typed=v,
+              autofocus:true,maxLength:100,
+              decoration:const InputDecoration(labelText:'Nombre del diseño')),
+          ]),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancelar')),
+          FilledButton(key:const Key('brand-save-design-only'),
+            onPressed:()=>Navigator.pop(ctx,typed.trim()),
+            child:const Text('Guardar diseño')),
+        ]));
+    if(chosen==null||chosen.length<2||!mounted)return;
+    draftTitle.text=chosen;
+    await _saveDraft();
+  }
+
   Future<void> _saveDraft() async {
     if (!validPalette || name.text.trim().isEmpty) {
       _notice('Revisa el nombre y los colores HEX de la identidad.',bad:true);
@@ -531,8 +585,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       );
       draft=updated;
       await _reload();
-      _notice('Borrador guardado en Supabase · revisión ${updated['revision']}. '
-        'No modifica la marca pública.');
+      _notice('Diseño «${draftTitle.text}» guardado para después. '
+        'La marca publicada sigue intacta.');
     } catch (_) {
       _notice('No fue posible guardar. Recarga si otro administrador cambió la versión.',bad:true);
     } finally {
@@ -542,6 +596,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
 
   Future<void> _loadDraft(Map<String, dynamic> item) async {
     try {
+      _brandHydrating=true;
       final settings=Map<String,dynamic>.from(item['settings'] as Map);
       final c=Map<String,dynamic>.from(settings['colors'] as Map);
       if (!c.values.every((x)=>x is String &&
@@ -559,7 +614,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         primary.text=c['primary'].toString();
         accent.text=c['accent'].toString();
         background.text=c['background'].toString();
-        font=(settings['font']??'Georgia').toString();
+        final selectedFont=(settings['font']??'Arial').toString();
+        font=FittedFontCatalog.accepts(selectedFont)?selectedFont:'Arial';
         final logo=(settings['logo']??'catalog:0').toString();
         selectedLogoAsset=LiveBrandSettings.safeAssetUrl(logo)?logo:null;
         final parsed=int.tryParse(logo.replaceFirst('catalog:',''));
@@ -571,21 +627,17 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           ..addAll(Map<String,String>.from(settings['media']??{}));
         tab=1;
       });
-      _notice('Borrador cargado para edición. No hay cambios publicados.');
+      _brandHydrating=false;
+      _markPreviewDirty();
+      _notice('Diseño cargado únicamente en vista previa. '
+        'Pulsa Guardar y publicar para aplicarlo a toda Fitted.');
     } catch (_) {
-      _notice('El borrador contiene datos no compatibles.',bad:true);
+      _notice('El diseño guardado contiene datos no compatibles.',bad:true);
+    } finally {
+      _brandHydrating=false;
     }
   }
 
-  Future<void> _fetchRevisions() async {
-    if(draft==null)return;
-    try {
-      final rows=await widget.repository.loadRevisions(draft!['id'] as String);
-      if(mounted)setState(()=>revisions=rows);
-    } catch (_) {
-      _notice('No fue posible consultar las revisiones.',bad:true);
-    }
-  }
 
   Future<void> _upload() async {
     if(busy)return;
@@ -611,8 +663,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           if(kind=='logo')selectedLogoAsset=url;
           else selectedImages[kind]=url;
         });
-        _queueBrandSave();
-        _notice('Imagen seleccionada. Guardando para todos los usuarios.');
+        _markPreviewDirty();
+        _notice('Imagen preparada para tu vista previa. '
+          'No aparecerá en la app hasta pulsar Guardar y publicar.');
       } else {
         final saved=await widget.repository.uploadAsset(
           kind:kind,name:file.name,bytes:bytes,license:license);
@@ -652,12 +705,12 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           if(kind=='logo')selectedLogoAsset=url;
           else selectedImages[kind]=url;
         });
-        _queueBrandSave();
+        _markPreviewDirty();
       } else {
         _notice('Esta clase de recurso todavía permanece privada.');
       }
     } catch (_) {
-      _notice('No fue posible usar este recurso públicamente.',bad:true);
+      _notice('No se pudo preparar este recurso para la vista previa.',bad:true);
     } finally {
       if(mounted)setState(()=>busy=false);
     }
@@ -827,8 +880,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     ))));
 
   Widget _editor() => ListView(padding:const EdgeInsets.all(18),children:[
-    _header('Marca global en vivo',
-      'Los cambios se muestran aquí y se guardan automáticamente para todas las personas.'),
+    _header('Diseñador de Marca · Vista previa privada',
+      'Prueba aquí todos los estilos. Sólo se reflejarán en Fitted '
+      'cuando pulses Guardar y publicar.'),
     if(!_brandReady) const LinearProgressIndicator(),
     if(brandStatus!=null) Padding(
       padding:const EdgeInsets.only(bottom:12),
@@ -839,6 +893,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         if(!_brandReady) TextButton(onPressed:()=>widget.liveBrand.refresh(),
           child:const FittedText('Sincronizar')),
       ])),
+    _publicationActions(),
+    const SizedBox(height:15),
     LayoutBuilder(builder:(context,box) {
       final wide=box.maxWidth>=950;
       final editor=_identityControls();
@@ -848,7 +904,45 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         Expanded(flex:4,child:preview),
       ]):Column(children:[editor,const SizedBox(height:14),preview]);
     }),
+    const SizedBox(height:16),
+    _publicationActions(),
   ]);
+
+  Widget _publicationActions()=>Wrap(
+    spacing:10,runSpacing:9,alignment:WrapAlignment.end,
+    children:[
+      OutlinedButton.icon(
+        key:const Key('brand-discard-preview'),
+        onPressed:!_brandReady||_brandSaving||!_brandDirty?null:
+          _discardPreviewChanges,
+        icon:const Icon(Icons.undo),
+        label:const Text('Descartar cambios')),
+      OutlinedButton.icon(
+        key:const Key('brand-save-private-draft'),
+        onPressed:!_brandReady||_brandSaving?null:_saveNamedDraft,
+        icon:const Icon(Icons.bookmark_border),
+        label:const Text('Guardar diseño para después')),
+      FilledButton.icon(
+        key:const Key('brand-publish-save'),
+        onPressed:!_brandReady||_brandSaving||!_brandDirty?null:
+          _saveBrandGlobally,
+        icon:Icon(_brandSaving?Icons.sync:Icons.publish_outlined),
+        label:const Text('Guardar y publicar')),
+    ]);
+  
+  Widget _paletteMenuEntry(String label,Map<String,String> palette){
+    Widget swatch(String key)=>Container(
+      width:17,height:17,margin:const EdgeInsets.only(right:3),
+      decoration:BoxDecoration(
+        shape:BoxShape.circle,
+        color:_color(palette[key]??'#FFFFFF',Colors.white),
+        border:Border.all(color:Theme.of(context).dividerColor,width:1)));
+    return Row(mainAxisSize:MainAxisSize.min,children:[
+      swatch('primary'),swatch('accent'),swatch('background'),
+      const SizedBox(width:9),
+      Flexible(child:Text(label,maxLines:1,overflow:TextOverflow.ellipsis)),
+    ]);
+  }
 
   Widget _identityControls()=>Column(
     crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -881,18 +975,16 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 labelText:'Selecciona una paleta',
                 prefixIcon:Icon(Icons.palette_outlined)),
               items:[
-                const DropdownMenuItem(
-                  value:'custom',child:Text('Personalizada · edición actual')),
+                DropdownMenuItem(value:'custom',
+                  child:_paletteMenuEntry('Personalizada · vista previa',colors)),
                 for(var i=0;i<_paletteSeeds.length;i++)
-                  DropdownMenuItem(
-                    value:'seed:$i',
-                    child:Text(_paletteSeeds[i]['name']!,
-                      maxLines:1,overflow:TextOverflow.ellipsis)),
+                  DropdownMenuItem(value:'seed:$i',
+                    child:_paletteMenuEntry(_paletteSeeds[i]['name']!,
+                      _paletteSeeds[i])),
                 for(final item in palettes)
-                  DropdownMenuItem(
-                    value:'saved:${item['id']}',
-                    child:Text('★ ${item['name']}',
-                      maxLines:1,overflow:TextOverflow.ellipsis)),
+                  DropdownMenuItem(value:'saved:${item['id']}',
+                    child:_paletteMenuEntry('★ ${item['name']}',
+                      Map<String,String>.from(item['colors'] as Map))),
               ],
               onChanged:_choosePalette,
             ),
@@ -938,22 +1030,21 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
           FittedText('Tipografía',style:Theme.of(context).textTheme.titleLarge),
-          DropdownButtonFormField<String>(
-            key:ValueKey('font-$font'),initialValue:font,
-            decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Familia de prueba')),
-            items:[
-              for(final f in ['Georgia','Palatino','Garamond','Arial'])
-                DropdownMenuItem(value:f,child:FittedText(f)),
-              if(font.startsWith('asset:'))
-                DropdownMenuItem(value:font,
-                  child:const FittedText('Fuente WOFF2 cargada (requiere compilación)')),
-            ],
-            onChanged:(v){setState(()=>font=v??'Georgia');_queueBrandSave();},
-          ),
           const SizedBox(height:8),
-          const FittedText('Las fuentes WOFF2 se conservan en la biblioteca. '
-            'Su visualización nativa completa requiere procesarlas para Flutter.',
-            style:TextStyle(fontSize:12)),
+          const Text('Busca entre más de cien familias y mira cómo se escribe '
+            'cada una antes de elegir.'),
+          const SizedBox(height:10),
+          FittedFontMenu(current:font,onSelected:(f){
+            setState(()=>font=f);
+            _markPreviewDirty();
+          }),
+          const SizedBox(height:12),
+          Text('Fitted · personas en movimiento',
+            style:FittedFontCatalog.preview(font,base:
+              const TextStyle(fontSize:21,fontWeight:FontWeight.w600))),
+          const SizedBox(height:7),
+          Text('Las fuentes se descargan al mostrarse y se almacenan en caché.',
+            style:Theme.of(context).textTheme.bodySmall),
         ]))),
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
@@ -1011,7 +1102,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             const Icon(Icons.touch_app_outlined,size:17),
             const SizedBox(width:8),
             const Expanded(child:Text(
-              'Desliza para explorar; toca para ampliar y aplicar.')),
+              'Desliza para explorar; toca para ampliar y probar.')),
           ]),
           const SizedBox(height:14),
           OutlinedButton.icon(
@@ -1029,7 +1120,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             TextButton.icon(
               onPressed:(){
                 setState(()=>selectedLogoAsset=null);
-                _queueBrandSave();
+                _markPreviewDirty();
               },
               icon:const Icon(Icons.restore_outlined),
               label:const Text('Volver al catálogo')),
@@ -1038,7 +1129,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           SwitchListTile(
             title:const FittedText('Vista oscura'),
             value:dark,
-            onChanged:(v){setState(()=>dark=v);_queueBrandSave();}),
+            onChanged:(v){setState(()=>dark=v);_markPreviewDirty();}),
           DropdownButtonFormField<String>(
             key:ValueKey('layout-$layout'),
             initialValue:layout,
@@ -1046,16 +1137,17 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               DropdownMenuItem(value:'editorial',child:FittedText('Editorial')),
               DropdownMenuItem(value:'minimal',child:FittedText('Minimalista')),
             ],
-            onChanged:(v){setState(()=>layout=v??'editorial');_queueBrandSave();},
+            onChanged:(v){setState(()=>layout=v??'editorial');_markPreviewDirty();},
             decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Distribución')),
           ),
         ]))),
       const SizedBox(height:12),
       const ListTile(
         key:Key('b3-auto-publish-label'),
-        leading:Icon(Icons.cloud_done_outlined),
-        title:FittedText('Guardado automático activo'),
-        subtitle:FittedText('No hay solicitudes de revisión ni builds por cada cambio.')),
+        leading:Icon(Icons.visibility_outlined),
+        title:FittedText('Modo vista previa · Sin publicación automática'),
+        subtitle:FittedText('El resto de Fitted sólo cambiará al guardar '
+          'y publicar explícitamente.')),
     ]);
 
   Widget _preview(){
@@ -1105,9 +1197,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   const SizedBox(width:8),
                   Expanded(child:FittedText(name.text.isEmpty?'Mi marca':name.text,
                     maxLines:2,overflow:TextOverflow.ellipsis,
-                    style:TextStyle(color:foreground,fontSize:19,
-                      fontWeight:FontWeight.w600,
-                      fontFamily:font.startsWith('asset:')?null:font))),
+                    style:FittedFontCatalog.preview(font,base:TextStyle(
+                      color:foreground,fontSize:19,fontWeight:FontWeight.w600)))),
                 ])),
               Stack(children:[
                 Container(
@@ -1126,12 +1217,11 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                       fontSize:11,color:foreground.withValues(alpha:.7),letterSpacing:2)),
                     const SizedBox(height:15),
                     FittedText(headline.text,
-                      style:TextStyle(fontFamily:font.startsWith('asset:')?null:font,
-                        fontSize:mobilePreview?28:34,
-                        color:foreground,height:1.22)),
+                      style:FittedFontCatalog.preview(font,base:TextStyle(
+                        fontSize:mobilePreview?28:34,color:foreground,height:1.22))),
                     const SizedBox(height:16),
-                    FittedText(description.text,style:TextStyle(
-                      color:foreground,fontSize:15,height:1.5)),
+                    FittedText(description.text,style:FittedFontCatalog.preview(font,base:TextStyle(
+                      color:foreground,fontSize:15,height:1.5))),
                     const SizedBox(height:18),
                     Container(
                       decoration:BoxDecoration(
@@ -1145,11 +1235,11 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
               Container(
                 padding:const EdgeInsets.all(20),
                 child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  FittedText(tagline.text,style:TextStyle(
-                    color:foreground,fontWeight:FontWeight.bold,fontSize:18)),
+                  FittedText(tagline.text,style:FittedFontCatalog.preview(font,base:TextStyle(
+                    color:foreground,fontWeight:FontWeight.bold,fontSize:18))),
                   const SizedBox(height:7),
                   FittedText('Cómo me muevo · Cómo vivo · Cómo me relaciono',
-                    style:TextStyle(color:foreground)),
+                    style:FittedFontCatalog.preview(font,base:TextStyle(color:foreground))),
                 ]),
               ),
             ]),
@@ -1157,7 +1247,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         )),
         const SizedBox(height:12),
         FittedText('El diseño de la portada ya usa esta marca global. '
-          'Versión activa: ${widget.liveBrand.version}.',
+          'Versión publicada: ${widget.liveBrand.version}. La composición se prueba aquí sin publicarse.',
           style:const TextStyle(fontSize:12)),
       ])));
   }
@@ -1227,45 +1317,82 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       child:FittedText('Aún no hay recursos privados.')),
   ]);
 
-  Widget _drafts()=>ListView(padding:const EdgeInsets.all(22),children:[
-    _header('Borradores y versiones',
-      'Guarda, consulta y recupera configuraciones. Ninguna cambia la marca pública.'),
-    _field(draftTitle,'Título del borrador'),
-    FilledButton.icon(
-      onPressed:busy?null:_saveDraft,
-      icon:const Icon(Icons.save_outlined),
-      label:FittedText(draft==null?'Crear borrador':'Guardar nueva revisión'),
-    ),
-    const SizedBox(height:12),
-    OutlinedButton(
-      onPressed:()=>setState((){
-        draft=null;revisions=[];draftTitle.text='Nueva propuesta';
-      }),
-      child:const FittedText('Comenzar una propuesta nueva'),
-    ),
-    if(draft!=null) ...[
-      const SizedBox(height:14),
-      OutlinedButton.icon(onPressed:_fetchRevisions,
-        icon:const Icon(Icons.history),
-        label:const FittedText('Ver historial del borrador')),
-      for(final rev in revisions)
-        ListTile(
-          leading:const Icon(Icons.history_toggle_off),
-          title:FittedText('Revisión ${rev['revision']}'),
-          subtitle:FittedText(rev['recorded_at'].toString()),
-        ),
-    ],
-    const SizedBox(height:20),
-    FittedText('Diseños guardados',style:Theme.of(context).textTheme.titleLarge),
-    for(final item in drafts)
-      Card(child:ListTile(
-        title:FittedText(item['title'].toString()),
-        subtitle:FittedText('Revisión ${item['revision']} · ${item['updated_at']}'),
-        trailing:const Icon(Icons.edit_outlined),
-        onTap:()=>_loadDraft(item),
+  Widget _drafts()=>ListView(
+    key:const Key('brand-saved-designs'),
+    padding:const EdgeInsets.all(22),
+    children:[
+      _header('Mis diseños guardados',
+        'Aquí guardas propuestas para retomarlas otro día. '
+        'Ninguna se publica al guardarla ni al abrirla.'),
+      Card(child:Padding(
+        padding:const EdgeInsets.all(17),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          FittedText('Así funciona',style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:10),
+          const Text('1. Personaliza colores, fuentes o logotipos en Diseñador de Marca.'),
+          const SizedBox(height:7),
+          const Text('2. Pulsa «Guardar diseño para después» si quieres conservar la propuesta.'),
+          const SizedBox(height:7),
+          const Text('3. Aquí puedes volver a abrirla. Solo se hará pública '
+            'cuando pulses «Guardar y publicar» en el diseñador.'),
+          const SizedBox(height:14),
+          FilledButton.icon(
+            key:const Key('brand-designs-go-editor'),
+            onPressed:()=>setState(()=>tab=1),
+            icon:const Icon(Icons.brush_outlined),
+            label:const Text('Ir al Diseñador de Marca')),
+        ]),
       )),
-    if(drafts.isEmpty)const FittedText('No se han creado borradores.'),
-  ]);
+      const SizedBox(height:17),
+      Row(children:[
+        Expanded(child:FittedText('Propuestas guardadas (${drafts.length})',
+          style:Theme.of(context).textTheme.titleLarge)),
+        IconButton(
+          tooltip:'Actualizar diseños guardados',
+          onPressed:_reload,
+          icon:const Icon(Icons.refresh)),
+      ]),
+      if(drafts.isEmpty)
+        const Padding(
+          padding:EdgeInsets.symmetric(vertical:20),
+          child:Text('Todavía no hay diseños guardados. '
+            'Empieza probando una paleta en el diseñador.')),
+      for(final item in drafts)
+        Card(child:Padding(
+          padding:const EdgeInsets.all(13),
+          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Row(children:[
+              const Icon(Icons.bookmark_added_outlined),
+              const SizedBox(width:9),
+              Expanded(child:FittedText(item['title'].toString(),
+                maxLines:2,overflow:TextOverflow.ellipsis,
+                style:Theme.of(context).textTheme.titleMedium)),
+            ]),
+            const SizedBox(height:11),
+            Wrap(spacing:6,runSpacing:6,children:[
+              for(final key in const ['primary','accent','background'])
+                Container(width:32,height:32,
+                  decoration:BoxDecoration(
+                    color:_color((item['settings'] is Map &&
+                      (item['settings'] as Map)['colors'] is Map)
+                        ?((item['settings'] as Map)['colors'] as Map)[key]
+                          ?.toString()??'#FFFFFF':'#FFFFFF',Colors.white),
+                    borderRadius:BorderRadius.circular(8),
+                    border:Border.all(color:Theme.of(context).dividerColor))),
+            ]),
+            const SizedBox(height:10),
+            FittedText('Guardado: ${item['updated_at']??'Fecha no disponible'}',
+              style:Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height:13),
+            OutlinedButton.icon(
+              key:Key('brand-load-design-${item['id']}'),
+              onPressed:()=>_loadDraft(item),
+              icon:const Icon(Icons.visibility_outlined),
+              label:const Text('Abrir en vista previa')),
+          ]),
+        )),
+    ],
+  );
 
   Widget _publication() => ListView(
     key:const Key('b3-brand-history'),
