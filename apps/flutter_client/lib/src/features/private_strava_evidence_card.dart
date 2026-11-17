@@ -68,23 +68,21 @@ class _PrivateStravaEvidenceCardState extends State<PrivateStravaEvidenceCard> {
     });
     final owner = widget.ownerId;
     try {
-      final selection = await FilePicker.platform.pickFiles(
+      final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['csv'],
-        withData: true,
-        allowMultiple: false,
       );
-      if (selection == null) return;
-      final file = selection.files.single;
+      if (file == null) return;
       if (!file.name.toLowerCase().endsWith('.csv')) {
         throw const FormatException('Selecciona el archivo activities.csv.');
       }
-      if (file.size > 3 * 1024 * 1024) {
+      final length = file.lengthSync() ?? await file.length();
+      if (length != null && length > 3 * 1024 * 1024) {
         throw const FormatException('El archivo supera el límite de 3 MB.');
       }
-      final bytes = file.bytes;
-      if (bytes == null || bytes.isEmpty) {
-        throw const FormatException('No fue posible leer el archivo seleccionado.');
+      final bytes = await file.readAsBytes();
+      if (bytes.isEmpty || bytes.length > 3 * 1024 * 1024) {
+        throw const FormatException('El archivo debe contener datos y no superar 3 MB.');
       }
       // Decode and compute locally; do not upload or retain source bytes.
       final parsed = PrivateActivityEvidenceAnalyzer.analyze(
