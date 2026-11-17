@@ -458,6 +458,9 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       {String locale='es'})=>
       _fitIa('chat_retry',{'pillar':pillar,'locale':locale});
   @override
+  Future<Map<String,dynamic>> fitIaChatOlder(String pillar,int before)=>
+      _fitIa('chat_older',{'pillar':pillar,'before':before});
+  @override
   Future<Map<String,dynamic>> fitIaForm(String pillar)=>
       _fitIa('form',{'pillar':pillar});
   @override
