@@ -20,6 +20,8 @@ import 'match_calculator_admin.dart';
 import 'activities_b1.dart';
 import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
+import '../widgets/fitted_logo_catalog.dart';
+import '../widgets/fitted_color_picker.dart';
 
 /// Administration lives in the SAME Flutter application / MaterialApp as
 /// member screens. Only the server-backed role gate may construct this view.
@@ -66,16 +68,6 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     Icons.collections_outlined,
     Icons.layers_outlined,
     Icons.history_outlined
-  ];
-  static const _logoNames = <String>[
-    'F · Plata', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
-    'Brújula', 'Trayectoria', 'Horizonte', 'Geometría', 'Movimiento',
-  ];
-  static const _logoIcons = <IconData>[
-    Icons.change_history, Icons.graphic_eq, Icons.landscape_outlined,
-    Icons.hub_outlined, Icons.multiline_chart, Icons.explore_outlined,
-    Icons.timeline, Icons.waves_outlined, Icons.diamond_outlined,
-    Icons.auto_graph_outlined,
   ];
   static const _paletteSeeds = <Map<String, String>>[
     {'name':'Fitted · Pizarra y Plata','primary':'#DDE7EC','accent':'#8196A2','background':'#1A2D38'},
@@ -208,12 +200,175 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     });
   }
 
+  String get _selectedPaletteKey {
+    bool matches(Map<String, String> p) =>
+      paletteName.text.trim()==p['name'] &&
+      primary.text.trim().toUpperCase()==p['primary']?.toUpperCase() &&
+      accent.text.trim().toUpperCase()==p['accent']?.toUpperCase() &&
+      background.text.trim().toUpperCase()==p['background']?.toUpperCase();
+    for(var i=0;i<_paletteSeeds.length;i++){
+      if(matches(_paletteSeeds[i]))return 'seed:$i';
+    }
+    for(final item in palettes){
+      final raw=Map<String,dynamic>.from(item['colors'] as Map);
+      final data=<String,String>{
+        'name':item['name'].toString(),
+        for(final key in ['primary','accent','background'])
+          key:raw[key]?.toString()??'',
+      };
+      if(matches(data))return 'saved:${item['id']}';
+    }
+    return 'custom';
+  }
+
+  void _choosePalette(String? selected) {
+    if(selected==null||selected=='custom')return;
+    if(selected.startsWith('seed:')){
+      final index=int.tryParse(selected.substring(5));
+      if(index!=null&&index>=0&&index<_paletteSeeds.length){
+        _applyPalette(_paletteSeeds[index]);
+      }
+    }else if(selected.startsWith('saved:')){
+      final id=selected.substring(6);
+      for(final item in palettes){
+        if(item['id'].toString()!=id)continue;
+        final c=Map<String,dynamic>.from(item['colors'] as Map);
+        _applyPalette({
+          'name':item['name'].toString(),
+          for(final k in ['primary','accent','background'])
+            k:c[k].toString(),
+        });
+        break;
+      }
+    }
+  }
+
+  Future<void> _chooseColor(TextEditingController controller,String label) async {
+    final result=await FittedColorPicker.show(context,
+      label:label,initialColor:_color(controller.text,Colors.white));
+    if(result==null||!mounted)return;
+    final value='#${(result.toARGB32()&0xFFFFFF).toRadixString(16).padLeft(6,'0').toUpperCase()}';
+    setState(()=>controller.text=value);
+  }
+
+  Widget _colorSelector(String label,TextEditingController controller){
+    final c=_color(controller.text,Colors.white);
+    final border=Theme.of(context).colorScheme.outline;
+    return Padding(
+      padding:const EdgeInsets.only(bottom:9),
+      child:OutlinedButton(
+        key:Key('brand-color-${label.toLowerCase()}'),
+        onPressed:()=>_chooseColor(controller,label),
+        style:OutlinedButton.styleFrom(
+          padding:const EdgeInsets.symmetric(horizontal:13,vertical:12)),
+        child:Row(children:[
+          Container(width:38,height:38,
+            decoration:BoxDecoration(
+              color:c,borderRadius:BorderRadius.circular(10),
+              border:Border.all(color:border))),
+          const SizedBox(width:13),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
+            children:[
+              Text(label,style:Theme.of(context).textTheme.bodyLarge),
+              Text(controller.text.toUpperCase(),
+                style:Theme.of(context).textTheme.bodySmall),
+            ])),
+          const Icon(Icons.colorize_outlined,size:20),
+          const SizedBox(width:5),
+          const Icon(Icons.chevron_right,size:18),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _deleteSelectedPalette() async {
+    final selected=_selectedPaletteKey;
+    if(!selected.startsWith('saved:'))return;
+    final remove=await showDialog<bool>(context:context,
+      builder:(context)=>AlertDialog(
+        title:const Text('Eliminar paleta guardada'),
+        content:Text('¿Eliminar «${paletteName.text}» del catálogo? '
+          'Los colores publicados no cambiarán hasta que elijas otra paleta.'),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(context,false),
+            child:const Text('Cancelar')),
+          FilledButton(onPressed:()=>Navigator.pop(context,true),
+            child:const Text('Eliminar')),
+        ]));
+    if(remove!=true||!mounted)return;
+    try{
+      await widget.repository.deletePalette(selected.substring(6));
+      if(!mounted)return;
+      paletteName.text='Personalizada';
+      await _reload();
+      _notice('Paleta eliminada del catálogo. Los colores continúan disponibles.');
+    }catch(_){
+      _notice('No fue posible eliminar esta paleta. Verifica tu sesión MFA.',bad:true);
+    }
+  }
+
+  Widget _logoGlyph(int index,double size,Color p,Color a)=>
+    index==0?FittedMintMark(size:size):FittedLogoGlyph(
+      index:index,size:size,primary:p,accent:a);
+
+  Future<void> _inspectLogo(int index) async {
+    final p=_color(primary.text,const Color(0xFFDDE7EC));
+    final a=_color(accent.text,const Color(0xFF8196A2));
+    final selected=await showDialog<bool>(
+      context:context,
+      builder:(context)=>AlertDialog(
+        key:const Key('brand-logo-detail'),
+        title:Text(FittedLogoCatalog.names[index]),
+        content:ConstrainedBox(
+          constraints:const BoxConstraints(maxWidth:320),
+          child:Column(mainAxisSize:MainAxisSize.min,children:[
+            Container(
+              width:180,height:180,
+              padding:const EdgeInsets.all(18),
+              decoration:BoxDecoration(
+                color:Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius:BorderRadius.circular(26)),
+              child:_logoGlyph(index,144,p,a)),
+            const SizedBox(height:15),
+            Text(FittedLogoCatalog.descriptions[index],
+              textAlign:TextAlign.center),
+            const SizedBox(height:8),
+            Text('Vector escalable · sin archivos externos',
+              textAlign:TextAlign.center,
+              style:Theme.of(context).textTheme.bodySmall),
+          ])),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(context,false),
+            child:const Text('Cerrar')),
+          FilledButton(
+            key:const Key('brand-logo-apply'),
+            onPressed:()=>Navigator.pop(context,true),
+            child:const Text('Usar este logotipo')),
+        ],
+      ));
+    if(selected==true&&mounted){
+      setState((){
+        selectedLogoAsset=null;
+        logoIndex=index;
+      });
+      _queueBrandSave();
+    }
+  }
+
   Future<void> _savePalette() async {
+    if(palettes.length>=BrandAdminRepository.maxSavedPalettes){
+      _notice('Alcanzaste 50 paletas guardadas. Elimina alguna para crear otra.',
+        bad:true);
+      return;
+    }
     try {
       await widget.repository.createPalette(paletteName.text, colors);
       await _reload();
       _notice('Paleta incorporada al catálogo administrativo.');
-    } catch (_) { _notice('No fue posible guardar la paleta. Verifica los colores y MFA.',bad:true); }
+    } catch (e) {
+      _notice('No se guardó la paleta. Comprueba el nombre, el límite y MFA.',
+        bad:true);
+    }
   }
 
 
@@ -244,7 +399,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       dark=s.dark;
       layout=s.layout;
       if(s.logo.startsWith('catalog:')) {
-        logoIndex=int.tryParse(s.logo.substring(8))??0;
+        logoIndex=(int.tryParse(s.logo.substring(8))??0).clamp(0,20);
         selectedLogoAsset=null;
       } else {
         selectedLogoAsset=s.logo;
@@ -406,9 +561,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         background.text=c['background'].toString();
         font=(settings['font']??'Georgia').toString();
         final logo=(settings['logo']??'catalog:0').toString();
-        selectedLogoAsset=logo.startsWith('asset:')?logo.substring(6):null;
+        selectedLogoAsset=LiveBrandSettings.safeAssetUrl(logo)?logo:null;
         final parsed=int.tryParse(logo.replaceFirst('catalog:',''));
-        logoIndex=(parsed??0).clamp(0,9);
+        logoIndex=(parsed??0).clamp(0,20);
         dark=settings['mode']=='dark';
         layout=(settings['layout']??'editorial').toString();
         selectedImages
@@ -709,41 +864,75 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
-          FittedText('Paletas y colores',style:Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height:8),
-          Wrap(spacing:7,runSpacing:7,children:[
-            for(final p in _paletteSeeds)
-              ChoiceChip(label:FittedText(p['name']!),
-                selected:paletteName.text==p['name'],
-                onSelected:(_)=>_applyPalette(p)),
-          ]),
-          if(palettes.isNotEmpty) ...[
-            const SizedBox(height:12),
-            const FittedText('Mis paletas guardadas'),
-            Wrap(spacing:6,runSpacing:6,children:[
-              for(final p in palettes)
-                ActionChip(label:FittedText(p['name'].toString()),
-                  onPressed:(){
-                    final c=Map<String,dynamic>.from(p['colors'] as Map);
-                    _applyPalette({'name':p['name'].toString(),
-                      for(final k in ['primary','accent','background'])
-                        k:c[k].toString()});
-                  }),
-            ]),
-          ],
-          const SizedBox(height:13),
-          _field(paletteName,'Nombre de la nueva paleta'),
-          Row(children:[
-            Expanded(child:_field(primary,'Primario HEX')),
-            const SizedBox(width:8),
-            Expanded(child:_field(accent,'Acento HEX')),
-          ]),
-          _field(background,'Fondo HEX'),
-          FilledButton.tonalIcon(
-            onPressed:validPalette?_savePalette:null,
-            icon:const Icon(Icons.add_circle_outline),
-            label:const FittedText('Crear paleta en catálogo'),
+          FittedText('Paletas y colores',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:7),
+          Text('Elige una combinación o crea hasta 50 paletas propias.',
+            style:Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height:12),
+          KeyedSubtree(
+            key:const Key('brand-palette-selector'),
+            child:DropdownButtonFormField<String>(
+              key:ValueKey('palette-${_selectedPaletteKey}'),
+              isExpanded:true,
+              menuMaxHeight:340,
+              initialValue:_selectedPaletteKey,
+              decoration:const InputDecoration(
+                labelText:'Selecciona una paleta',
+                prefixIcon:Icon(Icons.palette_outlined)),
+              items:[
+                const DropdownMenuItem(
+                  value:'custom',child:Text('Personalizada · edición actual')),
+                for(var i=0;i<_paletteSeeds.length;i++)
+                  DropdownMenuItem(
+                    value:'seed:$i',
+                    child:Text(_paletteSeeds[i]['name']!,
+                      maxLines:1,overflow:TextOverflow.ellipsis)),
+                for(final item in palettes)
+                  DropdownMenuItem(
+                    value:'saved:${item['id']}',
+                    child:Text('★ ${item['name']}',
+                      maxLines:1,overflow:TextOverflow.ellipsis)),
+              ],
+              onChanged:_choosePalette,
+            ),
           ),
+          const SizedBox(height:12),
+          Wrap(spacing:5,runSpacing:7,children:[
+            for(final item in [
+              (name:'Primario',c:primary.text),
+              (name:'Acento',c:accent.text),
+              (name:'Fondo',c:background.text),
+            ])
+              Chip(label:Text(item.name),
+                avatar:CircleAvatar(
+                  backgroundColor:_color(item.c,Colors.white),radius:10)),
+          ]),
+          const SizedBox(height:12),
+          _colorSelector('Primario',primary),
+          _colorSelector('Acento',accent),
+          _colorSelector('Fondo',background),
+          const SizedBox(height:9),
+          Text('Mis paletas guardadas: ${palettes.length} de 50',
+            key:const Key('brand-palette-count'),
+            style:Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height:9),
+          _field(paletteName,'Nombre de la combinación'),
+          Wrap(spacing:10,runSpacing:7,children:[
+            FilledButton.tonalIcon(
+              key:const Key('brand-palette-save'),
+              onPressed:validPalette&&
+                palettes.length<BrandAdminRepository.maxSavedPalettes
+                  ?_savePalette:null,
+              icon:const Icon(Icons.add_circle_outline),
+              label:const FittedText('Guardar como paleta')),
+            if(_selectedPaletteKey.startsWith('saved:'))
+              OutlinedButton.icon(
+                key:const Key('brand-palette-delete'),
+                onPressed:_deleteSelectedPalette,
+                icon:const Icon(Icons.delete_outline),
+                label:const Text('Eliminar guardada')),
+          ]),
         ]))),
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
@@ -769,26 +958,82 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
-          FittedText('Logotipos del catálogo',style:Theme.of(context).textTheme.titleLarge),
+          FittedText('Galería de logotipos',
+            style:Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height:7),
+          Text('20 símbolos vectoriales originales, además del monograma '
+            'actual. Selecciona una miniatura para verla ampliada.',
+            style:Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height:12),
-          Wrap(spacing:8,runSpacing:8,children:[
-            for(var i=0;i<_logoNames.length;i++)
-              ChoiceChip(
-                key:Key('admin-logo-$i'),
-                avatar:i==0
-                  ?const FittedMintMark(size:22)
-                  :Icon(_logoIcons[i],size:19),
-                label:FittedText(_logoNames[i]),
-                selected:selectedLogoAsset==null&&logoIndex==i,
-                onSelected:(_){setState((){
-                  selectedLogoAsset=null;logoIndex=i;
-                });_queueBrandSave();},
-              ),
+          SizedBox(height:130,
+            child:ListView.separated(
+              key:const Key('brand-logo-reel'),
+              scrollDirection:Axis.horizontal,
+              itemCount:FittedLogoCatalog.count,
+              separatorBuilder:(_,__)=>const SizedBox(width:10),
+              itemBuilder:(context,i){
+                final chosen=selectedLogoAsset==null&&logoIndex==i;
+                final p=_color(primary.text,const Color(0xFFDDE7EC));
+                final a=_color(accent.text,const Color(0xFF8196A2));
+                return Material(
+                  color:chosen?Theme.of(context).colorScheme.primary
+                    .withValues(alpha:.11):
+                    Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius:BorderRadius.circular(16),
+                  child:InkWell(
+                    key:Key('admin-logo-$i'),
+                    borderRadius:BorderRadius.circular(16),
+                    onTap:()=>_inspectLogo(i),
+                    child:Container(
+                      width:105,padding:const EdgeInsets.all(9),
+                      decoration:BoxDecoration(
+                        border:Border.all(
+                          color:chosen?Theme.of(context).colorScheme.primary:
+                            Theme.of(context).colorScheme.outline
+                              .withValues(alpha:.38),
+                          width:chosen?2:1),
+                        borderRadius:BorderRadius.circular(16)),
+                      child:Column(mainAxisAlignment:MainAxisAlignment.center,
+                        children:[
+                          _logoGlyph(i,69,p,a),
+                          const SizedBox(height:7),
+                          Text(FittedLogoCatalog.names[i],
+                            maxLines:1,overflow:TextOverflow.ellipsis,
+                            style:Theme.of(context).textTheme.labelMedium),
+                        ]),
+                    ),
+                  ),
+                );
+              },
+            )),
+          const SizedBox(height:11),
+          Row(children:[
+            const Icon(Icons.touch_app_outlined,size:17),
+            const SizedBox(width:8),
+            const Expanded(child:Text(
+              'Desliza para explorar; toca para ampliar y aplicar.')),
           ]),
-          if(selectedLogoAsset!=null)
-            TextButton(
-              onPressed:(){setState(()=>selectedLogoAsset=null);_queueBrandSave();},
-              child:const FittedText('Volver a los logos del catálogo')),
+          const SizedBox(height:14),
+          OutlinedButton.icon(
+            key:const Key('brand-logo-upload-own'),
+            onPressed:busy?null:()async{
+              selectedUploadKind='logo';
+              await _upload();
+            },
+            icon:const Icon(Icons.upload_file_outlined),
+            label:const Text('Subir mi propio logotipo · PNG o WebP')),
+          if(selectedLogoAsset!=null) ...[
+            const SizedBox(height:9),
+            Text('Logotipo personalizado seleccionado',
+              style:Theme.of(context).textTheme.bodySmall),
+            TextButton.icon(
+              onPressed:(){
+                setState(()=>selectedLogoAsset=null);
+                _queueBrandSave();
+              },
+              icon:const Icon(Icons.restore_outlined),
+              label:const Text('Volver al catálogo')),
+          ],
           const SizedBox(height:10),
           SwitchListTile(
             title:const FittedText('Vista oscura'),
@@ -856,7 +1101,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                   else if(logoIndex==0)
                     const FittedMintMark(size:35)
                   else
-                    Icon(_logoIcons[logoIndex],color:p,size:32),
+                    _logoGlyph(logoIndex,35,p,a),
                   const SizedBox(width:8),
                   Expanded(child:FittedText(name.text.isEmpty?'Mi marca':name.text,
                     maxLines:2,overflow:TextOverflow.ellipsis,
