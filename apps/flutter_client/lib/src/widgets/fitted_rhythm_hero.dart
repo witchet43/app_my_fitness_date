@@ -36,7 +36,7 @@ class FittedRhythmHero extends StatelessWidget {
           border: Border.all(color: FitDateColors.aqua.withValues(alpha: .32)),
           gradient: LinearGradient(
             begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: [Color(0xFF17274A), Color(0xFF181D3E), Color(0xFF282143)],
+            colors: [FitDateColors.surfaceRaised, FitDateColors.surface, FitDateColors.inkDeep],
           ),
           boxShadow: [BoxShadow(
             color: FitDateColors.aqua.withValues(alpha: .09),
