@@ -15,6 +15,9 @@ abstract class FitIaRepository {
   Future<Map<String,dynamic>> fitIaSubmitForm(
     String pillar,List<Map<String,String>> answers);
   Future<Map<String,dynamic>> fitIaInsights(String pillar);
+  /// Enables legacy pillar consent only when the account already opted into AI.
+  /// Test doubles may omit this optional bridge.
+  Future<bool> fitIaSyncAccountConsent()async=>false;
   Future<Map<String,dynamic>> fitIaConsent(bool enabled);
   Future<Map<String,dynamic>> fitIaGenerateSummary();
   Future<void> fitIaDeleteMyData();
