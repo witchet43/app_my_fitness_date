@@ -14,9 +14,10 @@ class FittedProfileStoryV28 extends StatelessWidget {
     super.key,required this.profile,required this.rhythm,
     required this.onConfigure,required this.onEditIdentity,
     required this.startingPreference,required this.onChooseStarting,
+    this.fitIaOverview,
   });
   final Map<String,dynamic> profile;
-  final Map<String,dynamic>? rhythm;
+  final Map<String,dynamic>? rhythm,fitIaOverview;
   final VoidCallback onConfigure;
   final VoidCallback onEditIdentity;
   final String? startingPreference;
@@ -136,7 +137,8 @@ class FittedProfileStoryV28 extends StatelessWidget {
             label:Text(en?'Edit my lifestyle':'Configurar mi estilo de vida')),
           SizedBox(height:17),
           FittedProfileProgressV29(
-            rhythm:rhythm,startingPreference:startingPreference,
+            rhythm:rhythm,fitIaOverview:fitIaOverview,
+            startingPreference:startingPreference,
             onChooseStarting:onChooseStarting,onConfigure:onConfigure,
             showRhythm:false),
         ]),
@@ -160,7 +162,8 @@ class FittedProfileStoryV28 extends StatelessWidget {
             en?'How I Relate':'Cómo me relaciono',en?'How I make room for someone':'Mis conexiones',relates),
           SizedBox(height:12),
           FittedProfileProgressV29(
-            rhythm:rhythm,startingPreference:startingPreference,
+            rhythm:rhythm,fitIaOverview:fitIaOverview,
+            startingPreference:startingPreference,
             onChooseStarting:onChooseStarting,onConfigure:onConfigure,
             showCompletion:false),
         ],
