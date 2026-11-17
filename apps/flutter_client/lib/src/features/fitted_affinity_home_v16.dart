@@ -26,72 +26,72 @@ class FittedAffinityHomeV16 extends StatelessWidget {
     ];
     final labels=en
       ?const ['How I Move','How I Live','How I Relate']
-      :const ['Cómo me muevo','Cómo vivo','Cómo me relaciono'];
+      :['Cómo me muevo','Cómo vivo','Cómo me relaciono'];
     final accents=[
       FitDateColors.aqua,
       FitDateColors.apricot,
       FitDateColors.lilac,
     ];
     return Card(
-      key:const Key('fitted-home-affinity-v16'),
+      key:Key('fitted-home-affinity-v16'),
       margin:EdgeInsets.zero,
       clipBehavior:Clip.antiAlias,
       child:Padding(
-        padding:const EdgeInsets.all(20),
+        padding:EdgeInsets.all(20),
         child:Column(
           crossAxisAlignment:CrossAxisAlignment.start,
           children:[
             Row(children:[
               Container(
-                padding:const EdgeInsets.all(10),
+                padding:EdgeInsets.all(10),
                 decoration:BoxDecoration(
                   color:FitDateColors.lilac.withValues(alpha:.12),
                   borderRadius:BorderRadius.circular(14)),
-                child:const Icon(Icons.auto_awesome_outlined,
+                child:Icon(Icons.auto_awesome_outlined,
                   color:FitDateColors.lilac)),
-              const SizedBox(width:12),
+              SizedBox(width:12),
               Expanded(child:Column(
                 crossAxisAlignment:CrossAxisAlignment.start,
                 children:[
                   Text(en?'Your compatibility profile':'Tu perfil de afinidad',
                     style:Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height:3),
+                  SizedBox(height:3),
                   Text(en?'Your lifestyle, your pace':
                     'Tu estilo de vida, a tu ritmo',
                     style:Theme.of(context).textTheme.bodySmall),
                 ],
               )),
               Text('$overall%',
-                key:const Key('fitted-affinity-coverage'),
+                key:Key('fitted-affinity-coverage'),
                 style:Theme.of(context).textTheme.titleLarge?.copyWith(
                   color:FitDateColors.lilac,fontWeight:FontWeight.w800)),
             ]),
-            const SizedBox(height:9),
+            SizedBox(height:9),
             Text(en
               ?'This is how much of your private profile is complete—not a match score.'
               :'Esto muestra cuánto has completado de tu perfil privado, no un porcentaje de compatibilidad.',
               style:Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height:14),
+            SizedBox(height:14),
             for(var i=0;i<3;i++)...[
               InkWell(
                 key:Key('affinity-open-pillar-$i'),
                 borderRadius:BorderRadius.circular(12),
                 onTap:()=>onConfigurePillar(i),
                 child:Padding(
-                  padding:const EdgeInsets.symmetric(
+                  padding:EdgeInsets.symmetric(
                     vertical:10,horizontal:6),
                   child:Column(children:[
                     Row(children:[
                       Icon(icons[i],color:accents[i],size:18),
-                      const SizedBox(width:10),
+                      SizedBox(width:10),
                       Expanded(child:Text(labels[i],
                         style:Theme.of(context).textTheme.titleSmall)),
                       Text('${progress[i]}%',
                         style:Theme.of(context).textTheme.labelLarge),
-                      const SizedBox(width:6),
-                      const Icon(Icons.chevron_right,size:19),
+                      SizedBox(width:6),
+                      Icon(Icons.chevron_right,size:19),
                     ]),
-                    const SizedBox(height:7),
+                    SizedBox(height:7),
                     ClipRRect(
                       borderRadius:BorderRadius.circular(6),
                       child:LinearProgressIndicator(
@@ -105,23 +105,23 @@ class FittedAffinityHomeV16 extends StatelessWidget {
                   ]),
                 ),
               ),
-              if(i!=2)const Divider(height:8),
+              if(i!=2)Divider(height:8),
             ],
-            const SizedBox(height:13),
+            SizedBox(height:13),
             Wrap(spacing:10,runSpacing:8,children:[
               FilledButton.icon(
-                key:const Key('affinity-finish-profile'),
+                key:Key('affinity-finish-profile'),
                 onPressed:()=>onConfigurePillar(
                   progress.indexWhere((p)=>p<100)==-1
                     ?0:progress.indexWhere((p)=>p<100)),
-                icon:const Icon(Icons.tune_outlined),
+                icon:Icon(Icons.tune_outlined),
                 label:Text(en?'Complete my lifestyle':
                   'Completar mi estilo de vida'),
               ),
               OutlinedButton.icon(
-                key:const Key('affinity-see-matches'),
+                key:Key('affinity-see-matches'),
                 onPressed:onDiscover,
-                icon:const Icon(Icons.explore_outlined),
+                icon:Icon(Icons.explore_outlined),
                 label:Text(en?'Discover compatible people':
                   'Descubrir personas afines'),
               ),
