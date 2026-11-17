@@ -1,1 +1,1 @@
-Validate Fit-IA panel v2, owner-only responses, MFA admin, CORS and legacy regressions.
+Run full Flutter QA after strict analyzer fix, privacy snapshots and administrator-configured depth.
