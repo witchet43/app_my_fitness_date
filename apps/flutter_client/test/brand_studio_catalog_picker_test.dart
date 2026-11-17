@@ -56,6 +56,8 @@ void main(){
 
   testWidgets('HSV picker supports visual color selection and cancel',
     (tester)async{
+    await tester.binding.setSurfaceSize(const Size(360,760));
+    addTearDown(()=>tester.binding.setSurfaceSize(null));
     Color? selected;
     await tester.pumpWidget(MaterialApp(home:Scaffold(body:
       Builder(builder:(context)=>FilledButton(
