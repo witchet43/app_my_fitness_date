@@ -300,11 +300,12 @@ Deno.serve(async(req)=>{
   const action=body.action;
   if(!["state","answer","overview","consent","summary","delete",
        "form","form_submit","insights",
-       "chat_state","chat_send","chat_retry"].includes(
+       "chat_state","chat_send","chat_retry","chat_older"].includes(
       String(action)))return respond(400,{status:"invalid_action"});
   if((action==="state"||action==="answer"||action==="form"||
       action==="form_submit"||action==="insights"||
-      action==="chat_state"||action==="chat_send"||action==="chat_retry")&&!validPillar(body.pillar))
+      action==="chat_state"||action==="chat_send"||
+      action==="chat_retry"||action==="chat_older")&&!validPillar(body.pillar))
     return respond(400,{status:"invalid_pillar"});
   try{
     // Single owner-level switch for EVERY external model call. Guided
@@ -315,6 +316,15 @@ Deno.serve(async(req)=>{
         "fitted_ai_account_preference_v1",{},bearer);
       accountAiEnabled=preference.configured===true&&
         preference.enabled===true;
+    }
+    if(action==="chat_older"){
+      const before=body.before;
+      if(typeof before!=="number"||!Number.isSafeInteger(before)||
+        before<=0)return respond(400,{status:"invalid_cursor"});
+      const older=await rpc<Json>("fit_ia_chat_older_v3",{
+        p_pillar:body.pillar,p_before:before,
+      },bearer);
+      return respond(200,{status:"ok",...older});
     }
     if(action==="chat_state"||action==="chat_retry"||action==="chat_send"){
       const active=await rpc<Json>("fit_ia_state_v1",{
