@@ -1,0 +1,38 @@
+name: Fitted global brand and legal QA
+on:
+  push:
+    branches: [feature/fitted-global-dynamic-brand-legal-20261116]
+    paths:
+      - .build-gates/fitted-dynamic-brand-qa.txt
+permissions:
+  contents: read
+jobs:
+  brand-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.9"
+          cache: true
+      - name: Legal and source integrity
+        run: |
+          python3 scripts/check_public_legal.py
+          python3 scripts/check_saas_factory.py
+          node --check apps/flutter_client/cloudflare/brand-legal.js
+      - name: Flutter toolchain
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Analyze all Flutter source
+        working-directory: apps/flutter_client
+        run: flutter analyze --no-fatal-infos
+      - name: Flutter widget and runtime brand regression
+        working-directory: apps/flutter_client
+        run: flutter test --reporter expanded
+      - name: Compiled Flutter web including public cover
+        working-directory: apps/flutter_client
+        run: flutter build web --release --dart-define=MFD_V26_ENABLED=true
