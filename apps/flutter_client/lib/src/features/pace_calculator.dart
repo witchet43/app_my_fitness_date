@@ -153,10 +153,10 @@ class _PaceCalculatorState extends State<PaceCalculator> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(21),
               gradient: LinearGradient(
-                colors: [Color(0xFF273A29), Color(0xFF252E39)],
+                colors: [FitDateColors.surfaceRaised, FitDateColors.surface],
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
               ),
-              border: Border.all(color: Color(0xFF455840)),
+              border: Border.all(color: FitDateColors.outline),
             ),
             padding: EdgeInsets.all(20),
             child: Wrap(
