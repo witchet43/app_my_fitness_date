@@ -339,6 +339,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               'summary_en':story['summary_en'],
               'ai_consented':true,
               'mode':'ai',
+              'fit_ia_private_only':true,
             };
           }
         });
