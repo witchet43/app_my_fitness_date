@@ -10,7 +10,8 @@ const model=Deno.env.get("FITTED_FIT_IA_MODEL")||
 const headers={
   "content-type":"application/json","cache-control":"no-store",
   "access-control-allow-origin":"*",
-  "access-control-allow-headers":"authorization,apikey,content-type",
+  "access-control-allow-headers":
+    "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage, x-supabase-api-version",
   "access-control-allow-methods":"POST,OPTIONS","vary":"origin",
 };
 type Json=Record<string,unknown>;
