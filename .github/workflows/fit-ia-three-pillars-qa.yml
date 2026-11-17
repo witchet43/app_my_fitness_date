@@ -18,7 +18,7 @@ jobs:
           import re
           base=Path('supabase/migrations')
           for n,prefix in [('041','move'),('042','live'),('043','relate')]:
-              match=next(base.glob('202611170'+n[-2:]+'*'),None)
+              match=next(base.glob('2026111700'+n[-2:]+'*'),None)
               assert match, (n,prefix)
               sql=match.read_text()
               ids=re.findall(r"\('("+prefix+r"_[0-9]{3})'",sql)
