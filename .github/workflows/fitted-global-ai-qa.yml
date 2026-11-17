@@ -40,6 +40,14 @@ jobs:
           assert "fitted_summary_consent_b17" in sql
           assert "fit_ia_set_consent_v1" in sql
           assert "share_consented=excluded.share_consented" in sql
+          for slug in ('fit-ia-v1','fitted-ai-summary-b18'):
+              edge=Path(f'supabase/functions/{slug}/index.ts').read_text()
+              assert 'fitted_ai_account_preference_v1' in edge
+              assert 'consent_required' in edge
+          privacy=Path('apps/flutter_client/cloudflare/privacy/index.html').read_text()
+          terms=Path('apps/flutter_client/cloudflare/terms/index.html').read_text()
+          assert 'v29-privacy-2' in privacy and 'OpenAI' in privacy
+          assert 'v29-terms-2' in terms and 'inteligencia artificial' in terms
           root=Path('apps/flutter_client/lib/src/member_v26_app.dart').read_text()
           assert "FittedAiAccountGate(" in root
           assert "aiConfigured=aiPref['configured']==true" in root
