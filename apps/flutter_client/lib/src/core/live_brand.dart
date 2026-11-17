@@ -38,7 +38,7 @@ class LiveBrandSettings {
     accent: '#68D4C7',
     background: '#1A2D38',
     font: 'Arial',
-    // catalog:0 resolves to the bundled, brand-owned Fitted mint F.
+    // catalog:0 retains the approved silver F; 1..20 are owner-selectable vector marks.
     // User-selected custom logos still override the default through Brand Lab.
     logo: 'catalog:0',
     media: <String, String>{},
@@ -93,7 +93,273 @@ class LiveBrandSettings {
       background: hex('background', fallback.background),
       font: const ['Arial', 'Georgia', 'Palatino', 'Garamond']
           .contains(selectedFont) ? selectedFont : fallback.font,
-      logo: RegExp(r'^catalog:[0-9]$').hasMatch(selectedLogo) ||
+      logo: RegExp(r'^catalog:([0-9]|1[0-9]|20).hasMatch(selectedLogo) ||
+          safeAssetUrl(selectedLogo) ? selectedLogo : fallback.logo,
+      media: media,
+      mode: const ['dark', 'light'].contains(selectedMode)
+          ? selectedMode : fallback.mode,
+      layout: const ['editorial', 'minimal'].contains(selectedLayout)
+          ? selectedLayout : fallback.layout,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'name':name,
+    'tagline':tagline,
+    'title':title,
+    'description':description,
+    'paletteName':paletteName,
+    'colors': {
+      'primary':primary, 'accent':accent, 'background':background,
+    },
+    'font':font,
+    'logo':logo,
+    'media':media,
+    'mode':mode,
+    'layout':layout,
+  };
+
+  Color get primaryColor => _color(primary);
+  Color get accentColor => _color(accent);
+  Color get backgroundColor => _color(background);
+  bool get dark => mode == 'dark';
+
+  static Color _color(String hex) =>
+      Color(0xFF000000 | int.parse(hex.substring(1), radix: 16));
+
+  ThemeData toTheme() {
+    FitDateColors.useBrand(
+      primary:primaryColor,accent:accentColor,
+      background:backgroundColor,dark:dark,
+    );
+    final brightness = dark ? Brightness.dark : Brightness.light;
+    final bg = backgroundColor;
+    final fg = bg.computeLuminance() < .35 ? Colors.white : Colors.black87;
+    final p = primaryColor;
+    final a = accentColor;
+    final onP = p.computeLuminance() > .3 ? Colors.black : Colors.white;
+    final onA = a.computeLuminance() > .3 ? Colors.black : Colors.white;
+    final base = dark ? FitDateTheme.dark() : ThemeData.light(useMaterial3:true);
+    final scheme = ColorScheme.fromSeed(
+      seedColor:p,brightness:brightness,
+    ).copyWith(
+      primary:p,onPrimary:onP,secondary:a,onSecondary:onA,
+      surface:bg,onSurface:fg,
+    );
+    final raised=FitDateColors.surfaceRaised;
+    final line=FitDateColors.outline;
+    final body=FitDateColors.pearl;
+    final muted=FitDateColors.muted;
+    return base.copyWith(
+      colorScheme:scheme.copyWith(
+        surface:FitDateColors.surface,onSurface:body,
+        outline:line,surfaceContainerHighest:raised,
+      ),
+      primaryColor:p,
+      scaffoldBackgroundColor:bg,
+      canvasColor:bg,
+      appBarTheme:AppBarTheme(
+        backgroundColor:bg,foregroundColor:body,
+        surfaceTintColor:Colors.transparent,elevation:0,
+      ),
+      cardTheme:CardThemeData(
+        color:FitDateColors.surface,elevation:0,
+        shape:RoundedRectangleBorder(
+          borderRadius:BorderRadius.circular(20),
+          side:BorderSide(color:line.withValues(alpha:.5)),
+        ),
+      ),
+      textTheme:base.textTheme.apply(
+        fontFamily:font,bodyColor:body,displayColor:body,
+      ),
+      iconTheme:IconThemeData(color:FitDateColors.lilac),
+      dividerTheme:DividerThemeData(color:line,thickness:1),
+      chipTheme:ChipThemeData(
+        backgroundColor:raised,
+        selectedColor:p.withValues(alpha:.20),
+        side:BorderSide(color:line),
+        labelStyle:TextStyle(color:body,fontSize:12),
+        shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),
+      ),
+      inputDecorationTheme:InputDecorationTheme(
+        filled:true,fillColor:raised,
+        hintStyle:TextStyle(color:muted),
+        labelStyle:TextStyle(color:muted),
+        enabledBorder:OutlineInputBorder(
+          borderRadius:BorderRadius.circular(16),
+          borderSide:BorderSide(color:line)),
+        focusedBorder:OutlineInputBorder(
+          borderRadius:BorderRadius.circular(16),
+          borderSide:BorderSide(color:p,width:1.6)),
+      ),
+      filledButtonTheme:FilledButtonThemeData(
+        style:FilledButton.styleFrom(
+          backgroundColor:p,foregroundColor:onP,
+          minimumSize:const Size(0,48)),
+      ),
+      outlinedButtonTheme:OutlinedButtonThemeData(
+        style:OutlinedButton.styleFrom(
+          foregroundColor:body,
+          side:BorderSide(color:line),
+          minimumSize:const Size(0,48)),
+      ),
+      textButtonTheme:TextButtonThemeData(
+        style:TextButton.styleFrom(foregroundColor:p),
+      ),
+      navigationBarTheme:NavigationBarThemeData(
+        backgroundColor:FitDateColors.surface,
+        indicatorColor:p.withValues(alpha:.18),
+        labelTextStyle:WidgetStatePropertyAll(
+          TextStyle(color:body,fontSize:12)),
+      ),
+      navigationRailTheme:NavigationRailThemeData(
+        backgroundColor:bg,
+        indicatorColor:p.withValues(alpha:.18),
+        selectedIconTheme:IconThemeData(color:p),
+        unselectedIconTheme:IconThemeData(color:muted),
+        selectedLabelTextStyle:TextStyle(color:body,fontWeight:FontWeight.w800),
+        unselectedLabelTextStyle:TextStyle(color:muted),
+      ),
+      progressIndicatorTheme:ProgressIndicatorThemeData(
+        color:p,linearTrackColor:raised),
+      floatingActionButtonTheme:FloatingActionButtonThemeData(
+        backgroundColor:p,foregroundColor:onP),
+      dialogTheme:DialogThemeData(
+        backgroundColor:FitDateColors.surface,
+        titleTextStyle:TextStyle(color:body,fontSize:20,fontWeight:FontWeight.w700),
+      ),
+      bottomSheetTheme:BottomSheetThemeData(
+        backgroundColor:FitDateColors.surface),
+      snackBarTheme:SnackBarThemeData(
+        backgroundColor:raised,
+        contentTextStyle:TextStyle(color:body)),
+    );
+  }
+}
+
+class LiveBrandController extends ChangeNotifier {
+  LiveBrandController(this.client);
+  final SupabaseClient client;
+  LiveBrandSettings current = LiveBrandSettings.fallback;
+  int version = 0;
+  bool loaded = false;
+  bool saving = false;
+  String? lastError;
+  bool _disposed = false;
+  bool _loading = false;
+
+  void _emit() { if (!_disposed) notifyListeners(); }
+
+  Future<void> refresh() async {
+    if (_loading || saving || _disposed) return;
+    _loading = true;
+    try {
+      final value = await client.from('mfd_brand_live')
+        .select('version,settings').eq('id',true).single()
+        .timeout(const Duration(seconds: 12));
+      final incomingVersion = (value['version'] as num).toInt();
+      if (!loaded || incomingVersion > version) {
+        current = LiveBrandSettings.fromMap(value['settings']);
+        version = incomingVersion;
+        loaded = true;
+        lastError = null;
+        _emit();
+      }
+    } catch (_) {
+      // The last known-good brand is preserved on transient connectivity loss.
+      lastError = 'Sincronización de identidad pendiente.';
+      _emit();
+    } finally {
+      _loading = false;
+    }
+  }
+
+  Future<void> save(LiveBrandSettings proposed) async {
+    if (saving) throw StateError('Ya se está guardando un cambio');
+    saving = true;
+    _emit();
+    try {
+      final response = await client.rpc('brand_set_live',params:{
+        'p_settings': proposed.toMap(),
+        'p_expected_version': version,
+      }).timeout(const Duration(seconds: 15));
+      if (response is! Map) throw StateError('Respuesta inválida');
+      final status = response['status']?.toString();
+      if (status != 'saved') {
+        throw StateError(status == 'conflict'
+          ? 'La marca cambió en otra sesión. Recarga la configuración.'
+          : status == 'forbidden'
+          ? 'Se requiere una sesión de propietario con MFA verificado.'
+          : 'Revisa los campos e imágenes de la marca.');
+      }
+      current = LiveBrandSettings.fromMap(response['settings']);
+      version = (response['version'] as num).toInt();
+      loaded = true;
+      lastError = null;
+    } catch (e) {
+      lastError = e.toString().replaceFirst('Bad state: ', '');
+      rethrow;
+    } finally {
+      saving = false;
+      _emit();
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> history() async {
+    final result = await client.rpc('brand_history_live')
+        .timeout(const Duration(seconds: 12));
+    return (result as List).map(
+      (v) => Map<String, dynamic>.from(v as Map),
+    ).toList();
+  }
+
+  Future<void> restore(int target) async {
+    if (saving) throw StateError('Otra operación sigue en curso');
+    saving = true;
+    _emit();
+    try {
+      final value = await client.rpc('brand_restore_live',params:{
+        'p_version':target,'p_expected_version':version,
+      }).timeout(const Duration(seconds: 15));
+      if (value is! Map || value['status'] != 'saved') {
+        throw StateError('No se pudo restaurar esta versión.');
+      }
+      current = LiveBrandSettings.fromMap(value['settings']);
+      version = (value['version'] as num).toInt();
+      loaded = true;
+      lastError = null;
+    } finally {
+      saving = false;
+      _emit();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  String get asJson => jsonEncode(current.toMap());
+}
+
+/// All Flutter screens in a given session see the same approved brand.
+class LiveBrandScope extends InheritedWidget {
+  const LiveBrandScope({
+    super.key,
+    required this.brand,
+    required super.child,
+  });
+  final LiveBrandSettings brand;
+  static LiveBrandSettings of(BuildContext context) =>
+    context.dependOnInheritedWidgetOfExactType<LiveBrandScope>()?.brand
+      ?? LiveBrandSettings.fallback;
+
+  @override
+  bool updateShouldNotify(LiveBrandScope oldWidget) =>
+    !identical(oldWidget.brand, brand);
+}
+).hasMatch(selectedLogo) ||
           safeAssetUrl(selectedLogo) ? selectedLogo : fallback.logo,
       media: media,
       mode: const ['dark', 'light'].contains(selectedMode)
