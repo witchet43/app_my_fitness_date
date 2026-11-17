@@ -118,8 +118,12 @@ grant execute on function public.fitted_set_ai_account_preference_v1(boolean,tex
 create or replace function public.fit_ia_set_consent_v1(p_enabled boolean)
 returns jsonb language plpgsql security definer set search_path=''
 as $legacyfit$
-declare result jsonb;
+declare result jsonb; v_uid uuid:=auth.uid();
 begin
+  if not exists (select 1 from public.fitted_ai_account_preferences_v1
+    where user_id=v_uid) then
+    raise exception 'first_login_ai_choice_required' using errcode='42501';
+  end if;
   result:=public.fitted_set_ai_account_preference_v1(p_enabled,'settings');
   return jsonb_build_object('ai_enabled',result->'enabled',
     'account_wide',true,'status',result->>'status');
@@ -140,6 +144,7 @@ begin
   then return 'not_available'; end if;
   select enabled into v_enabled from public.fitted_ai_account_preferences_v1
     where user_id=v_uid;
+  if not found then return 'first_login_ai_choice_required'; end if;
   if v_enabled is distinct from p_ai then
     perform public.fitted_set_ai_account_preference_v1(p_ai,'settings');
   end if;
