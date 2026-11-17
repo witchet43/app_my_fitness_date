@@ -91,7 +91,7 @@ class MfdBranding extends StatelessWidget {
           size:box.biggest.shortestSide),
       );
     }
-    final markSize = full && bundledMark ? 63.0 : width;
+    final markSize = full ? 63.0 : width;
     final mark = Container(
       key:Key(full ? 'mfd-brand-full' : 'mfd-brand-icon'),
       width:markSize,
@@ -111,7 +111,7 @@ class MfdBranding extends StatelessWidget {
     return Semantics(
       label:'Logotipo ${brand.name}',
       image:true,
-      child:full && bundledMark
+      child:full
         ? SizedBox(width:width,child:Row(
             mainAxisSize:MainAxisSize.min,
             children:[
