@@ -424,9 +424,10 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       _fitIa('state',{'pillar':pillar});
   @override
   Future<Map<String,dynamic>> fitIaAnswer(
-      String pillar,String questionId,String choiceKey)=>
+      String pillar,String questionId,String choiceKey,{String locale='es'})=>
       _fitIa('answer',{
         'pillar':pillar,'question_id':questionId,'choice_key':choiceKey,
+        'locale':locale,
       });
   @override
   Future<Map<String,dynamic>> fitIaOverview()=>_fitIa('overview');
