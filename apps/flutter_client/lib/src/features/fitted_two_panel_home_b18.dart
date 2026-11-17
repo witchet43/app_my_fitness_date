@@ -186,7 +186,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
       clipBehavior:Clip.antiAlias,
       decoration:BoxDecoration(
         gradient:LinearGradient(colors:[
-          Color(0xFF29375E),Color(0xFF321F52)]),
+          FitDateColors.surfaceRaised,FitDateColors.surface]),
         borderRadius:BorderRadius.circular(23),
         border:Border.all(color:FitDateColors.lilac.withValues(alpha:.55))),
       child:Stack(fit:StackFit.expand,children:[
@@ -233,7 +233,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
           borderRadius:BorderRadius.circular(28),
           border:Border.all(color:FitDateColors.aqua.withValues(alpha:.4)),
           gradient:LinearGradient(
-            colors:[Color(0xFF162A4B),Color(0xFF191D40),Color(0xFF292046)])),
+            colors:[FitDateColors.inkDeep,FitDateColors.surface,FitDateColors.surfaceRaised])),
         child:Stack(children:[
           Positioned.fill(child:FittedRhythmLines(density:.8)),
           Padding(
@@ -450,7 +450,7 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
       (es:'Aceptar privacidad y consentimiento',en:'Accept privacy and consent',
         descEs:'Tus datos siguen protegidos.',descEn:'Your information stays protected.',
         ok:data['dating_consent']==true,onTap:widget.onPrepare),
-      (es:'Apertura segura de Fitted',en:'Safety release approval',
+      (es:'Apertura segura de la aplicación',en:'Safety release approval',
         descEs:'Operación y moderación verificadas.',descEn:'Verified safety operations.',
         ok:data['discovery_release_ready']==true,onTap:widget.onPrepare),
     ];
@@ -462,7 +462,7 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
       decoration:BoxDecoration(
         borderRadius:BorderRadius.circular(28),
         gradient:LinearGradient(colors:[
-          Color(0xFF20254B),Color(0xFF23204A),Color(0xFF30214F)]),
+          FitDateColors.inkDeep,FitDateColors.surface,FitDateColors.surfaceRaised]),
         border:Border.all(color:FitDateColors.lilac.withValues(alpha:.52))),
       child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Row(children:[
