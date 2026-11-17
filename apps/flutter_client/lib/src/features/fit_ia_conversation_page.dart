@@ -15,7 +15,10 @@ class FitIaConversationPage extends StatefulWidget {
 }
 class _FitIaConversationPageState extends State<FitIaConversationPage>{
   late int current;
-  Map<String,dynamic>? state,overview;
+  Map<String,dynamic>? state,overview,insights;
+  List<Map<String,dynamic>> formQuestions=[];
+  final Map<String,String> formDraft={};
+  bool formMode=false,formLoading=false,formSaving=false;
   final scroll=ScrollController();
   bool loading=true,sending=false,summaryBusy=false,consentBusy=false;
   String? error,notice;
@@ -61,14 +64,12 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     final selected=pillar;
     setState((){loading=true;error=null;});
     try{
-      final results=await Future.wait([
-        widget.repository.fitIaState(selected),
-        widget.repository.fitIaOverview(),
-      ]);
+      // The active question is the critical request. Optional insights must
+      // not prevent a chat from opening when the secondary RPC is unavailable.
+      final session=await widget.repository.fitIaState(selected);
       if(!mounted||selected!=pillar)return;
-      setState((){
-        state=results[0];overview=results[1];loading=false;
-      });
+      setState((){state=session;loading=false;});
+      unawaited(_refreshInsights());
       _scrollBottom();
     }catch(_){
       if(mounted&&selected==pillar)setState((){
@@ -80,9 +81,93 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     }
   }
   Future<void> _switch(int index)async{
-    if(index==current||sending||loading)return;
-    setState((){current=index;state=null;notice=null;});
+    if(index==current||sending||loading||formSaving)return;
+    if(!await _allowDiscard())return;
+    setState((){
+      current=index;state=null;overview=null;insights=null;
+      formQuestions=[];formDraft.clear();notice=null;
+    });
     await _load();
+    if(formMode)await _loadForm();
+  }
+  Future<bool> _allowDiscard()async{
+    if(formDraft.isEmpty)return true;
+    return await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+      title:Text(tr('Respuestas sin guardar','Unsaved answers')),
+      content:Text(tr('Guarda el formulario o descarta estas selecciones.',
+        'Save the form or discard your selections.')),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(ctx,false),
+          child:Text(tr('Seguir aquí','Stay here'))),
+        TextButton(onPressed:()=>Navigator.pop(ctx,true),
+          child:Text(tr('Descartar selecciones','Discard selections'))),
+      ],
+    ))??false;
+  }
+  Future<void> _refreshInsights()async{
+    final target=pillar;
+    try{
+      final result=await Future.wait([
+        widget.repository.fitIaOverview(),
+        widget.repository.fitIaInsights(target),
+      ]);
+      if(mounted&&target==pillar)setState((){
+        overview=result[0];insights=result[1];
+      });
+    }catch(_){
+      // A question remains usable if analytics are temporarily unavailable.
+    }
+  }
+  Future<void> _loadForm()async{
+    final target=pillar;
+    setState(()=>formLoading=true);
+    try{
+      final data=await widget.repository.fitIaForm(target);
+      if(!mounted||target!=pillar)return;
+      final items=data['questions'];
+      setState((){
+        formQuestions=items is List
+          ?items.whereType<Map>().map((e)=>Map<String,dynamic>.from(e)).toList()
+          :[];
+        formDraft.clear();formLoading=false;error=null;
+      });
+    }catch(_){
+      if(mounted&&target==pillar)setState((){
+        formLoading=false;
+        error=tr('No se pudo cargar el formulario. Inténtalo de nuevo.',
+          'Could not load the form. Please try again.');
+      });
+    }
+  }
+  Future<void> _setMode(bool useForm)async{
+    if(formMode==useForm||sending||formSaving)return;
+    if(!await _allowDiscard())return;
+    setState((){
+      formMode=useForm;formDraft.clear();error=null;
+    });
+    if(useForm)await _loadForm();
+  }
+  Future<void> _submitForm()async{
+    if(formSaving||formDraft.isEmpty)return;
+    final target=pillar;
+    setState(()=>formSaving=true);
+    try{
+      final items=formDraft.entries.map((e)=><String,String>{
+        'question_id':e.key,'choice_key':e.value,
+      }).toList();
+      await widget.repository.fitIaSubmitForm(target,items);
+      if(!mounted||target!=pillar)return;
+      formDraft.clear();
+      await _load();
+      if(mounted&&target==pillar)await _loadForm();
+      if(mounted)setState(()=>notice=tr('Respuestas guardadas.',
+        'Answers saved.'));
+    }catch(_){
+      if(mounted)setState(()=>error=tr(
+        'No se pudieron guardar las respuestas. '
+        'Conservamos tus selecciones para que puedas reintentar.',
+        'Unable to save. Your choices are kept for another attempt.'));
+    }finally{if(mounted)setState(()=>formSaving=false);}
   }
   Future<void> _answer(String key)async{
     final q=question;
@@ -102,6 +187,7 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
         if(mounted)setState(()=>overview=result);
       }catch(_){/* The answered question is already durably persisted. */}
       _scrollBottom();
+      unawaited(_refreshInsights());
       if(aiEnabled&&totalAnswers>=5&&
         (totalAnswers==5||(totalAnswers-5)%3==0)){
         unawaited(_refreshSummary(silent:true));
