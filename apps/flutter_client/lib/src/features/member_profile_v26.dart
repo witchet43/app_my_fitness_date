@@ -5,6 +5,7 @@ import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'fit_ia_conversation_page.dart';
 import 'fitted_profile_story_v28.dart';
+import 'private_strava_evidence_card.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
 import 'fitted_two_panel_home_b18.dart';
@@ -768,6 +769,19 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               onConfigure:()=>configurePillars(),
               onEditIdentity:widget.onEdit,
             ),
+          ),
+          const SizedBox(height:16),
+          Text(FittedLocaleScope.t(context,
+            'Cómo me muevo · Mis aplicaciones',
+            'How I move · My apps'),
+            key:const Key('private-activity-connect-heading'),
+            style:Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight:FontWeight.w800)),
+          const SizedBox(height:10),
+          PrivateStravaEvidenceCard(
+            key:ValueKey('private-strava-owner-' +
+              (widget.api.auth.auth.currentUser?.id ?? 'signed-out')),
+            ownerId:widget.api.auth.auth.currentUser?.id ?? '',
           ),
 
           if((lifestyle!=null &&
