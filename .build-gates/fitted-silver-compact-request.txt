@@ -1,1 +1,0 @@
-Trigger scoped QA for Fitted silver F, exact approved photo and compact sign-in before merge.
