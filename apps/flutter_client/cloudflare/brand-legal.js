@@ -54,7 +54,7 @@
     }
   }
   async function refresh(){
-    if (key==='__FITTED_PUBLIC_BRAND_KEY__')return;
+    if (key.startsWith('__'))return;
     try {
       const response=await fetch(endpoint,{headers:{apikey:key},cache:'no-store',signal:AbortSignal.timeout(6000)});
       if(!response.ok)return;
