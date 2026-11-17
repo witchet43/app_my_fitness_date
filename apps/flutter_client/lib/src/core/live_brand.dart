@@ -128,6 +128,10 @@ class LiveBrandSettings {
       Color(0xFF000000 | int.parse(hex.substring(1), radix: 16));
 
   ThemeData toTheme() {
+    FitDateColors.useBrand(
+      primary:primaryColor,accent:accentColor,
+      background:backgroundColor,dark:dark,
+    );
     final brightness = dark ? Brightness.dark : Brightness.light;
     final bg = backgroundColor;
     final fg = bg.computeLuminance() < .35 ? Colors.white : Colors.black87;
@@ -142,30 +146,94 @@ class LiveBrandSettings {
       primary:p,onPrimary:onP,secondary:a,onSecondary:onA,
       surface:bg,onSurface:fg,
     );
+    final raised=FitDateColors.surfaceRaised;
+    final line=FitDateColors.outline;
+    final body=FitDateColors.pearl;
+    final muted=FitDateColors.muted;
     return base.copyWith(
-      colorScheme:scheme,
+      colorScheme:scheme.copyWith(
+        surface:FitDateColors.surface,onSurface:body,
+        outline:line,surfaceContainerHighest:raised,
+      ),
+      primaryColor:p,
       scaffoldBackgroundColor:bg,
       canvasColor:bg,
+      fontFamily:font,
+      appBarTheme:AppBarTheme(
+        backgroundColor:bg,foregroundColor:body,
+        surfaceTintColor:Colors.transparent,elevation:0,
+      ),
       cardTheme:CardThemeData(
-        color:dark ? Color.lerp(bg, Colors.white, .07) : Colors.white,
-        elevation:0,
+        color:FitDateColors.surface,elevation:0,
         shape:RoundedRectangleBorder(
-          borderRadius:BorderRadius.circular(18),
-          side:BorderSide(color:p.withValues(alpha:.18)),
+          borderRadius:BorderRadius.circular(20),
+          side:BorderSide(color:line.withValues(alpha:.5)),
         ),
       ),
       textTheme:base.textTheme.apply(
-        fontFamily:font,bodyColor:fg,displayColor:fg,
+        fontFamily:font,bodyColor:body,displayColor:body,
       ),
-
+      iconTheme:IconThemeData(color:FitDateColors.lilac),
+      dividerTheme:DividerThemeData(color:line,thickness:1),
+      chipTheme:ChipThemeData(
+        backgroundColor:raised,
+        selectedColor:p.withValues(alpha:.20),
+        side:BorderSide(color:line),
+        labelStyle:TextStyle(color:body,fontSize:12),
+        shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),
+      ),
+      inputDecorationTheme:InputDecorationTheme(
+        filled:true,fillColor:raised,
+        hintStyle:TextStyle(color:muted),
+        labelStyle:TextStyle(color:muted),
+        enabledBorder:OutlineInputBorder(
+          borderRadius:BorderRadius.circular(16),
+          borderSide:BorderSide(color:line)),
+        focusedBorder:OutlineInputBorder(
+          borderRadius:BorderRadius.circular(16),
+          borderSide:BorderSide(color:p,width:1.6)),
+      ),
       filledButtonTheme:FilledButtonThemeData(
         style:FilledButton.styleFrom(
           backgroundColor:p,foregroundColor:onP,
-        ),
+          minimumSize:const Size(0,48)),
       ),
       outlinedButtonTheme:OutlinedButtonThemeData(
-        style:OutlinedButton.styleFrom(foregroundColor:fg),
+        style:OutlinedButton.styleFrom(
+          foregroundColor:body,
+          side:BorderSide(color:line),
+          minimumSize:const Size(0,48)),
       ),
+      textButtonTheme:TextButtonThemeData(
+        style:TextButton.styleFrom(foregroundColor:p),
+      ),
+      navigationBarTheme:NavigationBarThemeData(
+        backgroundColor:FitDateColors.surface,
+        indicatorColor:p.withValues(alpha:.18),
+        labelTextStyle:WidgetStatePropertyAll(
+          TextStyle(color:body,fontSize:12)),
+      ),
+      navigationRailTheme:NavigationRailThemeData(
+        backgroundColor:bg,
+        indicatorColor:p.withValues(alpha:.18),
+        selectedIconTheme:IconThemeData(color:p),
+        unselectedIconTheme:IconThemeData(color:muted),
+        selectedLabelTextStyle:TextStyle(color:body,fontWeight:FontWeight.w800),
+        unselectedLabelTextStyle:TextStyle(color:muted),
+      ),
+      progressIndicatorTheme:ProgressIndicatorThemeData(
+        color:p,linearTrackColor:raised),
+      floatingActionButtonTheme:FloatingActionButtonThemeData(
+        backgroundColor:p,foregroundColor:onP),
+      dialogTheme:DialogThemeData(
+        backgroundColor:FitDateColors.surface,
+        titleTextStyle:TextStyle(color:body,fontSize:20,fontWeight:FontWeight.w700),
+      ),
+      bottomSheetTheme:BottomSheetThemeData(
+        backgroundColor:FitDateColors.surface),
+      snackBarTheme:SnackBarThemeData(
+        backgroundColor:raised,
+        contentTextStyle:TextStyle(color:body)),
     );
   }
 }
