@@ -87,7 +87,8 @@ class FakeFitIa implements FitIaRepository{
       String pillar,List<Map<String,String>> answers)async{
     for(final entry in answers){
       counts[pillar]=counts[pillar]!+1;
-      chosen[pillar]='Mi favorita';
+      chosen[pillar]=entry['choice_key']=='opt_1'
+        ?'Mi favorita':'La segunda';
       saveCalls++;
     }
     return {'status':'saved','saved':answers.length,'depth':depth(pillar)};
