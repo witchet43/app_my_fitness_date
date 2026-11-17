@@ -44,8 +44,8 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
     ?data?['has_more']==true:olderHasMore;
   List<String> get options{
     final raw=data?['quick_options'];
-    return !enabled||awaiting||raw is! List?[]:
-      raw.whereType<String>().take(4).toList();
+    if(!enabled||awaiting||raw is! List)return <String>[];
+    return raw.whereType<String>().take(4).toList();
   }
   Map<String,dynamic> get depth{
     final raw=data?['depth'];
