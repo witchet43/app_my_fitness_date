@@ -1,1 +1,1 @@
-Run PostgreSQL contract tests with corrected dollar-quoted function fixture, followed by Flutter web.
+Retry disposable PostgreSQL with authenticated owner SELECT grants and RLS; run full Flutter regression and web build.
