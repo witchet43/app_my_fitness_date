@@ -291,13 +291,14 @@ class FittedIdentityPanelB18 extends StatelessWidget {
 class FittedFitsPanelB18 extends StatefulWidget {
   const FittedFitsPanelB18({super.key,required this.api,
     required this.pillarProgress,required this.status,
-    this.fitIaOverview,
+    this.fitIaOverview,this.onConfigurePillars,
     required this.onPrepare,required this.onVerifyAge});
   final MemberV26Api api;
   final List<int> pillarProgress;
   final Map<String,dynamic>? fitIaOverview;
   final Map<String,dynamic>? status;
   final VoidCallback onPrepare,onVerifyAge;
+  final VoidCallback? onConfigurePillars;
   @override
   State<FittedFitsPanelB18> createState()=>_FittedFitsPanelB18State();
 }
@@ -448,7 +449,7 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
         descEs:'Profundidad media o fuerte en movimiento, vida y relaciones.',
         descEn:'Medium or strong coverage across movement, life and relationships.',
         ok:widget.fitIaOverview==null?p.every((x)=>x>=100):enoughFitIa,
-        onTap:widget.onPrepare),
+        onTap:widget.onConfigurePillars??widget.onPrepare),
       (es:'Verificar mayoría de edad',en:'Verify legal age',
         descEs:'Revisión humana de identificación.',descEn:'Human ID review.',
         ok:data['age_verified']==true,onTap:widget.onVerifyAge),
