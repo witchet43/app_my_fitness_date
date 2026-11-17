@@ -195,8 +195,6 @@ class _FittedFontMenuState extends State<FittedFontMenu>{
   void dispose(){search.dispose();super.dispose();}
   @override
   Widget build(BuildContext context){
-    final fonts=FittedFontCatalog.available.where((f)=>
-      f.toLowerCase().contains(search.text.trim().toLowerCase())).toList();
     return Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.stretch,
       children:[
         OutlinedButton(
