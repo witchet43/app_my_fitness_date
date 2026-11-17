@@ -83,8 +83,9 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
         locale:english?'en':'es');
       // A member's existing account-wide opt-in is sufficient. Repair the
       // legacy per-pillar flag without another permission dialog.
-      if(result['ai_enabled']!=true){
-        final synced=await widget.repository.fitIaSyncAccountConsent();
+      if(result['ai_enabled']!=true && widget.repository is FitIaAccountConsentSync){
+        final synced=await (widget.repository as FitIaAccountConsentSync)
+          .fitIaSyncAccountConsent();
         if(synced){
           result=await widget.repository.fitIaChatState(selected,
             locale:english?'en':'es');
