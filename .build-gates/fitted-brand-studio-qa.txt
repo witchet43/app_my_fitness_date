@@ -1,1 +1,0 @@
-Full regression after narrow-screen HSV picker tap coordinates and scroll-to-swatch fix.
