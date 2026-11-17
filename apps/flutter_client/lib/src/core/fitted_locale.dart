@@ -333,6 +333,10 @@ abstract final class FittedTranslations {
 
     'Personas en movimiento. Conexiones que trascienden.':
       'People in motion. Connections that go further.',
+    'Conexiones que trascienden.':
+      'Connections that go further.',
+    'Entrenamiento, bienestar y un estilo de vida activo. Conecta con personas que comparten tus intereses, valores y pasión por el movimiento.':
+      'Training, wellness, and an active lifestyle. Connect with people who share your interests, values, and passion for movement.',
     'Entrenamiento, recovery y rutinas intencionales. Conecta por tus valores y estilo de vida, incluso si practican deportes distintos.':
       'Training, recovery, and intentional routines. Connect through shared values and lifestyle, even when you practice different sports.',
     'Entrenamiento, recovery y rutinas intencionales. Conecta con alguien por sus valores y estilo de vida, incluso si practican deportes distintos.':
