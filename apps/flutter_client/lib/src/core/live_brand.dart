@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme/fitness_date_theme.dart';
+import '../widgets/fitted_font_catalog.dart';
 
 /// Only display-safe global values. No private draft or credential fields.
 class LiveBrandSettings {
@@ -78,7 +79,7 @@ class LiveBrandSettings {
         media[key] = candidate;
       }
     }
-    final selectedFont = str('font', fallback.font, 20);
+    final selectedFont = str('font', fallback.font, 60);
     final selectedLogo = str('logo', fallback.logo, 300);
     final selectedMode = str('mode', fallback.mode, 10);
     final selectedLayout = str('layout', fallback.layout, 20);
@@ -91,8 +92,7 @@ class LiveBrandSettings {
       primary: hex('primary', fallback.primary),
       accent: hex('accent', fallback.accent),
       background: hex('background', fallback.background),
-      font: const ['Arial', 'Georgia', 'Palatino', 'Garamond']
-          .contains(selectedFont) ? selectedFont : fallback.font,
+      font: FittedFontCatalog.accepts(selectedFont) ? selectedFont : fallback.font,
       logo: RegExp(r'^catalog:([0-9]|1[0-9]|20)$').hasMatch(selectedLogo) ||
           safeAssetUrl(selectedLogo) ? selectedLogo : fallback.logo,
       media: media,
@@ -169,8 +169,8 @@ class LiveBrandSettings {
           side:BorderSide(color:line.withValues(alpha:.5)),
         ),
       ),
-      textTheme:base.textTheme.apply(
-        fontFamily:font,bodyColor:body,displayColor:body,
+      textTheme:FittedFontCatalog.textTheme(font,base.textTheme).apply(
+        bodyColor:body,displayColor:body,
       ),
       iconTheme:IconThemeData(color:FitDateColors.lilac),
       dividerTheme:DividerThemeData(color:line,thickness:1),
