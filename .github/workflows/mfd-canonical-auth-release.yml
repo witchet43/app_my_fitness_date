@@ -155,6 +155,17 @@ jobs:
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
           cp -R cloudflare/privacy cloudflare/terms build/web/
+          cp cloudflare/brand-legal.js build/web/brand-legal.js
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          workflow=Path('../../.github/workflows/mfd-canonical-auth-release.yml').read_text()
+          matched=re.search(r'MFD_PROD_SUPABASE_PUBLISHABLE_KEY=(sb_publishable_[A-Za-z0-9_-]+)',workflow)
+          assert matched, 'Public client key not supplied for legal page brand settings'
+          script=Path('build/web/brand-legal.js')
+          assert '__FITTED_PUBLIC_BRAND_KEY__' in script.read_text()
+          script.write_text(script.read_text().replace('__FITTED_PUBLIC_BRAND_KEY__',matched.group(1)))
+          PY
           python3 - <<'PY'
           import json,subprocess
           from pathlib import Path
@@ -213,6 +224,11 @@ jobs:
                   html=get("/").decode("utf-8")
                   assert "favicon.png?v=slate-silver-v2" in html
                   assert "manifest.json?v=slate-silver-v2" in html
+                  legal_script=get("/brand-legal.js").decode("utf-8")
+                  assert "mfd_brand_live" in legal_script and "__FITTED_PUBLIC_BRAND_KEY__" not in legal_script
+                  for slug in ("terms","privacy"):
+                      policy=get("/"+slug+"/").decode("utf-8")
+                      assert 'data-brand-name' in policy and '/brand-legal.js' in policy
                   assert get("/favicon.png")[:8].hex()=="89504e470d0a1a0a"
                   assert get("/icons/Icon-192.png")[:8].hex()=="89504e470d0a1a0a"
                   assert len(get("/icons/Icon-512.png"))>2000
