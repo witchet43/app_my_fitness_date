@@ -545,8 +545,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   };
 
   Future<void> _saveNamedDraft()async{
-    final input=TextEditingController(text:draft==null
-      ?'${name.text} · ${paletteName.text}' : draftTitle.text);
+    var typed=draft==null
+      ?'${name.text} · ${paletteName.text}' : draftTitle.text;
     final chosen=await showDialog<String>(context:context,
       builder:(ctx)=>AlertDialog(
         title:const Text('Guardar diseño para después'),
@@ -556,18 +556,16 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             const Text('Se guarda en tus diseños privados. '
               'NO modifica la marca que ven los usuarios.'),
             const SizedBox(height:14),
-            TextField(controller:input,autofocus:true,maxLength:100,
+            TextFormField(initialValue:typed,onChanged:(v)=>typed=v,
+              autofocus:true,maxLength:100,
               decoration:const InputDecoration(labelText:'Nombre del diseño')),
           ]),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancelar')),
           FilledButton(key:const Key('brand-save-design-only'),
-            onPressed:()=>Navigator.pop(ctx,input.text.trim()),
+            onPressed:()=>Navigator.pop(ctx,typed.trim()),
             child:const Text('Guardar diseño')),
         ]));
-    // Extract value before disposing controller. Widgets of the dismissed
-    // dialog are no longer allowed to read disposed state.
-    WidgetsBinding.instance.addPostFrameCallback((_){input.dispose();});
     if(chosen==null||chosen.length<2||!mounted)return;
     draftTitle.text=chosen;
     await _saveDraft();
