@@ -1,1 +1,1 @@
-Recheck Flutter after fixing lazy-list test navigation to explicit Save button. No GCP builds.
+CI: verify no automatic publication, scroll back to Save through lazy list, all fonts/logos, and production Flutter build.
