@@ -18,6 +18,7 @@ name: Fitted - canonical unified authentication release
 # Dart parser delimiter correction, no design changes.
 # Supersede blocked image codec QA run with an IHDR-only image integrity check.
 # Follow-up: responsive mobile legal wrapping and medium-desktop layout regression fixes.
+# Release hotfix: enforce semantic tokens instead of obsolete fixed mint-pink literal.
 # Silver Motion F polish: neutral strokes and visual accents, copy-led compact access.
 on:
   push:
