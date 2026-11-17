@@ -4,6 +4,7 @@ import '../core/live_brand.dart';
 import '../widgets/mfd_branding.dart';
 import 'rhythm_concept_lab_b10.dart';
 import 'fitted_profile_progress_v29.dart';
+import '../core/fit_ia_repository.dart';
 import '../theme/fitness_date_theme.dart';
 import '../widgets/fitted_glass_atmosphere.dart';
 
@@ -14,10 +15,10 @@ class FittedProfileStoryV28 extends StatelessWidget {
     super.key,required this.profile,required this.rhythm,
     required this.onConfigure,required this.onEditIdentity,
     required this.startingPreference,required this.onChooseStarting,
-    this.fitIaOverview,
+    this.fitIaOverview,this.fitIaSummary,
   });
   final Map<String,dynamic> profile;
-  final Map<String,dynamic>? rhythm,fitIaOverview;
+  final Map<String,dynamic>? rhythm,fitIaOverview,fitIaSummary;
   final VoidCallback onConfigure;
   final VoidCallback onEditIdentity;
   final String? startingPreference;
@@ -54,9 +55,23 @@ class FittedProfileStoryV28 extends StatelessWidget {
       choice('train_partner','Entrenar juntos por definir',
         'Training together to be set'),
     ];
+    List<String> dimension(String key,List<String> old){
+      if(fitIaOverview==null)return old;
+      final level=FitIaDepth.level(fitIaOverview,key);
+      final count=FitIaDepth.answered(fitIaOverview,key);
+      return [
+        FitIaDepth.label(level,en),
+        en?'$count private answers':'$count respuestas privadas',
+        en?'Keep talking with Fit-IA':'Sigue conversando con Fit-IA',
+      ];
+    }
+    final aiStory=(fitIaSummary?[en?'summary_en':'summary_es']??'')
+      .toString().trim();
     final week=field('weekday'),sleep=field('sleep');
     final isKnown=rhythm!=null&&answers.isNotEmpty;
-    final statement=isKnown
+    final statement=aiStory.isNotEmpty && fitIaOverview?['ai_enabled']==true
+      ?aiStory
+      :isKnown
       ?en
         ?'My routine combines ${field('frequency').isEmpty?'movement':field('frequency').toLowerCase()} with ${week.isEmpty?'an evolving weekday rhythm':week.toLowerCase()} and ${sleep.isEmpty?'room for recovery':sleep.toLowerCase()}.'
         :'Mi rutina combina ${field('frequency').isEmpty?'movimiento':field('frequency').toLowerCase()}, ${week.isEmpty?'mis días entre semana':week.toLowerCase()} y ${sleep.isEmpty?'espacio para recuperarme':sleep.toLowerCase()}.'
@@ -134,7 +149,9 @@ class FittedProfileStoryV28 extends StatelessWidget {
             key:Key('profile-configure-pulse'),
             onPressed:onConfigure,
             icon:Icon(Icons.tune),
-            label:Text(en?'Edit my lifestyle':'Configurar mi estilo de vida')),
+            label:Text(fitIaOverview!=null
+              ?(en?'Talk to Fit-IA':'Platicar con Fit-IA')
+              :(en?'Edit my lifestyle':'Configurar mi estilo de vida'))),
           SizedBox(height:17),
           FittedProfileProgressV29(
             rhythm:rhythm,fitIaOverview:fitIaOverview,
@@ -153,13 +170,16 @@ class FittedProfileStoryV28 extends StatelessWidget {
               fontSize:11,letterSpacing:1.7,fontWeight:FontWeight.bold)),
           SizedBox(height:10),
           _rhythmTile(context,Icons.directions_run_outlined,
-            en?'How I Move':'Cómo me muevo',en?'How I train':'Mi actividad',moves),
+            en?'How I Move':'Cómo me muevo',en?'How I train':'Mi actividad',
+              dimension('move',moves)),
           SizedBox(height:8),
           _rhythmTile(context,Icons.nights_stay_outlined,
-            en?'How I Live':'Cómo vivo',en?'How I organize my life':'Mi ritmo',lives),
+            en?'How I Live':'Cómo vivo',en?'How I organize my life':'Mi ritmo',
+              dimension('live',lives)),
           SizedBox(height:8),
           _rhythmTile(context,Icons.people_outline,
-            en?'How I Relate':'Cómo me relaciono',en?'How I make room for someone':'Mis conexiones',relates),
+            en?'How I Relate':'Cómo me relaciono',en?'How I make room for someone':'Mis conexiones',
+              dimension('relate',relates)),
           SizedBox(height:12),
           FittedProfileProgressV29(
             rhythm:rhythm,fitIaOverview:fitIaOverview,
