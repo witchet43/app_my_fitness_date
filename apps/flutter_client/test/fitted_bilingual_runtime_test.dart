@@ -57,10 +57,10 @@ void main() {
     await controller.choose('en');
     await tester.pumpAndSettle();
     expect(find.text('PEOPLE IN MOTION'),findsOneWidget);
-    expect(find.text('YOUR FITTED SPACE'),findsOneWidget);
-    expect(find.text('Welcome'),findsOneWidget);
+    expect(find.text('YOUR FITTED SPACE'),findsNothing);
+    expect(find.byKey(const Key('landing-hero')),findsOneWidget);
     expect(find.text('Sign in with email'),findsOneWidget);
-    expect(find.text('Connections that go further.'),findsOneWidget);
+    expect(find.byKey(const Key('landing-headline')),findsOneWidget);
     expect(find.text('Meaningful affinity'),findsOneWidget);
     expect(find.text('Protection'),findsOneWidget);
     expect(find.text('Términos'),findsNothing);
