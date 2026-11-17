@@ -66,7 +66,7 @@ class _RhythmPainter extends CustomPainter {
 /// Backdrop is bounded by a rounded clip for predictable GPU costs.
 class FittedGlassPanel extends StatelessWidget {
   const FittedGlassPanel({super.key,required this.child,
-    this.padding=EdgeInsets.all(14),this.radius=20,this.blur=8});
+    this.padding=const EdgeInsets.all(14),this.radius=20,this.blur=8});
   final Widget child;
   final EdgeInsetsGeometry padding;
   final double radius,blur;
