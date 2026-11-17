@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/live_brand.dart';
@@ -5,9 +6,10 @@ import '../core/fitted_locale.dart';
 import '../widgets/mfd_branding.dart';
 import '../theme/fitness_date_theme.dart';
 
-/// One responsive public panel: story, photography, authentication and legal.
-/// The administrator's live brand continues to control copy, colors and cover.
-/// Registration consent remains part of the existing registration flow.
+/// Exact editorial composition approved for the Fitted public cover.
+/// The approved source contains the original young couple and mint ribbon.
+/// Photography, story, sign-in and legal links remain one accessible panel;
+/// no raster text or fake sign-in hotspots are used.
 class PublicEntryShell extends StatefulWidget {
   const PublicEntryShell({
     super.key,
@@ -33,6 +35,8 @@ class PublicEntryShell extends StatefulWidget {
 
 class _PublicEntryShellState extends State<PublicEntryShell> {
   bool register = false;
+  static const _approvedArtwork =
+    'assets/branding/fitted_approved_cover_reference.png';
 
   bool get legalConfigured =>
     widget.termsUrl.startsWith('https://') &&
@@ -45,267 +49,368 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     }
   }
 
-  static const _editorialPhoto =
-    'https://images.pexels.com/photos/8497645/pexels-photo-8497645.jpeg'
-    '?auto=compress&cs=tinysrgb&w=1600';
+  Widget _approvedPair() => LayoutBuilder(builder:(context,box) {
+    // Crop the exact approved reference in source-image pixels; keep the
+    // real couple, hair silhouette and motion ribbon, not the baked-in UI.
+    const sourceWidth=1672.0;
+    const sourceHeight=941.0;
+    const cropLeft=746.0;
+    const cropTop=33.0;
+    const cropWidth=916.0;
+    const cropHeight=559.0;
+    final scale=math.max(box.maxWidth/cropWidth,
+      box.maxHeight/cropHeight);
+    return Stack(fit:StackFit.expand,children:[
+      Positioned(
+        left:-cropLeft*scale,top:-cropTop*scale,
+        width:sourceWidth*scale,height:sourceHeight*scale,
+        child:Image.asset(_approvedArtwork,fit:BoxFit.fill,
+          key:const Key('landing-approved-image-source')),
+      ),
+    ]);
+  });
 
-  Widget _heroPill(IconData icon,String label,LiveBrandSettings brand) =>
+  Widget _photo(LiveBrandSettings brand,bool wide) {
+    final candidate=brand.media[wide?'cover_desktop':'cover_mobile'];
+    final custom=candidate!=null && LiveBrandSettings.safeAssetUrl(candidate);
+    Widget image = custom
+      ? Image.network(candidate,fit:BoxFit.cover,
+          errorBuilder:(_,__,___)=>_approvedPair())
+      : _approvedPair();
+    image=ClipRect(child:image);
+    // The source image softly disappears into the shared slate background,
+    // so no rectangular image container interrupts the floating portrait.
+    if(wide) {
+      image=ShaderMask(
+        blendMode:BlendMode.dstIn,
+        shaderCallback:(bounds)=>const LinearGradient(
+          begin:Alignment.centerLeft,end:Alignment.centerRight,
+          stops:[0,.16,.38,1],
+          colors:[Colors.transparent,Colors.black54,Colors.black,Colors.black],
+        ).createShader(bounds),
+        child:ShaderMask(
+          blendMode:BlendMode.dstIn,
+          shaderCallback:(bounds)=>const LinearGradient(
+            begin:Alignment.topCenter,end:Alignment.bottomCenter,
+            stops:[0,.77,1],
+            colors:[Colors.black,Colors.black,Colors.transparent],
+          ).createShader(bounds),
+          child:image,
+        ),
+      );
+    }
+    return Semantics(
+      label:FittedLocaleScope.t(context,
+        'Pareja joven corriendo al aire libre, portada aprobada de Fitted',
+        'Young adults running outdoors, approved Fitted cover'),
+      image:true,
+      child:KeyedSubtree(
+        key:const Key('landing-editorial-photo'),child:image));
+  }
+
+  Widget _chip(IconData icon,String es,String en,
+      LiveBrandSettings brand,double scale) =>
     Container(
-      padding:const EdgeInsets.symmetric(horizontal:11,vertical:9),
+      padding:EdgeInsets.symmetric(
+        horizontal:14*scale,vertical:10*scale),
       decoration:BoxDecoration(
-        color:brand.backgroundColor.withValues(alpha:.75),
-        borderRadius:BorderRadius.circular(36),
-        border:Border.all(color:brand.accentColor.withValues(alpha:.56)),
+        borderRadius:BorderRadius.circular(42),
+        color:const Color(0xFF0B2830).withValues(alpha:.70),
+        border:Border.all(color:brand.primaryColor.withValues(alpha:.7),
+          width:1.05),
       ),
       child:Row(mainAxisSize:MainAxisSize.min,children:[
-        Icon(icon,color:brand.primaryColor,size:17),
-        const SizedBox(width:8),
-        Text(label,style:const TextStyle(
-          color:FitDateColors.pearl,fontSize:12,fontWeight:FontWeight.w700)),
+        Icon(icon,color:brand.primaryColor,size:24*scale),
+        SizedBox(width:9*scale),
+        Text(FittedLocaleScope.t(context,es,en),
+          style:TextStyle(color:FitDateColors.pearl,
+            fontWeight:FontWeight.w800,fontSize:16.5*scale)),
       ]),
     );
 
-  Widget _message(LiveBrandSettings brand,bool wide) {
+  Widget _message(LiveBrandSettings brand,double scale,bool wide) {
     final title=FittedTranslations.translate(
       brand.title,FittedLocaleScope.languageOf(context));
     final description=FittedTranslations.translate(
       brand.description,FittedLocaleScope.languageOf(context));
-    final baseStyle=TextStyle(
+    final titleStyle=TextStyle(
       color:FitDateColors.pearl,fontFamily:brand.font,
-      fontSize:wide?52:34,fontWeight:FontWeight.w800,
-      height:1.11,letterSpacing:-1.3);
+      fontSize:wide?70*scale:37,fontWeight:FontWeight.w800,
+      letterSpacing:wide?-2.1*scale:-.9,
+      height:1.04,
+    );
+    Widget headline;
+    if(title=='Conexiones que trascienden.') {
+      headline=Text.rich(TextSpan(children:[
+        const TextSpan(text:'Conexiones que\n'),
+        TextSpan(text:'trascienden.',style:TextStyle(color:brand.primaryColor)),
+      ]),key:const Key('landing-headline'),style:titleStyle);
+    } else if(title=='Connections that go further.') {
+      headline=Text.rich(TextSpan(children:[
+        const TextSpan(text:'Connections that\n'),
+        TextSpan(text:'go further.',style:TextStyle(color:brand.primaryColor)),
+      ]),key:const Key('landing-headline'),style:titleStyle);
+    } else {
+      headline=Text(title,key:const Key('landing-headline'),style:titleStyle);
+    }
     return Column(
-      mainAxisSize:MainAxisSize.min,
       crossAxisAlignment:CrossAxisAlignment.start,
+      mainAxisSize:MainAxisSize.min,
       children:[
         Text(FittedLocaleScope.t(context,
           'PERSONAS EN MOVIMIENTO','PEOPLE IN MOTION'),
-          style:TextStyle(color:brand.primaryColor,fontSize:12,
-            letterSpacing:2.0,fontWeight:FontWeight.w800)),
-        const SizedBox(height:12),
-        Container(width:44,height:4,decoration:BoxDecoration(
-          color:brand.primaryColor,borderRadius:BorderRadius.circular(3))),
-        const SizedBox(height:17),
-        if(title.contains('trascienden.'))
-          RichText(key:const Key('landing-headline'),
-            text:TextSpan(style:baseStyle,children:[
-              TextSpan(text:title.split('trascienden.').first),
-              TextSpan(text:'trascienden.',
-                style:TextStyle(color:brand.primaryColor)),
-            ]))
-        else Text(title,key:const Key('landing-headline'),style:baseStyle),
-        const SizedBox(height:17),
+          style:TextStyle(color:brand.primaryColor,fontSize:19*scale,
+            letterSpacing:1.4*scale,fontWeight:FontWeight.w800)),
+        SizedBox(height:17*scale),
+        Container(width:68*scale,height:6*scale,
+          decoration:BoxDecoration(color:brand.primaryColor,
+            borderRadius:BorderRadius.circular(5))),
+        SizedBox(height:28*scale),
+        headline,
+        SizedBox(height:19*scale),
         Text(description,key:const Key('landing-brand-description'),
-          style:const TextStyle(color:FitDateColors.pearl,
-            fontSize:15.5,height:1.48)),
-        const SizedBox(height:20),
-        Wrap(spacing:9,runSpacing:9,children:[
-          _heroPill(Icons.directions_run_rounded,
-            FittedLocaleScope.t(context,'Cómo me muevo','How I Move'),brand),
-          _heroPill(Icons.spa_outlined,
-            FittedLocaleScope.t(context,'Cómo vivo','How I Live'),brand),
-          _heroPill(Icons.groups_outlined,
-            FittedLocaleScope.t(context,
-              'Cómo me relaciono','How I Relate'),brand),
+          style:TextStyle(color:FitDateColors.pearl,
+            height:1.37,fontSize:20.6*scale,fontWeight:FontWeight.w500)),
+        SizedBox(height:19*scale),
+        Wrap(spacing:14*scale,runSpacing:10*scale,children:[
+          _chip(Icons.directions_run_rounded,
+            'Cómo me muevo','How I Move',brand,scale),
+          _chip(Icons.spa_outlined,
+            'Cómo vivo','How I Live',brand,scale),
+          _chip(Icons.groups,
+            'Cómo me relaciono','How I Relate',brand,scale),
         ]),
       ],
     );
   }
 
-  Widget _photo(String url,LiveBrandSettings brand) => Stack(
-    fit:StackFit.expand,children:[
-      Image.network(
-        url,key:const Key('landing-editorial-photo'),
-        fit:BoxFit.cover,alignment:Alignment.center,
-        semanticLabel:FittedLocaleScope.t(context,
-          'Dos adultos jóvenes corriendo juntos al aire libre',
-          'Two young adults running together outdoors'),
-        errorBuilder:(_,__,___)=>const ColoredBox(
-          color:FitDateColors.surfaceRaised,child:Center(
-            child:Icon(Icons.directions_run,color:FitDateColors.aqua,size:64))),
-      ),
-      Positioned(right:0,bottom:22,child:Container(
-        width:130,height:2,
-        decoration:BoxDecoration(color:brand.primaryColor.withValues(alpha:.8),
-          borderRadius:BorderRadius.circular(2)))),
-    ],
-  );
+  Widget _googleSymbol(double scale)=>ShaderMask(
+    blendMode:BlendMode.srcIn,
+    shaderCallback:(bounds)=>const LinearGradient(
+      begin:Alignment.topLeft,end:Alignment.bottomRight,
+      stops:[0,.30,.55,.78,1],
+      colors:[
+        Color(0xFF4285F4),Color(0xFFEA4335),
+        Color(0xFFFBBC05),Color(0xFF34A853),Color(0xFF4285F4)
+      ]).createShader(bounds),
+    child:Text('G',style:TextStyle(
+      color:Colors.white,fontWeight:FontWeight.w900,
+      fontFamily:'Arial',fontSize:27*scale)));
 
-  Widget _hero(LiveBrandSettings brand,bool wide,double availableWidth) {
-    final raw=brand.media[wide?'cover_desktop':'cover_mobile'];
-    final photo=raw!=null && LiveBrandSettings.safeAssetUrl(raw)
-      ?raw:_editorialPhoto;
-    final surface=brand.backgroundColor;
-    return Container(
-      key:const Key('landing-hero'),
-      clipBehavior:Clip.antiAlias,
-      decoration:BoxDecoration(
-        borderRadius:BorderRadius.circular(34),
-        border:Border.all(color:brand.primaryColor.withValues(alpha:.65)),
-        gradient:LinearGradient(
-          begin:Alignment.topLeft,end:Alignment.bottomRight,
-          colors:[surface,FitDateColors.surfaceRaised,surface])),
-      child:Column(mainAxisSize:MainAxisSize.min,children:[
-        if(wide) SizedBox(
-          height:465,
-          child:Stack(fit:StackFit.expand,children:[
-            Positioned.fill(left:availableWidth*.40,
-              child:_photo(photo,brand)),
-            Positioned.fill(child:DecoratedBox(decoration:BoxDecoration(
-              gradient:LinearGradient(
-                begin:Alignment.centerLeft,end:Alignment.centerRight,
-                stops:const [0,.34,.69,1],
-                colors:[surface,surface,
-                  surface.withValues(alpha:.85),Colors.transparent])))),
-            Positioned(left:54,top:43,width:availableWidth*.49,
-              child:_message(brand,true)),
-          ]),
-        ) else ...[
-          SizedBox(height:220,width:double.infinity,
-            child:_photo(photo,brand)),
-          Padding(padding:const EdgeInsets.fromLTRB(21,21,21,10),
-            child:_message(brand,false)),
-        ],
-        _access(wide,brand),
-      ]),
-    );
-  }
-
-  Widget _authButtons(bool wide,LiveBrandSettings brand) {
+  Widget _authButtons(bool wide,LiveBrandSettings brand,double scale) {
     final action=register
       ?widget.onEmailRegister??widget.onEmail
       :widget.onEmailSignIn??widget.onEmail;
+    final labelStyle=TextStyle(
+      fontWeight:FontWeight.w700,fontSize:19.2*scale);
+    final height=66*scale;
     final google=OutlinedButton.icon(
       key:const Key('google-signin-entry'),
       onPressed:legalConfigured?widget.onGoogle:null,
       style:OutlinedButton.styleFrom(
+        minimumSize:Size(0,height),
+        padding:EdgeInsets.symmetric(horizontal:10*scale),
         foregroundColor:FitDateColors.pearl,
-        side:BorderSide(color:brand.primaryColor.withValues(alpha:.65)),
-        minimumSize:const Size(0,51)),
-      icon:const Icon(Icons.account_circle_outlined),
+        textStyle:labelStyle,
+        side:BorderSide(color:brand.primaryColor.withValues(alpha:.91),
+          width:1.2),
+        shape:const StadiumBorder(),
+        backgroundColor:const Color(0xFF0D2A32).withValues(alpha:.62),
+      ),
+      icon:_googleSymbol(scale),
       label:Text(FittedLocaleScope.t(context,
-        'Continuar con Google','Continue with Google')));
+        'Continuar con Google','Continue with Google')),
+    );
     final apple=OutlinedButton.icon(
       key:const Key('apple-signin-entry'),
       onPressed:legalConfigured?widget.onApple:null,
       style:OutlinedButton.styleFrom(
+        minimumSize:Size(0,height),
+        padding:EdgeInsets.symmetric(horizontal:10*scale),
         foregroundColor:FitDateColors.pearl,
-        side:BorderSide(color:brand.primaryColor.withValues(alpha:.65)),
-        minimumSize:const Size(0,51)),
-      icon:const Icon(Icons.apple),
+        textStyle:labelStyle,
+        side:BorderSide(color:brand.primaryColor.withValues(alpha:.91),
+          width:1.2),
+        shape:const StadiumBorder(),
+        backgroundColor:const Color(0xFF0D2A32).withValues(alpha:.62),
+      ),
+      icon:Icon(Icons.apple,size:28*scale),
       label:Text(FittedLocaleScope.t(context,
-        'Continuar con Apple','Continue with Apple')));
+        'Continuar con Apple','Continue with Apple')),
+    );
     final email=FilledButton.icon(
       key:const Key('email-entry'),
       onPressed:legalConfigured?action:null,
       style:FilledButton.styleFrom(
+        minimumSize:Size(0,height),
+        padding:EdgeInsets.symmetric(horizontal:10*scale),
+        textStyle:labelStyle,
+        shape:const StadiumBorder(),
         backgroundColor:brand.primaryColor,
         foregroundColor:brand.backgroundColor,
-        minimumSize:const Size(0,51)),
-      icon:const Icon(Icons.mail_outline),
+      ),
+      icon:Icon(Icons.mail_outline_rounded,size:25*scale),
       label:Text(register
         ?FittedLocaleScope.t(context,
           'Crear cuenta con correo','Create account with email')
         :FittedLocaleScope.t(context,
-          'Entrar con correo','Sign in with email')));
-    return wide
-      ?Row(children:[
-          Expanded(child:google),const SizedBox(width:14),
-          Expanded(child:apple),const SizedBox(width:14),
-          Expanded(child:email),
-        ])
-      :Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-          google,const SizedBox(height:9),
-          apple,const SizedBox(height:9),email,
-        ]);
+          'Entrar con correo','Sign in with email')),
+      ),
+    );
+    if(!wide) {
+      return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        google,const SizedBox(height:9),
+        apple,const SizedBox(height:9),email,
+      ]);
+    }
+    return Row(children:[
+      Expanded(child:google),SizedBox(width:18*scale),
+      Expanded(child:apple),SizedBox(width:18*scale),
+      Expanded(child:email),
+    ]);
   }
 
-  Widget _compactPromise(IconData icon,String es,String en,
-      LiveBrandSettings brand) =>
+  Widget _promise(IconData icon,String es,String en,
+      LiveBrandSettings brand,double scale) =>
     Row(mainAxisSize:MainAxisSize.min,children:[
-      Icon(icon,color:brand.primaryColor,size:20),
-      const SizedBox(width:9),
+      Icon(icon,color:brand.primaryColor,size:28*scale),
+      SizedBox(width:12*scale),
       Text(FittedLocaleScope.t(context,es,en),
-        style:const TextStyle(color:FitDateColors.muted,fontSize:13)),
+        style:TextStyle(color:FitDateColors.pearl,
+          fontSize:18.5*scale)),
     ]);
 
-  Widget _access(bool wide,LiveBrandSettings brand) => KeyedSubtree(
+  Widget _access(bool wide,LiveBrandSettings brand,double scale,
+      double panelWidth) => KeyedSubtree(
     key:const Key('landing-access'),
     child:Padding(
-      padding:EdgeInsets.fromLTRB(wide?65:19,wide?8:18,
-        wide?65:19,wide?22:24),
+      padding:EdgeInsets.fromLTRB(
+        wide?panelWidth*.111:21,
+        wide?0:18,
+        wide?panelWidth*.111:21,
+        wide?30*scale:23),
       child:Column(mainAxisSize:MainAxisSize.min,children:[
-        Padding(
-          padding:const EdgeInsets.only(bottom:13),
-          child:Wrap(alignment:WrapAlignment.center,
-            crossAxisAlignment:WrapCrossAlignment.center,
-            spacing:15,runSpacing:6,children:[
-              Text(FittedLocaleScope.t(context,
-                'TU ESPACIO EN FITTED','YOUR FITTED SPACE'),
-                style:TextStyle(color:brand.primaryColor,
-                  fontSize:10,letterSpacing:1.6,
-                  fontWeight:FontWeight.w800)),
-              Text(register
-                ?FittedLocaleScope.t(context,'Comienza aquí','Start here')
-                :FittedLocaleScope.t(context,'Bienvenido','Welcome'),
-                style:const TextStyle(color:FitDateColors.pearl,
-                  fontSize:15,fontWeight:FontWeight.w700)),
-              Text(register
-                ?FittedLocaleScope.t(context,
-                  'Crea tu cuenta y empieza tu perfil.',
-                  'Create your account and begin your profile.')
-                :FittedLocaleScope.t(context,
-                  'Entra y continúa donde lo dejaste.',
-                  'Sign in and pick up where you left off.'),
-                style:const TextStyle(color:FitDateColors.muted,
-                  fontSize:12)),
-            ]),
-        ),
-        _authButtons(wide,brand),
-        const SizedBox(height:14),
-        TextButton(
-          key:const Key('switch-entry-mode'),
-          onPressed:()=>setState(()=>register=!register),
-          child:Text(register
-            ?FittedLocaleScope.t(context,
-              '¿Ya tienes cuenta? Inicia sesión',
-              'Already have an account? Sign in')
-            :FittedLocaleScope.t(context,
-              '¿Aún no tienes cuenta? Regístrate',
-              'New here? Sign up'),
-            style:TextStyle(color:brand.primaryColor,
-              fontWeight:FontWeight.w600))),
-        const SizedBox(height:13),
-        Wrap(
-          alignment:WrapAlignment.center,
-          spacing:wide?30:18,runSpacing:12,
+        _authButtons(wide,brand,scale),
+        SizedBox(height:16*scale),
+        Row(children:[
+          Expanded(child:Divider(color:FitDateColors.pearl.withValues(alpha:.7),
+            thickness:.8)),
+          SizedBox(width:14*scale),
+          Flexible(child:TextButton(
+            key:const Key('switch-entry-mode'),
+            onPressed:()=>setState(()=>register=!register),
+            child:Text.rich(
+              TextSpan(children:[
+                TextSpan(text:register
+                  ?FittedLocaleScope.t(context,'¿Ya tienes cuenta? ',
+                    'Already have an account? ')
+                  :FittedLocaleScope.t(context,'¿Aún no tienes cuenta? ',
+                    'New here? ')),
+                TextSpan(text:register
+                  ?FittedLocaleScope.t(context,'Inicia sesión','Sign in')
+                  :FittedLocaleScope.t(context,'Regístrate','Sign up'),
+                  style:TextStyle(color:brand.primaryColor,
+                    decoration:TextDecoration.underline,
+                    decorationColor:brand.primaryColor,
+                    fontWeight:FontWeight.w800)),
+              ]),maxLines:1,
+              style:TextStyle(color:FitDateColors.pearl,
+                fontSize:17.2*scale,fontWeight:FontWeight.w500)),
+          )),
+          SizedBox(width:14*scale),
+          Expanded(child:Divider(color:FitDateColors.pearl.withValues(alpha:.7),
+            thickness:.8)),
+        ]),
+        SizedBox(height:16*scale),
+        Wrap(alignment:WrapAlignment.center,
+          crossAxisAlignment:WrapCrossAlignment.center,
+          spacing:30*scale,runSpacing:12*scale,
           children:[
-            _compactPromise(Icons.people_outline,
-              'Personas auténticas','Authentic people',brand),
-            _compactPromise(Icons.auto_awesome_outlined,
-              'Afinidad real','Meaningful affinity',brand),
-            _compactPromise(Icons.shield_outlined,
-              'Protección','Protection',brand),
+            _promise(Icons.groups_rounded,
+              'Personas auténticas','Authentic people',brand,scale),
+            if(wide) Text('|',style:TextStyle(
+              color:FitDateColors.pearl,fontSize:18*scale)),
+            _promise(Icons.auto_awesome_rounded,
+              'Afinidad real','Meaningful affinity',brand,scale),
+            if(wide) Text('|',style:TextStyle(
+              color:FitDateColors.pearl,fontSize:18*scale)),
+            _promise(Icons.shield_outlined,
+              'Protección','Protection',brand,scale),
           ]),
-        const SizedBox(height:11),
-        Wrap(
-          alignment:WrapAlignment.center,
-          spacing:15,
-          children:[
-            TextButton(
-              onPressed:legalConfigured
-                ?()=>openPolicy(widget.termsUrl):null,
-              child:Text(FittedLocaleScope.t(context,'Términos','Terms'),
-                style:const TextStyle(color:FitDateColors.pearl))),
-            TextButton(
-              onPressed:legalConfigured
-                ?()=>openPolicy(widget.privacyUrl):null,
-              child:Text(FittedLocaleScope.t(context,
-                'Privacidad','Privacy'),
-                style:const TextStyle(color:FitDateColors.pearl))),
-          ]),
+        SizedBox(height:14*scale),
+        Row(mainAxisAlignment:MainAxisAlignment.center,children:[
+          TextButton(
+            onPressed:legalConfigured
+              ?()=>openPolicy(widget.termsUrl):null,
+            child:Text(FittedLocaleScope.t(context,'Términos','Terms'),
+              style:TextStyle(color:FitDateColors.pearl,
+                fontSize:17.5*scale))),
+          SizedBox(width:21*scale),
+          Text('|',style:TextStyle(
+            color:FitDateColors.pearl,fontSize:17*scale)),
+          SizedBox(width:21*scale),
+          TextButton(
+            onPressed:legalConfigured
+              ?()=>openPolicy(widget.privacyUrl):null,
+            child:Text(FittedLocaleScope.t(context,'Privacidad','Privacy'),
+              style:TextStyle(color:FitDateColors.pearl,
+                fontSize:17.5*scale))),
+        ]),
       ]),
     ));
+
+  Widget _hero(LiveBrandSettings brand,bool wide,double panelWidth) {
+    final scale=(panelWidth/1616).clamp(.73,1.09).toDouble();
+    final heroHeight=520*scale;
+    return Stack(
+      key:const Key('landing-hero'),
+      clipBehavior:Clip.none,
+      children:[
+        Container(
+          width:panelWidth,
+          decoration:BoxDecoration(
+            borderRadius:BorderRadius.circular(53*scale),
+            border:Border.all(color:brand.primaryColor.withValues(alpha:.83),
+              width:1.25),
+            gradient:LinearGradient(
+              begin:Alignment.topLeft,end:Alignment.bottomRight,
+              colors:[brand.backgroundColor,
+                const Color(0xFF13343E),const Color(0xFF12303A)])),
+          clipBehavior:Clip.antiAlias,
+          child:Stack(children:[
+            Positioned.fill(child:IgnorePointer(child:CustomPaint(
+              painter:_FittedApprovedWaves(brand.primaryColor)))),
+            Column(children:[
+              if(wide)
+                SizedBox(
+                  height:heroHeight,
+                  child:Padding(
+                    padding:EdgeInsets.fromLTRB(
+                      panelWidth*.067,59*scale, panelWidth*.48,0),
+                    child:Align(alignment:Alignment.topLeft,
+                      child:_message(brand,scale,true)),
+                  ),
+                )
+              else ...[
+                SizedBox(height:265,width:double.infinity,
+                  child:_photo(brand,false)),
+                Padding(
+                  padding:const EdgeInsets.fromLTRB(21,22,20,18),
+                  child:_message(brand, .75,false)),
+              ],
+              _access(wide,brand,scale,panelWidth),
+            ]),
+          ]),
+        ),
+        if(wide)
+          Positioned(
+            right:0,top:-46*scale,
+            width:panelWidth*.557,height:557*scale,
+            child:IgnorePointer(child:_photo(brand,true)),
+          ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -315,31 +420,65 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     return Scaffold(
       backgroundColor:brand.backgroundColor,
       appBar:AppBar(
+        toolbarHeight:62,
         backgroundColor:brand.backgroundColor,
-        titleSpacing:wide?32:15,
+        titleSpacing:wide?31:15,
         title:Row(mainAxisSize:MainAxisSize.min,children:[
-          const MfdBranding(full:false,width:42),
-          const SizedBox(width:11),
+          const MfdBranding(full:false,width:44),
+          const SizedBox(width:10),
           Flexible(child:Text(brand.name,maxLines:1,
             overflow:TextOverflow.ellipsis,
-            style:const TextStyle(fontSize:22,color:FitDateColors.pearl,
-              fontWeight:FontWeight.w800))),
+            style:const TextStyle(fontSize:27.5,
+              color:FitDateColors.pearl,fontWeight:FontWeight.w800))),
         ]),
         actions:[const Padding(padding:EdgeInsets.only(right:16),
           child:Center(child:FittedLanguageSelector()))],
       ),
       body:SafeArea(child:LayoutBuilder(builder:(context,box) {
-        final panelWidth=(box.maxWidth-(wide?56:28)).clamp(0.0,1500.0).toDouble();
+        final panelWidth=math.min(box.maxWidth-(wide?52:24),1680.0);
         return ListView(
+          clipBehavior:Clip.none,
           padding:EdgeInsets.symmetric(
-            horizontal:wide?28:14,vertical:wide?16:10),
-          children:[Center(child:ConstrainedBox(
-            constraints:const BoxConstraints(maxWidth:1500),
-            child:_hero(brand,wide,panelWidth))),
-            const SizedBox(height:20),
-          ],
+            horizontal:wide?26:12,vertical:wide?17:11),
+          children:[Center(child:_hero(brand,wide,panelWidth)),
+            const SizedBox(height:40)],
         );
       })),
     );
   }
+}
+
+/// Teal editorial swoops: background-only. Text and buttons remain real UI.
+class _FittedApprovedWaves extends CustomPainter {
+  const _FittedApprovedWaves(this.mint);
+  final Color mint;
+
+  @override
+  void paint(Canvas canvas,Size size) {
+    final w=size.width,h=size.height;
+    final left=Path()
+      ..moveTo(0,h*.675)
+      ..cubicTo(w*.06,h*.726,w*.16,h*.87,w*.245,h)
+      ..lineTo(0,h)..close();
+    canvas.drawPath(left,Paint()..shader=LinearGradient(
+      begin:Alignment.topLeft,end:Alignment.bottomRight,
+      colors:[mint.withValues(alpha:.96),
+        const Color(0xFF3C928F).withValues(alpha:.37),
+        const Color(0xFF122E39).withValues(alpha:.07)],
+    ).createShader(Rect.fromLTWH(0,h*.64,w*.25,h*.4)));
+
+    final right=Path()
+      ..moveTo(w*.765,h)
+      ..cubicTo(w*.87,h*.95,w*.965,h*.79,w,h*.655)
+      ..lineTo(w,h)..close();
+    canvas.drawPath(right,Paint()..shader=LinearGradient(
+      begin:Alignment.topLeft,end:Alignment.bottomRight,
+      colors:[const Color(0xFF1B4950).withValues(alpha:.3),
+        const Color(0xFF65ECD2).withValues(alpha:.93),mint],
+    ).createShader(Rect.fromLTWH(w*.74,h*.65,w*.26,h*.36)));
+  }
+
+  @override
+  bool shouldRepaint(covariant _FittedApprovedWaves oldDelegate) =>
+    oldDelegate.mint!=mint;
 }
