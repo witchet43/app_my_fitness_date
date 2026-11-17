@@ -56,8 +56,8 @@ class _FittedColorPickerState extends State<FittedColorPicker>{
   Widget build(BuildContext context){
     final c=hsv.toColor();
     final fg=c.computeLuminance()>.44?Colors.black87:Colors.white;
-    final pickerWidth=(MediaQuery.sizeOf(context).width-112)
-      .clamp(200.0,360.0).toDouble();
+    final pickerWidth=(MediaQuery.sizeOf(context).width-160)
+      .clamp(160.0,360.0).toDouble();
     return AlertDialog(
       key:const Key('brand-hsv-picker'),
       title:Text('Color: ${widget.label}'),
