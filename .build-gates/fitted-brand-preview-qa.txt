@@ -1,1 +1,1 @@
-Staging validation: preview-only, 100+ fonts, logo designs, drafts and full Flutter tests.
+Run QA after matching updated athletic duo vector in privacy & terms assertion.
