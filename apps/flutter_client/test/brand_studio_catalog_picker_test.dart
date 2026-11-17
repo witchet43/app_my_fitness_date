@@ -3,9 +3,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:my_fitness_date/src/core/live_brand.dart';
 import 'package:my_fitness_date/src/widgets/fitted_color_picker.dart';
 import 'package:my_fitness_date/src/widgets/fitted_logo_catalog.dart';
+import 'package:my_fitness_date/src/widgets/fitted_font_catalog.dart';
 import 'package:my_fitness_date/src/widgets/mfd_branding.dart';
 
 void main(){
+  test('font catalogue offers over 100 real Google Font families',(){
+    expect(FittedFontCatalog.available.length,greaterThan(100));
+    expect(FittedFontCatalog.accepts('Arial'),isTrue);
+    expect(FittedFontCatalog.accepts('Montserrat'),isTrue);
+    expect(FittedFontCatalog.accepts('___UNTRUSTED___'),isFalse);
+  });
+
+  test('athletic icon names describe movement, shared activities and fitness',(){
+    expect(FittedLogoCatalog.names.length,21);
+    expect(FittedLogoCatalog.names[1],'Zancada compartida');
+    expect(FittedLogoCatalog.names[2],'Fuerza en pareja');
+    expect(FittedLogoCatalog.names[3],'Ciclismo en dúo');
+    expect(FittedLogoCatalog.names.toSet().length,21);
+  });
+
   test('twenty distinct vector proposals plus approved F are stable IDs',(){
     expect(FittedLogoCatalog.names.length,21);
     expect(FittedLogoCatalog.descriptions.length,21);
