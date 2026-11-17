@@ -14,6 +14,7 @@ name: Fitted - canonical unified authentication release
 # Compact welcome and bilingual cover tested before canonical deployment.
 # Public smoke now validates the Slate Mint launcher, HTML cache keys and theme.
 # Approved photo edition: original couple reference locally bundled; no stock photo substitutions.
+# Verify SHA256 of the exact user-approved artwork in source and public deployment.
 on:
   push:
     branches: [main]
@@ -85,6 +86,12 @@ jobs:
           landing=Path("apps/flutter_client/lib/src/features/public_entry_shell.dart").read_text()
           member=Path("apps/flutter_client/lib/src/member_v26_app.dart").read_text()
           assert "FitnessDateApp(api:ApiClient())" not in source, "Legacy public app can still boot"
+          import hashlib
+          artwork=Path('apps/flutter_client/assets/branding/fitted_approved_cover_reference.png')
+          assert artwork.is_file(), 'Approved couple image missing'
+          assert hashlib.sha256(artwork.read_bytes()).hexdigest() == '58cec73adf728f2bcaef85626a3b49dd381db4bb102028e50b0cc58567113107'
+          assert 'landing-create-profile' not in landing
+          assert '_approvedPair()' in landing
           assert "anonymous-pace-tool" not in landing
           assert "Acceso aún no configurado" not in landing
           assert "popUntil((route) => route.isFirst)" in member
@@ -172,7 +179,7 @@ jobs:
       - name: End-to-end verify canonical HTTP release and legal pages
         run: |
           python3 - <<'PY'
-          import json,subprocess,urllib.request,time
+          import json,subprocess,urllib.request,time,hashlib
           home="https://my-fitness-date.pages.dev"
           sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
           def get(path):
@@ -197,6 +204,8 @@ jobs:
                   assert info["pulso_real_feedback_enabled"] is False
                   assert b"flutter" in get("/").lower()
                   assert len(get("/main.dart.js"))>1000
+                  approved=get("/assets/assets/branding/fitted_approved_cover_reference.png")
+                  assert hashlib.sha256(approved).hexdigest()=="58cec73adf728f2bcaef85626a3b49dd381db4bb102028e50b0cc58567113107", "Approved image mismatch on Cloudflare"
                   html=get("/").decode("utf-8")
                   assert "favicon.png?v=slate-mint-v1" in html
                   assert "manifest.json?v=slate-mint-v1" in html
