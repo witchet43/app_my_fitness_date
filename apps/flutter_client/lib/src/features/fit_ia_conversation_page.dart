@@ -91,11 +91,16 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     try{
       final response=await widget.repository.fitIaAnswer(
         pillar,q['id'].toString(),key,locale:en?'en':'es');
-      final result=await widget.repository.fitIaOverview();
       if(!mounted)return;
       setState((){
-        state=response;overview=result;error=null;
+        state=response;error=null;
       });
+      // An overview refresh must never make a successfully saved answer
+      // appear to fail or get submitted twice after a network hiccup.
+      try{
+        final result=await widget.repository.fitIaOverview();
+        if(mounted)setState(()=>overview=result);
+      }catch(_){/* The answered question is already durably persisted. */}
       _scrollBottom();
       if(aiEnabled&&totalAnswers>=5&&
         (totalAnswers==5||(totalAnswers-5)%3==0)){
