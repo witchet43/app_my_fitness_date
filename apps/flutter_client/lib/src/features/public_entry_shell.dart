@@ -131,8 +131,14 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
   Widget _message(LiveBrandSettings brand,double scale,bool wide) {
     final title=FittedTranslations.translate(
       brand.title,FittedLocaleScope.languageOf(context));
-    final description=FittedTranslations.translate(
+    final rawDescription=FittedTranslations.translate(
       brand.description,FittedLocaleScope.languageOf(context));
+    final description=rawDescription==
+      'Entrenamiento, bienestar y un estilo de vida activo. Conecta con personas que comparten tus intereses, valores y pasión por el movimiento.'
+      ?'Entrenamiento, bienestar y un estilo de vida activo.\n'
+       'Conecta con personas que comparten tus intereses,\n'
+       'valores y pasión por el movimiento.'
+      :rawDescription;
     final titleStyle=TextStyle(
       color:FitDateColors.pearl,fontFamily:brand.font,
       fontSize:wide?70*scale:37,fontWeight:FontWeight.w800,
