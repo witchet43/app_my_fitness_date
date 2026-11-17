@@ -538,7 +538,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   Future<void> configurePillars([int initialPillar=0])async{
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder:(_)=>FitIaConversationPage(
-        repository:widget.api,initialPillar:initialPillar)));
+        repository:widget.api,initialPillar:initialPillar,
+        ownerId:widget.api.auth.auth.currentUser?.id ?? '')));
     if(mounted)await reload();
   }
 
