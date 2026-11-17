@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,18 +5,17 @@ import 'package:my_fitness_date/src/core/live_brand.dart';
 import 'package:my_fitness_date/src/features/public_entry_shell.dart';
 
 void main() {
-  testWidgets('approved Fitted photograph is the exact bundled 1672x941 asset',
-      (tester) async {
+  test('approved Fitted photograph is the exact bundled 1672x941 PNG',
+      () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
     final data=await rootBundle.load(
       'assets/branding/fitted_approved_cover_reference.png');
     expect(data.lengthInBytes,greaterThan(1000000));
-    final bytes=data.buffer.asUint8List();
-    final codec=await ui.instantiateImageCodec(bytes);
-    final frame=await codec.getNextFrame();
-    expect(frame.image.width,1672);
-    expect(frame.image.height,941);
-    frame.image.dispose();
-    codec.dispose();
+    // PNG's IHDR records original dimensions at byte offsets 16 and 20.
+    // Read it without a frame codec: image decoding inside fake-async widget
+    // tests can block a CI runner while waiting for the native engine.
+    expect(data.getUint32(16),1672);
+    expect(data.getUint32(20),941);
   });
 
   testWidgets('desktop cover is a SINGLE panel with portrait floating above',
