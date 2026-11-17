@@ -1,0 +1,1 @@
+Validate single AI preference, first-login choice, Flutter analysis/tests, release build.
