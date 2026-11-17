@@ -17,6 +17,7 @@ import 'fitted_age_admin_b14.dart';
 import 'community_moderation_b4.dart';
 import 'gym_catalog_admin_b11.dart';
 import 'match_calculator_admin.dart';
+import 'fit_ia_admin_page.dart';
 import 'activities_b1.dart';
 import 'admin_curated_activities_b2.dart';
 import '../widgets/mfd_branding.dart';
@@ -52,11 +53,11 @@ class BrandAdminHome extends StatefulWidget {
 
 class _BrandAdminHomeState extends State<BrandAdminHome> {
   static const _tabs = <String>[
-    'Resumen', 'Diseñador de Marca', 'Calculadora del match', 'Biblioteca', 'Mis diseños', 'Historial'
+    'Resumen', 'Diseñador de Marca', 'Calculadora del match', 'Biblioteca', 'Mis diseños', 'Historial', 'Fit-IA'
   ];
   static const _englishTabs = <String>[
     'Overview', 'Brand Designer', 'Match Calculator',
-    'Library', 'My Designs', 'History',
+    'Library', 'My Designs', 'History', 'Fit-IA',
   ];
   String tabLabel(int index) =>
     FittedLocaleScope.languageOf(context)=='en'
@@ -68,7 +69,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     Icons.tune_outlined,
     Icons.collections_outlined,
     Icons.layers_outlined,
-    Icons.history_outlined
+    Icons.history_outlined,
+    Icons.auto_awesome_outlined,
   ];
   static const _paletteSeeds = <Map<String, String>>[
     {'name':'Fitted · Pizarra y Plata','primary':'#DDE7EC','accent':'#8196A2','background':'#1A2D38'},
@@ -1448,7 +1450,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       ])));
     return switch(tab) {
       0=>_summary(),1=>_editor(),2=>MatchCalculatorAdmin(client:widget.liveBrand.client),
-      3=>_library(),4=>_drafts(),_=>_publication(),
+      3=>_library(),4=>_drafts(),5=>_publication(),
+      6=>FitIaAdminPage(repository:SupabaseFitIaAdminRepository(
+        widget.liveBrand.client)),
+      _=>_summary(),
     };
   }
 

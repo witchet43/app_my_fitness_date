@@ -413,9 +413,21 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       }
       throw const MemberApiException('Fit-IA devolvió una respuesta inesperada.');
     }on MemberApiException{rethrow;}
-    catch(_){
+    on FunctionException catch(e){
+      if(e.status==401)throw const MemberApiException(
+        'Tu sesión venció. Vuelve a iniciar sesión para conversar.');
+      if(e.status==403)throw const MemberApiException(
+        'No tienes permiso para abrir esta conversación.');
+      if(e.status==409)throw const MemberApiException(
+        'La pregunta cambió. Recarga la conversación para continuar.');
+      if(e.status==429)throw const MemberApiException(
+        'Fit-IA alcanzó el límite temporal de solicitudes.');
       throw const MemberApiException(
-        'No pudimos conectar con Fit-IA. Inténtalo de nuevo.');
+        'Fit-IA no respondió correctamente. Intenta actualizar la pantalla.');
+    }catch(_){
+      throw const MemberApiException(
+        'No se pudo establecer conexión con Fit-IA. '
+        'Verifica tu red o actualiza la página.');
     }
   }
 
@@ -431,6 +443,16 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       });
   @override
   Future<Map<String,dynamic>> fitIaOverview()=>_fitIa('overview');
+  @override
+  Future<Map<String,dynamic>> fitIaForm(String pillar)=>
+      _fitIa('form',{'pillar':pillar});
+  @override
+  Future<Map<String,dynamic>> fitIaSubmitForm(
+      String pillar,List<Map<String,String>> answers)=>
+      _fitIa('form_submit',{'pillar':pillar,'answers':answers});
+  @override
+  Future<Map<String,dynamic>> fitIaInsights(String pillar)=>
+      _fitIa('insights',{'pillar':pillar});
   @override
   Future<Map<String,dynamic>> fitIaConsent(bool enabled)=>
       _fitIa('consent',{'enabled':enabled});
