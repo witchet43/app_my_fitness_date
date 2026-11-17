@@ -452,7 +452,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
           child: PaceCalculator(),
         ),
         SizedBox(height: 20),
-        const _ComingSoonCard(
+        _ComingSoonCard(
           icon: Icons.event_available_outlined,
           title: 'Actividades para compartir',
           description: 'Encuentros deportivos, grupos y eventos '
@@ -497,7 +497,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _StatusPill(
+              _StatusPill(
                 title: 'VISTA PREVIA · SIN PERFILES REALES',
                 color: FitDateColors.coral,
               ),
@@ -600,7 +600,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
           ),
         ),
         SizedBox(height: 18),
-        const _ComingSoonCard(
+        _ComingSoonCard(
           icon: Icons.verified_user_outlined,
           title: 'Conexiones seguras, primero',
           description: 'Antes de abrir FitDating habrá verificación de edad, '
@@ -659,7 +659,7 @@ class _Eyebrow extends StatelessWidget {
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.title, required this.color});
+  _StatusPill({required this.title, required this.color});
 
   final String title;
   final Color color;
@@ -712,7 +712,7 @@ class _HeroCopy extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _StatusPill(
+        _StatusPill(
           title: 'MOVIMIENTO + CONEXIONES REALES',
           color: FitDateColors.lime,
         ),
@@ -1024,7 +1024,7 @@ class _PrivacyBanner extends StatelessWidget {
 }
 
 class _ComingSoonCard extends StatelessWidget {
-  const _ComingSoonCard({
+  _ComingSoonCard({
     required this.icon,
     required this.title,
     required this.description,
