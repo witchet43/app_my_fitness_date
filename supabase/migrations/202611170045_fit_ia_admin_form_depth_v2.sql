@@ -189,12 +189,12 @@ create or replace function public.fit_ia_admin_save_question_v2(
  p_choices_es jsonb,p_choices_en jsonb,p_enabled boolean)
 returns jsonb language plpgsql security definer set search_path=''
 as $$
-declare pillar text; i int;
+declare v_pillar text; i int;
 begin
  if not app_private.is_brand_administrator(true) then
   raise exception 'admin_mfa_required' using errcode='42501';end if;
- select q.pillar into pillar from public.fit_ia_questions_v1 q where q.id=p_id;
- if pillar is null then raise exception 'unknown_question';end if;
+ select q.pillar into v_pillar from public.fit_ia_questions_v1 q where q.id=p_id;
+ if v_pillar is null then raise exception 'unknown_question';end if;
  if p_topic is null or p_topic!~'^[a-z_]{3,40}$' or
   length(trim(coalesce(p_prompt_es,''))) not between 15 and 250 or
   length(trim(coalesce(p_prompt_en,''))) not between 15 and 250 or
@@ -203,14 +203,15 @@ begin
   jsonb_array_length(p_choices_es)<>4 or jsonb_array_length(p_choices_en)<>4
  then raise exception 'invalid_question' using errcode='22023';end if;
  for i in 0..3 loop
-  if p_choices_es->i->>'key'<>'opt_'||(i+1)::text or
-     p_choices_en->i->>'key'<>'opt_'||(i+1)::text or
+  if p_choices_es->i->>'key'<>('opt_'||(i+1)::text) or
+     p_choices_en->i->>'key'<>('opt_'||(i+1)::text) or
      length(trim(coalesce(p_choices_es->i->>'label',''))) not between 2 and 90 or
      length(trim(coalesce(p_choices_en->i->>'label',''))) not between 2 and 90
   then raise exception 'invalid_option' using errcode='22023';end if;
  end loop;
+ if p_enabled is null then raise exception 'invalid_enabled';end if;
  if not p_enabled and (select count(*) from public.fit_ia_questions_v1
-   where enabled and pillar=fit_ia_admin_save_question_v2.pillar)<=1 then
+   where enabled and pillar=v_pillar)<=1 then
    raise exception 'at_least_one_question_required';end if;
  update public.fit_ia_questions_v1 set topic=p_topic,
   prompt_es=trim(p_prompt_es),prompt_en=trim(p_prompt_en),
