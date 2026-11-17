@@ -59,7 +59,7 @@ function plain(text:unknown,max=220):string{
   return value;
 }
 async function completion(messages:{role:string;content:string}[],
-  tokenLimit=100):Promise<string|null>{
+  tokenLimit=100,asJson=false):Promise<string|null>{
   if(!openAi)return null;
   try{
     const r=await fetch("https://api.openai.com/v1/chat/completions",{
@@ -68,6 +68,7 @@ async function completion(messages:{role:string;content:string}[],
         "content-type":"application/json"},
       body:JSON.stringify({
         model,temperature:.5,max_tokens:tokenLimit,messages,
+        ...(asJson?{response_format:{type:"json_object"}}:{}),
       }),
       signal:AbortSignal.timeout(9500),
     });
@@ -87,13 +88,16 @@ function canned(pillar:string,choice:string,es:boolean):string{
   if(pillar==="live")return "That fits you: "+short+". Let's get to know another part of everyday life.";
   return "Thanks for sharing: "+short+". Let's explore another part of how you connect.";
 }
-async function reaction(pillar:string,chosen:string,aiEnabled:boolean):Promise<string>{
-  const fallback=canned(pillar,chosen,true);
+async function reaction(pillar:string,chosen:string,aiEnabled:boolean,
+  locale:string):Promise<string>{
+  const english=locale==="en";
+  const fallback=canned(pillar,chosen,!english);
   if(!aiEnabled||!openAi)return fallback;
   const text=await completion([
     {role:"system",content:
       "You are Fit-IA, an elegant, kind conversational assistant for adults. "+
-      "Write one short natural sentence in Latin American Spanish (maximum 150 chars) "+
+      (english?"Write one short sentence in English (maximum 150 chars) ":
+        "Write one short natural sentence in Latin American Spanish (maximum 150 chars) ")+
       "acknowledging the selected answer, followed by a brief transition to a "+
       "new question. No diagnosis, no personality inferences, no flattery, "+
       "no judgement, no precise routines or locations. Never mention scores. "+
@@ -132,7 +136,7 @@ async function createSummary(token:string,uid:string,force=false):Promise<Json>{
       "Each summary 160-1050 characters, 1-3 flowing paragraphs. "+
       "Do not use any relationship compatibility or completeness percentages."},
     {role:"user",content:scrub(data.answers)},
-  ],1280);
+  ],1280,true);
   if(!response)return {status:"ai_unavailable"};
   let output:Json;
   try{output=JSON.parse(response) as Json;}catch(_){return {status:"invalid_ai_response"};}
@@ -181,8 +185,10 @@ Deno.serve(async(req)=>{
         p_choice_key:body.choice_key,
       },bearer);
       const before=await rpc<Json>("fit_ia_state_v1",{p_pillar:body.pillar},bearer);
+      const language=body.locale==="en"?"en":"es";
       const comment=await reaction(String(body.pillar),
-        String(answer.chosen_es??""),before.ai_enabled===true);
+        String(language==="en"?answer.chosen_en:answer.chosen_es??""),
+        before.ai_enabled===true,language);
       const next=await rpc<Json>("fit_ia_next_v1",{
         p_pillar:body.pillar,p_reaction:comment,
       },bearer);
