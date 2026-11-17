@@ -344,11 +344,15 @@ class _MemberV26AppState extends State<MemberV26App> {
     email.dispose();password.dispose();
   }
 
-  Future<void> acceptLegal() async {
+  Future<void> acceptLegal(bool aiConsent) async {
     setState(()=>busy=true);
     try{
       await widget.api.acceptConsent('terms',widget.termsVersion);
       await widget.api.acceptConsent('privacy',widget.privacyVersion);
+      // Explicit opt-in is collected with registration/legal setup, never
+      // automatically inferred from agreement to terms or privacy.
+      await widget.api.setFittedAiAccountPreference(
+        aiConsent,source:'onboarding');
       await refresh();
     }catch(_){
       if(mounted)setState(()=>failure='No pudimos registrar tu consentimiento.');
@@ -527,7 +531,7 @@ class _LegalGate extends StatefulWidget {
   final String termsUrl;
   final String privacyUrl;
   final bool submitting;
-  final VoidCallback onAccept;
+  final void Function(bool aiConsent) onAccept;
   final VoidCallback onLogout;
   @override
   State<_LegalGate> createState()=>_LegalGateState();
@@ -536,6 +540,7 @@ class _LegalGateState extends State<_LegalGate> {
   bool terms=false;
   bool privacy=false;
   bool adult=false;
+  bool aiConsent=false;
   Future<void> open(String url) async {
     final uri=Uri.tryParse(url);
     if(uri!=null && uri.scheme=='https') {
@@ -571,10 +576,18 @@ class _LegalGateState extends State<_LegalGate> {
           subtitle:FittedText('La declaración no sustituye '
             'la verificación externa de edad.'),
           value:adult,onChanged:(v)=>setState(()=>adult=v??false)),
+        CheckboxListTile(
+          key:const Key('fitted-registration-ai-opt-in'),
+          title:FittedText('Autorizo el uso de inteligencia artificial'),
+          subtitle:FittedText('Las conversaciones y resúmenes privados '
+            'pueden procesarse mediante OpenAI. Es opcional, puedes '
+            'cambiarlo después en Configuración y no publica tu perfil.'),
+          value:aiConsent,
+          onChanged:(value)=>setState(()=>aiConsent=value??false)),
         FilledButton(
           key:Key('v26-accept-legal'),
           onPressed:terms&&privacy&&adult&&!widget.submitting
-            ?widget.onAccept:null,
+            ?()=>widget.onAccept(aiConsent):null,
           child:FittedText(widget.submitting?'Guardando...':'Continuar')),
         TextButton(onPressed:widget.onLogout,
           child:FittedText('Salir de mi cuenta')),

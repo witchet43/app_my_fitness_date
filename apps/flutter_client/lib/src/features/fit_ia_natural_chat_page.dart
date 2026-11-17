@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../core/fit_ia_repository.dart';
 import '../core/fitted_locale.dart';
+import '../core/live_brand.dart';
 import '../widgets/fit_ia_mascot.dart';
 
 /// Fit-IA v3 is AI-only. Curated questions are model guidance, never a
@@ -29,6 +30,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
   static const icons=[Icons.directions_run_outlined,
     Icons.spa_outlined,Icons.people_outline];
   bool get english=>FittedLocaleScope.languageOf(context)=='en';
+  String get assistantName=>LiveBrandScope.of(context).assistantName;
   String tr(String es,String en)=>english?en:es;
   String get pillar=>keys[active];
   bool get enabled=>data?['ai_enabled']==true;
@@ -77,8 +79,18 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
     final selected=pillar;
     setState((){loading=true;issue=null;});
     try{
-      final result=await widget.repository.fitIaChatState(selected,
+      var result=await widget.repository.fitIaChatState(selected,
         locale:english?'en':'es');
+      // A member's existing account-wide opt-in is sufficient. Repair the
+      // legacy per-pillar flag without another permission dialog.
+      if(result['ai_enabled']!=true && widget.repository is FitIaAccountConsentSync){
+        final synced=await (widget.repository as FitIaAccountConsentSync)
+          .fitIaSyncAccountConsent();
+        if(synced){
+          result=await widget.repository.fitIaChatState(selected,
+            locale:english?'en':'es');
+        }
+      }
       if(!mounted||pillar!=selected)return;
       setState((){
         data=result;loading=false;
@@ -193,8 +205,8 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       setState((){
         data=reply;
         if(reply['status']=='ai_unavailable'){
-          notice=tr('Fit-IA aún no responde; tu texto permanece guardado.',
-            'Fit-IA is still unavailable; your text remains saved.');
+          notice=tr('El asistente aún no responde; tu texto permanece guardado.',
+            'The assistant is still unavailable; your text remains saved.');
         }
       });
       _scrollBottom();unawaited(_refreshInsights());
@@ -203,46 +215,6 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
         'No fue posible recuperar la respuesta. Reintenta.',
         'Could not recover the reply. Please retry.'));
     }finally{if(mounted)setState(()=>sending=false);}
-  }
-  Future<void> _consent()async{
-    if(busyConsent)return;
-    final accepted=await showDialog<bool>(context:context,
-      builder:(dialog)=>AlertDialog(
-        title:Text(tr('Conversar con Fit-IA','Chat with Fit-IA')),
-        content:Text(tr(
-          'Fit-IA utiliza OpenAI para dirigir la conversación y generar '
-          'resúmenes privados. Tus respuestas escritas se enviarán al '
-          'proveedor de IA después de filtrar datos de contacto '
-          'detectables. Los filtros pueden no detectar todos los datos. '
-          'El historial permanece en tu cuenta, '
-          'no se comparte con otros miembros y puedes eliminarlo. '
-          'Activar también habilita la IA de tu cuenta.',
-          'Fit-IA uses OpenAI to lead the conversation and write '
-          'private summaries. Your typed messages are processed by '
-          'the AI provider after detectable contact details are filtered. '
-          'These filters may not detect every sensitive detail. '
-          'Your history stays in your account, is not shared with '
-          'other members and may be deleted. Enabling also activates '
-          'account-wide AI.')),
-        actions:[
-          TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:Text(tr('Ahora no','Not now'))),
-          FilledButton(
-            key:const Key('fit-ia-confirm-consent'),
-            onPressed:()=>Navigator.pop(dialog,true),
-            child:Text(tr('Activar Fit-IA','Enable Fit-IA'))),
-        ],
-      ));
-    if(accepted!=true||!mounted)return;
-    setState(()=>busyConsent=true);
-    try{
-      await widget.repository.fitIaConsent(true);
-      if(mounted)await _load();
-    }catch(_){
-      if(mounted)setState(()=>issue=tr(
-        'No fue posible activar la conversación con IA.',
-        'Could not activate AI conversation.'));
-    }finally{if(mounted)setState(()=>busyConsent=false);}
   }
   Future<void> _disable()async{
     if(busyConsent)return;
@@ -331,7 +303,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
                 padding:const EdgeInsets.all(13),
                 child:Column(
                   crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    Text(own?tr('Tú','You'):'Fit-IA',
+                    Text(own?tr('Tú','You'):assistantName,
                       style:theme.textTheme.labelSmall?.copyWith(
                         color:theme.colorScheme.primary,
                         fontWeight:FontWeight.w800)),
@@ -370,7 +342,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
             child:Row(mainAxisSize:MainAxisSize.min,children:[
               const FitIaMascot(size:27),
               const SizedBox(width:8),
-              Text(tr('Fit-IA está pensando…','Fit-IA is thinking…')),
+              Text(tr('$assistantName está pensando…','$assistantName is thinking…')),
               const SizedBox(width:9),
               const SizedBox(width:14,height:14,
                 child:CircularProgressIndicator(strokeWidth:2)),
@@ -391,20 +363,21 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       return Padding(padding:const EdgeInsets.all(16),
         child:Column(mainAxisSize:MainAxisSize.min,
           crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-            Text(tr('Fit-IA conversa contigo utilizando IA',
-              'Fit-IA chats with you using AI'),
+            Text(tr('Conversación con IA no disponible',
+              'AI conversation unavailable'),
               style:theme.textTheme.titleMedium),
             const SizedBox(height:8),
-            Text(tr('Autoriza el uso de IA para comenzar o continuar '
-              'tu conversación privada.',
-              'Allow AI processing to begin or continue your private chat.'),
+            Text(tr('Comprueba en Cuenta → Configuración que autorizaste '
+              'la IA durante el registro. Si ya la autorizaste, recarga.',
+              'Check your account settings for the AI choice made during '
+              'registration. If already enabled, reload.'),
               style:theme.textTheme.bodySmall),
             const SizedBox(height:11),
-            FilledButton.icon(
-              key:const Key('fit-ia-enable-ai'),
-              onPressed:busyConsent?null:_consent,
-              icon:const Icon(Icons.verified_user_outlined),
-              label:Text(tr('Activar Fit-IA','Enable Fit-IA'))),
+            OutlinedButton.icon(
+              key:const Key('fit-ia-reload-consent'),
+              onPressed:loading?null:_load,
+              icon:const Icon(Icons.refresh_outlined),
+              label:Text(tr('Recargar conversación','Reload chat'))),
           ]),
       );
     }
@@ -466,7 +439,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
             const FitIaMascot(size:54),const SizedBox(width:12),
             Expanded(child:Column(
               crossAxisAlignment:CrossAxisAlignment.start,children:[
-                Text('Fit-IA',style:theme.textTheme.titleLarge?.copyWith(
+                Text(assistantName,style:theme.textTheme.titleLarge?.copyWith(
                   fontWeight:FontWeight.w800)),
                 Text(english?FitIaDepth.labelsEn[active]:
                   FitIaDepth.labelsEs[active],
@@ -587,7 +560,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
     return Scaffold(
       key:const Key('fit-ia-natural-conversation-page'),
       appBar:AppBar(
-        title:const Text('Fit-IA'),
+        title:Text(assistantName),
         actions:[
           PopupMenuButton<String>(
             tooltip:tr('Privacidad','Privacy'),
@@ -615,8 +588,8 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
               Align(alignment:Alignment.centerLeft,
                 child:Column(crossAxisAlignment:CrossAxisAlignment.start,
                   children:[
-                    Text(tr('Tu espacio con Fit-IA',
-                      'Your space with Fit-IA'),
+                    Text(tr('Tu espacio con $assistantName',
+                      'Your space with $assistantName'),
                       style:Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight:FontWeight.w800)),
                     const SizedBox(height:9),

@@ -84,6 +84,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   ];
 
   final name = TextEditingController(text:'Fitted');
+  final assistantName = TextEditingController(text:'Fit-IA');
   final tagline = TextEditingController(text:'Conexiones con intención.');
   final headline = TextEditingController(text:'Personas afines a tu forma de vivir.');
   final description = TextEditingController(
@@ -122,7 +123,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   @override
   void initState() {
     super.initState();
-    for (final c in [name,tagline,headline,description,
+    for (final c in [name,assistantName,tagline,headline,description,
       paletteName,primary,accent,background]) {
       c.addListener(_redraw);
     }
@@ -145,7 +146,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
   @override
   void dispose() {
     widget.liveBrand.removeListener(_observeBrand);
-    for (final c in [name,tagline,headline,description,paletteName,
+    for (final c in [name,assistantName,tagline,headline,description,paletteName,
       primary,accent,background,draftTitle]) {
       c.dispose();
     }
@@ -393,6 +394,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     final settings=widget.liveBrand.current;
     setState((){
       name.text=settings.name;
+      assistantName.text=settings.assistantName;
       tagline.text=settings.tagline;
       headline.text=settings.title;
       description.text=settings.description;
@@ -457,6 +459,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     final selectedLogo=pending['logo'].toString();
     if(!validPalette ||
        name.text.trim().length<2 || name.text.trim().length>60 ||
+       assistantName.text.trim().length<2 || assistantName.text.trim().length>40 ||
        tagline.text.trim().length<2 || tagline.text.trim().length>120 ||
        headline.text.trim().length<8 || headline.text.trim().length>180 ||
        description.text.trim().length<10 || description.text.trim().length>600 ||
@@ -527,6 +530,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
 
   Map<String, dynamic> _settings() => {
     'name':name.text.trim(),
+    'assistantName':assistantName.text.trim(),
     'tagline':tagline.text.trim(),
     'title':headline.text.trim(),
     'description':description.text.trim(),
@@ -953,6 +957,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
           FittedText('Nombre y comunicación',style:Theme.of(context).textTheme.titleLarge),
           const SizedBox(height:12),
           _field(name,'Nombre de la aplicación'),
+          _field(assistantName,'Nombre del asistente de IA'),
           _field(tagline,'Lema'),
           _field(headline,'Título de portada'),
           _field(description,'Presentación',lines:3),

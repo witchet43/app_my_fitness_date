@@ -58,3 +58,8 @@ abstract final class FitIaDepth {
       ?(x['answered'] as num).toInt():0;
   }
 }
+
+/// Optional migration bridge for accounts that already consented to AI.
+abstract interface class FitIaAccountConsentSync {
+  Future<bool> fitIaSyncAccountConsent();
+}
