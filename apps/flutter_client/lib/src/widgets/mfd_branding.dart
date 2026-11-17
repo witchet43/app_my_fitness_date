@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/live_brand.dart';
 import '../theme/fitness_date_theme.dart';
+import 'fitted_logo_catalog.dart';
 
 
 /* Shared translucent silver F. The two flowing strokes evoke motion and
@@ -59,18 +60,7 @@ class MfdBranding extends StatelessWidget {
   });
   final bool full;
   final double width;
-  static const _catalog = <IconData>[
-    Icons.diamond_outlined,
-    Icons.graphic_eq,
-    Icons.landscape_outlined,
-    Icons.hub_outlined,
-    Icons.multiline_chart,
-    Icons.explore_outlined,
-    Icons.timeline,
-    Icons.waves_outlined,
-    Icons.diamond_outlined,
-    Icons.auto_graph_outlined,
-  ];
+
 
   @override
   Widget build(BuildContext context) {
@@ -90,9 +80,10 @@ class MfdBranding extends StatelessWidget {
         errorBuilder:(context,error,stackTrace)=>Icon(
           Icons.auto_awesome,color:Color(0xFFB5C5CE),size:32),
       );
-    } else if (index != null && index > 0 && index < _catalog.length) {
-      image = FittedBox(child:Icon(_catalog[index],
-        color:brand.primaryColor,size:64));
+    } else if (index != null && index > 0 && index < FittedLogoCatalog.count) {
+      image = LayoutBuilder(builder:(_,box)=>FittedLogoGlyph(
+        index:index,size:box.biggest.shortestSide,
+        primary:brand.primaryColor,accent:brand.accentColor));
     } else {
       image = LayoutBuilder(
         builder:(_,box)=>FittedMintMark(
