@@ -223,7 +223,10 @@ class _FittedFontMenuState extends State<FittedFontMenu>{
           f.toLowerCase().contains(search.text.trim().toLowerCase())).toList();
         return AlertDialog(
           title:const Text('Elegir tipografía'),
-          content:SizedBox(width:460,height:440,child:Column(children:[
+          content:SizedBox(
+            width:(MediaQuery.sizeOf(ctx).width-120).clamp(140.0,460.0),
+            height:(MediaQuery.sizeOf(ctx).height-220).clamp(220.0,440.0),
+            child:Column(children:[
             TextField(key:const Key('brand-font-search'),controller:search,
               autofocus:true,
               onChanged:(_)=>refresh((){}),
