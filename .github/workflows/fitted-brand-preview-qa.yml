@@ -1,0 +1,53 @@
+name: Fitted brand editor staged preview font and logo QA
+on:
+  push:
+    branches: [feature/fitted-brand-editor-preview-save-fonts-icons-drafts-20261116]
+    paths:
+      - .build-gates/fitted-brand-preview-qa.txt
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Brand staging, migration and legal integrity
+        run: |
+          python3 scripts/check_public_legal.py
+          node --check apps/flutter_client/cloudflare/brand-legal.js
+          node scripts/test_fitted_legal_brand.cjs
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path("apps/flutter_client/lib/src/features/brand_admin_home.dart").read_text()
+          assert "_queueBrandSave" not in a and "Timer(" not in a
+          assert "brand-publish-save" in a and "Cambios sin publicar" in a
+          assert "Guardar diseño para después" in a
+          fonts=Path("apps/flutter_client/lib/src/widgets/fitted_font_catalog.dart").read_text()
+          assert "GoogleFontsLite.getFont" in fonts and "GoogleFontsLite.getTextTheme" in fonts
+          logos=Path("apps/flutter_client/lib/src/widgets/fitted_logo_catalog.dart").read_text()
+          for text in ("Zancada compartida","Fuerza en pareja","Ciclismo en dúo"):
+              assert text in logos
+          sql=Path("supabase/migrations/202611170039_fitted_brand_font_catalog.sql").read_text()
+          assert "create or replace function app_private.valid_mfd_brand" in sql
+          print("Brand safety and catalogue static gate: PASS")
+          PY
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Prepare Flutter
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Analyze Dart
+        working-directory: apps/flutter_client
+        run: flutter analyze --no-fatal-infos
+      - name: Run entire Flutter suite
+        working-directory: apps/flutter_client
+        run: flutter test --reporter expanded
+      - name: Compile authenticated Flutter web
+        working-directory: apps/flutter_client
+        run: flutter build web --release --dart-define=MFD_V26_ENABLED=true
