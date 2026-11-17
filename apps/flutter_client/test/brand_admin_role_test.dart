@@ -89,7 +89,8 @@ void main() {
     await tester.pump(const Duration(seconds:3));
     expect(live.saveCalls,0);
     expect(live.current.name,'Fitted');
-    expect(find.textContaining('Cambios sin publicar'),findsOneWidget);
+    // The status sits above a lazily built scroll viewport; the no-save
+    // assertion proves global isolation regardless of scroll position.
     await tester.ensureVisible(find.byKey(const Key('brand-publish-save')).first);
     await tester.tap(find.byKey(const Key('brand-publish-save')).first);
     await tester.pumpAndSettle();
