@@ -1,1 +1,1 @@
-QA rerun after correcting raw Dart RegExp literal in live-brand parser.
+Run QA after fixing HSV AlertDialog intrinsic layout and verifying legal catalogue logos.
