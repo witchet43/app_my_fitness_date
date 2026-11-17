@@ -91,13 +91,14 @@ void main() {
     expect(live.current.name,'Fitted');
     // The status sits above a lazily built scroll viewport; the no-save
     // assertion proves global isolation regardless of scroll position.
-    // Scroll the lazy editor ListView back toward its top Save action.
-    await tester.dragUntilVisible(
-      find.byKey(const Key('brand-publish-save')).first,
-      find.byType(ListView).first,
-      const Offset(0,260),
-    );
-    await tester.pumpAndSettle();
+    // The long editor uses lazy ListView children; walk back to its header
+    // without asking Flutter to resolve an offscreen Finder.first.
+    for(var i=0;i<15 &&
+        find.byKey(const Key('brand-publish-save')).evaluate().isEmpty;i++){
+      await tester.drag(find.byType(ListView).first,const Offset(0,270));
+      await tester.pump();
+    }
+    expect(find.byKey(const Key('brand-publish-save')),findsWidgets);
     await tester.tap(find.byKey(const Key('brand-publish-save')).first);
     await tester.pumpAndSettle();
     expect(live.saveCalls,1);
