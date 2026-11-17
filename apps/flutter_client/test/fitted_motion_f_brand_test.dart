@@ -16,7 +16,8 @@ void main(){
     expect(FitDateColors.inkDeep,const Color(0xFF1A2D38));
     expect(FitDateColors.aqua,Color.lerp(
       const Color(0xFF8EF0D5),const Color(0xFFB7C6CF),.44));
-    expect(FitDateColors.pulsePink,const Color(0xFF6BD6B7));
+    expect(FitDateColors.pulsePink,Color.lerp(
+      const Color(0xFF68D4C7),const Color(0xFFB7C6CF),.42));
     final theme=brand.toTheme();
     expect(theme.colorScheme.primary,const Color(0xFF8EF0D5));
     expect(theme.scaffoldBackgroundColor,const Color(0xFF1A2D38));
