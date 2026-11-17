@@ -24,7 +24,7 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
   final older=<Map<String,dynamic>>[];
   bool olderHasMore=false,olderLoading=false;
   bool loading=true,sending=false,busyConsent=false;
-  String? issue,notice;
+  String? issue,notice,pendingPreview;
   static const keys=['move','live','relate'];
   static const icons=[Icons.directions_run_outlined,
     Icons.spa_outlined,Icons.people_outline];
@@ -151,13 +151,15 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
     if(!enabled||loading||sending||awaiting||
       value.isEmpty||value.length>1500)return;
     final key=pillar;
-    setState((){sending=true;issue=null;notice=null;});
+    setState((){
+      sending=true;issue=null;notice=null;pendingPreview=value;
+    });
     try{
       final result=await widget.repository.fitIaChatSend(
         key,value,_uuid(),locale:english?'en':'es');
       if(!mounted||key!=pillar)return;
       setState((){
-        data=result;
+        data=result;pendingPreview=null;
         if(suggested==null)editor.clear();
         if(result['status']=='ai_unavailable'){
           notice=tr('Guardé tu mensaje. Puedes recuperar '
@@ -169,11 +171,15 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       drafts[key]=editor.text;
       _scrollBottom();unawaited(_refreshInsights());
     }catch(_){
-      if(mounted&&key==pillar)setState(()=>issue=tr(
-        'No se confirmó el envío. Recarga la conversación '
-        'antes de intentar enviarlo otra vez.',
-        'Send not confirmed. Reload the conversation '
-        'before sending anything again.'));
+      if(mounted&&key==pillar)setState((){
+        pendingPreview=null;
+        if(suggested!=null)editor.text=value;
+        issue=tr(
+          'No se confirmó el envío. Recarga la conversación '
+          'antes de intentar enviarlo otra vez.',
+          'Send not confirmed. Reload the conversation '
+          'before sending anything again.');
+      });
     }finally{if(mounted)setState(()=>sending=false);}
   }
   Future<void> _retry()async{
@@ -206,13 +212,15 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
         content:Text(tr(
           'Fit-IA utiliza OpenAI para dirigir la conversación y generar '
           'resúmenes privados. Tus respuestas escritas se enviarán al '
-          'proveedor de IA después de ocultar los datos de contacto '
-          'detectables. El historial permanece en tu cuenta, '
+          'proveedor de IA después de filtrar datos de contacto '
+          'detectables. Los filtros pueden no detectar todos los datos. '
+          'El historial permanece en tu cuenta, '
           'no se comparte con otros miembros y puedes eliminarlo. '
           'Activar también habilita la IA de tu cuenta.',
           'Fit-IA uses OpenAI to lead the conversation and write '
           'private summaries. Your typed messages are processed by '
-          'the AI provider after detectable contact details are redacted. '
+          'the AI provider after detectable contact details are filtered. '
+          'These filters may not detect every sensitive detail. '
           'Your history stays in your account, is not shared with '
           'other members and may be deleted. Enabling also activates '
           'account-wide AI.')),
@@ -355,6 +363,8 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
           label:Text(tr('Mostrar mensajes anteriores',
             'Load earlier messages')))),
         for(final entry in history)_bubble(entry),
+        if(pendingPreview!=null)
+          _bubble({'role':'user','text':pendingPreview}),
         if(sending)
           Padding(padding:const EdgeInsets.all(12),
             child:Row(mainAxisSize:MainAxisSize.min,children:[
