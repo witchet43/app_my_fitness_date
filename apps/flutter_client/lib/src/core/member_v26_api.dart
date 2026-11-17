@@ -432,6 +432,16 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   @override
   Future<Map<String,dynamic>> fitIaOverview()=>_fitIa('overview');
   @override
+  Future<Map<String,dynamic>> fitIaForm(String pillar)=>
+      _fitIa('form',{'pillar':pillar});
+  @override
+  Future<Map<String,dynamic>> fitIaSubmitForm(
+      String pillar,List<Map<String,String>> answers)=>
+      _fitIa('form_submit',{'pillar':pillar,'answers':answers});
+  @override
+  Future<Map<String,dynamic>> fitIaInsights(String pillar)=>
+      _fitIa('insights',{'pillar':pillar});
+  @override
   Future<Map<String,dynamic>> fitIaConsent(bool enabled)=>
       _fitIa('consent',{'enabled':enabled});
   @override
