@@ -4,6 +4,9 @@ on:
     branches: [feature/fit-ia-natural-guided-chat-v3-20261117]
 permissions:
   contents: read
+concurrency:
+  group: fit-ia-v3-qa
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-latest
