@@ -22,6 +22,7 @@ class FakeBrandRepository extends BrandAdminRepository {
 }
 
 class FakeLiveBrand extends LiveBrandController {
+  int saveCalls=0;
   FakeLiveBrand(super.client) {
     loaded=true;
     current=LiveBrandSettings.fallback;
@@ -29,6 +30,14 @@ class FakeLiveBrand extends LiveBrandController {
   }
   @override
   Future<void> refresh() async {}
+  @override
+  Future<void> save(LiveBrandSettings proposed)async{
+    saveCalls++;
+    current=proposed;
+    version++;
+    loaded=true;
+    notifyListeners();
+  }
 }
 
 void main() {
@@ -61,6 +70,34 @@ void main() {
     expect(BrandAdminRepository.validHex('#ffffff;script'),isFalse);
   });
 
+  testWidgets('Changing designer settings never publishes before Save & publish',
+      (tester)async{
+    await tester.binding.setSurfaceSize(const Size(1200,900));
+    addTearDown(()=>tester.binding.setSurfaceSize(null));
+    final repository=FakeBrandRepository();
+    final live=FakeLiveBrand(repository.client);
+    await tester.pumpWidget(MaterialApp(home:BrandAdminHome(
+      repository:repository,liveBrand:live,
+      email:'brand-admin@example.invalid',onSignOut:()async{})));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Editar marca en vivo'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('brand-publish-save')),findsWidgets);
+    final brandField=find.widgetWithText(TextField,'Nombre de la aplicación');
+    await tester.ensureVisible(brandField);
+    await tester.enterText(brandField,'Fitted Preview Only');
+    await tester.pump(const Duration(seconds:3));
+    expect(live.saveCalls,0);
+    expect(live.current.name,'Fitted');
+    expect(find.textContaining('Cambios sin publicar'),findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('brand-publish-save')).first);
+    await tester.tap(find.byKey(const Key('brand-publish-save')).first);
+    await tester.pumpAndSettle();
+    expect(live.saveCalls,1);
+    expect(live.current.name,'Fitted Preview Only');
+    expect(tester.takeException(),isNull);
+  });
+
   testWidgets('Native admin dashboard uses member Flutter MaterialApp',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200,900));
@@ -79,7 +116,7 @@ void main() {
     expect(find.text('FitDating'),findsNothing);
     await tester.tap(find.text('Editar marca en vivo'));
     await tester.pumpAndSettle();
-    expect(find.text('Marca global en vivo'),findsOneWidget);
+    expect(find.text('Diseñador de Marca · Vista previa privada'),findsOneWidget);
     expect(find.byKey(const Key('brand-palette-selector')),findsOneWidget);
     expect(find.byKey(const Key('brand-color-primario')),findsOneWidget);
     expect(find.byKey(const Key('brand-logo-reel')),findsOneWidget);
