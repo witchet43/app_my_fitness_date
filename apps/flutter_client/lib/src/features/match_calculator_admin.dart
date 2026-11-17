@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/fitted_locale.dart';
 import '../core/fitted_match_engine.dart';
+import '../theme/fitness_date_theme.dart';
 
 /// Single in-app admin studio. Backend independently verifies owner + MFA.
 /// Synthetic inputs never leak actual members' answers.
@@ -175,7 +176,7 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
         padding:const EdgeInsets.all(14),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           Row(children:[
-            const Icon(Icons.tune,size:19,color:Color(0xFFD5BE8A)),
+            Icon(Icons.tune,size:19,color:FitDateColors.lilac),
             const SizedBox(width:10),
             Expanded(child:Column(
               crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -370,7 +371,7 @@ class _MatchCalculatorAdminState extends State<MatchCalculatorAdmin> {
                 ]),
                 LinearProgressIndicator(
                   value:r.factors[f.id]!/100,
-                  minHeight:5,color:const Color(0xFFD5BE8A)),
+                  minHeight:5,color:FitDateColors.lilac),
                 Padding(padding:const EdgeInsets.fromLTRB(0,6,0,13),
                   child:Text(explainMatchReason(
                     r.reasonCodes[f.id]!,language:english?'en':'es'),
