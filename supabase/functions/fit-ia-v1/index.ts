@@ -92,11 +92,19 @@ function canned(pillar:string,choice:string,es:boolean):string{
 async function reaction(pillar:string,chosen:string,aiEnabled:boolean,
   locale:string):Promise<string>{
   const english=locale==="en";
+  const domain:Record<string,string>={
+    move:"training, sports, movement, exercise and recovery ONLY",
+    live:"daily lifestyle, leisure, hobbies and routines ONLY",
+    relate:"connections, communication, dating intentions and relationships ONLY",
+  };
   const fallback=canned(pillar,chosen,!english);
   if(!aiEnabled||!openAi)return fallback;
   const text=await completion([
     {role:"system",content:
       "You are Fit-IA, an elegant, kind conversational assistant for adults. "+
+      "STRICT DOMAIN: "+domain[pillar]+". "+
+      "Never introduce topics from the other two domains or ask questions outside this domain. "+
+      "Only the published question bank determines the next question. "+
       (english?"Write one short sentence in English (maximum 150 chars) ":
         "Write one short natural sentence in Latin American Spanish (maximum 150 chars) ")+
       "acknowledging the selected answer, followed by a brief transition to a "+
@@ -165,9 +173,11 @@ Deno.serve(async(req)=>{
   let body:Json;
   try{body=await req.json() as Json;}catch(_){return respond(400,{status:"invalid_json"});}
   const action=body.action;
-  if(!["state","answer","overview","consent","summary","delete"].includes(
+  if(!["state","answer","overview","consent","summary","delete",
+       "form","form_submit","insights"].includes(
       String(action)))return respond(400,{status:"invalid_action"});
-  if((action==="state"||action==="answer")&&!validPillar(body.pillar))
+  if((action==="state"||action==="answer"||action==="form"||
+      action==="form_submit"||action==="insights")&&!validPillar(body.pillar))
     return respond(400,{status:"invalid_pillar"});
   try{
     // Single owner-level switch for EVERY external model call. Guided
@@ -207,6 +217,31 @@ Deno.serve(async(req)=>{
       return respond(200,{status:"saved",...next,
         ai_enabled:accountAiEnabled&&next.ai_enabled===true,
         conversation_mode:accountAiEnabled&&next.ai_enabled&&openAi?"ai":"guided"});
+    }
+    if(action==="form"){
+      const result=await rpc<Json>("fit_ia_form_v2",{
+        p_pillar:body.pillar,
+      },bearer);
+      return respond(200,{status:"ok",...result});
+    }
+    if(action==="form_submit"){
+      const input=body.answers;
+      if(!Array.isArray(input)||input.length<1||input.length>10 ||
+         !input.every((entry)=>typeof entry==="object"&&entry!==null&&
+           validId(entry.question_id)&&validChoice(entry.choice_key)&&
+           (entry.question_id as string).startsWith(String(body.pillar)+"_")))
+        return respond(400,{status:"invalid_form"});
+      const result=await rpc<Json>("fit_ia_submit_form_v2",{
+        p_pillar:body.pillar,p_answers:input,
+      },bearer);
+      return respond(200,{status:"saved",...result});
+    }
+    if(action==="insights"){
+      const [brief,answers]=await Promise.all([
+        rpc<Json>("fit_ia_pillar_brief_v2",{p_pillar:body.pillar},bearer),
+        rpc<Json[]>("fit_ia_answers_list_v2",{p_pillar:body.pillar},bearer),
+      ]);
+      return respond(200,{status:"ok",brief,answers});
     }
     if(action==="consent"){
       if(typeof body.enabled!=="boolean")return respond(400,{status:"invalid_consent"});
