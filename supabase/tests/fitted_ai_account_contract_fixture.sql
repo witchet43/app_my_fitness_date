@@ -27,4 +27,4 @@ create table app_private.member_profile_summaries_b17(
 );
 create function app_private.refresh_profile_summary_b17(p_user uuid)
 returns void language plpgsql security definer set search_path=''
-as $begin return; end$;
+as $fixture$begin return; end$fixture$;
