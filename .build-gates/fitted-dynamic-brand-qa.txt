@@ -1,1 +1,0 @@
-Verification after correcting Dart constant syntax in Gym Shield palette; complete legal JS and Flutter regression.
