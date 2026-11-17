@@ -38,8 +38,10 @@ def main():
     assert 'apple-touch-icon.png' in html
     assert 'favicon.png?v=slate-silver-v2' in html
     theme=(root/"lib/src/theme/fitness_date_theme.dart").read_text()
-    for color in ("0xFF1A2D38","0xFF8EF0D5","0xFF68D4C7","0xFF6BD6B7"):
-        assert color in theme,"Motion F color token not present: "+color
+    for color in ("0xFF1A2D38","0xFF8EF0D5","0xFF68D4C7"):
+        assert color in theme,"Fallback brand token not present: "+color
+    for token in ("static void useBrand", "static Color get pulsePink", "static Color get aqua"):
+        assert token in theme,"Dynamic palette token not present: "+token
     brand=(root/"lib/src/core/live_brand.dart").read_text()
     for token in ("'catalog:0'","'#8EF0D5'","'#68D4C7'","'#1A2D38'"):
         assert token in brand,"Dynamic fallback brand is not synchronized: "+token
