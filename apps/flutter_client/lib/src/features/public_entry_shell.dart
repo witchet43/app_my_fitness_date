@@ -261,7 +261,6 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           'Crear cuenta con correo','Create account with email')
         :FittedLocaleScope.t(context,
           'Entrar con correo','Sign in with email')),
-      ),
     );
     if(!wide) {
       return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
