@@ -61,7 +61,7 @@ setImmediate(()=>{
     assert.equal(vector.hidden,false);
     assert.equal(vector.viewBox,'0 0 100 100');
     assert.equal(vector.children.length,2);
-    assert.match(vector.children[0].attributes.d,/M 31 50|M 31 29/);
+    assert.match(vector.children[0].attributes.d,/M 31 36 L 35 51/);
     console.log('PASS legal pages bind name, colors and catalog:20 vector logo from live brand');
   }catch(e){console.error(e);process.exitCode=1}
 });
