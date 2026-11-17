@@ -51,6 +51,9 @@ class FakeNatural implements FitIaRepository{
     'has_more':false,
   };
   @override
+  Future<Map<String,dynamic>> fitIaChatOlder(String pillar,int before)async=>
+      {'messages':<Map<String,dynamic>>[],'has_more':false};
+  @override
   Future<Map<String,dynamic>> fitIaChatState(String pillar,
     {String locale='es'})async{reads++;return chat(pillar);}
   @override
