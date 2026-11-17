@@ -855,8 +855,9 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     ))));
 
   Widget _editor() => ListView(padding:const EdgeInsets.all(18),children:[
-    _header('Marca global en vivo',
-      'Los cambios se muestran aquí y se guardan automáticamente para todas las personas.'),
+    _header('Diseñador de Marca · Vista previa privada',
+      'Prueba aquí todos los estilos. Sólo se reflejarán en Fitted '
+      'cuando pulses Guardar y publicar.'),
     if(!_brandReady) const LinearProgressIndicator(),
     if(brandStatus!=null) Padding(
       padding:const EdgeInsets.only(bottom:12),
@@ -867,6 +868,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         if(!_brandReady) TextButton(onPressed:()=>widget.liveBrand.refresh(),
           child:const FittedText('Sincronizar')),
       ])),
+    _publicationActions(),
+    const SizedBox(height:15),
     LayoutBuilder(builder:(context,box) {
       final wide=box.maxWidth>=950;
       final editor=_identityControls();
@@ -876,7 +879,45 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
         Expanded(flex:4,child:preview),
       ]):Column(children:[editor,const SizedBox(height:14),preview]);
     }),
+    const SizedBox(height:16),
+    _publicationActions(),
   ]);
+
+  Widget _publicationActions()=>Wrap(
+    spacing:10,runSpacing:9,alignment:WrapAlignment.end,
+    children:[
+      OutlinedButton.icon(
+        key:const Key('brand-discard-preview'),
+        onPressed:!_brandReady||_brandSaving||!_brandDirty?null:
+          _discardPreviewChanges,
+        icon:const Icon(Icons.undo),
+        label:const Text('Descartar cambios')),
+      OutlinedButton.icon(
+        key:const Key('brand-save-private-draft'),
+        onPressed:!_brandReady||_brandSaving?null:_saveNamedDraft,
+        icon:const Icon(Icons.bookmark_border),
+        label:const Text('Guardar diseño para después')),
+      FilledButton.icon(
+        key:const Key('brand-publish-save'),
+        onPressed:!_brandReady||_brandSaving||!_brandDirty?null:
+          _saveBrandGlobally,
+        icon:Icon(_brandSaving?Icons.sync:Icons.publish_outlined),
+        label:const Text('Guardar y publicar')),
+    ]);
+  
+  Widget _paletteMenuEntry(String label,Map<String,String> palette){
+    Widget swatch(String key)=>Container(
+      width:17,height:17,margin:const EdgeInsets.only(right:3),
+      decoration:BoxDecoration(
+        shape:BoxShape.circle,
+        color:_color(palette[key]??'#FFFFFF',Colors.white),
+        border:Border.all(color:Theme.of(context).dividerColor,width:1)));
+    return Row(mainAxisSize:MainAxisSize.min,children:[
+      swatch('primary'),swatch('accent'),swatch('background'),
+      const SizedBox(width:9),
+      Flexible(child:Text(label,maxLines:1,overflow:TextOverflow.ellipsis)),
+    ]);
+  }
 
   Widget _identityControls()=>Column(
     crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -909,18 +950,16 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 labelText:'Selecciona una paleta',
                 prefixIcon:Icon(Icons.palette_outlined)),
               items:[
-                const DropdownMenuItem(
-                  value:'custom',child:Text('Personalizada · edición actual')),
+                DropdownMenuItem(value:'custom',
+                  child:_paletteMenuEntry('Personalizada · vista previa',colors)),
                 for(var i=0;i<_paletteSeeds.length;i++)
-                  DropdownMenuItem(
-                    value:'seed:$i',
-                    child:Text(_paletteSeeds[i]['name']!,
-                      maxLines:1,overflow:TextOverflow.ellipsis)),
+                  DropdownMenuItem(value:'seed:$i',
+                    child:_paletteMenuEntry(_paletteSeeds[i]['name']!,
+                      _paletteSeeds[i])),
                 for(final item in palettes)
-                  DropdownMenuItem(
-                    value:'saved:${item['id']}',
-                    child:Text('★ ${item['name']}',
-                      maxLines:1,overflow:TextOverflow.ellipsis)),
+                  DropdownMenuItem(value:'saved:${item['id']}',
+                    child:_paletteMenuEntry('★ ${item['name']}',
+                      Map<String,String>.from(item['colors'] as Map))),
               ],
               onChanged:_choosePalette,
             ),
@@ -966,22 +1005,21 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,children:[
           FittedText('Tipografía',style:Theme.of(context).textTheme.titleLarge),
-          DropdownButtonFormField<String>(
-            key:ValueKey('font-$font'),initialValue:font,
-            decoration:InputDecoration(labelText:FittedLocaleScope.translate(context,'Familia de prueba')),
-            items:[
-              for(final f in ['Georgia','Palatino','Garamond','Arial'])
-                DropdownMenuItem(value:f,child:FittedText(f)),
-              if(font.startsWith('asset:'))
-                DropdownMenuItem(value:font,
-                  child:const FittedText('Fuente WOFF2 cargada (requiere compilación)')),
-            ],
-            onChanged:(v){setState(()=>font=v??'Georgia');_markPreviewDirty();},
-          ),
           const SizedBox(height:8),
-          const FittedText('Las fuentes WOFF2 se conservan en la biblioteca. '
-            'Su visualización nativa completa requiere procesarlas para Flutter.',
-            style:TextStyle(fontSize:12)),
+          const Text('Busca entre más de cien familias y mira cómo se escribe '
+            'cada una antes de elegir.'),
+          const SizedBox(height:10),
+          FittedFontMenu(current:font,onSelected:(f){
+            setState(()=>font=f);
+            _markPreviewDirty();
+          }),
+          const SizedBox(height:12),
+          Text('Fitted · personas en movimiento',
+            style:FittedFontCatalog.preview(font,base:
+              const TextStyle(fontSize:21,fontWeight:FontWeight.w600))),
+          const SizedBox(height:7),
+          Text('Las fuentes se descargan al mostrarse y se almacenan en caché.',
+            style:Theme.of(context).textTheme.bodySmall),
         ]))),
       const SizedBox(height:10),
       Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(
@@ -1039,7 +1077,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             const Icon(Icons.touch_app_outlined,size:17),
             const SizedBox(width:8),
             const Expanded(child:Text(
-              'Desliza para explorar; toca para ampliar y aplicar.')),
+              'Desliza para explorar; toca para ampliar y probar.')),
           ]),
           const SizedBox(height:14),
           OutlinedButton.icon(
@@ -1081,9 +1119,10 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
       const SizedBox(height:12),
       const ListTile(
         key:Key('b3-auto-publish-label'),
-        leading:Icon(Icons.cloud_done_outlined),
-        title:FittedText('Guardado automático activo'),
-        subtitle:FittedText('No hay solicitudes de revisión ni builds por cada cambio.')),
+        leading:Icon(Icons.visibility_outlined),
+        title:FittedText('Modo vista previa · Sin publicación automática'),
+        subtitle:FittedText('El resto de Fitted sólo cambiará al guardar '
+          'y publicar explícitamente.')),
     ]);
 
   Widget _preview(){
@@ -1135,7 +1174,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                     maxLines:2,overflow:TextOverflow.ellipsis,
                     style:TextStyle(color:foreground,fontSize:19,
                       fontWeight:FontWeight.w600,
-                      fontFamily:font.startsWith('asset:')?null:font))),
+                      fontFamily:FittedFontCatalog.legacy.contains(font)?font:null))),
                 ])),
               Stack(children:[
                 Container(
@@ -1154,7 +1193,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                       fontSize:11,color:foreground.withValues(alpha:.7),letterSpacing:2)),
                     const SizedBox(height:15),
                     FittedText(headline.text,
-                      style:TextStyle(fontFamily:font.startsWith('asset:')?null:font,
+                      style:TextStyle(fontFamily:FittedFontCatalog.legacy.contains(font)?font:null,
                         fontSize:mobilePreview?28:34,
                         color:foreground,height:1.22)),
                     const SizedBox(height:16),
