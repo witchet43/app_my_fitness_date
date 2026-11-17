@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts_lite.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Whitelisted, legitimate open-licensed family names from Google Fonts.
 /// The editor loads only visible previews; no 100+ font requests on open.
@@ -159,7 +159,7 @@ abstract final class FittedFontCatalog {
 
   static late final List<String> available = [
     ...legacy,
-    ...candidates.where(GoogleFontsLite.fontsMap.containsKey),
+    ...candidates.where(GoogleFonts.asMap().containsKey),
   ];
 
   static bool accepts(String name) => available.contains(name);
@@ -168,14 +168,14 @@ abstract final class FittedFontCatalog {
     final style=base ?? const TextStyle(fontSize:18);
     if(legacy.contains(name))return style.copyWith(fontFamily:name);
     if(!accepts(name))return style.copyWith(fontFamily:'Arial');
-    return GoogleFontsLite.getFont(name,textStyle:style);
+    return GoogleFonts.getFont(name,textStyle:style);
   }
 
   static TextTheme textTheme(String name,TextTheme original) {
     if(legacy.contains(name)||!accepts(name)){
       return original.apply(fontFamily:legacy.contains(name)?name:'Arial');
     }
-    return GoogleFontsLite.getTextTheme(name,original);
+    return GoogleFonts.getTextTheme(name,original);
   }
 }
 
