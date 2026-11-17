@@ -2,8 +2,6 @@ name: Fit-IA Admin and Two-Panel QA
 on:
   push:
     branches: [feature/fitted-fitia-admin-conversation-ui-cors-20261117]
-    paths:
-      - .build-gates/fit-ia-panel-v2-qa.txt
 permissions:
   contents: read
 jobs:
