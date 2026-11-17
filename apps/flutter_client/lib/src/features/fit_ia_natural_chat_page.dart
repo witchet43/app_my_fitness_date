@@ -77,8 +77,17 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
     final selected=pillar;
     setState((){loading=true;issue=null;});
     try{
-      final result=await widget.repository.fitIaChatState(selected,
+      var result=await widget.repository.fitIaChatState(selected,
         locale:english?'en':'es');
+      // A member's existing account-wide opt-in is sufficient. Repair the
+      // legacy per-pillar flag without another permission dialog.
+      if(result['ai_enabled']!=true){
+        final synced=await widget.repository.fitIaSyncAccountConsent();
+        if(synced){
+          result=await widget.repository.fitIaChatState(selected,
+            locale:english?'en':'es');
+        }
+      }
       if(!mounted||pillar!=selected)return;
       setState((){
         data=result;loading=false;
@@ -391,20 +400,21 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
       return Padding(padding:const EdgeInsets.all(16),
         child:Column(mainAxisSize:MainAxisSize.min,
           crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-            Text(tr('Fit-IA conversa contigo utilizando IA',
-              'Fit-IA chats with you using AI'),
+            Text(tr('Conversación con IA no disponible',
+              'AI conversation unavailable'),
               style:theme.textTheme.titleMedium),
             const SizedBox(height:8),
-            Text(tr('Autoriza el uso de IA para comenzar o continuar '
-              'tu conversación privada.',
-              'Allow AI processing to begin or continue your private chat.'),
+            Text(tr('Comprueba en Cuenta → Configuración que autorizaste '
+              'la IA durante el registro. Si ya la autorizaste, recarga.',
+              'Check your account settings for the AI choice made during '
+              'registration. If already enabled, reload.'),
               style:theme.textTheme.bodySmall),
             const SizedBox(height:11),
-            FilledButton.icon(
-              key:const Key('fit-ia-enable-ai'),
-              onPressed:busyConsent?null:_consent,
-              icon:const Icon(Icons.verified_user_outlined),
-              label:Text(tr('Activar Fit-IA','Enable Fit-IA'))),
+            OutlinedButton.icon(
+              key:const Key('fit-ia-reload-consent'),
+              onPressed:loading?null:_load,
+              icon:const Icon(Icons.refresh_outlined),
+              label:Text(tr('Recargar conversación','Reload chat'))),
           ]),
       );
     }
