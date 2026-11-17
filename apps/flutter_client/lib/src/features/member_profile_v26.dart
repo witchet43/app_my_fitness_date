@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'rhythm_concept_lab_b10.dart';
+import 'fit_ia_conversation_page.dart';
+import '../core/fit_ia_repository.dart';
 import 'fitted_profile_story_v28.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
@@ -281,6 +283,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   Map<String,dynamic>? lifestyle;
   Map<String,dynamic>? summary;
   Map<String,dynamic>? matchStatus;
+  Map<String,dynamic>? fitIaOverview;
   Future<Uint8List>? profilePortrait;
   bool summaryBusy=false;
   String? startingRhythm;
@@ -316,9 +319,28 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
         final current=await Future.wait<Map<String,dynamic>>([
           widget.api.myFittedSummaryB18(),
           widget.api.datingStatus(),
+          widget.api.fitIaOverview().catchError((Object _) =>
+            <String,dynamic>{}),
         ]);
         if(mounted)setState((){
-          summary=current[0];matchStatus=current[1];
+          fitIaOverview=current[2];
+          matchStatus=current[1];
+          summary=current[0];
+          // Fit-IA summaries remain private. They are displayed only when
+          // the owner separately approved AI use; public candidate profiles
+          // still follow the existing sharing consent and publication gate.
+          final ia=current[2];
+          final story=ia['summary'];
+          if(ia['ai_enabled']==true && story is Map &&
+             (story['summary_es']??'').toString().trim().isNotEmpty){
+            summary={
+              ...current[0],
+              'summary_es':story['summary_es'],
+              'summary_en':story['summary_en'],
+              'ai_consented':true,
+              'mode':'ai',
+            };
+          }
         });
       }catch(_){if(mounted)setState(()=>matchStatus=null);}
 
@@ -500,52 +522,12 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
     }
   }
 
-  Future<void> configurePillars([int initialPillar=0]) async {
-    var consent=consentGrantedInSession || await lifestyleConsent;
-    if(!mounted)return;
-    if(!consent){
-      final approved=await showDialog<bool>(context:context,
-        builder:(dialog)=>AlertDialog(
-          title:Text(FittedLocaleScope.t(context,
-            'Tu estilo de vida es privado',
-            'Your lifestyle is private')),
-          content:Text(FittedLocaleScope.t(context,
-            'Para guardar tus tres pilares, acepta el consentimiento '
-            'independiente de FitDating. Tus respuestas permanecen privadas '
-            'y no activan el descubrimiento ni los mensajes automáticamente.',
-            'To save your three pillars, accept the separate FitDating '
-            'consent. Your answers stay private and do not automatically '
-            'enable discovery or messages.')),
-          actions:[
-            TextButton(
-              onPressed:()=>Navigator.of(dialog).pop(false),
-              child:Text(FittedLocaleScope.t(context,'Ahora no','Not now'))),
-            FilledButton(
-              key:Key('pillars-consent-confirm'),
-              onPressed:()=>Navigator.of(dialog).pop(true),
-              child:Text(FittedLocaleScope.t(context,
-                'Acepto y continúo','I agree and continue'))),
-          ],
-        ),
-      );
-      if(!mounted||approved!=true)return;
-      try{
-        await widget.api.acceptDating();
-        consentGrantedInSession=true;
-        consent=true;
-      }catch(_){
-        if(mounted)ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-          content:Text(FittedLocaleScope.t(context,
-            'No se pudo guardar tu consentimiento. Intenta de nuevo.',
-            'Could not save your consent. Try again.'))));
-        return;
-      }
-    }
-    if(!mounted)return;
+  /// Three pillars now use Fit-IA's own private conversation consent.
+  /// Dating/discovery remains a separate, explicitly consented operation.
+  Future<void> configurePillars([int initialPillar=0])async{
     await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder:(_)=>RhythmConceptLabB10(
-        repository:widget.api,canSave:consent,
-        profileMode:true,initialPillar:initialPillar)));
+      builder:(_)=>FitIaConversationPage(
+        repository:widget.api,initialPillar:initialPillar)));
     if(mounted)await reload();
   }
 
@@ -738,6 +720,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             FittedIdentityPanelB18(
               name:(p['display_name']??'').toString().trim().split(' ').first,
               rhythm:lifestyle,summary:summary,
+              fitIaOverview:fitIaOverview,
               photo:profilePortrait,summaryBusy:summaryBusy,
               profileVisibleToMembers:p['social_visibility']=='members',
               onPillar:(index)=>configurePillars(index),
@@ -749,6 +732,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             FittedFitsPanelB18(
               api:widget.api,
               pillarProgress:FittedProfileInsights.pillarProgress(lifestyle),
+              fitIaOverview:fitIaOverview,
               status:matchStatus,
               onPrepare:openFitdatingB18,
               onVerifyAge:openAgeVerificationB18,
@@ -767,6 +751,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             key:Key('fitted-profile-three-pillars-card'),
             child:FittedProfileStoryV28(
               profile:p,rhythm:lifestyle,
+              fitIaOverview:fitIaOverview,
               startingPreference:startingRhythm,
               onChooseStarting:setStartingRhythm,
               onConfigure:()=>configurePillars(),
