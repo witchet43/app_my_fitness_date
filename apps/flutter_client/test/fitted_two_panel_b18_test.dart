@@ -61,7 +61,8 @@ void main(){
     expect(find.text('Privado hasta que autorices compartirlo y actives la visibilidad para miembros.'),findsOneWidget);
     expect(find.text('Escribe tu historia con tus propias palabras.'),
       findsOneWidget);
-    expect(find.text('0%'),findsNWidgets(3));
+    expect(find.text('Débil'),findsNWidgets(3));
+    expect(find.text('0%'),findsNothing);
     expect(tester.takeException(),isNull);
   });
 }
