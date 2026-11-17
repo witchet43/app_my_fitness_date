@@ -1,1 +1,1 @@
-Full QA after removing offscreen status expectation; assert global brand truly unchanged before explicit Save. Include responsive fonts.
+Recheck Flutter after fixing lazy-list test navigation to explicit Save button. No GCP builds.
