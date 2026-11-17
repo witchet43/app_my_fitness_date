@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../core/fitted_locale.dart';
 import '../core/fitted_profile_insights_v29.dart';
+import '../core/fit_ia_repository.dart';
 import '../core/member_v26_api.dart';
 import '../theme/fitness_date_theme.dart';
 import '../widgets/fitted_glass_atmosphere.dart';
@@ -12,13 +13,14 @@ class FittedIdentityPanelB18 extends StatelessWidget {
   const FittedIdentityPanelB18({
     super.key,required this.name,required this.rhythm,
     required this.summary,required this.onPillar,
+    this.fitIaOverview,
     required this.onEdit,required this.onSummaryConsent,
     this.onManualEdit,
     required this.photo,required this.summaryBusy,
     this.profileVisibleToMembers=false,
   });
   final String name;
-  final Map<String,dynamic>? rhythm,summary;
+  final Map<String,dynamic>? rhythm,summary,fitIaOverview;
   final ValueChanged<int> onPillar;
   final VoidCallback onEdit,onSummaryConsent;
   final VoidCallback? onManualEdit;
@@ -54,7 +56,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
 
   /// Quiet three-pillar progress navigation at the upper-right of the hero.
   Widget _pillars(BuildContext context,bool en){
-    final progress=FittedProfileInsights.pillarProgress(rhythm);
+    // Coverage is qualitative: never expose a synthetic completion percentage.
     final names=en?const ['How I Move','How I Live','How I Relate']:
       const ['Cómo me muevo','Cómo vivo','Cómo me relaciono'];
     const icons=[Icons.directions_run_rounded,Icons.wb_twilight_outlined,
@@ -84,19 +86,18 @@ class FittedIdentityPanelB18 extends StatelessWidget {
                   style:TextStyle(fontSize:12.5,
                     color:FitDateColors.pearl,fontWeight:FontWeight.w600))),
                 SizedBox(width:6),
-                SizedBox(width:58,
-                  child:LinearProgressIndicator(
-                    key:Key('b18-pillar-progress-$i'),
-                    value:progress[i]/100,
-                    minHeight:4,
-                    borderRadius:BorderRadius.circular(5),
-                    color:colors[i],
-                    backgroundColor:FitDateColors.pearl.withValues(alpha:.13))),
-                SizedBox(width:6),
-                SizedBox(width:34,child:Text('${progress[i]}%',
-                  textAlign:TextAlign.right,
-                  style:TextStyle(fontSize:11,color:colors[i],
-                    fontWeight:FontWeight.w700))),
+                Container(
+                  key:Key('b18-pillar-depth-$i'),
+                  padding:const EdgeInsets.symmetric(
+                    horizontal:9,vertical:5),
+                  decoration:BoxDecoration(
+                    color:colors[i].withValues(alpha:.13),
+                    borderRadius:BorderRadius.circular(10)),
+                  child:Text(FitIaDepth.label(FitIaDepth.level(
+                    fitIaOverview,FitIaDepth.keys[i]),en),
+                    style:TextStyle(fontSize:11,color:colors[i],
+                      fontWeight:FontWeight.w800)),
+                ),
               ]),
             )),
         ],
@@ -291,9 +292,11 @@ class FittedIdentityPanelB18 extends StatelessWidget {
 class FittedFitsPanelB18 extends StatefulWidget {
   const FittedFitsPanelB18({super.key,required this.api,
     required this.pillarProgress,required this.status,
+    this.fitIaOverview,
     required this.onPrepare,required this.onVerifyAge});
   final MemberV26Api api;
   final List<int> pillarProgress;
+  final Map<String,dynamic>? fitIaOverview;
   final Map<String,dynamic>? status;
   final VoidCallback onPrepare,onVerifyAge;
   @override
@@ -437,10 +440,16 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
     final en=FittedLocaleScope.languageOf(context)=='en';
     final p=widget.pillarProgress;
     final data=widget.status??const <String,dynamic>{};
+    final enoughFitIa=widget.fitIaOverview!=null &&
+      FitIaDepth.keys.every((k)=>const ['medium','strong']
+        .contains(FitIaDepth.level(widget.fitIaOverview,k)));
     final setup=<({String es,String en,String descEs,String descEn,bool ok,VoidCallback onTap})>[
-      (es:'Completar los tres pilares',en:'Complete your three pillars',
-        descEs:'Tu ritmo, hábitos y relaciones.',descEn:'Your lifestyle and values.',
-        ok:p.every((x)=>x>=100),onTap:widget.onPrepare),
+      (es:'Conocer tus tres pilares con Fit-IA',
+        en:'Explore your three pillars with Fit-IA',
+        descEs:'Profundidad media o fuerte en movimiento, vida y relaciones.',
+        descEn:'Medium or strong coverage across movement, life and relationships.',
+        ok:widget.fitIaOverview==null?p.every((x)=>x>=100):enoughFitIa,
+        onTap:widget.onPrepare),
       (es:'Verificar mayoría de edad',en:'Verify legal age',
         descEs:'Revisión humana de identificación.',descEn:'Human ID review.',
         ok:data['age_verified']==true,onTap:widget.onVerifyAge),
