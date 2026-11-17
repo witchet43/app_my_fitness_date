@@ -206,9 +206,9 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
       key:const Key('gym-shield-privacy-summary'),
       padding:const EdgeInsets.all(15),
       decoration:BoxDecoration(
-        color:const FitDateColors.surface,
+        color:FitDateColors.surface,
         borderRadius:BorderRadius.circular(15),
-        border:Border.all(color:const FitDateColors.outline),
+        border:Border.all(color:FitDateColors.outline),
       ),
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[
@@ -265,14 +265,14 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
           duration:const Duration(milliseconds:180),
           padding:const EdgeInsets.all(17),
           decoration:BoxDecoration(
-            color:active?const FitDateColors.surfaceRaised:const FitDateColors.surface,
+            color:active?FitDateColors.surfaceRaised:FitDateColors.surface,
             borderRadius:BorderRadius.circular(17),
             border:Border.all(color:active
-              ?const FitDateColors.lilac:const FitDateColors.outline),
+              ?FitDateColors.lilac:FitDateColors.outline),
           ),
           child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Icon(active?Icons.radio_button_checked:Icons.radio_button_off,
-              color:const FitDateColors.lilac,size:23),
+              color:FitDateColors.lilac,size:23),
             const SizedBox(width:12),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               children:[
