@@ -573,7 +573,8 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
             ]),
           ),
         Padding(padding:const EdgeInsets.fromLTRB(13,5,13,9),
-          child:Row(children:[
+          child:Wrap(alignment:WrapAlignment.spaceBetween,
+            spacing:6,runSpacing:4,children:[
             TextButton.icon(
               key:const Key('fit-ia-pause'),
               onPressed:()async{
@@ -582,7 +583,6 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
               },
               icon:const Icon(Icons.pause_circle_outline),
               label:Text(tr('Continuar después','Continue later'))),
-            const Spacer(),
             if(!aiEnabled)
               TextButton.icon(
                 key:const Key('fit-ia-enable-ai'),
