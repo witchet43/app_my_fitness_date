@@ -18,6 +18,9 @@ void main(){
       findsOneWidget);
     expect(find.byKey(const Key('fitted-ai-first-access-disable')),
       findsOneWidget);
+    await tester.ensureVisible(find.byKey(
+      const Key('fitted-ai-first-access-disable')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(
       const Key('fitted-ai-first-access-disable')));
     await tester.pump();
@@ -30,6 +33,9 @@ void main(){
     final decisions=<bool>[];
     await tester.pumpWidget(MaterialApp(home:FittedAiAccountGate(
       onChoose:(enabled)async=>decisions.add(enabled))));
+    await tester.ensureVisible(find.byKey(
+      const Key('fitted-ai-first-access-enable')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(
       const Key('fitted-ai-first-access-enable')));
     await tester.pump();
