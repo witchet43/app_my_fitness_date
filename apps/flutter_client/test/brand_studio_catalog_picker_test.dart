@@ -68,9 +68,12 @@ void main(){
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('brand-hsv-sv')),findsOneWidget);
     expect(find.byKey(const Key('brand-hsv-hue')),findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('brand-preset-#8EF0D5')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('brand-preset-#8EF0D5')));
     await tester.pump();
-    expect(find.text('#8EF0D5'),findsOneWidget);
+    final field=tester.widget<TextField>(find.byKey(const Key('brand-hsv-hex')));
+    expect(field.controller?.text,'#8EF0D5');
     await tester.tap(find.byKey(const Key('brand-hsv-apply')));
     await tester.pumpAndSettle();
     expect(selected,const Color(0xFF8EF0D5));
