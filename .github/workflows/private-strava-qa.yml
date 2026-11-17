@@ -26,7 +26,7 @@ jobs:
           assert "PrivateStravaEvidenceCard(" in owner and "selectedArea==0" in owner
           assert "if(current==0 && widget.ownerId.isNotEmpty)" in conv
           assert "PrivateStravaEvidenceCard(ownerId:widget.ownerId)" in conv
-          assert "FilePicker.platform.pickFiles" in feature
+          assert "FilePicker.pickFile" in feature and "file.readAsBytes()" in feature
           assert "SharedPreferences" in feature
           assert "activityDay" in engine and "primarySportShare" in engine
           assert "api.strava.com" not in engine and "OAuthProvider" not in engine
