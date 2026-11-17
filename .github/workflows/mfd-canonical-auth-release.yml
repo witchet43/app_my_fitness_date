@@ -119,6 +119,14 @@ jobs:
           providers=cfg.get("external",{})
           assert providers.get("google") is True
           assert providers.get("email") is True
+          brand_req=urllib.request.Request(
+              base+"/rest/v1/mfd_brand_live?select=version,settings&id=eq.true",
+              headers={"apikey":m.group(1),"User-Agent":"Fitted-Brand-QA/1.0"})
+          with urllib.request.urlopen(brand_req,timeout=15) as response:
+              live_brand=json.load(response)
+          assert len(live_brand)==1 and live_brand[0]["settings"]["name"]
+          assert isinstance(live_brand[0]["settings"]["colors"],dict)
+          print("Public MFA-published brand endpoint ready:",live_brand[0]["version"])
           apple=providers.get("apple") is True
           with open(os.environ["GITHUB_ENV"],"a") as out:
               out.write("MFD_APPLE_AVAILABLE="+str(apple).lower()+"\n")
