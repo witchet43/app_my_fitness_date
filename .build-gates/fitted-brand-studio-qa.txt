@@ -1,0 +1,1 @@
+Validate Brand Studio 50 palettes, 20 original vector symbols and interactive HSV picker.
