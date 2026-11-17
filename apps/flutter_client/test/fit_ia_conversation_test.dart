@@ -50,6 +50,19 @@ class FakeFitIa implements FitIaRepository{
     ],
   };
   @override
+  Future<Map<String,dynamic>> fitIaChatOlder(String pillar,int before)async=>
+      {'messages':<Map<String,dynamic>>[],'has_more':false};
+  @override
+  Future<Map<String,dynamic>> fitIaChatState(String pillar,
+      {String locale='es'})async=>current(pillar);
+  @override
+  Future<Map<String,dynamic>> fitIaChatSend(String pillar,
+      String text,String clientId,{String locale='es'})async=>
+      current(pillar);
+  @override
+  Future<Map<String,dynamic>> fitIaChatRetry(String pillar,
+      {String locale='es'})async=>current(pillar);
+  @override
   Future<Map<String,dynamic>> fitIaState(String pillar)async=>current(pillar);
   @override
   Future<Map<String,dynamic>> fitIaOverview()async=>{

@@ -444,6 +444,23 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   @override
   Future<Map<String,dynamic>> fitIaOverview()=>_fitIa('overview');
   @override
+  Future<Map<String,dynamic>> fitIaChatState(String pillar,
+      {String locale='es'})=>
+      _fitIa('chat_state',{'pillar':pillar,'locale':locale});
+  @override
+  Future<Map<String,dynamic>> fitIaChatSend(
+      String pillar,String text,String clientId,{String locale='es'})=>
+      _fitIa('chat_send',{
+        'pillar':pillar,'text':text,'client_id':clientId,'locale':locale,
+      });
+  @override
+  Future<Map<String,dynamic>> fitIaChatRetry(String pillar,
+      {String locale='es'})=>
+      _fitIa('chat_retry',{'pillar':pillar,'locale':locale});
+  @override
+  Future<Map<String,dynamic>> fitIaChatOlder(String pillar,int before)=>
+      _fitIa('chat_older',{'pillar':pillar,'before':before});
+  @override
   Future<Map<String,dynamic>> fitIaForm(String pillar)=>
       _fitIa('form',{'pillar':pillar});
   @override
@@ -454,8 +471,12 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   Future<Map<String,dynamic>> fitIaInsights(String pillar)=>
       _fitIa('insights',{'pillar':pillar});
   @override
-  Future<Map<String,dynamic>> fitIaConsent(bool enabled)=>
-      _fitIa('consent',{'enabled':enabled});
+  Future<Map<String,dynamic>> fitIaConsent(bool enabled)async{
+    // Both gates must agree: the account-wide AI permission and Fit-IA's
+    // separate private conversation permission. Neither is inferred.
+    await setFittedAiAccountPreference(enabled,source:'settings');
+    return _fitIa('consent',{'enabled':enabled});
+  }
   @override
   Future<Map<String,dynamic>> fitIaGenerateSummary()=>_fitIa('summary');
   @override
