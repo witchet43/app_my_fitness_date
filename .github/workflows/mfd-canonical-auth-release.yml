@@ -21,6 +21,7 @@ name: Fitted - canonical unified authentication release
 # Release hotfix: enforce semantic tokens instead of obsolete fixed mint-pink literal.
 # Fit-IA v3: publish natural AI-led conversation, editable text replies, durable history and athletic mascot.
 # Fit-IA v4: consent at registration, legacy pillar sync, admin-editable assistant name; canonical prod release.
+# Fit-IA v4.1: distinguish missing provider from missing consent, no repeated opt-in writes.
 # Fit-IA v2 canonical release: fixed browser CORS, configurable admin rules, dual chat/form and progressive insights.
 # Fit-IA conversational release: 300 curated questions, private adaptive pillars, qualitative coverage and consent-controlled AI biography.
 # Brand Studio preview-only release: explicit Save & publish, 100+ real font previews, athletic logo vectors and saved designs.
