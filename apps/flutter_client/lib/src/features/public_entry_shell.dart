@@ -303,7 +303,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           child:Center(child:FittedLanguageSelector()))],
       ),
       body:SafeArea(child:LayoutBuilder(builder:(context,box) {
-        final panelWidth=(box.maxWidth-(wide?56:28)).clamp(0.0,1500.0);
+        final panelWidth=(box.maxWidth-(wide?56:28)).clamp(0.0,1500.0).toDouble();
         return ListView(
           padding:EdgeInsets.symmetric(
             horizontal:wide?28:14,vertical:wide?16:10),
