@@ -1,1 +1,1 @@
-Run QA after matching updated athletic duo vector in privacy & terms assertion.
+Run Flutter QA after pinning Google Fonts 8.2.1 to avoid material_ui TextTheme mismatch and simplifying draft menu.
