@@ -15,9 +15,6 @@ abstract class FitIaRepository {
   Future<Map<String,dynamic>> fitIaSubmitForm(
     String pillar,List<Map<String,String>> answers);
   Future<Map<String,dynamic>> fitIaInsights(String pillar);
-  /// Enables legacy pillar consent only when the account already opted into AI.
-  /// Test doubles may omit this optional bridge.
-  Future<bool> fitIaSyncAccountConsent()async=>false;
   Future<Map<String,dynamic>> fitIaConsent(bool enabled);
   Future<Map<String,dynamic>> fitIaGenerateSummary();
   Future<void> fitIaDeleteMyData();
@@ -60,4 +57,9 @@ abstract final class FitIaDepth {
     return x is Map && x['answered'] is num
       ?(x['answered'] as num).toInt():0;
   }
+}
+
+/// Optional migration bridge for accounts that already consented to AI.
+abstract interface class FitIaAccountConsentSync {
+  Future<bool> fitIaSyncAccountConsent();
 }
