@@ -1,1 +1,0 @@
-Retry disposable PostgreSQL with authenticated owner SELECT grants and RLS; run full Flutter regression and web build.
