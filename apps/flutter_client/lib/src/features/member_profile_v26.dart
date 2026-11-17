@@ -315,10 +315,12 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
       });
       try{
         final current=await Future.wait<Map<String,dynamic>>([
-          widget.api.myFittedSummaryB18(),
-          widget.api.datingStatus(),
-          widget.api.fitIaOverview().catchError((Object _) =>
-            <String,dynamic>{}),
+          widget.api.myFittedSummaryB18().catchError(
+            (Object _) => <String,dynamic>{}),
+          widget.api.datingStatus().catchError(
+            (Object _) => <String,dynamic>{}),
+          widget.api.fitIaOverview().catchError(
+            (Object _) => <String,dynamic>{}),
         ]);
         if(mounted)setState((){
           fitIaOverview=current[2];
@@ -731,6 +733,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               api:widget.api,
               pillarProgress:FittedProfileInsights.pillarProgress(lifestyle),
               fitIaOverview:fitIaOverview,
+              onConfigurePillars:()=>configurePillars(),
               status:matchStatus,
               onPrepare:openFitdatingB18,
               onVerifyAge:openAgeVerificationB18,
