@@ -12,6 +12,7 @@ name: Fitted - canonical unified authentication release
 # UX audit v34.1: mobile photo-led registration verified, 102-test regression release.\n# Slate Mint: one public panel, dynamic palette, new mark; no safety gate changes.
 # Mint icon gate corrective release: optimized flat icon is intentionally below 5 KB.
 # Compact welcome and bilingual cover tested before canonical deployment.
+# Public smoke now validates the Slate Mint launcher, HTML cache keys and theme.
 on:
   push:
     branches: [main]
@@ -189,22 +190,22 @@ jobs:
                   assert info["story_modes"]=="manual_owner_text_or_opt_in_ai"
                   assert info["ai_summary"]=="opt_in_with_editorial_fallback"
                   assert info["candidate_feed"]=="verified_real_members_only"
-                  assert info["brand_icon"]=="fitted-orbit-f"
+                  assert info["brand_icon"]=="fitted-mint-f"
                   assert info["manual_age_verification"] is True
                   assert info["dating_access"]=="reviewed_adults_with_operator_activation"
                   assert info["pulso_real_feedback_enabled"] is False
                   assert b"flutter" in get("/").lower()
                   assert len(get("/main.dart.js"))>1000
                   html=get("/").decode("utf-8")
-                  assert "favicon.png?v=orbit-b16" in html
-                  assert "manifest.json?v=orbit-b16" in html
+                  assert "favicon.png?v=slate-mint-v1" in html
+                  assert "manifest.json?v=slate-mint-v1" in html
                   assert get("/favicon.png")[:8].hex()=="89504e470d0a1a0a"
                   assert get("/icons/Icon-192.png")[:8].hex()=="89504e470d0a1a0a"
-                  assert len(get("/icons/Icon-512.png"))>5000
+                  assert len(get("/icons/Icon-512.png"))>2000
                   assert get("/icon.webp")[:4]==b"RIFF"
                   brand_manifest=json.loads(get("/manifest.json"))
                   assert brand_manifest["name"]=="Fitted"
-                  assert brand_manifest["theme_color"]=="#0D1030"
+                  assert brand_manifest["theme_color"]=="#1A2D38"
                   assert any(item["sizes"]=="512x512" for item in brand_manifest["icons"])
                   for slug in ("terms","privacy"):
                       assert b"<html" in get("/"+slug+"/").lower()
