@@ -58,7 +58,7 @@ class FakeFitIa implements FitIaRepository{
   };
   @override
   Future<Map<String,dynamic>> fitIaAnswer(
-      String pillar,String questionId,String choice)async{
+      String pillar,String questionId,String choice,{String locale='es'})async{
     saveCalls++;
     counts[pillar]=counts[pillar]!+1;
     chosen[pillar]='Mi favorita';
