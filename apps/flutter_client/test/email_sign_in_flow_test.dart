@@ -31,7 +31,7 @@ void main() {
         },
       ),
     ));
-    expect(find.text('Bienvenido'), findsOneWidget);
+    expect(find.byKey(const Key('landing-hero')), findsOneWidget);
 
     final signInButton = tester.widget<FilledButton>(
         find.byKey(const Key('email-entry')));
