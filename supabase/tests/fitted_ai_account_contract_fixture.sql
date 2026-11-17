@@ -10,6 +10,10 @@ create table public.fit_ia_settings_v1(
   consented_at timestamptz,
   last_generation_at timestamptz
 );
+alter table public.fit_ia_settings_v1 enable row level security;
+grant select on public.fit_ia_settings_v1 to authenticated;
+create policy fit_ia_settings_owner_read_v1 on public.fit_ia_settings_v1
+  for select to authenticated using (user_id=(select auth.uid()));
 create table public.fit_ia_messages_v1(user_id uuid not null);
 create table public.fit_ia_sessions_v1(user_id uuid not null);
 create table public.fit_ia_answers_v1(user_id uuid not null);
