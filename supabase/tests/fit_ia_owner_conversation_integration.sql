@@ -28,6 +28,8 @@ begin
   if (st->'depth'->>'answered')::integer<>1 then
     raise exception 'Answer depth not incremented';
   end if;
+  -- The account-level first-choice gate precedes legacy Fit-IA controls.
+  perform public.fitted_set_ai_account_preference_v1(true,'onboarding');
   a=public.fit_ia_set_consent_v1(true);
   if a->>'ai_enabled'<>'true' then
     raise exception 'Explicit opt-in failed';
