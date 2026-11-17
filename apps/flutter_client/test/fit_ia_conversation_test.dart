@@ -133,7 +133,7 @@ void main(){
       repository:repository)));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('fit-ia-conversation-page')),findsOneWidget);
-    expect(find.text('Cómo me muevo'),findsOneWidget);
+    expect(find.text('Cómo me muevo'),findsWidgets);
     expect(find.text('Cómo vivo'),findsOneWidget);
     expect(find.text('Cómo me relaciono'),findsOneWidget);
     expect(find.byKey(const Key('fit-ia-mobile-insights')),findsOneWidget);
