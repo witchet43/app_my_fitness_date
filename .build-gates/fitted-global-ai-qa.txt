@@ -1,1 +1,1 @@
-Validate single AI preference, first-login choice, Flutter analysis/tests, release build.
+Final validation: bilingual first-login explicit AI preference; centralized SQL RLS and legacy gate; all Flutter and legal page regressions.
