@@ -1,1 +1,1 @@
-Run QA after fixing migration discovery pattern; verify all 300 rows, Flutter chat and privacy invariants.
+Final Fit-IA QA after app integration, live 300 question seed, transactional A/B RLS consent test, bilingual commentary, private profile story and owner-controlled deletion.
