@@ -1,0 +1,1 @@
+Run dynamic brand and legal QA gate. No Cloud Build.
