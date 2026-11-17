@@ -19,6 +19,7 @@ name: Fitted - canonical unified authentication release
 # Supersede blocked image codec QA run with an IHDR-only image integrity check.
 # Follow-up: responsive mobile legal wrapping and medium-desktop layout regression fixes.
 # Release hotfix: enforce semantic tokens instead of obsolete fixed mint-pink literal.
+# Brand Studio release: 20 vector logos, HSV controls, owner-safe 50 palette slots and legal logo mirroring.
 # Silver Motion F polish: neutral strokes and visual accents, copy-led compact access.
 on:
   push:
@@ -236,6 +237,7 @@ jobs:
                   assert "manifest.json?v=slate-silver-v2" in html
                   legal_script=get("/brand-legal.js").decode("utf-8")
                   assert "mfd_brand_live" in legal_script and "__FITTED_PUBLIC_BRAND_KEY__" not in legal_script
+                   assert 'function renderVector' in legal_script and 'const vectors=[' in legal_script
                   for slug in ("terms","privacy"):
                       policy=get("/"+slug+"/").decode("utf-8")
                       assert 'data-brand-name' in policy and '/brand-legal.js' in policy
