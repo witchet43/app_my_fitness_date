@@ -90,7 +90,7 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     setState(()=>sending=true);
     try{
       final response=await widget.repository.fitIaAnswer(
-        pillar,q['id'].toString(),key);
+        pillar,q['id'].toString(),key,locale:en?'en':'es');
       final result=await widget.repository.fitIaOverview();
       if(!mounted)return;
       setState((){
