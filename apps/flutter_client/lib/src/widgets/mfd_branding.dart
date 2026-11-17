@@ -35,14 +35,14 @@ class _FittedMintPainter extends CustomPainter {
       ..cubicTo(45,165,21,174,14,158)
       ..cubicTo(9,142,13,130,28,113)
       ..close();
-    canvas.drawPath(top,Paint()..shader=const LinearGradient(
+    canvas.drawPath(top,Paint()..shader=LinearGradient(
       begin:Alignment.topLeft,end:Alignment.bottomRight,
       colors:[Color(0xE8F2F6F7),Color(0xBFA9B9C1),Color(0x906F8792)],
-    ).createShader(const Rect.fromLTWH(14,22,168,146)));
-    canvas.drawPath(lower,Paint()..shader=const LinearGradient(
+    ).createShader(Rect.fromLTWH(14,22,168,146)));
+    canvas.drawPath(lower,Paint()..shader=LinearGradient(
       begin:Alignment.topLeft,end:Alignment.bottomRight,
       colors:[Color(0xD9CDD9DF),Color(0xA67D929D),Color(0x85516674)],
-    ).createShader(const Rect.fromLTWH(12,68,140,112)));
+    ).createShader(Rect.fromLTWH(12,68,140,112)));
     canvas.restore();
   }
   @override
@@ -84,11 +84,11 @@ class MfdBranding extends StatelessWidget {
     if (networkLogo) {
       image = Image.network(
         brand.logo,
-        key:const Key('mfd-public-logo-network'),
+        key:Key('mfd-public-logo-network'),
         fit:BoxFit.contain,
         filterQuality:FilterQuality.high,
         errorBuilder:(context,error,stackTrace)=>Icon(
-          Icons.auto_awesome,color:const Color(0xFFB5C5CE),size:32),
+          Icons.auto_awesome,color:Color(0xFFB5C5CE),size:32),
       );
     } else if (index != null && index > 0 && index < _catalog.length) {
       image = FittedBox(child:Icon(_catalog[index],
@@ -96,7 +96,7 @@ class MfdBranding extends StatelessWidget {
     } else {
       image = LayoutBuilder(
         builder:(_,box)=>FittedMintMark(
-          key:const Key('fitted-motion-f-mark'),
+          key:Key('fitted-motion-f-mark'),
           size:box.biggest.shortestSide),
       );
     }
@@ -125,19 +125,19 @@ class MfdBranding extends StatelessWidget {
             mainAxisSize:MainAxisSize.min,
             children:[
               mark,
-              const SizedBox(width:12),
+              SizedBox(width:12),
               Flexible(child:Column(
                 mainAxisSize:MainAxisSize.min,
                 crossAxisAlignment:CrossAxisAlignment.start,
                 children:[
                   Text(brand.name.toUpperCase(),
-                    key:const Key('fitted-motion-wordmark'),
+                    key:Key('fitted-motion-wordmark'),
                     maxLines:1,overflow:TextOverflow.ellipsis,
-                    style:const TextStyle(
+                    style:TextStyle(
                       fontSize:23,fontWeight:FontWeight.w800,
                       letterSpacing:2.5,color:FitDateColors.pearl)),
-                  const SizedBox(height:2),
-                  const Text('RITMO · CONEXIÓN',
+                  SizedBox(height:2),
+                  Text('RITMO · CONEXIÓN',
                     maxLines:1,overflow:TextOverflow.ellipsis,
                     style:TextStyle(fontSize:8.5,letterSpacing:1.2,
                       color:FitDateColors.lilac,
