@@ -55,6 +55,12 @@ void main() {
       find.byKey(const Key('landing-approved-image-source'))).dy;
     expect(portraitTop,lessThan(coverTop),
       reason:'Portrait hair must float above the top edge of the panel');
+    final accessTop=tester.getTopLeft(
+      find.byKey(const Key('landing-access'))).dy;
+    final lastPillarTextBottom=tester.getBottomLeft(
+      find.text('Cómo me relaciono')).dy;
+    expect(accessTop-lastPillarTextBottom,inInclusiveRange(0,112),
+      reason:'Desktop sign-in must follow the pillar chips without a tall empty spacer');
     expect(tester.takeException(),isNull);
   });
 
