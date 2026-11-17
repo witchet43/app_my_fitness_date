@@ -3,8 +3,8 @@ import '../core/live_brand.dart';
 import '../theme/fitness_date_theme.dart';
 
 
-/* Shared vector mint mark. A built-in vector keeps the public header, member
- * screens and brand catalogue crisp at every size without external requests. */
+/* Shared translucent silver F. The two flowing strokes evoke motion and
+ * connection without visual clutter or reliance on a remote asset. */
 class FittedMintMark extends StatelessWidget {
   const FittedMintMark({super.key,this.size=48});
   final double size;
@@ -35,15 +35,21 @@ class _FittedMintPainter extends CustomPainter {
       ..cubicTo(45,165,21,174,14,158)
       ..cubicTo(9,142,13,130,28,113)
       ..close();
-    canvas.drawPath(top,Paint()..color=const Color(0xFF89EBD2));
-    canvas.drawPath(lower,Paint()..color=const Color(0xFF69DEC8));
+    canvas.drawPath(top,Paint()..shader=const LinearGradient(
+      begin:Alignment.topLeft,end:Alignment.bottomRight,
+      colors:[Color(0xE8F2F6F7),Color(0xBFA9B9C1),Color(0x906F8792)],
+    ).createShader(const Rect.fromLTWH(14,22,168,146)));
+    canvas.drawPath(lower,Paint()..shader=const LinearGradient(
+      begin:Alignment.topLeft,end:Alignment.bottomRight,
+      colors:[Color(0xD9CDD9DF),Color(0xA67D929D),Color(0x85516674)],
+    ).createShader(const Rect.fromLTWH(12,68,140,112)));
     canvas.restore();
   }
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate)=>false;
 }
 
-/// Motion F: one mark on welcome, member screens and admin. Brand Lab custom
+/// Silver Motion F: one mark on welcome, member screens and admin. Brand Lab custom
 /// uploaded logos remain supported and can override this canonical default.
 class MfdBranding extends StatelessWidget {
   const MfdBranding({
@@ -82,7 +88,7 @@ class MfdBranding extends StatelessWidget {
         fit:BoxFit.contain,
         filterQuality:FilterQuality.high,
         errorBuilder:(context,error,stackTrace)=>Icon(
-          Icons.auto_awesome,color:brand.primaryColor,size:32),
+          Icons.auto_awesome,color:const Color(0xFFB5C5CE),size:32),
       );
     } else if (index != null && index > 0 && index < _catalog.length) {
       image = FittedBox(child:Icon(_catalog[index],

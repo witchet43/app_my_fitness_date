@@ -35,6 +35,7 @@ class PublicEntryShell extends StatefulWidget {
 
 class _PublicEntryShellState extends State<PublicEntryShell> {
   bool register = false;
+  static const _silver = Color(0xFFBCCCD4);
   static const _approvedArtwork =
     'assets/branding/fitted_approved_cover_reference.png';
 
@@ -116,11 +117,11 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       decoration:BoxDecoration(
         borderRadius:BorderRadius.circular(42),
         color:const Color(0xFF0B2830).withValues(alpha:.70),
-        border:Border.all(color:brand.primaryColor.withValues(alpha:.7),
+        border:Border.all(color:_silver.withValues(alpha:.56),
           width:1.05),
       ),
       child:Row(mainAxisSize:MainAxisSize.min,children:[
-        Icon(icon,color:brand.primaryColor,size:24*scale),
+        Icon(icon,color:_silver,size:24*scale),
         SizedBox(width:9*scale),
         Text(FittedLocaleScope.t(context,es,en),
           style:TextStyle(color:FitDateColors.pearl,
@@ -149,12 +150,12 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     if(title=='Conexiones que trascienden.') {
       headline=Text.rich(TextSpan(children:[
         const TextSpan(text:'Conexiones que\n'),
-        TextSpan(text:'trascienden.',style:TextStyle(color:brand.primaryColor)),
+        TextSpan(text:'trascienden.',style:const TextStyle(color:_silver)),
       ]),key:const Key('landing-headline'),style:titleStyle);
     } else if(title=='Connections that go further.') {
       headline=Text.rich(TextSpan(children:[
         const TextSpan(text:'Connections that\n'),
-        TextSpan(text:'go further.',style:TextStyle(color:brand.primaryColor)),
+        TextSpan(text:'go further.',style:const TextStyle(color:_silver)),
       ]),key:const Key('landing-headline'),style:titleStyle);
     } else {
       headline=Text(title,key:const Key('landing-headline'),style:titleStyle);
@@ -165,11 +166,11 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       children:[
         Text(FittedLocaleScope.t(context,
           'PERSONAS EN MOVIMIENTO','PEOPLE IN MOTION'),
-          style:TextStyle(color:brand.primaryColor,fontSize:19*scale,
+          style:TextStyle(color:_silver,fontSize:19*scale,
             letterSpacing:1.4*scale,fontWeight:FontWeight.w800)),
         SizedBox(height:17*scale),
         Container(width:68*scale,height:6*scale,
-          decoration:BoxDecoration(color:brand.primaryColor,
+          decoration:BoxDecoration(color:_silver.withValues(alpha:.92),
             borderRadius:BorderRadius.circular(5))),
         SizedBox(height:28*scale),
         headline,
@@ -218,7 +219,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         padding:EdgeInsets.symmetric(horizontal:10*scale),
         foregroundColor:FitDateColors.pearl,
         textStyle:labelStyle,
-        side:BorderSide(color:brand.primaryColor.withValues(alpha:.91),
+        side:BorderSide(color:_silver.withValues(alpha:.72),
           width:1.2),
         shape:const StadiumBorder(),
         backgroundColor:const Color(0xFF0D2A32).withValues(alpha:.62),
@@ -235,7 +236,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         padding:EdgeInsets.symmetric(horizontal:10*scale),
         foregroundColor:FitDateColors.pearl,
         textStyle:labelStyle,
-        side:BorderSide(color:brand.primaryColor.withValues(alpha:.91),
+        side:BorderSide(color:_silver.withValues(alpha:.72),
           width:1.2),
         shape:const StadiumBorder(),
         backgroundColor:const Color(0xFF0D2A32).withValues(alpha:.62),
@@ -278,7 +279,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
   Widget _promise(IconData icon,String es,String en,
       LiveBrandSettings brand,double scale) =>
     Row(mainAxisSize:MainAxisSize.min,children:[
-      Icon(icon,color:brand.primaryColor,size:28*scale),
+      Icon(icon,color:_silver,size:28*scale),
       SizedBox(width:12*scale),
       Text(FittedLocaleScope.t(context,es,en),
         style:TextStyle(color:FitDateColors.pearl,
@@ -367,10 +368,8 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
 
   Widget _hero(LiveBrandSettings brand,bool wide,double panelWidth) {
     final scale=(panelWidth/1616).clamp(.73,1.09).toDouble();
-    // Keep the approved 1672px composition exactly; below that width,
-    // grant editorial copy enough room to wrap without RenderFlex overflow.
-    final heroHeight=520*scale +
-      math.max(0.0,1616.0-panelWidth)*.57;
+    // Intrinsic height follows translated/wrapping copy; no blank spacer
+    // between the three lifestyle pillars and working sign-in controls.
     return Stack(
       key:const Key('landing-hero'),
       clipBehavior:Clip.none,
@@ -379,7 +378,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           width:panelWidth,
           decoration:BoxDecoration(
             borderRadius:BorderRadius.circular(53*scale),
-            border:Border.all(color:brand.primaryColor.withValues(alpha:.83),
+            border:Border.all(color:_silver.withValues(alpha:.63),
               width:1.25),
             gradient:LinearGradient(
               begin:Alignment.topLeft,end:Alignment.bottomRight,
@@ -391,14 +390,11 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
               painter:_FittedApprovedWaves(brand.primaryColor)))),
             Column(children:[
               if(wide)
-                SizedBox(
-                  height:heroHeight,
-                  child:Padding(
-                    padding:EdgeInsets.fromLTRB(
-                      panelWidth*.067,59*scale, panelWidth*.48,0),
-                    child:Align(alignment:Alignment.topLeft,
-                      child:_message(brand,scale,true)),
-                  ),
+                Padding(
+                  padding:EdgeInsets.fromLTRB(
+                    panelWidth*.067,59*scale,panelWidth*.48,32*scale),
+                  child:Align(alignment:Alignment.topLeft,
+                    child:_message(brand,scale,true)),
                 )
               else ...[
                 SizedBox(height:265,width:double.infinity,
@@ -465,15 +461,17 @@ class _FittedApprovedWaves extends CustomPainter {
   @override
   void paint(Canvas canvas,Size size) {
     final w=size.width,h=size.height;
+    final silver=Color.lerp(mint,const Color(0xFFACBEC8),.9)!;
+    final graphite=Color.lerp(mint,const Color(0xFF4D6977),.9)!;
     final left=Path()
       ..moveTo(0,h*.675)
       ..cubicTo(w*.06,h*.726,w*.16,h*.87,w*.245,h)
       ..lineTo(0,h)..close();
     canvas.drawPath(left,Paint()..shader=LinearGradient(
       begin:Alignment.topLeft,end:Alignment.bottomRight,
-      colors:[mint.withValues(alpha:.96),
-        const Color(0xFF3C928F).withValues(alpha:.37),
-        const Color(0xFF122E39).withValues(alpha:.07)],
+      colors:[silver.withValues(alpha:.58),
+        graphite.withValues(alpha:.30),
+        graphite.withValues(alpha:.04)],
     ).createShader(Rect.fromLTWH(0,h*.64,w*.25,h*.4)));
 
     final right=Path()
@@ -482,8 +480,8 @@ class _FittedApprovedWaves extends CustomPainter {
       ..lineTo(w,h)..close();
     canvas.drawPath(right,Paint()..shader=LinearGradient(
       begin:Alignment.topLeft,end:Alignment.bottomRight,
-      colors:[const Color(0xFF1B4950).withValues(alpha:.3),
-        const Color(0xFF65ECD2).withValues(alpha:.93),mint],
+      colors:[graphite.withValues(alpha:.16),
+        silver.withValues(alpha:.47),silver.withValues(alpha:.68)],
     ).createShader(Rect.fromLTWH(w*.74,h*.65,w*.26,h*.36)));
   }
 
