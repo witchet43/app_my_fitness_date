@@ -55,9 +55,9 @@ class _FittedVisualShowcaseState extends State<FittedVisualShowcase> {
         body:SafeArea(child:Column(children:[
           Container(
             width:double.infinity,
-            color:const Color(0xFF123437),
-            padding:const EdgeInsets.symmetric(horizontal:14,vertical:9),
-            child:const Row(children:[
+            color:Color(0xFF123437),
+            padding:EdgeInsets.symmetric(horizontal:14,vertical:9),
+            child:Row(children:[
               Icon(Icons.visibility_outlined,color:FitDateColors.aqua,size:16),
               SizedBox(width:8),
               Expanded(child:Text('PREVIEW NO PRODUCTIVA · DATOS FICTICIOS',
@@ -70,10 +70,10 @@ class _FittedVisualShowcaseState extends State<FittedVisualShowcase> {
             width:double.infinity,
             child:SingleChildScrollView(
               scrollDirection:Axis.horizontal,
-              padding:const EdgeInsets.symmetric(horizontal:12,vertical:8),
+              padding:EdgeInsets.symmetric(horizontal:12,vertical:8),
               child:Row(children:[
                 for(var i=0;i<labels.length;i++)Padding(
-                  padding:const EdgeInsets.only(right:8),
+                  padding:EdgeInsets.only(right:8),
                   child:ChoiceChip(
                     key:Key('preview-tab-$i'),
                     selected:area==i,
@@ -85,15 +85,15 @@ class _FittedVisualShowcaseState extends State<FittedVisualShowcase> {
             ),
           ),
           Expanded(child:area==0
-            ? const PublicEntryShell(
+            ? PublicEntryShell(
                 termsUrl:'https://my-fitness-date.pages.dev/terms/',
                 privacyUrl:'https://my-fitness-date.pages.dev/privacy/',
               )
             : area==1
               ? SingleChildScrollView(
-                  padding:const EdgeInsets.all(18),
+                  padding:EdgeInsets.all(18),
                   child:Center(child:ConstrainedBox(
-                    constraints:const BoxConstraints(maxWidth:1000),
+                    constraints:BoxConstraints(maxWidth:1000),
                     child:FittedProfileStoryV28(
                       profile:profile,rhythm:rhythm,
                       startingPreference:null,
@@ -104,9 +104,9 @@ class _FittedVisualShowcaseState extends State<FittedVisualShowcase> {
                   )),
                 )
               : area==2
-                ? const RhythmConceptLabB10(profileMode:true)
+                ? RhythmConceptLabB10(profileMode:true)
                 : Center(child:ConstrainedBox(
-                    constraints:const BoxConstraints(maxWidth:900),
+                    constraints:BoxConstraints(maxWidth:900),
                     child:ProfileEditorV26(
                       initial:profile,
                       onSave:(data)async{

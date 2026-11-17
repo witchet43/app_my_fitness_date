@@ -66,7 +66,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         left:-cropLeft*scale,top:-cropTop*scale,
         width:sourceWidth*scale,height:sourceHeight*scale,
         child:Image.asset(_approvedArtwork,fit:BoxFit.fill,
-          key:const Key('landing-approved-image-source')),
+          key:Key('landing-approved-image-source')),
       ),
     ]);
   });
@@ -84,14 +84,14 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     if(wide) {
       image=ShaderMask(
         blendMode:BlendMode.dstIn,
-        shaderCallback:(bounds)=>const LinearGradient(
+        shaderCallback:(bounds)=>LinearGradient(
           begin:Alignment.centerLeft,end:Alignment.centerRight,
           stops:[0,.16,.38,1],
           colors:[Colors.transparent,Colors.black54,Colors.black,Colors.black],
         ).createShader(bounds),
         child:ShaderMask(
           blendMode:BlendMode.dstIn,
-          shaderCallback:(bounds)=>const LinearGradient(
+          shaderCallback:(bounds)=>LinearGradient(
             begin:Alignment.topCenter,end:Alignment.bottomCenter,
             stops:[0,.77,1],
             colors:[Colors.black,Colors.black,Colors.transparent],
@@ -106,7 +106,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         'Young adults running outdoors, approved Fitted cover'),
       image:true,
       child:KeyedSubtree(
-        key:const Key('landing-editorial-photo'),child:image));
+        key:Key('landing-editorial-photo'),child:image));
   }
 
   Widget _chip(IconData icon,String es,String en,
@@ -116,7 +116,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         horizontal:14*scale,vertical:10*scale),
       decoration:BoxDecoration(
         borderRadius:BorderRadius.circular(42),
-        color:const Color(0xFF0B2830).withValues(alpha:.70),
+        color:Color(0xFF0B2830).withValues(alpha:.70),
         border:Border.all(color:_silver.withValues(alpha:.56),
           width:1.05),
       ),
@@ -149,16 +149,16 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     Widget headline;
     if(title=='Conexiones que trascienden.') {
       headline=Text.rich(TextSpan(children:[
-        const TextSpan(text:'Conexiones que\n'),
-        TextSpan(text:'trascienden.',style:const TextStyle(color:_silver)),
-      ]),key:const Key('landing-headline'),style:titleStyle);
+        TextSpan(text:'Conexiones que\n'),
+        TextSpan(text:'trascienden.',style:TextStyle(color:_silver)),
+      ]),key:Key('landing-headline'),style:titleStyle);
     } else if(title=='Connections that go further.') {
       headline=Text.rich(TextSpan(children:[
-        const TextSpan(text:'Connections that\n'),
-        TextSpan(text:'go further.',style:const TextStyle(color:_silver)),
-      ]),key:const Key('landing-headline'),style:titleStyle);
+        TextSpan(text:'Connections that\n'),
+        TextSpan(text:'go further.',style:TextStyle(color:_silver)),
+      ]),key:Key('landing-headline'),style:titleStyle);
     } else {
-      headline=Text(title,key:const Key('landing-headline'),style:titleStyle);
+      headline=Text(title,key:Key('landing-headline'),style:titleStyle);
     }
     return Column(
       crossAxisAlignment:CrossAxisAlignment.start,
@@ -175,7 +175,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         SizedBox(height:28*scale),
         headline,
         SizedBox(height:19*scale),
-        Text(description,key:const Key('landing-brand-description'),
+        Text(description,key:Key('landing-brand-description'),
           style:TextStyle(color:FitDateColors.pearl,
             height:1.37,fontSize:20.6*scale,fontWeight:FontWeight.w500)),
         SizedBox(height:19*scale),
@@ -193,7 +193,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
 
   Widget _googleSymbol(double scale)=>ShaderMask(
     blendMode:BlendMode.srcIn,
-    shaderCallback:(bounds)=>const LinearGradient(
+    shaderCallback:(bounds)=>LinearGradient(
       begin:Alignment.topLeft,end:Alignment.bottomRight,
       stops:[0,.30,.55,.78,1],
       colors:[
@@ -212,7 +212,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       fontWeight:FontWeight.w700,fontSize:19.2*scale);
     final height=66*scale;
     final google=OutlinedButton.icon(
-      key:const Key('google-signin-entry'),
+      key:Key('google-signin-entry'),
       onPressed:legalConfigured?widget.onGoogle:null,
       style:OutlinedButton.styleFrom(
         minimumSize:Size(0,height),
@@ -221,15 +221,15 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         textStyle:labelStyle,
         side:BorderSide(color:_silver.withValues(alpha:.72),
           width:1.2),
-        shape:const StadiumBorder(),
-        backgroundColor:const Color(0xFF0D2A32).withValues(alpha:.62),
+        shape:StadiumBorder(),
+        backgroundColor:Color(0xFF0D2A32).withValues(alpha:.62),
       ),
       icon:_googleSymbol(scale),
       label:Text(FittedLocaleScope.t(context,
         'Continuar con Google','Continue with Google')),
     );
     final apple=OutlinedButton.icon(
-      key:const Key('apple-signin-entry'),
+      key:Key('apple-signin-entry'),
       onPressed:legalConfigured?widget.onApple:null,
       style:OutlinedButton.styleFrom(
         minimumSize:Size(0,height),
@@ -238,21 +238,21 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         textStyle:labelStyle,
         side:BorderSide(color:_silver.withValues(alpha:.72),
           width:1.2),
-        shape:const StadiumBorder(),
-        backgroundColor:const Color(0xFF0D2A32).withValues(alpha:.62),
+        shape:StadiumBorder(),
+        backgroundColor:Color(0xFF0D2A32).withValues(alpha:.62),
       ),
       icon:Icon(Icons.apple,size:28*scale),
       label:Text(FittedLocaleScope.t(context,
         'Continuar con Apple','Continue with Apple')),
     );
     final email=FilledButton.icon(
-      key:const Key('email-entry'),
+      key:Key('email-entry'),
       onPressed:legalConfigured?action:null,
       style:FilledButton.styleFrom(
         minimumSize:Size(0,height),
         padding:EdgeInsets.symmetric(horizontal:10*scale),
         textStyle:labelStyle,
-        shape:const StadiumBorder(),
+        shape:StadiumBorder(),
         backgroundColor:brand.primaryColor,
         foregroundColor:brand.backgroundColor,
       ),
@@ -265,8 +265,8 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     );
     if(!wide) {
       return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-        google,const SizedBox(height:9),
-        apple,const SizedBox(height:9),email,
+        google,SizedBox(height:9),
+        apple,SizedBox(height:9),email,
       ]);
     }
     return Row(children:[
@@ -288,7 +288,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
 
   Widget _access(bool wide,LiveBrandSettings brand,double scale,
       double panelWidth) => KeyedSubtree(
-    key:const Key('landing-access'),
+    key:Key('landing-access'),
     child:Padding(
       padding:EdgeInsets.fromLTRB(
         wide?panelWidth*.111:21,
@@ -303,7 +303,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             thickness:.8)),
           SizedBox(width:14*scale),
           Flexible(child:TextButton(
-            key:const Key('switch-entry-mode'),
+            key:Key('switch-entry-mode'),
             onPressed:()=>setState(()=>register=!register),
             child:Text.rich(
               TextSpan(children:[
@@ -371,7 +371,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
     // Intrinsic height follows translated/wrapping copy; no blank spacer
     // between the three lifestyle pillars and working sign-in controls.
     return Stack(
-      key:const Key('landing-hero'),
+      key:Key('landing-hero'),
       clipBehavior:Clip.none,
       children:[
         Container(
@@ -383,7 +383,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
             gradient:LinearGradient(
               begin:Alignment.topLeft,end:Alignment.bottomRight,
               colors:[brand.backgroundColor,
-                const Color(0xFF13343E),const Color(0xFF12303A)])),
+                Color(0xFF13343E),Color(0xFF12303A)])),
           clipBehavior:Clip.antiAlias,
           child:Stack(children:[
             Positioned.fill(child:IgnorePointer(child:CustomPaint(
@@ -400,7 +400,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
                 SizedBox(height:265,width:double.infinity,
                   child:_photo(brand,false)),
                 Padding(
-                  padding:const EdgeInsets.fromLTRB(21,22,20,18),
+                  padding:EdgeInsets.fromLTRB(21,22,20,18),
                   child:_message(brand, .75,false)),
               ],
               _access(wide,brand,scale,panelWidth),
@@ -429,14 +429,14 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
         backgroundColor:brand.backgroundColor,
         titleSpacing:wide?31:15,
         title:Row(mainAxisSize:MainAxisSize.min,children:[
-          const MfdBranding(full:false,width:44),
-          const SizedBox(width:10),
+          MfdBranding(full:false,width:44),
+          SizedBox(width:10),
           Flexible(child:Text(brand.name,maxLines:1,
             overflow:TextOverflow.ellipsis,
-            style:const TextStyle(fontSize:27.5,
+            style:TextStyle(fontSize:27.5,
               color:FitDateColors.pearl,fontWeight:FontWeight.w800))),
         ]),
-        actions:[const Padding(padding:EdgeInsets.only(right:16),
+        actions:[Padding(padding:EdgeInsets.only(right:16),
           child:Center(child:FittedLanguageSelector()))],
       ),
       body:SafeArea(child:LayoutBuilder(builder:(context,box) {
@@ -446,7 +446,7 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
           padding:EdgeInsets.symmetric(
             horizontal:wide?26:12,vertical:wide?17:11),
           children:[Center(child:_hero(brand,wide,panelWidth)),
-            const SizedBox(height:40)],
+            SizedBox(height:40)],
         );
       })),
     );
@@ -461,8 +461,8 @@ class _FittedApprovedWaves extends CustomPainter {
   @override
   void paint(Canvas canvas,Size size) {
     final w=size.width,h=size.height;
-    final silver=Color.lerp(mint,const Color(0xFFACBEC8),.9)!;
-    final graphite=Color.lerp(mint,const Color(0xFF4D6977),.9)!;
+    final silver=Color.lerp(mint,Color(0xFFACBEC8),.9)!;
+    final graphite=Color.lerp(mint,Color(0xFF4D6977),.9)!;
     final left=Path()
       ..moveTo(0,h*.675)
       ..cubicTo(w*.06,h*.726,w*.16,h*.87,w*.245,h)

@@ -13,3 +13,9 @@
   Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob:; connect-src https://jtrdvnwbxpfdnbzasvcj.supabase.co; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'
   Cache-Control: no-cache, no-store, must-revalidate
   X-Robots-Tag: noindex, nofollow
+
+/terms/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://jtrdvnwbxpfdnbzasvcj.supabase.co; connect-src https://jtrdvnwbxpfdnbzasvcj.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+
+/privacy/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://jtrdvnwbxpfdnbzasvcj.supabase.co; connect-src https://jtrdvnwbxpfdnbzasvcj.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'

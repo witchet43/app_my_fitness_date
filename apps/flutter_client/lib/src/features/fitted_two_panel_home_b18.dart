@@ -28,23 +28,23 @@ class FittedIdentityPanelB18 extends StatelessWidget {
   Widget _heading(BuildContext context, bool en) => Column(
     crossAxisAlignment:CrossAxisAlignment.start,children:[
       Container(
-        padding:const EdgeInsets.symmetric(horizontal:14,vertical:9),
+        padding:EdgeInsets.symmetric(horizontal:14,vertical:9),
         decoration:BoxDecoration(
           color:FitDateColors.aqua.withValues(alpha:.09),
           borderRadius:BorderRadius.circular(40),
           border:Border.all(color:FitDateColors.aqua.withValues(alpha:.30))),
         child:Text(en?'LIFESTYLE COMPATIBILITY':'AFINIDAD DE ESTILO DE VIDA',
-          style:const TextStyle(color:FitDateColors.aqua,fontSize:11,
+          style:TextStyle(color:FitDateColors.aqua,fontSize:11,
             fontWeight:FontWeight.w800,letterSpacing:1.15)),
       ),
-      const SizedBox(height:16),
+      SizedBox(height:16),
       Text(en?'Hello, $name. Find your rhythm.':'Hola, $name. Sigue tu ritmo.',
-        key:const Key('b18-main-greeting'),
+        key:Key('b18-main-greeting'),
         maxLines:2,overflow:TextOverflow.ellipsis,
         style:Theme.of(context).textTheme.headlineMedium?.copyWith(
           fontWeight:FontWeight.w800,color:FitDateColors.pearl,
           height:1.13,fontSize:32)),
-      const SizedBox(height:7),
+      SizedBox(height:7),
       Text(en?'Meet people whose values and lifestyle align with yours.':
         'Conoce personas que comparten tu ritmo, tus valores y tus intenciones.',
         style:Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -59,11 +59,11 @@ class FittedIdentityPanelB18 extends StatelessWidget {
       const ['Cómo me muevo','Cómo vivo','Cómo me relaciono'];
     const icons=[Icons.directions_run_rounded,Icons.wb_twilight_outlined,
       Icons.connect_without_contact_outlined];
-    const colors=[FitDateColors.aqua,FitDateColors.apricot,FitDateColors.lilac];
+    final colors = [FitDateColors.aqua,FitDateColors.apricot,FitDateColors.lilac];
     return Container(
-      key:const Key('b19-compact-pillars'),
+      key:Key('b19-compact-pillars'),
       width:292,
-      padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),
+      padding:EdgeInsets.symmetric(horizontal:12,vertical:10),
       decoration:BoxDecoration(
         borderRadius:BorderRadius.circular(18),
         color:FitDateColors.inkDeep.withValues(alpha:.34),
@@ -75,15 +75,15 @@ class FittedIdentityPanelB18 extends StatelessWidget {
             onTap:()=>onPillar(i),
             borderRadius:BorderRadius.circular(10),
             child:Padding(
-              padding:const EdgeInsets.symmetric(vertical:7),
+              padding:EdgeInsets.symmetric(vertical:7),
               child:Row(children:[
                 Icon(icons[i],size:16,color:colors[i]),
-                const SizedBox(width:8),
+                SizedBox(width:8),
                 Expanded(child:Text(names[i],maxLines:1,
                   overflow:TextOverflow.ellipsis,
-                  style:const TextStyle(fontSize:12.5,
+                  style:TextStyle(fontSize:12.5,
                     color:FitDateColors.pearl,fontWeight:FontWeight.w600))),
-                const SizedBox(width:6),
+                SizedBox(width:6),
                 SizedBox(width:58,
                   child:LinearProgressIndicator(
                     key:Key('b18-pillar-progress-$i'),
@@ -92,7 +92,7 @@ class FittedIdentityPanelB18 extends StatelessWidget {
                     borderRadius:BorderRadius.circular(5),
                     color:colors[i],
                     backgroundColor:FitDateColors.pearl.withValues(alpha:.13))),
-                const SizedBox(width:6),
+                SizedBox(width:6),
                 SizedBox(width:34,child:Text('${progress[i]}%',
                   textAlign:TextAlign.right,
                   style:TextStyle(fontSize:11,color:colors[i],
@@ -113,48 +113,48 @@ class FittedIdentityPanelB18 extends StatelessWidget {
     final value=(s[en?'summary_en':'summary_es']??'').toString().trim();
     final empty= value.isEmpty;
     return FittedGlassPanel(
-      radius:23,blur:8,padding:const EdgeInsets.all(22),
+      radius:23,blur:8,padding:EdgeInsets.all(22),
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[
-          const Icon(Icons.auto_stories_outlined,color:FitDateColors.lilac,size:24),
-          const SizedBox(width:10),
+          Icon(Icons.auto_stories_outlined,color:FitDateColors.lilac,size:24),
+          SizedBox(width:10),
           Expanded(child:Text(en?'Your rhythm, in words':'Tu ritmo, en palabras',
-            key:const Key('b19-story-title'),
+            key:Key('b19-story-title'),
             style:Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight:FontWeight.w800))),
           Container(
-            padding:const EdgeInsets.symmetric(horizontal:9,vertical:4),
+            padding:EdgeInsets.symmetric(horizontal:9,vertical:4),
             decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),
               border:Border.all(color:FitDateColors.lilac.withValues(alpha:.65))),
             child:Text(actualAi?'IA':aiEnabled
               ?(en?'Editorial':'Editorial')
               :(en?'Written by you':'Tu historia'),
-              style:const TextStyle(fontSize:11,color:FitDateColors.lilac,
+              style:TextStyle(fontSize:11,color:FitDateColors.lilac,
                 fontWeight:FontWeight.w700))),
           if(!aiEnabled)...[
-            const SizedBox(width:5),
+            SizedBox(width:5),
             IconButton(
-              key:const Key('b19-edit-manual-story'),
+              key:Key('b19-edit-manual-story'),
               tooltip:en?'Edit my story':'Editar mi historia',
               onPressed:summaryBusy?null:onManualEdit,
-              icon:const Icon(Icons.edit_outlined,
+              icon:Icon(Icons.edit_outlined,
                 color:FitDateColors.lilac,size:22)),
           ],
         ]),
-        const SizedBox(height:19),
-        if(summaryBusy)const LinearProgressIndicator(minHeight:3),
+        SizedBox(height:19),
+        if(summaryBusy)LinearProgressIndicator(minHeight:3),
         Text(empty?(aiEnabled
             ?(en?'Complete your lifestyle profile to build your story.':
               'Completa tu perfil para construir tu historia con IA.')
             :(en?'Write your personal introduction in your own words.':
               'Escribe tu historia con tus propias palabras.'))
           :value,
-          key:const Key('b18-profile-summary'),
+          key:Key('b18-profile-summary'),
           style:Theme.of(context).textTheme.bodyLarge?.copyWith(
             height:1.64,fontSize:17.5,
             fontWeight:FontWeight.w400,
             color:empty?FitDateColors.muted:FitDateColors.pearl)),
-        const SizedBox(height:19),
+        SizedBox(height:19),
         Divider(color:FitDateColors.pearl.withValues(alpha:.15)),
         Text(published
             ?(en?'Visible to eligible verified members.':
@@ -163,9 +163,9 @@ class FittedIdentityPanelB18 extends StatelessWidget {
               'Privado hasta que autorices compartirlo y actives la visibilidad para miembros.'),
           style:Theme.of(context).textTheme.bodySmall?.copyWith(
             color:FitDateColors.muted)),
-        const SizedBox(height:7),
+        SizedBox(height:7),
         TextButton.icon(
-          key:const Key('b18-summary-consent'),
+          key:Key('b18-summary-consent'),
           onPressed:summaryBusy?null:onSummaryConsent,
           icon:Icon(aiEnabled?Icons.auto_awesome_outlined:
             Icons.verified_user_outlined,size:18),
@@ -179,40 +179,40 @@ class FittedIdentityPanelB18 extends StatelessWidget {
   }
 
   Widget _portrait(BuildContext context,bool en) => InkWell(
-    key:const Key('b18-owner-portrait'),
+    key:Key('b18-owner-portrait'),
     onTap:onEdit,borderRadius:BorderRadius.circular(23),
     child:Container(
       height:240,width:200,
       clipBehavior:Clip.antiAlias,
       decoration:BoxDecoration(
-        gradient:const LinearGradient(colors:[
-          Color(0xFF29375E),Color(0xFF321F52)]),
+        gradient:LinearGradient(colors:[
+          FitDateColors.surfaceRaised,FitDateColors.surface]),
         borderRadius:BorderRadius.circular(23),
         border:Border.all(color:FitDateColors.lilac.withValues(alpha:.55))),
       child:Stack(fit:StackFit.expand,children:[
         if(photo==null)
-          const Center(child:Icon(Icons.person_outline_rounded,
+          Center(child:Icon(Icons.person_outline_rounded,
             color:FitDateColors.lilac,size:78))
         else FutureBuilder<Uint8List>(
           future:photo,
           builder:(context,snap)=>snap.hasData&&snap.data!.isNotEmpty
             ?Image.memory(snap.data!,fit:BoxFit.cover,
               gaplessPlayback:true)
-            :const Center(child:Icon(Icons.person_outline_rounded,
+            :Center(child:Icon(Icons.person_outline_rounded,
                 color:FitDateColors.lilac,size:78)),
         ),
         Align(alignment:Alignment.bottomCenter,child:Container(
-          width:double.infinity,padding:const EdgeInsets.all(11),
+          width:double.infinity,padding:EdgeInsets.all(11),
           decoration:BoxDecoration(
             color:FitDateColors.inkDeep.withValues(alpha:.83),
-            borderRadius:const BorderRadius.only(
+            borderRadius:BorderRadius.only(
               bottomLeft:Radius.circular(21),
               bottomRight:Radius.circular(21))),
           child:Row(children:[
-            const Icon(Icons.camera_alt_outlined,size:21),
-            const SizedBox(width:8),
+            Icon(Icons.camera_alt_outlined,size:21),
+            SizedBox(width:8),
             Expanded(child:Text(en?'My profile photo':
-              'Mi foto de perfil',style:const TextStyle(
+              'Mi foto de perfil',style:TextStyle(
                 fontSize:12,fontWeight:FontWeight.w700))),
           ]),
         )),
@@ -227,51 +227,51 @@ class FittedIdentityPanelB18 extends StatelessWidget {
       final wide=box.maxWidth>=900;
       final medium=box.maxWidth>=600;
       return Container(
-        key:const Key('b18-unified-identity-panel'),
+        key:Key('b18-unified-identity-panel'),
         clipBehavior:Clip.antiAlias,
         decoration:BoxDecoration(
           borderRadius:BorderRadius.circular(28),
           border:Border.all(color:FitDateColors.aqua.withValues(alpha:.4)),
-          gradient:const LinearGradient(
-            colors:[Color(0xFF162A4B),Color(0xFF191D40),Color(0xFF292046)])),
+          gradient:LinearGradient(
+            colors:[FitDateColors.inkDeep,FitDateColors.surface,FitDateColors.surfaceRaised])),
         child:Stack(children:[
-          const Positioned.fill(child:FittedRhythmLines(density:.8)),
+          Positioned.fill(child:FittedRhythmLines(density:.8)),
           Padding(
             padding:EdgeInsets.all(wide?25:17),
             child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
               if(wide) Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
                 Expanded(child:_heading(context,en)),
-                const SizedBox(width:18),
+                SizedBox(width:18),
                 _pillars(context,en),
               ]) else Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
                 _heading(context,en),
-                const SizedBox(height:14),
+                SizedBox(height:14),
                 Align(alignment:Alignment.centerRight,child:_pillars(context,en)),
               ]),
-              const SizedBox(height:22),
+              SizedBox(height:22),
               if(wide) Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
                 Expanded(flex:75,child:ConstrainedBox(
-                  constraints:const BoxConstraints(minHeight:290),
+                  constraints:BoxConstraints(minHeight:290),
                   child:_summary(context,en))),
-                const SizedBox(width:17),
+                SizedBox(width:17),
                 SizedBox(width:200,child:_portrait(context,en)),
               ]) else if(medium)
                 Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
                   Expanded(child:_summary(context,en)),
-                  const SizedBox(width:12),
+                  SizedBox(width:12),
                   SizedBox(width:150,child:_portrait(context,en)),
                 ])
               else Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
                 _summary(context,en),
-                const SizedBox(height:15),
+                SizedBox(height:15),
                 Align(alignment:Alignment.centerRight,
                   child:SizedBox(width:175,child:_portrait(context,en))),
               ]),
-              const SizedBox(height:16),
+              SizedBox(height:16),
               Divider(color:FitDateColors.pearl.withValues(alpha:.18)),
               Row(children:[
-                const Icon(Icons.info_outline,color:FitDateColors.aqua,size:17),
-                const SizedBox(width:9),
+                Icon(Icons.info_outline,color:FitDateColors.aqua,size:17),
+                SizedBox(width:9),
                 Expanded(child:Text(en
                   ?'Your story stays yours: AI updates only with your consent; manual text changes only when you edit it.'
                   :'Tu historia te pertenece: la IA se actualiza solo con tu autorización; el texto manual cambia únicamente cuando tú lo editas.',
@@ -333,13 +333,13 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
     if(id.isEmpty||busy!=null)return;
     final confirm=await showDialog<bool>(context:context,builder:(ctx)=>
       AlertDialog(
-        title:const Text('¿Te interesa conocer a esta persona?'),
-        content:const Text('Solo existirá un match cuando ambos acepten.'),
+        title:Text('¿Te interesa conocer a esta persona?'),
+        content:Text('Solo existirá un match cuando ambos acepten.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(ctx,false),
-            child:const Text('Cancelar')),
+            child:Text('Cancelar')),
           FilledButton(onPressed:()=>Navigator.pop(ctx,true),
-            child:const Text('Expresar interés')),
+            child:Text('Expresar interés')),
         ],
       ));
     if(confirm!=true||!mounted)return;
@@ -360,14 +360,14 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
     final id=(person['user_id']??'').toString();
     final en=FittedLocaleScope.languageOf(context)=='en';
     return Expanded(child:Card(
-      key:Key('b18-fit-$id'),margin:const EdgeInsets.all(3),
-      child:Padding(padding:const EdgeInsets.all(14),
+      key:Key('b18-fit-$id'),margin:EdgeInsets.all(3),
+      child:Padding(padding:EdgeInsets.all(14),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           Row(children:[
             CircleAvatar(radius:28,
               backgroundColor:FitDateColors.surfaceRaised,
-              child:const Icon(Icons.person_outline,color:FitDateColors.lilac)),
-            const SizedBox(width:11),
+              child:Icon(Icons.person_outline,color:FitDateColors.lilac)),
+            SizedBox(width:11),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               children:[
                 Text((person['display_name']??'').toString(),
@@ -377,7 +377,7 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
                   style:Theme.of(context).textTheme.bodySmall),
               ])),
           ]),
-          const SizedBox(height:10),
+          SizedBox(height:10),
           FutureBuilder<Map<String,dynamic>>(
             future:widget.api.candidateShowcaseB18(id),
             builder:(context,s){
@@ -396,37 +396,37 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
                       ?ClipRRect(borderRadius:BorderRadius.circular(12),
                         child:Image.memory(photo.data!,height:115,
                           width:double.infinity,fit:BoxFit.cover))
-                      :const SizedBox.shrink()),
-                  const SizedBox(height:7),
+                      :SizedBox.shrink()),
+                  SizedBox(height:7),
                   Text(bio,maxLines:4,overflow:TextOverflow.ellipsis,
                     style:Theme.of(context).textTheme.bodySmall),
                 ]);
             }),
-          const SizedBox(height:9),
+          SizedBox(height:9),
           FutureBuilder<Map<String,dynamic>>(
             future:widget.api.compatibilityB11(id),
             builder:(context,score){
               final result=score.data;
               final percent=result?['percent'];
               if(result?['available']!=true || percent is! num){
-                return const SizedBox.shrink();
+                return SizedBox.shrink();
               }
               return Container(
-                padding:const EdgeInsets.symmetric(horizontal:10,vertical:6),
+                padding:EdgeInsets.symmetric(horizontal:10,vertical:6),
                 decoration:BoxDecoration(
                   border:Border.all(color:FitDateColors.aqua),
                   borderRadius:BorderRadius.circular(20)),
                 child:Text(en?'Lifestyle affinity · ${percent.round()}%':
                   'Ritmo afín · ${percent.round()}%',
-                  style:const TextStyle(fontSize:12,
+                  style:TextStyle(fontSize:12,
                     fontWeight:FontWeight.w700,color:FitDateColors.aqua)),
               );
             }),
-          const Spacer(),
+          Spacer(),
           Align(alignment:Alignment.centerRight,
             child:TextButton.icon(
               onPressed:busy==null?()=>like(person):null,
-              icon:const Icon(Icons.explore_outlined),
+              icon:Icon(Icons.explore_outlined),
               label:Text(en?'Interested':'Me interesa'))),
         ]),
       ),
@@ -450,28 +450,28 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
       (es:'Aceptar privacidad y consentimiento',en:'Accept privacy and consent',
         descEs:'Tus datos siguen protegidos.',descEn:'Your information stays protected.',
         ok:data['dating_consent']==true,onTap:widget.onPrepare),
-      (es:'Apertura segura de Fitted',en:'Safety release approval',
+      (es:'Apertura segura de la aplicación',en:'Safety release approval',
         descEs:'Operación y moderación verificadas.',descEn:'Verified safety operations.',
         ok:data['discovery_release_ready']==true,onTap:widget.onPrepare),
     ];
     final complete=setup.where((x)=>x.ok).length;
     final canBrowse=data['enabled']==true && complete==setup.length;
     return Container(
-      key:const Key('b18-fits-matching-panel'),
-      padding:const EdgeInsets.all(19),
+      key:Key('b18-fits-matching-panel'),
+      padding:EdgeInsets.all(19),
       decoration:BoxDecoration(
         borderRadius:BorderRadius.circular(28),
-        gradient:const LinearGradient(colors:[
-          Color(0xFF20254B),Color(0xFF23204A),Color(0xFF30214F)]),
+        gradient:LinearGradient(colors:[
+          FitDateColors.inkDeep,FitDateColors.surface,FitDateColors.surfaceRaised]),
         border:Border.all(color:FitDateColors.lilac.withValues(alpha:.52))),
       child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Row(children:[
-          Container(padding:const EdgeInsets.all(11),
+          Container(padding:EdgeInsets.all(11),
             decoration:BoxDecoration(
               color:FitDateColors.lilac.withValues(alpha:.17),
               borderRadius:BorderRadius.circular(16)),
-            child:const Icon(Icons.hub_outlined,color:FitDateColors.lilac,size:28)),
-          const SizedBox(width:13),
+            child:Icon(Icons.hub_outlined,color:FitDateColors.lilac,size:28)),
+          SizedBox(width:13),
           Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
             children:[
               Text(en?'Your next fits':'Tus próximos fits',
@@ -483,9 +483,9 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
             ])),
           IconButton(onPressed:loading?null:refresh,
             tooltip:en?'Refresh fits':'Actualizar fits',
-            icon:const Icon(Icons.refresh)),
+            icon:Icon(Icons.refresh)),
         ]),
-        const SizedBox(height:16),
+        SizedBox(height:16),
         LayoutBuilder(builder:(context,widths){
           final wide=widths.maxWidth>=770;
           final checklist=Column(crossAxisAlignment:CrossAxisAlignment.stretch,
@@ -498,12 +498,12 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
                   style:Theme.of(context).textTheme.titleLarge?.copyWith(
                     color:FitDateColors.lilac)),
               ]),
-              const SizedBox(height:10),
+              SizedBox(height:10),
               LinearProgressIndicator(
                 value:complete/setup.length,minHeight:7,
                 backgroundColor:FitDateColors.pearl.withValues(alpha:.12),
                 color:FitDateColors.lilac),
-              const SizedBox(height:9),
+              SizedBox(height:9),
               for(var i=0;i<setup.length;i++)
                 ListTile(
                   key:Key('b18-readiness-$i'),
@@ -512,11 +512,11 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
                     Icons.radio_button_unchecked,
                     color:setup[i].ok?FitDateColors.aqua:FitDateColors.lilac),
                   title:Text(en?setup[i].en:setup[i].es,
-                    style:const TextStyle(fontWeight:FontWeight.w600)),
+                    style:TextStyle(fontWeight:FontWeight.w600)),
                   subtitle:Text(en?setup[i].descEn:setup[i].descEs),
-                  trailing:setup[i].ok?const Icon(Icons.check,size:18,
+                  trailing:setup[i].ok?Icon(Icons.check,size:18,
                     color:FitDateColors.aqua):
-                    const Icon(Icons.chevron_right),
+                    Icon(Icons.chevron_right),
                   onTap:setup[i].onTap,
                 ),
             ]);
@@ -524,16 +524,16 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
             Text(en?'These are your fits':'Así se verán tus fits',
               style:Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight:FontWeight.w700)),
-            const SizedBox(height:5),
+            SizedBox(height:5),
             Text(canBrowse?(en?'Real members who passed safety checks.':
               'Perfiles reales con verificaciones de seguridad.'):(en
               ?'Matches will appear after every requirement is complete.':
               'Aquí aparecerán personas afines cuando completes los requisitos.'),
               style:Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height:13),
-            if(loading)const LinearProgressIndicator(),
+            SizedBox(height:13),
+            if(loading)LinearProgressIndicator(),
             if(problem!=null)Text(problem!,
-              style:const TextStyle(color:Colors.orangeAccent)),
+              style:TextStyle(color:Colors.orangeAccent)),
             if(!canBrowse)
               Container(height:176,alignment:Alignment.center,
                 decoration:BoxDecoration(
@@ -541,9 +541,9 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
                   color:FitDateColors.inkDeep.withValues(alpha:.4),
                   border:Border.all(color:FitDateColors.outline)),
                 child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
-                  const Icon(Icons.lock_person_outlined,size:42,
+                  Icon(Icons.lock_person_outlined,size:42,
                     color:FitDateColors.lilac),
-                  const SizedBox(height:10),
+                  SizedBox(height:10),
                   Text(en?'Your safe connections start here':
                     'Tus conexiones seguras empiezan aquí',
                     textAlign:TextAlign.center),
@@ -556,25 +556,25 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
             else if(candidates.isNotEmpty)
               Row(children:[
                 IconButton(
-                  key:const Key('b18-fit-previous'),
+                  key:Key('b18-fit-previous'),
                   onPressed:cursor>0?()=>setState(()=>cursor--):null,
                   tooltip:en?'Previous':'Anterior',
-                  icon:const Icon(Icons.chevron_left)),
+                  icon:Icon(Icons.chevron_left)),
                 Expanded(child:SizedBox(height:320,child:Row(children:[
                   _candidate(context,candidates[cursor]),
                   if(wide&&cursor+1<candidates.length)
                     _candidate(context,candidates[cursor+1]),
                 ]))),
                 IconButton(
-                  key:const Key('b18-fit-next'),
+                  key:Key('b18-fit-next'),
                   onPressed:cursor<candidates.length-1
                     ?()=>setState(()=>cursor++):null,
                   tooltip:en?'Next':'Siguiente',
-                  icon:const Icon(Icons.chevron_right)),
+                  icon:Icon(Icons.chevron_right)),
               ]),
-            const SizedBox(height:14),
+            SizedBox(height:14),
             FilledButton.icon(
-              key:const Key('b18-find-fits-cta'),
+              key:Key('b18-find-fits-cta'),
               onPressed:canBrowse?refresh:widget.onPrepare,
               icon:Icon(canBrowse?Icons.explore_outlined:Icons.tune),
               label:Text(canBrowse?(en?'Explore more fits':'Buscar más fits'):
@@ -583,12 +583,12 @@ class _FittedFitsPanelB18State extends State<FittedFitsPanelB18>{
           ]);
           if(wide)return Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Expanded(flex:45,child:checklist),
-            Container(width:1,margin:const EdgeInsets.symmetric(horizontal:19),
+            Container(width:1,margin:EdgeInsets.symmetric(horizontal:19),
               color:FitDateColors.outline),
             Expanded(flex:55,child:right),
           ]);
           return Column(children:[
-            checklist,const Divider(height:25),right]);
+            checklist,Divider(height:25),right]);
         }),
       ]),
     );

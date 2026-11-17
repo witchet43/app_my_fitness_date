@@ -74,7 +74,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
       await _identity.validateCurrentIdentity();
     } catch (_) {
       if (mounted) {
-        _messageKey.currentState?.showSnackBar(const SnackBar(
+        _messageKey.currentState?.showSnackBar(SnackBar(
           content: Text('Sesión QA finalizada. Inicia sesión de nuevo.'),
         ));
       }
@@ -93,7 +93,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
       await _identity.signOut();
     } catch (_) {
       if (mounted) {
-        _messageKey.currentState?.showSnackBar(const SnackBar(
+        _messageKey.currentState?.showSnackBar(SnackBar(
           content: Text('Sesión local cerrada. Revocación remota no confirmada.'),
         ));
       }
@@ -135,8 +135,8 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             mainAxisSize: MainAxisSize.min,
             children: [
               const _BrandMark(size: 42),
-              const SizedBox(width: 10),
-              const Flexible(
+              SizedBox(width: 10),
+              Flexible(
                 child: Text(
                   'My Fitness Date',
                   maxLines: 1,
@@ -155,7 +155,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             if (width >= 780)
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 18),
+                  padding: EdgeInsets.only(right: 18),
                   child: _StatusPill(
                     title: _publicProduction
                         ? 'EXPERIENCIA PÚBLICA'
@@ -166,7 +166,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
               ),
             if (widget.qaLoginEnabled && widget.api.isConfigured)
               IconButton(
-                key: const Key('qa-identity-action'),
+                key: Key('qa-identity-action'),
                 tooltip: _identity.signedIn
                     ? 'Cerrar sesión QA' : 'Iniciar sesión QA',
                 onPressed: _identity.signedIn
@@ -181,7 +181,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
           children: [
             if (wide)
               DecoratedBox(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
                     right: BorderSide(color: FitDateColors.outline, width: .7),
                   ),
@@ -249,20 +249,20 @@ class _FitnessDateAppState extends State<FitnessDateApp>
   Widget _content() {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1180),
+        constraints: BoxConstraints(maxWidth: 1180),
         child: ListView(
           key: ValueKey('content-section-$_section'),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 28),
           children: [
             if (widget.qaLoginEnabled && widget.api.isConfigured)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.only(bottom: 12),
                 child: Text(
                   _identity.signedIn
                       ? 'Sesión QA: ${_identity.session!.user.email} · No autoriza FitDating'
                       : 'Sin sesión QA · registro público cerrado',
-                  key: const Key('qa-session-status'),
-                  style: const TextStyle(
+                  key: Key('qa-session-status'),
+                  style: TextStyle(
                     color: FitDateColors.muted, fontSize: 12,
                   ),
                 ),
@@ -270,39 +270,39 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             if (_section == 0) _communityHome(),
             if (_section == 1) _activities(),
             if (_section == 2) _dating(),
-            const SizedBox(height: 26),
-            const Divider(color: FitDateColors.outline, thickness: .7),
-            const SizedBox(height: 14),
+            SizedBox(height: 26),
+            Divider(color: FitDateColors.outline, thickness: .7),
+            SizedBox(height: 14),
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 12,
               children: [
                 TextButton(
-                  key: const Key('public-privacy-link'),
+                  key: Key('public-privacy-link'),
                   onPressed: () async {
                     await launchUrl(Uri.parse('https://my-fitness-date.pages.dev/privacy/'),
                         mode: LaunchMode.externalApplication);
                   },
-                  child: const Text('Aviso de privacidad'),
+                  child: Text('Aviso de privacidad'),
                 ),
                 TextButton(
-                  key: const Key('public-terms-link'),
+                  key: Key('public-terms-link'),
                   onPressed: () async {
                     await launchUrl(Uri.parse('https://my-fitness-date.pages.dev/terms/'),
                         mode: LaunchMode.externalApplication);
                   },
-                  child: const Text('Términos y condiciones'),
+                  child: Text('Términos y condiciones'),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-            const Text(
+            SizedBox(height: 14),
+            Text(
               'My Fitness Date · Muévete con propósito. Conecta con respeto.',
               textAlign: TextAlign.center,
               style: TextStyle(color: FitDateColors.muted, fontSize: 12),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Versión pública: herramientas anónimas. '
               'Perfiles, citas y mensajería todavía no están disponibles.',
               textAlign: TextAlign.center,
@@ -318,13 +318,13 @@ class _FitnessDateAppState extends State<FitnessDateApp>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 8),
-        const Text('FitCommunity',
+        SizedBox(height: 8),
+        Text('FitCommunity',
             style: TextStyle(color: FitDateColors.muted, fontSize: 12,
                 fontWeight: FontWeight.w700)),
-        const SizedBox(height: 7),
+        SizedBox(height: 7),
         const _Eyebrow('FITNESS + CONEXIÓN'),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         LayoutBuilder(
           builder: (context, box) {
             final horizontal = box.maxWidth >= 820;
@@ -337,7 +337,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             return Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
@@ -347,7 +347,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                   ],
                 ),
                 border: Border.all(
-                  color: const Color(0xFF474257), width: .8,
+                  color: Color(0xFF474257), width: .8,
                 ),
               ),
               padding: EdgeInsets.all(horizontal ? 36 : 24),
@@ -355,16 +355,16 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                   ? Row(
                       children: [
                         Expanded(flex: 5, child: copy),
-                        const SizedBox(width: 18),
-                        const Expanded(flex: 4, child: art),
+                        SizedBox(width: 18),
+                        Expanded(flex: 4, child: art),
                       ],
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         copy,
-                        const SizedBox(height: 6),
-                        const Center(child: SizedBox(
+                        SizedBox(height: 6),
+                        Center(child: SizedBox(
                           height: 220, child: art,
                         )),
                       ],
@@ -372,9 +372,9 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             );
           },
         ),
-        const SizedBox(height: 26),
+        SizedBox(height: 26),
         const _Eyebrow('UNA IDEA, TRES FORMAS DE CONECTAR'),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         LayoutBuilder(builder: (context, box) {
           final columns = box.maxWidth >= 800 ? 3 : 1;
           final width = columns == 3
@@ -414,7 +414,7 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             ],
           );
         }),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         _PrivacyBanner(onDetails: () => _navigate(2)),
       ],
     );
@@ -424,10 +424,10 @@ class _FitnessDateAppState extends State<FitnessDateApp>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         const _Eyebrow('FITTOGETHER  /  TU ENERGÍA EN MOVIMIENTO'),
-        const SizedBox(height: 14),
-        const Text(
+        SizedBox(height: 14),
+        Text(
           'Entrena a tu ritmo.',
           style: TextStyle(
             color: FitDateColors.pearl,
@@ -435,24 +435,24 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             letterSpacing: -1,
           ),
         ),
-        const SizedBox(height: 8),
-        const Text(
+        SizedBox(height: 8),
+        Text(
           'Empieza por una meta personal. Lo que te mueve también '
           'puede ayudarte a conectar.',
           style: TextStyle(color: FitDateColors.muted, fontSize: 16),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             color: FitDateColors.surface,
             border: Border.all(color: FitDateColors.outline),
           ),
-          padding: const EdgeInsets.all(22),
-          child: const PaceCalculator(),
+          padding: EdgeInsets.all(22),
+          child: PaceCalculator(),
         ),
-        const SizedBox(height: 20),
-        const _ComingSoonCard(
+        SizedBox(height: 20),
+        _ComingSoonCard(
           icon: Icons.event_available_outlined,
           title: 'Actividades para compartir',
           description: 'Encuentros deportivos, grupos y eventos '
@@ -468,41 +468,41 @@ class _FitnessDateAppState extends State<FitnessDateApp>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         const _Eyebrow('FITDATING  /  CONEXIÓN CON INTENCIÓN'),
-        const SizedBox(height: 14),
-        const Text(
+        SizedBox(height: 14),
+        Text(
           'FitDating · Gym Shield',
           style: TextStyle(
             color: FitDateColors.pearl, fontSize: 34,
             fontWeight: FontWeight.w900, letterSpacing: -.8,
           ),
         ),
-        const SizedBox(height: 10),
-        const Text(
+        SizedBox(height: 10),
+        Text(
           'Que exista química no significa renunciar a tu privacidad.',
           style: TextStyle(color: FitDateColors.muted, fontSize: 17),
         ),
-        const SizedBox(height: 22),
+        SizedBox(height: 22),
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(26),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               colors: [Color(0xFF38213D), Color(0xFF1B2231)],
               begin: Alignment.topLeft, end: Alignment.bottomRight,
             ),
-            border: Border.all(color: const Color(0xFF5D3D5B)),
+            border: Border.all(color: Color(0xFF5D3D5B)),
           ),
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _StatusPill(
+              _StatusPill(
                 title: 'VISTA PREVIA · SIN PERFILES REALES',
                 color: FitDateColors.coral,
               ),
-              const SizedBox(height: 18),
-              const Row(
+              SizedBox(height: 18),
+              Row(
                 children: [
                   Icon(Icons.favorite_rounded,
                       size: 31, color: FitDateColors.coral),
@@ -514,8 +514,8 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                       size: 28, color: FitDateColors.lilac),
                 ],
               ),
-              const SizedBox(height: 18),
-              const Text(
+              SizedBox(height: 18),
+              Text(
                 'Tu entrenamiento es tu espacio. '
                 'Tus conexiones, tu elección.',
                 style: TextStyle(
@@ -523,8 +523,8 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                   height: 1.18, color: FitDateColors.pearl,
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text(
+              SizedBox(height: 10),
+              Text(
                 'Gym Shield está diseñado para proteger datos privados '
                 'del gimnasio y los horarios. Las coincidencias aún no '
                 'están disponibles en la versión pública.',
@@ -533,30 +533,30 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         Container(
           decoration: BoxDecoration(
             color: FitDateColors.surface,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: FitDateColors.outline),
           ),
-          padding: const EdgeInsets.all(22),
+          padding: EdgeInsets.all(22),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Privacidad del gimnasio · vista previa',
                 style: TextStyle(
                   fontSize: 19, fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text(
+              SizedBox(height: 10),
+              Text(
                 'Elige cómo te gustaría proteger tu espacio '
                 'de entrenamiento cuando esté disponible:',
                 style: TextStyle(color: FitDateColors.muted),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: SegmentedButton<String>(
@@ -587,8 +587,8 @@ class _FitnessDateAppState extends State<FitnessDateApp>
                       setState(() => _mode = values.first),
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Esta selección es solo ilustrativa y no se guarda. '
                 'No expone gimnasio, ubicación precisa ni horarios. '
                 'Las decisiones de elegibilidad corresponden al servidor.',
@@ -599,8 +599,8 @@ class _FitnessDateAppState extends State<FitnessDateApp>
             ],
           ),
         ),
-        const SizedBox(height: 18),
-        const _ComingSoonCard(
+        SizedBox(height: 18),
+        _ComingSoonCard(
           icon: Icons.verified_user_outlined,
           title: 'Conexiones seguras, primero',
           description: 'Antes de abrir FitDating habrá verificación de edad, '
@@ -624,7 +624,7 @@ class _BrandMark extends StatelessWidget {
       child: Container(
         width: size, height: size,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft, end: Alignment.bottomRight,
             colors: [FitDateColors.coral, Color(0xFFFF9B79)],
           ),
@@ -649,7 +649,7 @@ class _Eyebrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         color: FitDateColors.lime,
         letterSpacing: 1.9,
         fontSize: 11, fontWeight: FontWeight.w800,
@@ -659,7 +659,7 @@ class _Eyebrow extends StatelessWidget {
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.title, required this.color});
+  _StatusPill({required this.title, required this.color});
 
   final String title;
   final Color color;
@@ -672,12 +672,12 @@ class _StatusPill extends StatelessWidget {
         color: color.withValues(alpha: .10),
         border: Border.all(color: color.withValues(alpha: .32)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.circle, size: 7, color: color),
-          const SizedBox(width: 7),
+          SizedBox(width: 7),
           Flexible(
             child: Text(
               title,
@@ -712,22 +712,22 @@ class _HeroCopy extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _StatusPill(
+        _StatusPill(
           title: 'MOVIMIENTO + CONEXIONES REALES',
           color: FitDateColors.lime,
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         Text.rich(
           TextSpan(
             children: [
-              const TextSpan(text: 'Encuentra tu ritmo.\n'),
+              TextSpan(text: 'Encuentra tu ritmo.\n'),
               TextSpan(
                 text: 'Conecta de verdad.',
                 style: TextStyle(color: FitDateColors.coral),
               ),
             ],
           ),
-          key: const Key('brand-hero-headline'),
+          key: Key('brand-hero-headline'),
           style: TextStyle(
             fontSize: large ? 48 : 36,
             fontWeight: FontWeight.w900,
@@ -736,8 +736,8 @@ class _HeroCopy extends StatelessWidget {
             color: FitDateColors.pearl,
           ),
         ),
-        const SizedBox(height: 16),
-        const Text(
+        SizedBox(height: 16),
+        Text(
           'El movimiento nos une. Conoce el concepto de una comunidad '
           'donde el ejercicio, las metas y las conexiones auténticas '
           'tienen algo en común: tú.',
@@ -746,27 +746,27 @@ class _HeroCopy extends StatelessWidget {
             fontSize: 16, height: 1.48,
           ),
         ),
-        const SizedBox(height: 23),
+        SizedBox(height: 23),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
             FilledButton.icon(
-              key: const Key('go-to-pace'),
+              key: Key('go-to-pace'),
               onPressed: onActivity,
-              icon: const Icon(Icons.directions_run, size: 19),
-              label: const Text('Calcula tu ritmo'),
+              icon: Icon(Icons.directions_run, size: 19),
+              label: Text('Calcula tu ritmo'),
             ),
             OutlinedButton.icon(
-              key: const Key('go-to-dating'),
+              key: Key('go-to-dating'),
               onPressed: onDating,
-              icon: const Icon(Icons.favorite_border_rounded, size: 18),
-              label: const Text('Explora FitDating'),
+              icon: Icon(Icons.favorite_border_rounded, size: 18),
+              label: Text('Explora FitDating'),
             ),
           ],
         ),
-        const SizedBox(height: 14),
-        const Text(
+        SizedBox(height: 14),
+        Text(
           'La calculadora ya funciona. Comunidad y citas aún '
           'no admiten usuarios reales.',
           style: TextStyle(color: FitDateColors.muted, fontSize: 12),
@@ -820,7 +820,7 @@ class _ChemistryArt extends StatelessWidget {
                         width: side * .57, height: side * .66,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(side * .21),
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
@@ -913,8 +913,8 @@ class _ValueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final child = Container(
       width: width,
-      constraints: const BoxConstraints(minHeight: 218),
-      padding: const EdgeInsets.all(22),
+      constraints: BoxConstraints(minHeight: 218),
+      padding: EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: FitDateColors.surface,
         borderRadius: BorderRadius.circular(24),
@@ -931,22 +931,22 @@ class _ValueCard extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 25),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: FitDateColors.pearl,
               fontSize: 18, fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           Text(
             description,
-            style: const TextStyle(
+            style: TextStyle(
               color: FitDateColors.muted, fontSize: 13, height: 1.45,
             ),
           ),
-          const SizedBox(height: 13),
+          SizedBox(height: 13),
           Text(
             note,
             style: TextStyle(
@@ -977,18 +977,18 @@ class _PrivacyBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A282B),
-        border: Border.all(color: const Color(0xFF3A5350)),
+        color: Color(0xFF1A282B),
+        border: Border.all(color: Color(0xFF3A5350)),
         borderRadius: BorderRadius.circular(23),
       ),
       child: Row(
         children: [
-          const Icon(Icons.shield_outlined,
+          Icon(Icons.shield_outlined,
               color: FitDateColors.lime, size: 30),
-          const SizedBox(width: 14),
-          const Expanded(
+          SizedBox(width: 14),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1013,7 +1013,7 @@ class _PrivacyBanner extends StatelessWidget {
           IconButton(
             onPressed: onDetails,
             tooltip: 'Conocer Gym Shield',
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_forward_rounded, color: FitDateColors.lime,
             ),
           ),
@@ -1024,7 +1024,7 @@ class _PrivacyBanner extends StatelessWidget {
 }
 
 class _ComingSoonCard extends StatelessWidget {
-  const _ComingSoonCard({
+  _ComingSoonCard({
     required this.icon,
     required this.title,
     required this.description,
@@ -1039,7 +1039,7 @@ class _ComingSoonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: FitDateColors.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1049,22 +1049,22 @@ class _ComingSoonCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: color, size: 27),
-          const SizedBox(width: 13),
+          SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17, fontWeight: FontWeight.w800,
                     color: FitDateColors.pearl,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13, color: FitDateColors.muted, height: 1.5,
                   ),
                 ),

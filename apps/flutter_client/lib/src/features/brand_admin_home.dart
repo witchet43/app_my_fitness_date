@@ -68,7 +68,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     Icons.history_outlined
   ];
   static const _logoNames = <String>[
-    'F · Menta', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
+    'F · Plata', 'Cadencia', 'Cumbres', 'Vínculo', 'Pulso',
     'Brújula', 'Trayectoria', 'Horizonte', 'Geometría', 'Movimiento',
   ];
   static const _logoIcons = <IconData>[
@@ -78,6 +78,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     Icons.auto_graph_outlined,
   ];
   static const _paletteSeeds = <Map<String, String>>[
+    {'name':'Fitted · Pizarra y Plata','primary':'#DDE7EC','accent':'#8196A2','background':'#1A2D38'},
     {'name':'Fitted · Pizarra y Menta','primary':'#8EF0D5','accent':'#68D4C7','background':'#1A2D38'},
     {'name':'Fitted Motion · Midnight Aurora','primary':'#D9C3FF','accent':'#65D3FA','background':'#0D1030'},
     {'name':'Bosque', 'primary':'#D5BE8A','accent':'#9FB5A9','background':'#101B21'},
@@ -816,8 +817,8 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
     final p=_color(primary.text,const Color(0xFF28463D));
     final a=_color(accent.text,const Color(0xFFB49A6A));
     final bg=_color(background.text,const Color(0xFFF7F5F0));
-    final foreground=dark?Colors.white:const Color(0xFF182923);
-    final bodyColor=dark?const Color(0xFF172621):bg;
+    final foreground=bg.computeLuminance()<.35?Colors.white:const Color(0xFF172731);
+    final bodyColor=bg;
     final heroAssetId=selectedImages[mobilePreview?'cover_mobile':'cover_desktop'];
     final heroBytes=heroAssetId==null?null:downloaded[heroAssetId];
     final logoBytes=selectedLogoAsset==null?null:downloaded[selectedLogoAsset];
@@ -845,7 +846,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
             clipBehavior:Clip.antiAlias,
             child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
               Container(padding:const EdgeInsets.all(14),
-                color:dark?const Color(0xFF29362E):Colors.white,
+                color:Color.lerp(bg,dark?Colors.white:Colors.black,.08),
                 child:Row(children:[
                   if(logoBytes!=null)
                     Image.memory(logoBytes,width:35,height:35)
@@ -853,8 +854,7 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                     LiveBrandSettings.safeAssetUrl(selectedLogoAsset!))
                     Image.network(selectedLogoAsset!,width:35,height:35)
                   else if(logoIndex==0)
-                    Image.asset('assets/branding/mfd_icon.webp',
-                      width:35,height:35,fit:BoxFit.contain)
+                    const FittedMintMark(size:35)
                   else
                     Icon(_logoIcons[logoIndex],color:p,size:32),
                   const SizedBox(width:8),
@@ -868,31 +868,33 @@ class _BrandAdminHomeState extends State<BrandAdminHome> {
                 Container(
                   constraints:const BoxConstraints(minHeight:280),
                   decoration:BoxDecoration(
-                    gradient:LinearGradient(colors:[p,p.withValues(alpha:.65)]),
+                    gradient:LinearGradient(colors:[
+                      Color.lerp(bg,p,.15)!,Color.lerp(bg,a,.09)!]),
                     image:heroProvider==null?null:DecorationImage(
                       image:heroProvider,fit:BoxFit.cover,
                       colorFilter:ColorFilter.mode(
-                        p.withValues(alpha:.40),BlendMode.darken))),
+                        bg.withValues(alpha:.12),BlendMode.darken))),
                 ),
                 Padding(padding:const EdgeInsets.all(26),
                   child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    const FittedText('CONEXIONES CON INTENCIÓN',style:TextStyle(
-                      fontSize:11,color:Colors.white70,letterSpacing:2)),
+                    FittedText('CONEXIONES CON INTENCIÓN',style:TextStyle(
+                      fontSize:11,color:foreground.withValues(alpha:.7),letterSpacing:2)),
                     const SizedBox(height:15),
                     FittedText(headline.text,
                       style:TextStyle(fontFamily:font.startsWith('asset:')?null:font,
                         fontSize:mobilePreview?28:34,
-                        color:Colors.white,height:1.22)),
+                        color:foreground,height:1.22)),
                     const SizedBox(height:16),
-                    FittedText(description.text,style:const TextStyle(
-                      color:Colors.white,fontSize:15,height:1.5)),
+                    FittedText(description.text,style:TextStyle(
+                      color:foreground,fontSize:15,height:1.5)),
                     const SizedBox(height:18),
                     Container(
                       decoration:BoxDecoration(
                         color:a,borderRadius:BorderRadius.circular(10)),
                       padding:const EdgeInsets.all(12),
-                      child:const FittedText('Conocer nuestra propuesta',
-                        style:TextStyle(color:Colors.black87,fontWeight:FontWeight.w700))),
+                      child:FittedText('Conocer nuestra propuesta',
+                        style:TextStyle(color:a.computeLuminance()>.4
+                          ?Colors.black87:Colors.white,fontWeight:FontWeight.w700))),
                   ])),
               ]),
               Container(

@@ -10,7 +10,7 @@ class FittedRhythmLines extends StatelessWidget {
   @override
   Widget build(BuildContext context) => IgnorePointer(
     child:ExcludeSemantics(child:CustomPaint(
-      key:const Key('fitted-rhythm-lines'),
+      key:Key('fitted-rhythm-lines'),
       painter:_RhythmPainter(density),
       size:Size.infinite,
     )),
@@ -59,7 +59,7 @@ class _RhythmPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RhythmPainter old) =>
-    old.density!=density;
+    true;
 }
 
 /// Transparent glass accent; semantic labels belong to the caller content.
@@ -77,7 +77,7 @@ class FittedGlassPanel extends StatelessWidget {
     child:BackdropFilter(
       filter:ImageFilter.blur(sigmaX:blur,sigmaY:blur),
       child:Container(
-        key:const Key('fitted-glass-panel'),
+        key:Key('fitted-glass-panel'),
         padding:padding,
         decoration:BoxDecoration(
           gradient:LinearGradient(
@@ -91,7 +91,7 @@ class FittedGlassPanel extends StatelessWidget {
           borderRadius:BorderRadius.circular(radius),
           boxShadow: [
             BoxShadow(color:FitDateColors.inkDeep.withValues(alpha:.10),
-              blurRadius:18,offset:const Offset(0,9)),
+              blurRadius:18,offset:Offset(0,9)),
           ],
         ),
         child:child,

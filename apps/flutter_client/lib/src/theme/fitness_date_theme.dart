@@ -1,32 +1,51 @@
 import 'package:flutter/material.dart';
 
-/// Fitted Slate Mint: charcoal-slate surfaces, mint highlight and subtle teal rhythm.
+/// Dynamic Fitted palette: brand-controlled colors with neutral editorial accents.
 /// Designed for confident adults 35–50. Accents are used selectively, never as saturated full-screen fills.
-/// Static tokens support Flutter Web, Android and iOS without external fonts.
-abstract final class FitDateColors {
-  static const ink = Color(0xFF233C48);
-  static const inkDeep = Color(0xFF1A2D38);
-  static const surface = Color(0xFF233A46);
-  static const surfaceRaised = Color(0xFF2B4853);
-  // Keep semantic tokens compatible with existing components while
-  // shifting the Fitted design system to the Motion F visual identity.
-  static const coral = Color(0xFF8EF0D5); // mint call to action
-  static const coralDark = Color(0xFF164B4A);
-  static const lime = Color(0xFF68D4C7);
-  static const aqua = Color(0xFF8EF0D5);  // rhythm / focus
-  static const apricot = Color(0xFF72C8C4); // restrained pulse
-  static const lilac = Color(0xFF8EF0D5);
-  static const pearl = Color(0xFFF6FBFD);
-  static const muted = Color(0xFFC3D5DB);
-  static const outline = Color(0xFF557783);
-  static const pulseViolet = Color(0xFF528F91);
-  static const pulsePink = Color(0xFF6BD6B7);
-  static const pulseBlue = Color(0xFF65CFC9);
-}
+/// Tokens update on the same global brand version across Flutter Web, Android and iOS.
+/// Semantic palette driven by the live Brand Designer, never by a screen.
+ /// Neutral silver is the editorial accent; branded colors remain for actions.
+ /// The current brand is applied before each MaterialApp theme is built.
+ abstract final class FitDateColors {
+   static Color _primary = Color(0xFF8EF0D5);
+   static Color _accent = Color(0xFF68D4C7);
+   static Color _background = Color(0xFF1A2D38);
+   static bool _dark = true;
+
+   static void useBrand({required Color primary,required Color accent,
+       required Color background,required bool dark}) {
+     _primary=primary;
+     _accent=accent;
+     _background=background;
+     _dark=dark;
+   }
+
+   static Color get inkDeep => _background;
+   static Color get ink => _layer(.025);
+   static Color get surface => _layer(.065);
+   static Color get surfaceRaised => _layer(.12);
+   static Color get coral => _primary;
+   static Color get coralDark => _shade(_primary,.48);
+   static Color get lime => _accent;
+   static Color get aqua => Color.lerp(_primary, _neutral, .44)!;
+   static Color get apricot => Color.lerp(_accent, _neutral, .55)!;
+   static Color get lilac => Color.lerp(_primary, _neutral, .73)!;
+   static Color get pearl => _dark ? Color(0xFFF6FBFD) : Color(0xFF172731);
+   static Color get muted => Color.lerp(pearl, _background, .34)!;
+   static Color get outline => Color.lerp(pearl, _background, .71)!;
+   static Color get pulseViolet => Color.lerp(_primary, _neutral, .65)!;
+   static Color get pulsePink => Color.lerp(_accent, _neutral, .42)!;
+   static Color get pulseBlue => Color.lerp(_accent, _neutral, .25)!;
+   static Color get _neutral => _dark ? Color(0xFFB7C6CF) : Color(0xFF667983);
+   static Color _layer(double strength) =>
+       Color.lerp(_background, _dark ? Colors.white : Colors.black, strength)!;
+   static Color _shade(Color color,double strength) =>
+       Color.lerp(color,_dark ? Colors.black : Colors.white,strength)!;
+ }
 
 abstract final class FitDateTheme {
   static ThemeData dark() {
-    const scheme = ColorScheme.dark(
+    final scheme = ColorScheme.dark(
       primary: FitDateColors.coral,
       onPrimary: FitDateColors.inkDeep,
       secondary: FitDateColors.lime,
@@ -46,7 +65,7 @@ abstract final class FitDateTheme {
       scaffoldBackgroundColor: FitDateColors.inkDeep,
       canvasColor: FitDateColors.inkDeep,
       splashFactory: InkRipple.splashFactory,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: FitDateColors.inkDeep,
         foregroundColor: FitDateColors.pearl,
         surfaceTintColor: Colors.transparent,
@@ -61,11 +80,11 @@ abstract final class FitDateTheme {
       chipTheme: ChipThemeData(
         backgroundColor: FitDateColors.surfaceRaised,
         selectedColor: FitDateColors.aqua.withValues(alpha: .18),
-        side: const BorderSide(color: FitDateColors.outline),
-        labelStyle: const TextStyle(color: FitDateColors.pearl, fontSize: 12),
+        side: BorderSide(color: FitDateColors.outline),
+        labelStyle: TextStyle(color: FitDateColors.pearl, fontSize: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         displayLarge: TextStyle(
           fontSize: 56, fontFamily: 'Georgia', fontWeight: FontWeight.w700,
           color: FitDateColors.pearl, height: 1.08, letterSpacing: -1.8,
@@ -94,7 +113,7 @@ abstract final class FitDateTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(26),
-          side: const BorderSide(color: FitDateColors.outline, width: .65),
+          side: BorderSide(color: FitDateColors.outline, width: .65),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -102,25 +121,25 @@ abstract final class FitDateTheme {
         fillColor: FitDateColors.ink,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: FitDateColors.outline),
+          borderSide: BorderSide(color: FitDateColors.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: FitDateColors.outline),
+          borderSide: BorderSide(color: FitDateColors.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: FitDateColors.aqua, width: 2),
+          borderSide: BorderSide(color: FitDateColors.aqua, width: 2),
         ),
-        labelStyle: const TextStyle(color: FitDateColors.muted),
+        labelStyle: TextStyle(color: FitDateColors.muted),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: FitDateColors.coral,
           foregroundColor: FitDateColors.inkDeep,
-          minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(fontWeight: FontWeight.w800),
+          minimumSize: Size(0, 52),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          textStyle: TextStyle(fontWeight: FontWeight.w800),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -129,9 +148,9 @@ abstract final class FitDateTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: FitDateColors.pearl,
-          minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          side: const BorderSide(color: FitDateColors.outline),
+          minimumSize: Size(0, 52),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          side: BorderSide(color: FitDateColors.outline),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -139,24 +158,24 @@ abstract final class FitDateTheme {
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: FitDateColors.inkDeep,
-        indicatorColor: const Color(0xFF315650),
-        selectedIconTheme: const IconThemeData(
+        indicatorColor: Color(0xFF315650),
+        selectedIconTheme: IconThemeData(
           color: FitDateColors.coral, size: 26,
         ),
-        unselectedIconTheme: const IconThemeData(
+        unselectedIconTheme: IconThemeData(
           color: FitDateColors.muted, size: 23,
         ),
-        selectedLabelTextStyle: const TextStyle(
+        selectedLabelTextStyle: TextStyle(
           color: FitDateColors.pearl, fontWeight: FontWeight.w800,
           fontSize: 12,
         ),
-        unselectedLabelTextStyle: const TextStyle(
+        unselectedLabelTextStyle: TextStyle(
           color: FitDateColors.muted, fontSize: 12,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: FitDateColors.surface,
-        indicatorColor: const Color(0xFF315650),
+        indicatorColor: Color(0xFF315650),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             color: states.contains(WidgetState.selected)

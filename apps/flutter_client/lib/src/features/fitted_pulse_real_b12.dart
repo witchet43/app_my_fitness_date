@@ -43,9 +43,9 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
           :'Se eliminarán las observaciones asociadas a ti y tus confirmaciones. Esto no deshace reportes de seguridad independientes.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(ctx,false),
-            child:const Text('Cancelar')),
+            child:Text('Cancelar')),
           FilledButton(onPressed:()=>Navigator.pop(ctx,true),
-            child:const Text('Confirmar')),
+            child:Text('Confirmar')),
         ],
       ));
     if(approved!=true||!mounted)return;
@@ -115,10 +115,10 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
     return Stack(children:[
       Positioned.fill(child:ClipRRect(
         borderRadius:BorderRadius.circular(23),
-        child:const FittedRhythmLines(density:.7))),
+        child:FittedRhythmLines(density:.7))),
       FittedGlassPanel(
         radius:23,blur:8,
-        padding:const EdgeInsets.all(17),
+        padding:EdgeInsets.all(17),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           Row(children:[
             Container(
@@ -126,34 +126,34 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
               decoration:BoxDecoration(
                 color:FitDateColors.aqua.withValues(alpha:.16),
                 borderRadius:BorderRadius.circular(13)),
-              child:const Icon(Icons.fact_check_outlined,
+              child:Icon(Icons.fact_check_outlined,
                 color:FitDateColors.aqua,size:20)),
-            const SizedBox(width:10),
+            SizedBox(width:10),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               children:[
-                const Text('PULSO REAL',
+                Text('PULSO REAL',
                   style:TextStyle(color:FitDateColors.aqua,fontSize:11,
                     letterSpacing:2,fontWeight:FontWeight.w900)),
-                const SizedBox(height:3),
+                SizedBox(height:3),
                 Text(en?'Beyond the profile':'Más allá de lo que se cuenta',
                   style:Theme.of(context).textTheme.titleMedium),
               ])),
           ]),
-          const SizedBox(height:10),
+          SizedBox(height:10),
           Text(en
             ?'After a date, you can privately evaluate whether what you experienced aligned with what was shared.'
             :'Después de una cita puedes valorar en privado si tu experiencia coincidió con lo que la otra persona compartió.',
             style:Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height:10),
-          if(loading)const LinearProgressIndicator(),
+          SizedBox(height:10),
+          if(loading)LinearProgressIndicator(),
           if(!loading&&!available)
             Text(en
               ?'Available after mutual matching and approved safety checks.'
               :'Disponible después de un match mutuo y las verificaciones de seguridad.',
-              style:const TextStyle(color:FitDateColors.muted,fontSize:12)),
+              style:TextStyle(color:FitDateColors.muted,fontSize:12)),
           if(available)...[
             SwitchListTile.adaptive(
-              key:const Key('pulse-real-consent'),
+              key:Key('pulse-real-consent'),
               contentPadding:EdgeInsets.zero,
               value:consent,
               onChanged:busy?null:changeConsent,
@@ -164,23 +164,23 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
             ),
             if(consent&&!own)
               OutlinedButton.icon(
-                key:const Key('pulse-real-confirm-date'),
+                key:Key('pulse-real-confirm-date'),
                 onPressed:busy?null:confirm,
-                icon:const Icon(Icons.handshake_outlined),
+                icon:Icon(Icons.handshake_outlined),
                 label:Text(en?'Confirm we met':'Confirmar que nos conocimos')),
             if(consent&&own&&!both)
               Text(en?'Waiting for the other person to confirm the encounter.':
                 'Esperando la confirmación de la otra persona.',
-                style:const TextStyle(color:FitDateColors.muted)),
+                style:TextStyle(color:FitDateColors.muted)),
             if(consent&&both&&!bothConsent)
-              const Text('La otra persona aún no ha aceptado el tratamiento de evaluaciones.',
+              Text('La otra persona aún no ha aceptado el tratamiento de evaluaciones.',
                 style:TextStyle(color:FitDateColors.muted)),
             if(consent&&both&&bothConsent)...[
-              const SizedBox(height:6),
+              SizedBox(height:6),
               Text(en?'Which dimension did you experience?':
                 '¿Qué parte de su estilo de vida observaste?',
-                style:const TextStyle(fontWeight:FontWeight.w700)),
-              const SizedBox(height:7),
+                style:TextStyle(fontWeight:FontWeight.w700)),
+              SizedBox(height:7),
               Wrap(spacing:7,runSpacing:7,children:[
                 for(final d in const ['move','live','relate'])
                   ChoiceChip(
@@ -191,11 +191,11 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
                     }),
                     onSelected:busy?null:(_)=>setState(()=>dimension=d)),
               ]),
-              const SizedBox(height:12),
+              SizedBox(height:12),
               Text(en?'Did the experience match their description?':
                 '¿Coincidió con lo que decía su perfil?',
-                style:const TextStyle(fontWeight:FontWeight.w700)),
-              const SizedBox(height:6),
+                style:TextStyle(fontWeight:FontWeight.w700)),
+              SizedBox(height:6),
               for(final signal in const ['aligned','unclear','not_aligned'])
                 RadioListTile<String>(
                   key:Key('pulse-real-signal-$signal'),
@@ -212,24 +212,24 @@ class _FittedPulseRealPanelState extends State<FittedPulseRealPanel>{
                   }),
                 ),
               FilledButton.icon(
-                key:const Key('pulse-real-submit'),
+                key:Key('pulse-real-submit'),
                 onPressed:busy?null:submit,
-                icon:const Icon(Icons.lock_outline),
+                icon:Icon(Icons.lock_outline),
                 label:Text(en?'Submit private observation':
                   'Enviar observación privada')),
-              const SizedBox(height:6),
+              SizedBox(height:6),
               Text(en?'Your submitted dimensions: $total of 3':
                 'Dimensiones registradas: $total de 3',
-                style:const TextStyle(color:FitDateColors.muted,fontSize:11)),
+                style:TextStyle(color:FitDateColors.muted,fontSize:11)),
             ],
           ],
           if(message!=null)...[
-            const SizedBox(height:8),
-            Text(message!,key:const Key('pulse-real-message'),
-              style:const TextStyle(color:FitDateColors.aqua,fontSize:12)),
+            SizedBox(height:8),
+            Text(message!,key:Key('pulse-real-message'),
+              style:TextStyle(color:FitDateColors.aqua,fontSize:12)),
           ],
-          const SizedBox(height:8),
-          const Text('Sin acusaciones automáticas · Sin publicación inmediata · Con moderación y réplica.',
+          SizedBox(height:8),
+          Text('Sin acusaciones automáticas · Sin publicación inmediata · Con moderación y réplica.',
             style:TextStyle(fontSize:11,color:FitDateColors.muted,height:1.5)),
         ]),
       ),
