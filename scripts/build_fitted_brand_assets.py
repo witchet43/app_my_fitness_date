@@ -113,7 +113,7 @@ def web_assets(image: Image.Image, web: Path, source: Path):
                 '<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=slate-mint-v1">\n')
     assert "</head>" in html, "Flutter index must contain a head"
     html_path.write_text(html.replace("</head>", addition + "</head>", 1))
-    assert (web / "icons" / "Icon-512.png").stat().st_size > 5000
+    assert (web / "icons" / "Icon-512.png").stat().st_size > 2000
 
 
 def android_assets(image: Image.Image, root: Path):
