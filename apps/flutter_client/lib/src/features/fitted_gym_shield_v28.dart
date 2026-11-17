@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import '../core/fitted_locale.dart';
+import '../theme/fitness_date_theme.dart';
 
 /// User-owned private training schedule. Never publishes training places,
 /// day/window combinations, or the member's identity to other users.
@@ -205,14 +206,14 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
       key:const Key('gym-shield-privacy-summary'),
       padding:const EdgeInsets.all(15),
       decoration:BoxDecoration(
-        color:const Color(0xFF1D3432),
+        color:const FitDateColors.surface,
         borderRadius:BorderRadius.circular(15),
-        border:Border.all(color:const Color(0xFF718477)),
+        border:Border.all(color:const FitDateColors.outline),
       ),
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[
-          const Icon(Icons.verified_user_outlined,
-            color:Color(0xFFD5BE8A)),
+          Icon(Icons.verified_user_outlined,
+            color:FitDateColors.lilac),
           const SizedBox(width:9),
           Expanded(child:Text(tr(
             'Tu privacidad manda','Your boundaries come first'),
@@ -237,7 +238,7 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
           Text(tr(
             'Falta registrar una franja general para usar esta modalidad.',
             'Add a broad time window before using this mode.'),
-            style:const TextStyle(color:Color(0xFFD5BE8A))),
+            style:TextStyle(color:FitDateColors.lilac)),
         ],
         const SizedBox(height:11),
         Text(tr(
@@ -264,14 +265,14 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
           duration:const Duration(milliseconds:180),
           padding:const EdgeInsets.all(17),
           decoration:BoxDecoration(
-            color:active?const Color(0xFF283E3B):const Color(0xFF1A292C),
+            color:active?const FitDateColors.surfaceRaised:const FitDateColors.surface,
             borderRadius:BorderRadius.circular(17),
             border:Border.all(color:active
-              ?const Color(0xFFD5BE8A):const Color(0xFF425150)),
+              ?const FitDateColors.lilac:const FitDateColors.outline),
           ),
           child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Icon(active?Icons.radio_button_checked:Icons.radio_button_off,
-              color:const Color(0xFFD5BE8A),size:23),
+              color:const FitDateColors.lilac,size:23),
             const SizedBox(width:12),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               children:[
@@ -334,7 +335,7 @@ class _FittedGymShieldV28State extends State<FittedGymShieldV28> {
           Card(child:Padding(padding:const EdgeInsets.all(16),
             child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
               Row(children:[
-                const Icon(Icons.place_outlined,color:Color(0xFFD5BE8A)),
+                Icon(Icons.place_outlined,color:FitDateColors.lilac),
                 const SizedBox(width:10),
                 Expanded(child:Text(
                   (place['place_name']??'').toString(),
