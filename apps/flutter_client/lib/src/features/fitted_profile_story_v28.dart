@@ -70,7 +70,7 @@ class FittedProfileStoryV28 extends StatelessWidget {
         decoration:BoxDecoration(
           gradient:LinearGradient(
             begin:Alignment.topLeft,end:Alignment.bottomRight,
-            colors:[Color(0xFF1A4246),Color(0xFF1B2E38),Color(0xFF252A3D)]),
+            colors:[FitDateColors.surfaceRaised,FitDateColors.surface,FitDateColors.inkDeep]),
           borderRadius:BorderRadius.circular(27),
           border:Border.all(color:FitDateColors.aqua.withValues(alpha:.34)),
           boxShadow:[BoxShadow(color:FitDateColors.aqua.withValues(alpha:.07),
@@ -115,7 +115,7 @@ class FittedProfileStoryV28 extends StatelessWidget {
           if(city.isNotEmpty)...[
             SizedBox(height:5),
             Text(city,style:theme.textTheme.bodyMedium?.copyWith(
-              color:Color(0xFFB3C3B9))),
+              color:FitDateColors.muted)),
           ],
           SizedBox(height:17),
           Container(width:42,height:2,
@@ -181,7 +181,7 @@ class FittedProfileStoryV28 extends StatelessWidget {
       padding:EdgeInsets.symmetric(horizontal:16,vertical:17),
       decoration:BoxDecoration(
         gradient:LinearGradient(colors:[
-          accent.withValues(alpha:.13),Color(0xFF182830)],
+          accent.withValues(alpha:.13),FitDateColors.surface],
           begin:Alignment.topLeft,end:Alignment.bottomRight),
         borderRadius:BorderRadius.circular(20),
         border:Border.all(color:accent.withValues(alpha:.31)),
@@ -198,7 +198,7 @@ class FittedProfileStoryV28 extends StatelessWidget {
             Text(title,style:theme.textTheme.titleMedium?.copyWith(
               fontWeight:FontWeight.w800,color:FitDateColors.pearl)),
             Text(subtitle,style:theme.textTheme.bodySmall?.copyWith(
-              color:Color(0xFFB3C3B9))),
+              color:FitDateColors.muted)),
             SizedBox(height:7),
             Wrap(spacing:5,runSpacing:5,children:[
               for(final line in lines)
