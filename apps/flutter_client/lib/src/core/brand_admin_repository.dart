@@ -77,11 +77,33 @@ class BrandAdminRepository {
   static bool validHex(String value) =>
       RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(value);
 
+  static const maxSavedPalettes = 50;
+
+  Future<void> deletePalette(String id) async {
+    if(id.isEmpty)throw const FormatException('Paleta inválida');
+    if(!await hasVerifiedMfa()){
+      throw StateError('Se requiere verificación MFA para eliminar paletas');
+    }
+    await client.from('brand_palettes').delete()
+      .eq('id',id).eq('created_by',ownerId);
+  }
+
   Future<void> createPalette(String name, Map<String, String> colors) async {
     if (name.trim().length < 2 || name.length > 70 ||
         !const ['primary', 'accent', 'background']
             .every((k) => validHex(colors[k] ?? ''))) {
       throw const FormatException('Nombre o colores inválidos');
+    }
+    if(!await hasVerifiedMfa()){
+      throw StateError('Se requiere MFA para guardar paletas');
+    }
+    final existing=await loadPalettes();
+    if(existing.where((v)=>v['created_by']==ownerId).length>=maxSavedPalettes){
+      throw StateError('Has alcanzado el máximo de 50 paletas guardadas');
+    }
+    if(existing.any((v)=>v['created_by']==ownerId &&
+      v['name'].toString().toLowerCase()==name.trim().toLowerCase())){
+      throw StateError('Ya existe una paleta guardada con ese nombre');
     }
     await client.from('brand_palettes').insert({
       'name': name.trim(),

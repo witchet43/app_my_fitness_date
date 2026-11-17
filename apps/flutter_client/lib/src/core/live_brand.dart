@@ -38,7 +38,7 @@ class LiveBrandSettings {
     accent: '#68D4C7',
     background: '#1A2D38',
     font: 'Arial',
-    // catalog:0 resolves to the bundled, brand-owned Fitted mint F.
+    // catalog:0 remains the approved silver F; 1..20 are original vector symbols.
     // User-selected custom logos still override the default through Brand Lab.
     logo: 'catalog:0',
     media: <String, String>{},
@@ -93,7 +93,7 @@ class LiveBrandSettings {
       background: hex('background', fallback.background),
       font: const ['Arial', 'Georgia', 'Palatino', 'Garamond']
           .contains(selectedFont) ? selectedFont : fallback.font,
-      logo: RegExp(r'^catalog:[0-9]$').hasMatch(selectedLogo) ||
+      logo: RegExp(r'^catalog:([0-9]|1[0-9]|20)$').hasMatch(selectedLogo) ||
           safeAssetUrl(selectedLogo) ? selectedLogo : fallback.logo,
       media: media,
       mode: const ['dark', 'light'].contains(selectedMode)

@@ -8,7 +8,11 @@ const source=fs.readFileSync('apps/flutter_client/cloudflare/brand-legal.js','ut
   .replaceAll('__FITTED_PUBLIC_BRAND_KEY__','sb_publishable_test_nonsecret');
 assert(!source.includes('__FITTED_PUBLIC_BRAND_KEY__'));
 const palette={primary:'#DDE7EC',accent:'#8196A2',background:'#1A2D38'};
-const mark={hidden:true,src:''},vector={hidden:false};
+const mark={hidden:true,src:''},vector={
+  hidden:false,children:[],
+  setAttribute(key,value){this[key]=value},
+  replaceChildren(...children){this.children=children},
+};
 const favicon={href:'/favicon.png'},meta={content:''},theme={content:''};
 const brandNodes=[{textContent:'Fitted'},{textContent:'Fitted'}];
 const props={};
@@ -25,9 +29,13 @@ const document={
     'link[rel="icon"]':favicon,'meta[name="description"]':meta,
     'meta[name="theme-color"]':theme
   })[selector]||null,
-  addEventListener:()=>{}
+  addEventListener:()=>{},
+  createElementNS:()=>({
+    style:{},attributes:{},
+    setAttribute(key,value){this.attributes[key]=value},
+  })
 };
-const settings={name:'Conexión Viva',colors:palette,mode:'dark',logo:'catalog:0'};
+const settings={name:'Conexión Viva',colors:palette,mode:'dark',logo:'catalog:20'};
 const context={
   document,
   fetch:async (endpoint,options)=>{
@@ -51,6 +59,9 @@ setImmediate(()=>{
     assert.equal(theme.content,palette.background);
     assert.equal(mark.hidden,true);
     assert.equal(vector.hidden,false);
-    console.log('PASS legal pages bind name, colors and public logo from live brand');
+    assert.equal(vector.viewBox,'0 0 100 100');
+    assert.equal(vector.children.length,2);
+    assert.match(vector.children[0].attributes.d,/Q53 57/);
+    console.log('PASS legal pages bind name, colors and catalog:20 vector logo from live brand');
   }catch(e){console.error(e);process.exitCode=1}
 });
