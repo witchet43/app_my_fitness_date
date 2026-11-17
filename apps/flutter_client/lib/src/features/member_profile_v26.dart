@@ -752,7 +752,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
             key:Key('fitted-profile-three-pillars-card'),
             child:FittedProfileStoryV28(
               profile:p,rhythm:lifestyle,
-              fitIaOverview:fitIaOverview,
+              fitIaOverview:fitIaOverview,fitIaSummary:summary,
               startingPreference:startingRhythm,
               onChooseStarting:setStartingRhythm,
               onConfigure:()=>configurePillars(),
