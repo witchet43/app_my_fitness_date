@@ -1,1 +1,1 @@
-Run dynamic brand and legal QA gate. No Cloud Build.
+Recheck dynamic brand after fixing constant-expression and MaterialApp theme issues.
