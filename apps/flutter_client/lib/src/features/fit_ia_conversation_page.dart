@@ -2,14 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/fit_ia_repository.dart';
 import '../core/fitted_locale.dart';
+import 'private_strava_evidence_card.dart';
 
 /// Private, resumable conversations. Answers persist before a new question
 /// is displayed; they never enable discovery or share a personal profile.
 class FitIaConversationPage extends StatefulWidget {
   const FitIaConversationPage({super.key,required this.repository,
-    this.initialPillar=0}):assert(initialPillar>=0&&initialPillar<3);
+    this.initialPillar=0,this.ownerId=''}):assert(initialPillar>=0&&initialPillar<3);
   final FitIaRepository repository;
   final int initialPillar;
+  final String ownerId;
   @override
   State<FitIaConversationPage> createState()=>_FitIaConversationPageState();
 }
@@ -231,6 +233,21 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     ));
   }
 
+  Future<void> _showMyApplications() async {
+    if(widget.ownerId.isEmpty)return;
+    await showModalBottomSheet<void>(
+      context:context,
+      isScrollControlled:true,
+      showDragHandle:true,
+      builder:(sheet)=>SafeArea(child:FractionallySizedBox(
+        heightFactor:.85,
+        child:ListView(padding:const EdgeInsets.all(16),children:[
+          PrivateStravaEvidenceCard(ownerId:widget.ownerId),
+        ]),
+      )),
+    );
+  }
+
   Widget _tabs(){
     final colors=Theme.of(context).colorScheme;
     const icons=[Icons.directions_run_outlined,Icons.wb_sunny_outlined,
@@ -392,6 +409,15 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
                 style:Theme.of(context).textTheme.bodySmall),
               const SizedBox(height:13),
               _tabs(),
+              if(current==0 && widget.ownerId.isNotEmpty)
+                Align(alignment:Alignment.centerRight,
+                  child:TextButton.icon(
+                    key:const Key('fit-ia-move-my-apps'),
+                    onPressed:_showMyApplications,
+                    icon:const Icon(Icons.insights_outlined),
+                    label:Text(tr('Lo que mis aplicaciones dicen de mí',
+                      'What my apps say about me')),
+                  )),
               const SizedBox(height:12),
               Row(children:[
                 const Icon(Icons.shield_outlined,size:16),
