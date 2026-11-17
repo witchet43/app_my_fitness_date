@@ -1,1 +1,1 @@
-Final validation: bilingual first-login explicit AI preference; centralized SQL RLS and legacy gate; all Flutter and legal page regressions.
+Final Fitted account AI QA: Postgres 16 RLS + first-choice + revocation + cross-user tests, Flutter and legal docs.
