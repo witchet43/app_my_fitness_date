@@ -1,0 +1,50 @@
+name: Fitted account-wide AI opt-in QA
+on:
+  push:
+    branches: [feature/fitted-account-global-ai-optin-20261116]
+    paths: [.build-gates/fitted-global-ai-qa.txt]
+permissions:
+  contents: read
+jobs:
+  ai-preference-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.9"
+          cache: true
+      - name: Audit consent migration and old-feature routing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          sql=Path('supabase/migrations/202611170044_fitted_global_ai_account_consent.sql').read_text()
+          assert "fitted_ai_account_preferences_v1" in sql
+          assert "enable row level security" in sql
+          assert "fitted_set_ai_account_preference_v1" in sql
+          assert "fitted_summary_consent_b17" in sql
+          assert "fit_ia_set_consent_v1" in sql
+          assert "share_consented=excluded.share_consented" in sql
+          root=Path('apps/flutter_client/lib/src/member_v26_app.dart').read_text()
+          assert "FittedAiAccountGate(" in root
+          assert "aiConfigured=aiPref['configured']==true" in root
+          assert "onSettings:_openAiAccountSettings" in root
+          print("Account-wide choice, independent sharing, and RLS: PASS")
+          PY
+          python3 scripts/check_public_legal.py
+      - name: Prepare Flutter web toolchain
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Analyze all Dart sources
+        working-directory: apps/flutter_client
+        run: flutter analyze --no-fatal-infos
+      - name: Run Flutter regression tests
+        working-directory: apps/flutter_client
+        run: flutter test --reporter expanded
+      - name: Compile authentic Flutter web app
+        working-directory: apps/flutter_client
+        run: flutter build web --release --dart-define=MFD_V26_ENABLED=true
