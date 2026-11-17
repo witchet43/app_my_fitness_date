@@ -11,6 +11,7 @@ name: Fitted - canonical unified authentication release
 # Gym Shield v30: reciprocal conservative A/B rule, C pending safety review, verified-primary-venue scope and privacy UX.
 # UX audit v34.1: mobile photo-led registration verified, 102-test regression release.\n# Slate Mint: one public panel, dynamic palette, new mark; no safety gate changes.
 # Mint icon gate corrective release: optimized flat icon is intentionally below 5 KB.
+# Compact welcome and bilingual cover tested before canonical deployment.
 on:
   push:
     branches: [main]
