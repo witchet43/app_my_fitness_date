@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/fitted_locale.dart';
 import '../core/fitted_profile_insights_v29.dart';
+import '../core/fit_ia_repository.dart';
 import '../theme/fitness_date_theme.dart';
 
 /// Pure presentation: caller supplies saved, consented rhythm; no network.
@@ -9,10 +10,11 @@ class FittedProfileProgressV29 extends StatelessWidget {
   const FittedProfileProgressV29({
     super.key,required this.rhythm,
     required this.startingPreference,required this.onChooseStarting,
-    required this.onConfigure,
+    required this.onConfigure,this.fitIaOverview,
     this.showCompletion=true,this.showRhythm=true,
   });
   final Map<String,dynamic>? rhythm;
+  final Map<String,dynamic>? fitIaOverview;
   final String? startingPreference;
   final Future<void> Function(String?) onChooseStarting;
   final VoidCallback onConfigure;
@@ -43,23 +45,23 @@ class FittedProfileProgressV29 extends StatelessWidget {
     'competitive':'Your answers reflect competition and event preparation.',
   };
 
-  Widget _track(BuildContext context,String label,int value) {
+  Widget _depthRow(BuildContext context,String title,String key,bool en){
+    final depth=FitIaDepth.level(fitIaOverview,key);
     return Padding(
-      padding:const EdgeInsets.only(top:9),
-      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Row(children:[
-          Expanded(child:Text(label,
-            style:Theme.of(context).textTheme.labelMedium)),
-          Text('$value%',style:Theme.of(context).textTheme.labelMedium),
-        ]),
-        const SizedBox(height:5),
-        ClipRRect(borderRadius:BorderRadius.circular(5),child:
-          LinearProgressIndicator(
-            key:Key('pillar-progress-$label'),
-            value:value/100,minHeight:7,
-            backgroundColor:Theme.of(context).colorScheme.outline.withValues(alpha:.2),
-            color:Theme.of(context).colorScheme.primary,
-          ),
+      padding:const EdgeInsets.only(top:12),
+      child:Row(children:[
+        const Icon(Icons.chat_bubble_outline,size:17),
+        const SizedBox(width:9),
+        Expanded(child:Text(title,style:Theme.of(context).textTheme.bodyMedium)),
+        Container(
+          key:Key('fit-ia-depth-'+key),
+          padding:const EdgeInsets.symmetric(horizontal:11,vertical:7),
+          decoration:BoxDecoration(
+            borderRadius:BorderRadius.circular(12),
+            color:Theme.of(context).colorScheme.primary.withValues(alpha:.12)),
+          child:Text(FitIaDepth.label(depth,en),
+            style:Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight:FontWeight.w800)),
         ),
       ]),
     );
@@ -68,8 +70,7 @@ class FittedProfileProgressV29 extends StatelessWidget {
   @override
   Widget build(BuildContext context){
     final en=FittedLocaleScope.languageOf(context)=='en';
-    final pillar=FittedProfileInsights.pillarProgress(rhythm);
-    final overall=FittedProfileInsights.overallProgress(rhythm);
+    // Coverage of information replaces artificial profile percentages.
     final segment=FittedProfileInsights.classify(rhythm);
     final label=en?labelEn:labelEs;
     return Card(
@@ -79,36 +80,28 @@ class FittedProfileProgressV29 extends StatelessWidget {
         padding:const EdgeInsets.all(18),
         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           if(showCompletion)...[
-          Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,
-              children:[
-                Text(en?'YOUR PROFILE IS TAKING SHAPE':'TU PERFIL ESTÁ TOMANDO FORMA',
-                  style:TextStyle(letterSpacing:1.2,
-                    color:Theme.of(context).colorScheme.primary,fontWeight:FontWeight.w700,
-                    fontSize:11)),
-                const SizedBox(height:5),
-                Text(en?'A measure of what you have shared, not your value.':
-                  'Mide lo que has compartido, no tu valor como persona.',
-                  style:Theme.of(context).textTheme.bodySmall),
-              ])),
-            const SizedBox(width:8),
-            Text('$overall%',key:const Key('fitted-profile-completion'),
-              style:Theme.of(context).textTheme.headlineMedium),
-          ]),
-          const SizedBox(height:8),
-          _track(context,en?'How I Move':'Cómo me muevo',pillar[0]),
-          _track(context,en?'How I Live':'Cómo vivo',pillar[1]),
-          _track(context,en?'How I Relate':'Cómo me relaciono',pillar[2]),
-          const SizedBox(height:13),
-          Text(en
-            ?'Optional answers do not block your progress.'
-            :'Las respuestas opcionales no bloquean tu avance.',
-            style:Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height:10),
-          TextButton.icon(
-            key:const Key('fitted-progress-complete'),
-            onPressed:onConfigure,icon:const Icon(Icons.arrow_forward),
-            label:Text(en?'Continue my profile':'Continuar mi perfil')),
+            Text(en?'YOUR STORY IS TAKING SHAPE':
+              'TU HISTORIA ESTÁ TOMANDO FORMA',
+              style:TextStyle(letterSpacing:1.2,
+                color:Theme.of(context).colorScheme.primary,
+                fontWeight:FontWeight.w800,fontSize:11)),
+            const SizedBox(height:7),
+            Text(en
+              ?'Fit-IA learns about three areas of your lifestyle '
+               'through optional conversations, never a percentage.'
+              :'Fit-IA descubre tres dimensiones de tu estilo de vida '
+               'con conversaciones voluntarias, nunca porcentajes.',
+              style:Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height:9),
+            _depthRow(context,en?'How I Move':'Cómo me muevo','move',en),
+            _depthRow(context,en?'How I Live':'Cómo vivo','live',en),
+            _depthRow(context,en?'How I Relate':'Cómo me relaciono','relate',en),
+            const SizedBox(height:13),
+            FilledButton.tonalIcon(
+              key:const Key('fitted-progress-complete'),
+              onPressed:onConfigure,
+              icon:const Icon(Icons.auto_awesome_outlined),
+              label:Text(en?'Chat with Fit-IA':'Conversar con Fit-IA')),
           ],
           if(showRhythm)...[
           Text(en?'MY CURRENT MOVEMENT RHYTHM':'MI RITMO ACTUAL',
@@ -131,16 +124,10 @@ class FittedProfileProgressV29 extends StatelessWidget {
             const SizedBox(height:7),
             Text((en?reasonsEn:reasonsEs)[segment.primary]!,
               style:Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height:12),
-            Text(en?'SIMILARITY WITH FOUR RHYTHMS':
-              'AFINIDAD CON CUATRO RITMOS',
-              style:Theme.of(context).textTheme.labelSmall),
-            for(final id in FittedProfileInsights.segments)
-              _track(context,label[id]!,segment.affinities[id]!),
-            const SizedBox(height:8),
+            const SizedBox(height:11),
             Text(en
-              ?'Illustrative affinities, not statistical probabilities or match percentages.'
-              :'Afinidades orientativas, no probabilidades estadísticas ni porcentajes de match.',
+              ?'This description comes from previously saved activity preferences.'
+              :'Esta descripción proviene de preferencias de actividad guardadas anteriormente.',
               style:Theme.of(context).textTheme.bodySmall),
           ],
           const SizedBox(height:11),

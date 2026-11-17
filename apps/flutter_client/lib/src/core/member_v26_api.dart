@@ -7,10 +7,11 @@ import 'activity_repository.dart';
 import 'curator_repository.dart';
 import 'community_repository.dart';
 import 'dating_repository_b11.dart';
+import 'fit_ia_repository.dart';
 
 /// Business data travels through our authenticated Supabase Edge gateway,
 /// using the member JWT and RLS, never a privileged database key.
-class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11 {
+class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11, FitIaRepository {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
@@ -385,6 +386,63 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   Future<List<Map<String,dynamic>>> moderationDeletionRequests() async =>
     _items(_decode(await _request('GET','/v1/admin/community/deletions')));
 
+
+
+  /// Fit-IA is a private, JWT-authenticated Edge Function. No service-role
+  /// credentials or other members' data ever reach this application.
+  Future<Map<String,dynamic>> _fitIa(String action,
+      [Map<String,dynamic> args=const {}])async{
+    if(auth.auth.currentSession?.accessToken==null){
+      throw const MemberApiException('Inicia sesión para conversar con Fit-IA.');
+    }
+    try{
+      final result=await auth.functions.invoke('fit-ia-v1',
+        body:{'action':action,...args}).timeout(
+          Duration(seconds:action=='summary'?40:25));
+      if(result.status!=200){
+        throw const MemberApiException(
+          'Fit-IA no está disponible. Tus respuestas guardadas permanecen seguras.');
+      }
+      final raw=result.data;
+      if(raw is Map){
+        return Map<String,dynamic>.from(raw);
+      }
+      if(raw is String){
+        final parsed=jsonDecode(raw);
+        if(parsed is Map)return Map<String,dynamic>.from(parsed);
+      }
+      throw const MemberApiException('Fit-IA devolvió una respuesta inesperada.');
+    }on MemberApiException{rethrow;}
+    catch(_){
+      throw const MemberApiException(
+        'No pudimos conectar con Fit-IA. Inténtalo de nuevo.');
+    }
+  }
+
+  @override
+  Future<Map<String,dynamic>> fitIaState(String pillar)=>
+      _fitIa('state',{'pillar':pillar});
+  @override
+  Future<Map<String,dynamic>> fitIaAnswer(
+      String pillar,String questionId,String choiceKey,{String locale='es'})=>
+      _fitIa('answer',{
+        'pillar':pillar,'question_id':questionId,'choice_key':choiceKey,
+        'locale':locale,
+      });
+  @override
+  Future<Map<String,dynamic>> fitIaOverview()=>_fitIa('overview');
+  @override
+  Future<Map<String,dynamic>> fitIaConsent(bool enabled)=>
+      _fitIa('consent',{'enabled':enabled});
+  @override
+  Future<Map<String,dynamic>> fitIaGenerateSummary()=>_fitIa('summary');
+  @override
+  Future<void> fitIaDeleteMyData()async{
+    final result=await _fitIa('delete');
+    if(result['status']!='deleted'){
+      throw const MemberApiException('No se pudieron borrar tus respuestas.');
+    }
+  }
 
   // B18 safe summary: direct, authenticated owner-only RPC.
   Future<Map<String,dynamic>> myFittedSummaryB18() async {
