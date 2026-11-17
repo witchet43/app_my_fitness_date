@@ -80,8 +80,10 @@ void main() {
     await tester.tap(find.text('Editar marca en vivo'));
     await tester.pumpAndSettle();
     expect(find.text('Marca global en vivo'),findsOneWidget);
+    expect(find.byKey(const Key('brand-palette-selector')),findsOneWidget);
+    expect(find.byKey(const Key('brand-color-primario')),findsOneWidget);
+    expect(find.byKey(const Key('brand-logo-reel')),findsOneWidget);
     expect(find.byKey(const Key('admin-logo-0')),findsOneWidget);
-    expect(find.byKey(const Key('admin-logo-9')),findsOneWidget);
     expect(find.byKey(const Key('b3-auto-publish-label')),findsOneWidget);
   });
 }
