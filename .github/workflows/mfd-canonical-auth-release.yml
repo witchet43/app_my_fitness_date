@@ -84,6 +84,7 @@ jobs:
         run: |
           python3 scripts/verify_hosted_auth.py
           python3 scripts/check_public_legal.py
+          node scripts/test_fitted_legal_brand.cjs
           python3 - <<'PY'
           from pathlib import Path
           source=Path("apps/flutter_client/lib/main.dart").read_text()
