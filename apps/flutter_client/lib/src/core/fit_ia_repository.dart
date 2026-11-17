@@ -4,6 +4,10 @@ abstract class FitIaRepository {
   Future<Map<String,dynamic>> fitIaAnswer(
     String pillar,String questionId,String choiceKey,{String locale='es'});
   Future<Map<String,dynamic>> fitIaOverview();
+  Future<Map<String,dynamic>> fitIaForm(String pillar);
+  Future<Map<String,dynamic>> fitIaSubmitForm(
+    String pillar,List<Map<String,String>> answers);
+  Future<Map<String,dynamic>> fitIaInsights(String pillar);
   Future<Map<String,dynamic>> fitIaConsent(bool enabled);
   Future<Map<String,dynamic>> fitIaGenerateSummary();
   Future<void> fitIaDeleteMyData();
