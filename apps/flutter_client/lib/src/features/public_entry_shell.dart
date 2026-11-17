@@ -235,6 +235,32 @@ class _PublicEntryShellState extends State<PublicEntryShell> {
       padding:EdgeInsets.fromLTRB(wide?65:19,wide?8:18,
         wide?65:19,wide?22:24),
       child:Column(mainAxisSize:MainAxisSize.min,children:[
+        Padding(
+          padding:const EdgeInsets.only(bottom:13),
+          child:Wrap(alignment:WrapAlignment.center,
+            crossAxisAlignment:WrapCrossAlignment.center,
+            spacing:15,runSpacing:6,children:[
+              Text(FittedLocaleScope.t(context,
+                'TU ESPACIO EN FITTED','YOUR FITTED SPACE'),
+                style:TextStyle(color:brand.primaryColor,
+                  fontSize:10,letterSpacing:1.6,
+                  fontWeight:FontWeight.w800)),
+              Text(register
+                ?FittedLocaleScope.t(context,'Comienza aquí','Start here')
+                :FittedLocaleScope.t(context,'Bienvenido','Welcome'),
+                style:const TextStyle(color:FitDateColors.pearl,
+                  fontSize:15,fontWeight:FontWeight.w700)),
+              Text(register
+                ?FittedLocaleScope.t(context,
+                  'Crea tu cuenta y empieza tu perfil.',
+                  'Create your account and begin your profile.')
+                :FittedLocaleScope.t(context,
+                  'Entra y continúa donde lo dejaste.',
+                  'Sign in and pick up where you left off.'),
+                style:const TextStyle(color:FitDateColors.muted,
+                  fontSize:12)),
+            ]),
+        ),
         _authButtons(wide,brand),
         const SizedBox(height:14),
         TextButton(
