@@ -56,6 +56,8 @@ class _FittedColorPickerState extends State<FittedColorPicker>{
   Widget build(BuildContext context){
     final c=hsv.toColor();
     final fg=c.computeLuminance()>.44?Colors.black87:Colors.white;
+    final pickerWidth=(MediaQuery.sizeOf(context).width-112)
+      .clamp(200.0,360.0).toDouble();
     return AlertDialog(
       key:const Key('brand-hsv-picker'),
       title:Text('Color: ${widget.label}'),
@@ -68,19 +70,21 @@ class _FittedColorPickerState extends State<FittedColorPicker>{
             Text('Elige un punto en la paleta, mueve el tono o escribe HEX.',
               style:Theme.of(context).textTheme.bodySmall),
             const SizedBox(height:15),
-            LayoutBuilder(builder:(context,b)=>GestureDetector(
-              key:const Key('brand-hsv-sv'),behavior:HitTestBehavior.opaque,
-              onTapDown:(v)=>_updateSV(v.localPosition,b.maxWidth),
-              onPanUpdate:(v)=>_updateSV(v.localPosition,b.maxWidth),
-              child:CustomPaint(
-                painter:_SVPainter(hsv),size:Size(b.maxWidth,180)))),
+            SizedBox(width:pickerWidth,height:180,
+              child:GestureDetector(
+                key:const Key('brand-hsv-sv'),behavior:HitTestBehavior.opaque,
+                onTapDown:(v)=>_updateSV(v.localPosition,pickerWidth),
+                onPanUpdate:(v)=>_updateSV(v.localPosition,pickerWidth),
+                child:CustomPaint(painter:_SVPainter(hsv),
+                  size:Size(pickerWidth,180)))),
             const SizedBox(height:16),
-            LayoutBuilder(builder:(context,b)=>GestureDetector(
-              key:const Key('brand-hsv-hue'),behavior:HitTestBehavior.opaque,
-              onTapDown:(v)=>_updateHue(v.localPosition.dx,b.maxWidth),
-              onPanUpdate:(v)=>_updateHue(v.localPosition.dx,b.maxWidth),
-              child:CustomPaint(
-                painter:_HuePainter(hsv.hue),size:Size(b.maxWidth,24)))),
+            SizedBox(width:pickerWidth,height:24,
+              child:GestureDetector(
+                key:const Key('brand-hsv-hue'),behavior:HitTestBehavior.opaque,
+                onTapDown:(v)=>_updateHue(v.localPosition.dx,pickerWidth),
+                onPanUpdate:(v)=>_updateHue(v.localPosition.dx,pickerWidth),
+                child:CustomPaint(painter:_HuePainter(hsv.hue),
+                  size:Size(pickerWidth,24)))),
             const SizedBox(height:18),
             Row(children:[
               Expanded(child:Container(
