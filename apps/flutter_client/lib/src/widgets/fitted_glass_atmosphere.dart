@@ -59,7 +59,7 @@ class _RhythmPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RhythmPainter old) =>
-    old.density!=density;
+    true;
 }
 
 /// Transparent glass accent; semantic labels belong to the caller content.
