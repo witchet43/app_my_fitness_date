@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
-import 'fit_ia_conversation_page.dart';
+import 'fit_ia_natural_chat_page.dart';
 import 'fitted_profile_story_v28.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
@@ -547,7 +547,7 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   /// Dating/discovery remains a separate, explicitly consented operation.
   Future<void> configurePillars([int initialPillar=0])async{
     await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder:(_)=>FitIaConversationPage(
+      builder:(_)=>FitIaNaturalChatPage(
         repository:widget.api,initialPillar:initialPillar)));
     if(mounted)await reload();
   }
