@@ -42,7 +42,7 @@ void main() {
     await tester.pump();
     expect(find.byType(CheckboxListTile), findsNothing);
     await tester.ensureVisible(find.byKey(const Key('email-entry')));
-    expect(find.text('Comienza aquí'), findsOneWidget);
+    expect(find.text('Crear cuenta con correo'), findsOneWidget);
   });
   testWidgets('configured access buttons invoke real supplied sign-in actions',
       (tester) async {

@@ -31,14 +31,14 @@ class LiveBrandSettings {
   static const fallback = LiveBrandSettings(
     name: 'Fitted',
     tagline: 'Personas en movimiento. Conexiones con intención.',
-    title: 'Personas en movimiento. Conexiones que trascienden.',
-    description: 'Entrenamiento, recovery y rutinas intencionales. Conecta con alguien por sus valores y estilo de vida, incluso si practican deportes distintos.',
-    paletteName: 'Fitted Motion · Midnight Aurora',
-    primary: '#D9C3FF',
-    accent: '#65D3FA',
-    background: '#0D1030',
-    font: 'Georgia',
-    // catalog:0 deliberately resolves to the bundled, brand-owned Motion F.
+    title: 'Conexiones que trascienden.',
+    description: 'Entrenamiento, bienestar y un estilo de vida activo. Conecta con personas que comparten tus intereses, valores y pasión por el movimiento.',
+    paletteName: 'Fitted · Pizarra y Menta',
+    primary: '#8EF0D5',
+    accent: '#68D4C7',
+    background: '#1A2D38',
+    font: 'Arial',
+    // catalog:0 resolves to the bundled, brand-owned Fitted mint F.
     // User-selected custom logos still override the default through Brand Lab.
     logo: 'catalog:0',
     media: <String, String>{},

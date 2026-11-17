@@ -6,19 +6,19 @@ import 'package:my_fitness_date/src/theme/fitness_date_theme.dart';
 import 'package:my_fitness_date/src/widgets/mfd_branding.dart';
 
 void main(){
-  test('Fitted Aurora palette keeps public brand and Flutter in sync',(){
+  test('Fitted Slate Mint palette keeps public brand and Flutter in sync',(){
     const brand=LiveBrandSettings.fallback;
     expect(brand.name,'Fitted');
     expect(brand.logo,'catalog:0');
-    expect(brand.primary,'#D9C3FF');
-    expect(brand.accent,'#65D3FA');
-    expect(brand.background,'#0D1030');
-    expect(FitDateColors.inkDeep,const Color(0xFF0D1030));
-    expect(FitDateColors.aqua,const Color(0xFF65D3FA));
-    expect(FitDateColors.pulsePink,const Color(0xFFF15FAB));
+    expect(brand.primary,'#8EF0D5');
+    expect(brand.accent,'#68D4C7');
+    expect(brand.background,'#1A2D38');
+    expect(FitDateColors.inkDeep,const Color(0xFF1A2D38));
+    expect(FitDateColors.aqua,const Color(0xFF8EF0D5));
+    expect(FitDateColors.pulsePink,const Color(0xFF6BD6B7));
     final theme=brand.toTheme();
-    expect(theme.colorScheme.primary,const Color(0xFFD9C3FF));
-    expect(theme.scaffoldBackgroundColor,const Color(0xFF0D1030));
+    expect(theme.colorScheme.primary,const Color(0xFF8EF0D5));
+    expect(theme.scaffoldBackgroundColor,const Color(0xFF1A2D38));
     expect(theme.colorScheme.onPrimary,Colors.black);
   });
 

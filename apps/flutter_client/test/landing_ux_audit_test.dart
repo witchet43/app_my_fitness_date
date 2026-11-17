@@ -33,10 +33,12 @@ void main(){
       expect(accessTop,greaterThan(heroTop));
       expect(accessTop,lessThan(1100),
         reason:'The photographic hero must be followed by an accessible registration panel');
-      expect(find.byKey(const Key('landing-create-profile')),findsOneWidget);
+      expect(find.byKey(const Key('landing-create-profile')),findsNothing);
+      expect(find.ancestor(of:find.byKey(const Key('landing-access')),
+        matching:find.byKey(const Key('landing-hero'))),findsOneWidget);
       expect(tester.takeException(),isNull);
     });
-  testWidgets('desktop features editorial image before the registration panel',
+  testWidgets('desktop integrates image and registration inside the same hero',
     (tester) async{
       await tester.binding.setSurfaceSize(const Size(1280,900));
       addTearDown(()=>tester.binding.setSurfaceSize(null));
@@ -46,6 +48,8 @@ void main(){
       final login=tester.getTopLeft(find.byKey(const Key('landing-access')));
       expect(hero.dy,isNonNegative);
       expect(login.dy,greaterThan(hero.dy));
+      expect(find.ancestor(of:find.byKey(const Key('landing-access')),
+        matching:find.byKey(const Key('landing-hero'))),findsOneWidget);
       expect(find.byKey(const Key('landing-editorial-photo')),findsOneWidget);
       expect(find.byKey(const Key('anonymous-pace-tool')),findsNothing);
       expect(tester.takeException(),isNull);

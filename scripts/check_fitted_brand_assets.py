@@ -13,7 +13,9 @@ def main():
     root=Path(args.project)
     icon=root/"assets/branding/fitted_motion_f.webp"
     alias=root/"assets/branding/mfd_icon.webp"
-    assert icon.read_bytes()==alias.read_bytes(), "In-app F differs from launcher source"
+    assert icon.is_file() and alias.is_file(), "Bundled fallback files missing"
+    mark=(root/"assets/branding/fitted_mint_f.svg").read_text()
+    assert "<svg" in mark and "#89EBD2" in mark, "Mint F source missing"
     with Image.open(icon) as im:
         assert im.format=="WEBP" and min(im.size)>=160 and im.width==im.height, im.size
     web=root/"web"
@@ -29,17 +31,17 @@ def main():
             assert im.format=="PNG" and im.size==size,(name,im.size)
             assert im.getpixel((0,0))!=(255,255,255), "Default Flutter icon present"
     m=json.loads((web/"manifest.json").read_text())
-    assert m["name"]=="Fitted" and m["theme_color"]=="#0D1030"
+    assert m["name"]=="Fitted" and m["theme_color"]=="#1A2D38"
     assert any("maskable" in entry.get("purpose","") for entry in m["icons"])
     html=(web/"index.html").read_text()
     assert '<title>Fitted</title>' in html
     assert 'apple-touch-icon.png' in html
-    assert 'favicon.png?v=orbit-b16' in html
+    assert 'favicon.png?v=slate-mint-v1' in html
     theme=(root/"lib/src/theme/fitness_date_theme.dart").read_text()
-    for color in ("0xFF0D1030","0xFF65D3FA","0xFFC4ACFF","0xFFF15FAB"):
+    for color in ("0xFF1A2D38","0xFF8EF0D5","0xFF68D4C7","0xFF6BD6B7"):
         assert color in theme,"Motion F color token not present: "+color
     brand=(root/"lib/src/core/live_brand.dart").read_text()
-    for token in ("'catalog:0'","'#D9C3FF'","'#65D3FA'","'#0D1030'"):
+    for token in ("'catalog:0'","'#8EF0D5'","'#68D4C7'","'#1A2D38'"):
         assert token in brand,"Dynamic fallback brand is not synchronized: "+token
     print("PASS Motion F canonical asset, favicon, maskable PWA, iOS touch, Flutter palette")
 

@@ -9,7 +9,7 @@ name: Fitted - canonical unified authentication release
 # Profile v29: truthful three-pillar completion, dynamic four-rhythm classifier and optional starting point; CI verified.
 # Match policy v2: extendible audited factor catalogue, distance as filter, transparent evidence and score explanation.
 # Gym Shield v30: reciprocal conservative A/B rule, C pending safety review, verified-primary-venue scope and privacy UX.
-# UX audit v34.1: mobile photo-led registration verified, 102-test regression release.
+# UX audit v34.1: mobile photo-led registration verified, 102-test regression release.\n# Slate Mint: one public panel, dynamic palette, new mark; no safety gate changes.
 on:
   push:
     branches: [main]
@@ -148,8 +148,8 @@ jobs:
             "commit":sha,"channel":"canonical-unified-auth",
             "login_return":"https://my-fitness-date.pages.dev/",
             "member_access":True,"dating_enabled":False,
-            "visual_revision":"fitted-editorial-story-b19",
-            "brand_icon":"fitted-orbit-f",
+            "visual_revision":"fitted-slate-mint-single-hero",
+            "brand_icon":"fitted-mint-f",
             "ai_summary":"opt_in_with_editorial_fallback",
             "story_modes":"manual_owner_text_or_opt_in_ai",
             "candidate_feed":"verified_real_members_only",
@@ -183,7 +183,7 @@ jobs:
                   assert info["channel"]=="canonical-unified-auth",info
                   assert info["login_return"]==home+"/",info
                   assert info["member_access"] is True
-                  assert info["visual_revision"]=="fitted-editorial-story-b19"
+                  assert info["visual_revision"]=="fitted-slate-mint-single-hero"
                   assert info["story_modes"]=="manual_owner_text_or_opt_in_ai"
                   assert info["ai_summary"]=="opt_in_with_editorial_fallback"
                   assert info["candidate_feed"]=="verified_real_members_only"

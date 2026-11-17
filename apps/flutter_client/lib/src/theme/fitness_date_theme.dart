@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 
-/// Fitted Motion F: midnight navy, ice-blue rhythm, violet glass and a restrained fuchsia pulse.
+/// Fitted Slate Mint: charcoal-slate surfaces, mint highlight and subtle teal rhythm.
 /// Designed for confident adults 35–50. Accents are used selectively, never as saturated full-screen fills.
 /// Static tokens support Flutter Web, Android and iOS without external fonts.
 abstract final class FitDateColors {
-  static const ink = Color(0xFF18234C);
-  static const inkDeep = Color(0xFF0D1030);
-  static const surface = Color(0xFF151B3E);
-  static const surfaceRaised = Color(0xFF202953);
+  static const ink = Color(0xFF233C48);
+  static const inkDeep = Color(0xFF1A2D38);
+  static const surface = Color(0xFF233A46);
+  static const surfaceRaised = Color(0xFF2B4853);
   // Keep semantic tokens compatible with existing components while
   // shifting the Fitted design system to the Motion F visual identity.
-  static const coral = Color(0xFFD9C3FF); // accessible lavender CTA
-  static const coralDark = Color(0xFF35224F);
-  static const lime = Color(0xFF65D3FA);
-  static const aqua = Color(0xFF65D3FA);  // rhythm / focus
-  static const apricot = Color(0xFFF385C5); // restrained pulse
-  static const lilac = Color(0xFFC4ACFF);
-  static const pearl = Color(0xFFF7F6FF);
-  static const muted = Color(0xFFBCC8E4);
-  static const outline = Color(0xFF424B7D);
-  static const pulseViolet = Color(0xFF8A63EE);
-  static const pulsePink = Color(0xFFF15FAB);
-  static const pulseBlue = Color(0xFF50C8FF);
+  static const coral = Color(0xFF8EF0D5); // mint call to action
+  static const coralDark = Color(0xFF164B4A);
+  static const lime = Color(0xFF68D4C7);
+  static const aqua = Color(0xFF8EF0D5);  // rhythm / focus
+  static const apricot = Color(0xFF72C8C4); // restrained pulse
+  static const lilac = Color(0xFF8EF0D5);
+  static const pearl = Color(0xFFF6FBFD);
+  static const muted = Color(0xFFC3D5DB);
+  static const outline = Color(0xFF557783);
+  static const pulseViolet = Color(0xFF528F91);
+  static const pulsePink = Color(0xFF6BD6B7);
+  static const pulseBlue = Color(0xFF65CFC9);
 }
 
 abstract final class FitDateTheme {
@@ -139,7 +139,7 @@ abstract final class FitDateTheme {
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: FitDateColors.inkDeep,
-        indicatorColor: const Color(0xFF30245F),
+        indicatorColor: const Color(0xFF315650),
         selectedIconTheme: const IconThemeData(
           color: FitDateColors.coral, size: 26,
         ),
@@ -156,7 +156,7 @@ abstract final class FitDateTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: FitDateColors.surface,
-        indicatorColor: const Color(0xFF36265C),
+        indicatorColor: const Color(0xFF315650),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             color: states.contains(WidgetState.selected)
