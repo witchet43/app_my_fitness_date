@@ -1,0 +1,54 @@
+name: Fit-IA Admin and Two-Panel QA
+on:
+  push:
+    branches: [feature/fitted-fitia-admin-conversation-ui-cors-20261117]
+    paths:
+      - .build-gates/fit-ia-panel-v2-qa.txt
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate CORS, strict domain and administrator boundaries
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          edge=Path('supabase/functions/fit-ia-v1/index.ts').read_text()
+          assert 'x-client-info' in edge and 'x-retry-count' in edge
+          assert 'STRICT DOMAIN:' in edge
+          assert 'form_submit' in edge and 'insights' in edge
+          sql=Path('supabase/migrations/202611170045_fit_ia_admin_form_depth_v2.sql').read_text()
+          assert 'app_private.is_brand_administrator(true)' in sql
+          assert 'p_pillar' in sql and 'p_choice_key' not in sql
+          ui=Path('apps/flutter_client/lib/src/features/fit_ia_conversation_page.dart').read_text()
+          assert 'fit-ia-insights-panel' in ui
+          assert 'fit-ia-traditional-form' in ui
+          assert 'fit-ia-executive-summary' in ui
+          assert 'fit-ia-pause' in ui
+          assert 'fit-ia-admin' in Path('apps/flutter_client/lib/src/features/fit_ia_admin_page.dart').read_text()
+          print('Fit-IA v2 static safety gate PASS')
+          PY
+          python3 scripts/check_public_legal.py
+          node scripts/test_fitted_legal_brand.cjs
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Install Flutter packages
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Flutter static analyzer
+        working-directory: apps/flutter_client
+        run: flutter analyze --no-fatal-infos
+      - name: Full Flutter test suite
+        working-directory: apps/flutter_client
+        run: flutter test --reporter expanded
+      - name: Compile release website
+        working-directory: apps/flutter_client
+        run: flutter build web --release --dart-define=MFD_V26_ENABLED=true
