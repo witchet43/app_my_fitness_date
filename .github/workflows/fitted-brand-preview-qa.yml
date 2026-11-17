@@ -24,7 +24,7 @@ jobs:
           assert "brand-publish-save" in a and "Cambios sin publicar" in a
           assert "Guardar diseño para después" in a
           fonts=Path("apps/flutter_client/lib/src/widgets/fitted_font_catalog.dart").read_text()
-          assert "GoogleFontsLite.getFont" in fonts and "GoogleFontsLite.getTextTheme" in fonts
+          assert "GoogleFonts.getFont" in fonts and "GoogleFonts.getTextTheme" in fonts
           logos=Path("apps/flutter_client/lib/src/widgets/fitted_logo_catalog.dart").read_text()
           for text in ("Zancada compartida","Fuerza en pareja","Ciclismo en dúo"):
               assert text in logos
