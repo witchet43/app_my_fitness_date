@@ -346,7 +346,7 @@ Deno.serve(async(req)=>{
         }
       }
       const result=await resolveChat(pillar,language,bearer,userId);
-      return respond(result.status==="ai_unavailable"?503:200,{
+      return respond(200,{
         ...result,ai_enabled:true,conversation_mode:"ai_only",
       });
     }
