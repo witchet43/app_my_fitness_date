@@ -137,3 +137,7 @@
 | SaaS Factory v1.9 | Marco de ingeniería aprobado y 219 controles | **No** |
 
 **Responsable de decisiones:** por designar/confirmar. **Evidencia de investigación:** SIN_DATOS. **Estado general:** exploración documentada, **sin features desplegadas por este cambio**.
+
+## Adenda de decisión de producto — 17 de noviembre de 2026
+
+[Fitted: FIT, PULSE, SYNC e IMPULSO](FITTED_SOCIAL_INTERACTIONS.md) documenta los cuatro conceptos aprobados y 12 requisitos adicionales SI-01..SI-12; no forman parte de las 84 referencias históricas del PDF. FIT es interés explícito privado; SYNC es interés recíproco elegible; IMPULSO es reconocimiento social y PULSE es contenido voluntario. Esta decisión delimita el lenguaje y comportamiento funcional, sin cerrar otros aspectos de D-08 ni habilitar chat o publicación de datos externos. Implementación y liberación pendientes.
