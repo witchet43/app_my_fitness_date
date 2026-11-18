@@ -1,0 +1,62 @@
+name: Fitted - controlled Supabase deployment
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: "Component to deploy"
+        type: choice
+        options: [function, migrations]
+        required: true
+      function_slug:
+        description: "Function slug (function deployment only)"
+        type: string
+        required: false
+permissions:
+  contents: read
+concurrency:
+  group: fitted-supabase-production
+  cancel-in-progress: false
+jobs:
+  supabase-production:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: jtrdvnwbxpfdnbzasvcj
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Check configuration and release control
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          python3 scripts/check_saas_factory.py
+          test "${{ github.ref }}" = "refs/heads/main"
+      - name: Deploy explicitly requested component
+        env:
+          COMPONENT: ${{ inputs.component }}
+          FUNCTION_SLUG: ${{ inputs.function_slug }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$COMPONENT" == "function" ]]; then
+            case "$FUNCTION_SLUG" in
+              fit-ia-v1|fitted-ai-summary-b18|member-api-v26|heartbeat)
+                test -d "supabase/functions/$FUNCTION_SLUG"
+                supabase functions deploy "$FUNCTION_SLUG" --project-ref "$PROJECT_REF"
+                ;;
+              *) echo "Function not allowlisted"; exit 1 ;;
+            esac
+          elif [[ "$COMPONENT" == "migrations" ]]; then
+            test -n "$SUPABASE_DB_PASSWORD"
+            supabase link --project-ref "$PROJECT_REF"
+            supabase db push
+          else
+            exit 1
+          fi

@@ -1,0 +1,33 @@
+name: Fitted - daily production monitor
+on:
+  schedule:
+    - cron: "23 11 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fitted-daily-monitor
+  cancel-in-progress: true
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Public site, release metadata and backend heartbeat
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request
+          headers={"User-Agent":"Fitted-Monitor/1.0","Cache-Control":"no-cache"}
+          def fetch(url):
+              with urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=15) as r:
+                  assert r.status==200
+                  return r.read()
+          release=json.loads(fetch("https://my-fitness-date.pages.dev/mfd-release.json"))
+          assert len(release.get("commit",""))==40
+          hb=json.loads(fetch("https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/heartbeat"))
+          assert hb.get("status")=="ok" and hb.get("dependencies",{}).get("database")=="ok"
+          print(json.dumps({"status":"ok","deployed_commit":release["commit"],"database":"ok"}))
+          PY

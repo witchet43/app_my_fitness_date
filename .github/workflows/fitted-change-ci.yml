@@ -1,0 +1,74 @@
+name: Fitted - change-aware quality gate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "supabase/**"
+      - "cloudflare/**"
+      - "scripts/**"
+      - ".github/workflows/**"
+      - "product.manifest.yaml"
+      - "AGENTS.md"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fitted-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      flutter: ${{ steps.scope.outputs.flutter }}
+      database: ${{ steps.scope.outputs.database }}
+      edge: ${{ steps.scope.outputs.edge }}
+      full_gate: ${{ steps.scope.outputs.full_gate }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: scope
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            python3 scripts/fitted_change_scope.py --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+          else
+            python3 scripts/fitted_change_scope.py --files apps/flutter_client/lib/main.dart supabase/functions/fit-ia-v1/index.ts supabase/migrations/synthetic.sql
+          fi
+      - run: python3 -m unittest discover -s scripts -p 'test_fitted_change_scope.py'
+      - run: python3 scripts/check_saas_factory.py
+  flutter:
+    needs: scope
+    if: needs.scope.outputs.flutter == 'true' || needs.scope.outputs.full_gate == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.9"
+          cache: true
+      - name: Flutter dependencies
+        working-directory: apps/flutter_client
+        run: flutter pub get
+      - name: Analyze and test
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+  release-policy:
+    needs: scope
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Release gate is documentary, not an automatic authorization
+        run: |
+          python3 scripts/check_saas_factory.py
+          echo "Production authorization and readiness still governed by AGENTS.md and G0-G5."
