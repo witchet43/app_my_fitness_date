@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { isPrivateCandidate, isOwnedExport } from '../src/domain/smokeContract';
 import { readPendingFlag } from '../src/domain/sessionGate';
+import { waitForMailpitOtp } from './mailpit-otp';
 
 const apiUrl = process.env.API_URL || '';
 const publicKey = process.env.PUBLISHABLE_KEY || process.env.ANON_KEY || '';
@@ -69,11 +70,18 @@ try{
                                 b.auth.signUp({email:addr('b'),password})]);
  for(const u of users){
    assert.ifError(u.error);
-   assert.ok(u.data.user&&u.data.session,
-     'local Auth must issue sessions (email confirmation disabled only locally)');
+   assert.ok(u.data.user&&!u.data.session,
+     'local Auth must require email confirmation before issuing JWT');
  }
  const uidA=required(users[0].data.user?.id,'A id');
  const uidB=required(users[1].data.user?.id,'B id');
+ for(const [user,email] of [[a,addr('a')],[b,addr('b')]] as const){
+   const otp=await waitForMailpitOtp(email,'MFD_QA_CONFIRM_CODE');
+   const verified=await user.auth.verifyOtp({email,token:otp,type:'signup'});
+   assert.ifError(verified.error);
+   assert.ok(verified.data.session,'email confirmation must issue a valid session');
+ }
+ checks.push('Mailpit confirmation OTP required for real local signup');
  assert.notEqual(uidA,uidB);
 
  const wrong=await alternate.auth.signInWithPassword({email:addr('a'),password:'wrong-password'});
