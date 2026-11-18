@@ -11,6 +11,7 @@ import '../widgets/fitted_font_catalog.dart';
 class LiveBrandSettings {
   const LiveBrandSettings({
     required this.name,
+    this.assistantName='Fit-IA',
     required this.tagline,
     required this.title,
     required this.description,
@@ -25,7 +26,7 @@ class LiveBrandSettings {
     required this.layout,
   });
 
-  final String name, tagline, title, description, paletteName;
+  final String name, assistantName, tagline, title, description, paletteName;
   final String primary, accent, background, font, logo, mode, layout;
   final Map<String, String> media;
 
@@ -85,6 +86,7 @@ class LiveBrandSettings {
     final selectedLayout = str('layout', fallback.layout, 20);
     return LiveBrandSettings(
       name: str('name', fallback.name, 60),
+      assistantName: str('assistantName', fallback.assistantName, 40),
       tagline: str('tagline', fallback.tagline, 120),
       title: str('title', fallback.title, 180),
       description: str('description', fallback.description, 600),
@@ -105,6 +107,7 @@ class LiveBrandSettings {
 
   Map<String, dynamic> toMap() => {
     'name':name,
+    'assistantName':assistantName,
     'tagline':tagline,
     'title':title,
     'description':description,

@@ -19,6 +19,10 @@ name: Fitted - canonical unified authentication release
 # Supersede blocked image codec QA run with an IHDR-only image integrity check.
 # Follow-up: responsive mobile legal wrapping and medium-desktop layout regression fixes.
 # Release hotfix: enforce semantic tokens instead of obsolete fixed mint-pink literal.
+# Fit-IA v3: publish natural AI-led conversation, editable text replies, durable history and athletic mascot.
+# Fit-IA v4: consent at registration, legacy pillar sync, admin-editable assistant name; canonical prod release.
+# Fit-IA v4.1: distinguish missing provider from missing consent, no repeated opt-in writes.
+# Fit-IA v2 canonical release: fixed browser CORS, configurable admin rules, dual chat/form and progressive insights.
 # Fit-IA conversational release: 300 curated questions, private adaptive pillars, qualitative coverage and consent-controlled AI biography.
 # Brand Studio preview-only release: explicit Save & publish, 100+ real font previews, athletic logo vectors and saved designs.
 # Brand Studio release: 20 vector logos, HSV controls, owner-safe 50 palette slots and legal logo mirroring.
@@ -106,7 +110,10 @@ jobs:
           assert "popUntil((route) => route.isFirst)" in member
           assert "brand_admin_status" in member and "brand_admin_session" in member
           assert "onEmailSignIn" in member and "onGoogle" in member
-          print("One editorial welcome + authenticated member/admin gates verified")
+          assert "FittedAiAccountGate(" in member
+          assert "onSettings:_openAiAccountSettings" in member
+          assert "fitted_ai_account_preference_v1" in Path("apps/flutter_client/lib/src/core/member_v26_api.dart").read_text()
+          print("One editorial welcome + authenticated member/admin + AI consent gates verified")
           PY
       - name: Validate hosted Google, email, Apple availability and member API
         run: |
@@ -135,6 +142,28 @@ jobs:
           with open(os.environ["GITHUB_ENV"],"a") as out:
               out.write("MFD_APPLE_AVAILABLE="+str(apple).lower()+"\n")
           print("Google + Email ready. Apple configured:",apple)
+          # The global account AI gate must exist BEFORE publishing this UI.
+          gate=urllib.request.Request(
+              base+"/rest/v1/rpc/fitted_ai_account_preference_v1",
+              data=b'{}',method="POST",headers={
+                "apikey":m.group(1),"Content-Type":"application/json",
+                "User-Agent":"Fitted-AI-Consent-Gate/1.0"})
+          try:
+              with urllib.request.urlopen(gate,timeout=15) as response:
+                  gate_status=response.status
+          except urllib.error.HTTPError as err:
+              gate_status=err.code
+          assert gate_status in (401,403),("Missing or unsafe AI gate",gate_status)
+          for slug in ("fit-ia-v1","fitted-ai-summary-b18"):
+              req=urllib.request.Request(
+                  base+"/functions/v1/"+slug,
+                  data=b'{}',method="POST",headers={"Content-Type":"application/json"})
+              try:
+                  with urllib.request.urlopen(req,timeout=15) as response:
+                      status=response.status
+              except urllib.error.HTTPError as err:
+                  status=err.code
+              assert status in (401,403),("AI function missing/ungated",slug,status)
           api=base+"/functions/v1/member-api-v26"
           for endpoint in ("/v1/me/profile","/v1/dating/candidates"):
               request=urllib.request.Request(api+endpoint,headers={"User-Agent":"MFD-Canonical-QA/1.0"})
@@ -162,8 +191,8 @@ jobs:
             --dart-define=MFD_API_BASE_URL=https://jtrdvnwbxpfdnbzasvcj.supabase.co/functions/v1/member-api-v26 \
             --dart-define=MFD_TERMS_URL=https://my-fitness-date.pages.dev/terms/ \
             --dart-define=MFD_PRIVACY_URL=https://my-fitness-date.pages.dev/privacy/ \
-            --dart-define=MFD_TERMS_VERSION=v28-terms-1 \
-            --dart-define=MFD_PRIVACY_VERSION=v28-privacy-1 \
+            --dart-define=MFD_TERMS_VERSION=v29-terms-2 \
+            --dart-define=MFD_PRIVACY_VERSION=v29-privacy-2 \
             --dart-define=MFD_OAUTH_REDIRECT_URL=https://my-fitness-date.pages.dev/
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects

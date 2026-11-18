@@ -11,7 +11,7 @@ import 'fit_ia_repository.dart';
 
 /// Business data travels through our authenticated Supabase Edge gateway,
 /// using the member JWT and RLS, never a privileged database key.
-class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11, FitIaRepository {
+class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRepository, DatingRepositoryB11, FitIaRepository, FitIaAccountConsentSync {
   MemberV26Api({required this.gatewayUrl, required this.auth});
 
   final String gatewayUrl;
@@ -413,9 +413,21 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
       }
       throw const MemberApiException('Fit-IA devolvió una respuesta inesperada.');
     }on MemberApiException{rethrow;}
-    catch(_){
+    on FunctionException catch(e){
+      if(e.status==401)throw const MemberApiException(
+        'Tu sesión venció. Vuelve a iniciar sesión para conversar.');
+      if(e.status==403)throw const MemberApiException(
+        'No tienes permiso para abrir esta conversación.');
+      if(e.status==409)throw const MemberApiException(
+        'La pregunta cambió. Recarga la conversación para continuar.');
+      if(e.status==429)throw const MemberApiException(
+        'Fit-IA alcanzó el límite temporal de solicitudes.');
       throw const MemberApiException(
-        'No pudimos conectar con Fit-IA. Inténtalo de nuevo.');
+        'Fit-IA no respondió correctamente. Intenta actualizar la pantalla.');
+    }catch(_){
+      throw const MemberApiException(
+        'No se pudo establecer conexión con Fit-IA. '
+        'Verifica tu red o actualiza la página.');
     }
   }
 
@@ -432,8 +444,46 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   @override
   Future<Map<String,dynamic>> fitIaOverview()=>_fitIa('overview');
   @override
-  Future<Map<String,dynamic>> fitIaConsent(bool enabled)=>
-      _fitIa('consent',{'enabled':enabled});
+  Future<Map<String,dynamic>> fitIaChatState(String pillar,
+      {String locale='es'})=>
+      _fitIa('chat_state',{'pillar':pillar,'locale':locale});
+  @override
+  Future<Map<String,dynamic>> fitIaChatSend(
+      String pillar,String text,String clientId,{String locale='es'})=>
+      _fitIa('chat_send',{
+        'pillar':pillar,'text':text,'client_id':clientId,'locale':locale,
+      });
+  @override
+  Future<Map<String,dynamic>> fitIaChatRetry(String pillar,
+      {String locale='es'})=>
+      _fitIa('chat_retry',{'pillar':pillar,'locale':locale});
+  @override
+  Future<Map<String,dynamic>> fitIaChatOlder(String pillar,int before)=>
+      _fitIa('chat_older',{'pillar':pillar,'before':before});
+  @override
+  Future<Map<String,dynamic>> fitIaForm(String pillar)=>
+      _fitIa('form',{'pillar':pillar});
+  @override
+  Future<Map<String,dynamic>> fitIaSubmitForm(
+      String pillar,List<Map<String,String>> answers)=>
+      _fitIa('form_submit',{'pillar':pillar,'answers':answers});
+  @override
+  Future<Map<String,dynamic>> fitIaInsights(String pillar)=>
+      _fitIa('insights',{'pillar':pillar});
+  @override
+  Future<bool> fitIaSyncAccountConsent()async{
+    final choice=await fittedAiAccountPreference();
+    if(choice['configured']!=true||choice['enabled']!=true)return false;
+    final result=await _fitIa('consent',{'enabled':true});
+    return result['ai_enabled']==true || result['status']=='saved';
+  }
+  @override
+  Future<Map<String,dynamic>> fitIaConsent(bool enabled)async{
+    // Both gates must agree: the account-wide AI permission and Fit-IA's
+    // separate private conversation permission. Neither is inferred.
+    await setFittedAiAccountPreference(enabled,source:'settings');
+    return _fitIa('consent',{'enabled':enabled});
+  }
   @override
   Future<Map<String,dynamic>> fitIaGenerateSummary()=>_fitIa('summary');
   @override
@@ -445,6 +495,29 @@ class MemberV26Api implements ActivityRepository, CuratorRepository, CommunityRe
   }
 
   // B18 safe summary: direct, authenticated owner-only RPC.
+  /// One auditable account-level preference shared by every generative AI tool.
+  Future<Map<String,dynamic>> fittedAiAccountPreference() async{
+    final value=await auth.rpc('fitted_ai_account_preference_v1')
+      .timeout(const Duration(seconds:12));
+    return Map<String,dynamic>.from(value as Map);
+  }
+
+  Future<Map<String,dynamic>> setFittedAiAccountPreference(bool enabled,
+      {required String source}) async{
+    if(!const ['onboarding','settings'].contains(source)){
+      throw const MemberApiException('Origen de preferencia IA inválido.');
+    }
+    final value=await auth.rpc('fitted_set_ai_account_preference_v1',
+      params:{'p_enabled':enabled,'p_source':source})
+      .timeout(const Duration(seconds:12));
+    final result=Map<String,dynamic>.from(value as Map);
+    if(result['configured']!=true || result['status']!='saved'&&
+       result['status']!='already_configured'){
+      throw const MemberApiException('No fue posible guardar la preferencia.');
+    }
+    return result;
+  }
+
   Future<Map<String,dynamic>> myFittedSummaryB18() async {
     final raw=await auth.rpc('fitted_my_summary_b17');
     return raw is Map?Map<String,dynamic>.from(raw):<String,dynamic>{};

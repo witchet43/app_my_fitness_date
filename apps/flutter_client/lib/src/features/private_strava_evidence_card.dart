@@ -76,8 +76,7 @@ class _PrivateStravaEvidenceCardState extends State<PrivateStravaEvidenceCard> {
       if (!file.name.toLowerCase().endsWith('.csv')) {
         throw const FormatException('Selecciona el archivo activities.csv.');
       }
-      final length = file.lengthSync() ?? await file.length();
-      if (length != null && length > 3 * 1024 * 1024) {
+      if (file.size > 3 * 1024 * 1024) {
         throw const FormatException('El archivo supera el límite de 3 MB.');
       }
       final bytes = await file.readAsBytes();

@@ -8,7 +8,7 @@ import 'private_strava_evidence_card.dart';
 /// is displayed; they never enable discovery or share a personal profile.
 class FitIaConversationPage extends StatefulWidget {
   const FitIaConversationPage({super.key,required this.repository,
-    this.initialPillar=0,this.ownerId=''}):assert(initialPillar>=0&&initialPillar<3);
+    this.initialPillar=0,this.ownerId='' }):assert(initialPillar>=0&&initialPillar<3);
   final FitIaRepository repository;
   final int initialPillar;
   final String ownerId;
@@ -17,7 +17,10 @@ class FitIaConversationPage extends StatefulWidget {
 }
 class _FitIaConversationPageState extends State<FitIaConversationPage>{
   late int current;
-  Map<String,dynamic>? state,overview;
+  Map<String,dynamic>? state,overview,insights;
+  List<Map<String,dynamic>> formQuestions=[];
+  final Map<String,String> formDraft={};
+  bool formMode=false,formLoading=false,formSaving=false;
   final scroll=ScrollController();
   bool loading=true,sending=false,summaryBusy=false,consentBusy=false;
   String? error,notice;
@@ -63,14 +66,12 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     final selected=pillar;
     setState((){loading=true;error=null;});
     try{
-      final results=await Future.wait([
-        widget.repository.fitIaState(selected),
-        widget.repository.fitIaOverview(),
-      ]);
+      // The active question is the critical request. Optional insights must
+      // not prevent a chat from opening when the secondary RPC is unavailable.
+      final session=await widget.repository.fitIaState(selected);
       if(!mounted||selected!=pillar)return;
-      setState((){
-        state=results[0];overview=results[1];loading=false;
-      });
+      setState((){state=session;loading=false;});
+      unawaited(_refreshInsights());
       _scrollBottom();
     }catch(_){
       if(mounted&&selected==pillar)setState((){
@@ -82,9 +83,93 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     }
   }
   Future<void> _switch(int index)async{
-    if(index==current||sending||loading)return;
-    setState((){current=index;state=null;notice=null;});
+    if(index==current||sending||loading||formSaving)return;
+    if(!await _allowDiscard())return;
+    setState((){
+      current=index;state=null;overview=null;insights=null;
+      formQuestions=[];formDraft.clear();notice=null;
+    });
     await _load();
+    if(formMode)await _loadForm();
+  }
+  Future<bool> _allowDiscard()async{
+    if(formDraft.isEmpty)return true;
+    return await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+      title:Text(tr('Respuestas sin guardar','Unsaved answers')),
+      content:Text(tr('Guarda el formulario o descarta estas selecciones.',
+        'Save the form or discard your selections.')),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(ctx,false),
+          child:Text(tr('Seguir aquí','Stay here'))),
+        TextButton(onPressed:()=>Navigator.pop(ctx,true),
+          child:Text(tr('Descartar selecciones','Discard selections'))),
+      ],
+    ))??false;
+  }
+  Future<void> _refreshInsights()async{
+    final target=pillar;
+    try{
+      final result=await Future.wait([
+        widget.repository.fitIaOverview(),
+        widget.repository.fitIaInsights(target),
+      ]);
+      if(mounted&&target==pillar)setState((){
+        overview=result[0];insights=result[1];
+      });
+    }catch(_){
+      // A question remains usable if analytics are temporarily unavailable.
+    }
+  }
+  Future<void> _loadForm()async{
+    final target=pillar;
+    setState(()=>formLoading=true);
+    try{
+      final data=await widget.repository.fitIaForm(target);
+      if(!mounted||target!=pillar)return;
+      final items=data['questions'];
+      setState((){
+        formQuestions=items is List
+          ?items.whereType<Map>().map((e)=>Map<String,dynamic>.from(e)).toList()
+          :[];
+        formDraft.clear();formLoading=false;error=null;
+      });
+    }catch(_){
+      if(mounted&&target==pillar)setState((){
+        formLoading=false;
+        error=tr('No se pudo cargar el formulario. Inténtalo de nuevo.',
+          'Could not load the form. Please try again.');
+      });
+    }
+  }
+  Future<void> _setMode(bool useForm)async{
+    if(formMode==useForm||sending||formSaving)return;
+    if(!await _allowDiscard())return;
+    setState((){
+      formMode=useForm;formDraft.clear();error=null;
+    });
+    if(useForm)await _loadForm();
+  }
+  Future<void> _submitForm()async{
+    if(formSaving||formDraft.isEmpty)return;
+    final target=pillar;
+    setState(()=>formSaving=true);
+    try{
+      final items=formDraft.entries.map((e)=><String,String>{
+        'question_id':e.key,'choice_key':e.value,
+      }).toList();
+      await widget.repository.fitIaSubmitForm(target,items);
+      if(!mounted||target!=pillar)return;
+      formDraft.clear();
+      await _load();
+      if(mounted&&target==pillar)await _loadForm();
+      if(mounted)setState(()=>notice=tr('Respuestas guardadas.',
+        'Answers saved.'));
+    }catch(_){
+      if(mounted)setState(()=>error=tr(
+        'No se pudieron guardar las respuestas. '
+        'Conservamos tus selecciones para que puedas reintentar.',
+        'Unable to save. Your choices are kept for another attempt.'));
+    }finally{if(mounted)setState(()=>formSaving=false);}
   }
   Future<void> _answer(String key)async{
     final q=question;
@@ -104,6 +189,7 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
         if(mounted)setState(()=>overview=result);
       }catch(_){/* The answered question is already durably persisted. */}
       _scrollBottom();
+      unawaited(_refreshInsights());
       if(aiEnabled&&totalAnswers>=5&&
         (totalAnswers==5||(totalAnswers-5)%3==0)){
         unawaited(_refreshSummary(silent:true));
@@ -152,18 +238,18 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
     if(!aiEnabled){
       final allowed=await showDialog<bool>(context:context,
         builder:(dialog)=>AlertDialog(
-          title:const Text('Activar Fit-IA'),
-          content:Text(tr('Con tu permiso, Fit-IA enviará sólo tus respuestas '
-            'seleccionadas y sus temas generales a OpenAI para generar '
-            'comentarios y un resumen. No envía nombre, gimnasio, rutas, '
-            'dirección, horarios exactos ni contactos. Ninguna respuesta '
-            'se hace pública automáticamente. Puedes desactivarla y borrar '
-            'los datos cuando quieras.',
-            'With your permission, Fit-IA sends only selected answers and '
-            'general topics to OpenAI for comments and a summary. It does '
-            'not send your name, gym, routes, address, exact schedule or '
-            'contacts. Nothing becomes public automatically. You can '
-            'disable AI and erase data whenever you want.')),
+          title:const Text('Activar IA en toda mi cuenta'),
+          content:Text(tr('Esta decisión habilita todas las herramientas de IA '
+            'de tu cuenta, incluidos Fit-IA y los resúmenes privados. '
+            'Se pueden procesar respuestas y datos seleccionados del '
+            'perfil mediante OpenAI, nunca documentos de identidad, '
+            'gimnasios u horarios exactos. No publica contenido '
+            'automáticamente. Puedes apagarla en Configuración.',
+            'This choice enables AI across your entire account, '
+            'including Fit-IA and private stories. Selected profile '
+            'details and answers may be processed by OpenAI, never '
+            'identity documents, gyms or exact schedules. '
+            'Nothing is shared automatically. Disable it in Settings.')),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog,false),
               child:Text(tr('Ahora no','Not now'))),
@@ -234,58 +320,41 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
   }
 
   Future<void> _showMyApplications() async {
-    if(widget.ownerId.isEmpty)return;
-    await showModalBottomSheet<void>(
-      context:context,
-      isScrollControlled:true,
-      showDragHandle:true,
-      builder:(sheet)=>SafeArea(child:FractionallySizedBox(
-        heightFactor:.85,
-        child:ListView(padding:const EdgeInsets.all(16),children:[
-          PrivateStravaEvidenceCard(ownerId:widget.ownerId),
-        ]),
-      )),
-    );
+    if(current==0 && widget.ownerId.isNotEmpty){
+      await showModalBottomSheet<void>(
+        context:context,
+        isScrollControlled:true,
+        showDragHandle:true,
+        builder:(sheet)=>SafeArea(child:FractionallySizedBox(
+          heightFactor:.85,
+          child:ListView(padding:const EdgeInsets.all(16),children:[
+            PrivateStravaEvidenceCard(ownerId:widget.ownerId),
+          ]),
+        )),
+      );
+    }
   }
 
   Widget _tabs(){
     final colors=Theme.of(context).colorScheme;
     const icons=[Icons.directions_run_outlined,Icons.wb_sunny_outlined,
       Icons.people_outline];
-    return SingleChildScrollView(scrollDirection:Axis.horizontal,
+    return SingleChildScrollView(
+      scrollDirection:Axis.horizontal,
       child:Row(children:[
-        for(var i=0;i<3;i++)
-          Padding(padding:const EdgeInsets.only(right:9),
-            child:Material(
-              color:i==current?colors.primaryContainer:
-                colors.surfaceContainerHighest,
-              borderRadius:BorderRadius.circular(16),
-              child:InkWell(
-                key:Key('fit-ia-pillar-$i'),
-                onTap:()=>_switch(i),
-                borderRadius:BorderRadius.circular(16),
-                child:Container(
-                  width:157,padding:const EdgeInsets.all(12),
-                  decoration:BoxDecoration(
-                    borderRadius:BorderRadius.circular(16),
-                    border:Border.all(color:i==current?colors.primary:
-                      colors.outline.withValues(alpha:.25))),
-                  child:Column(crossAxisAlignment:CrossAxisAlignment.start,
-                    children:[
-                      Icon(icons[i],size:22),
-                      const SizedBox(height:8),
-                      Text(en?FitIaDepth.labelsEn[i]:FitIaDepth.labelsEs[i],
-                        maxLines:1,overflow:TextOverflow.ellipsis,
-                        style:const TextStyle(fontWeight:FontWeight.w700)),
-                      const SizedBox(height:5),
-                      Text(FitIaDepth.label(i==current?level:
-                        FitIaDepth.level(overview,FitIaDepth.keys[i]),en),
-                        style:Theme.of(context).textTheme.labelSmall),
-                    ]),
-                ),
-              ),
-            ),
+        for(var i=0;i<3;i++)Padding(
+          padding:const EdgeInsets.only(right:9),
+          child:ChoiceChip(
+            key:Key('fit-ia-pillar-'+i.toString()),
+            selected:current==i,
+            avatar:Icon(icons[i],size:17,color:current==i
+              ?colors.onSecondaryContainer:colors.onSurfaceVariant),
+            label:Text(en?FitIaDepth.labelsEn[i]:FitIaDepth.labelsEs[i]),
+            onSelected:(_)=>_switch(i),
+            shape:RoundedRectangleBorder(
+              borderRadius:BorderRadius.circular(13)),
           ),
+        ),
       ]),
     );
   }
@@ -359,132 +428,377 @@ class _FitIaConversationPageState extends State<FitIaConversationPage>{
             const SizedBox(height:7),
             const LinearProgressIndicator(minHeight:2),
           ],
-          const SizedBox(height:8),
-          Text(tr('Cada respuesta se guarda. Puedes pausar cuando quieras.',
-            'Every answer is saved. Pause whenever you like.'),
-            style:Theme.of(context).textTheme.bodySmall),
+
         ]),
     );
   }
+  List<Map<String,dynamic>> get answerHistory{
+    final raw=insights?['answers'];
+    return raw is List
+      ?raw.whereType<Map>().map((q)=>Map<String,dynamic>.from(q)).toList()
+      :<Map<String,dynamic>>[];
+  }
+
+  Widget _formList(){
+    if(formLoading)return const Center(child:CircularProgressIndicator());
+    if(formQuestions.isEmpty)return Center(child:Padding(
+      padding:const EdgeInsets.all(20),
+      child:Text(tr('Ya contestaste todas las preguntas disponibles '
+        'de este pilar. Puedes continuar en otro.',
+        'You have answered all available questions in this pillar.'))));
+    return ListView.builder(
+      key:const Key('fit-ia-traditional-form'),
+      padding:const EdgeInsets.all(15),
+      itemCount:formQuestions.length,
+      itemBuilder:(ctx,index){
+        final q=formQuestions[index];
+        final id=q['id'].toString();
+        final raw=q[en?'choices_en':'choices_es'];
+        final options=raw is List?raw.whereType<Map>().map(
+          (e)=>Map<String,dynamic>.from(e)).toList():<Map<String,dynamic>>[];
+        return Card(child:Padding(
+          padding:const EdgeInsets.all(15),
+          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text((index+1).toString().padLeft(2,'0')+'  ·  '+
+              (q[en?'en':'es']??'').toString(),
+              style:Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height:11),
+            Wrap(spacing:8,runSpacing:8,children:[
+              for(final opt in options)ChoiceChip(
+                key:Key('fit-ia-form-'+id+'-'+opt['key'].toString()),
+                selected:formDraft[id]==opt['key'],
+                label:Text(opt['label']?.toString()??''),
+                onSelected:formSaving?null:(v)=>setState((){
+                  if(v){formDraft[id]=opt['key'].toString();}
+                  else{formDraft.remove(id);}
+                }),
+              ),
+            ]),
+          ]),
+        ));
+      },
+    );
+  }
+
+  Widget _conversation(){
+    if(loading)return const Center(child:CircularProgressIndicator());
+    if(state==null)return Center(child:Column(
+      mainAxisSize:MainAxisSize.min,children:[
+        const Icon(Icons.wifi_off_outlined,size:37),
+        const SizedBox(height:12),
+        Text(tr('No pudimos iniciar la conversación',
+          'Unable to start the conversation')),
+        const SizedBox(height:9),
+        FilledButton(onPressed:_load,child:Text(tr('Reintentar','Retry'))),
+      ]));
+    return ListView(
+      key:const Key('fit-ia-chat-history'),
+      controller:scroll,
+      padding:const EdgeInsets.fromLTRB(18,22,18,24),
+      children:[
+        if(messages.isEmpty)
+          Align(alignment:Alignment.centerLeft,child:Card(
+            child:Padding(padding:const EdgeInsets.all(17),
+              child:Text(tr('¡Hola! Soy Fit-IA. Me gustaría conocer '
+                'cómo te expresas en este aspecto de tu vida.',
+                'Hello! I’m Fit-IA. Let’s explore this part of your life.'))))),
+        for(final m in messages)_bubble(m),
+        if(question==null&&messages.isNotEmpty)
+          Text(tr('Hemos recorrido las preguntas disponibles de este pilar.',
+            'We have explored the questions available in this pillar.')),
+      ],
+    );
+  }
+
+  Widget _modeSelector(){
+    return SegmentedButton<bool>(
+      key:const Key('fit-ia-mode-selector'),
+      segments:[
+        ButtonSegment<bool>(value:false,
+          label:Text(tr('Conversación','Conversation')),
+          icon:const Icon(Icons.forum_outlined,size:18)),
+        ButtonSegment<bool>(value:true,
+          label:Text(tr('Formulario','Form')),
+          icon:const Icon(Icons.list_alt_outlined,size:18)),
+      ],
+      selected:{formMode},showSelectedIcon:false,
+      onSelectionChanged:(v)=>_setMode(v.first),
+    );
+  }
+
+  Widget _leftPane(){
+    final theme=Theme.of(context);
+    return Card(
+      margin:EdgeInsets.zero,clipBehavior:Clip.antiAlias,
+      child:Column(children:[
+        Padding(padding:const EdgeInsets.fromLTRB(18,16,18,14),
+          child:LayoutBuilder(builder:(context,limits){
+            final heading=Row(children:[
+              CircleAvatar(
+                radius:22,
+                backgroundColor:theme.colorScheme.primaryContainer,
+                child:Icon(Icons.auto_awesome_rounded,
+                  color:theme.colorScheme.onPrimaryContainer)),
+              const SizedBox(width:12),
+              Expanded(child:Column(
+                crossAxisAlignment:CrossAxisAlignment.start,children:[
+                  Text('Fit-IA',style:theme.textTheme.titleLarge?.copyWith(
+                    fontWeight:FontWeight.w800)),
+                  Text(en?FitIaDepth.labelsEn[current]:FitIaDepth.labelsEs[current],
+                    style:theme.textTheme.bodySmall),
+                ]),
+              ),
+            ]);
+            return limits.maxWidth<540
+              ?Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                  heading,const SizedBox(height:13),
+                  _modeSelector(),
+                ])
+              :Row(children:[
+                  Expanded(child:heading),
+                  Flexible(child:_modeSelector()),
+                ]);
+          }),
+        ),
+        const Divider(height:1),
+        if(error!=null)
+          MaterialBanner(
+            leading:const Icon(Icons.info_outline),
+            content:Text(error!),
+            actions:[
+              TextButton(
+                onPressed:formMode?_loadForm:_load,
+                child:Text(tr('Reintentar','Retry'))),
+            ],
+          ),
+        if(notice!=null)Padding(
+          padding:const EdgeInsets.symmetric(horizontal:15,vertical:7),
+          child:Text(notice!,style:theme.textTheme.bodySmall)),
+        Expanded(child:formMode?_formList():_conversation()),
+        if(!formMode&&!loading&&question!=null)_choices(),
+        if(formMode)
+          Padding(padding:const EdgeInsets.all(12),
+            child:Row(children:[
+              Expanded(child:Text(
+                tr('Responde las que desees','Answer the ones you prefer'),
+                style:theme.textTheme.bodySmall)),
+              FilledButton.icon(
+                key:const Key('fit-ia-save-form'),
+                onPressed:formSaving||formDraft.isEmpty?null:_submitForm,
+                icon:const Icon(Icons.save_outlined,size:18),
+                label:Text(tr('Guardar','Save')+' ('+
+                  formDraft.length.toString()+')')),
+            ]),
+          ),
+        Padding(padding:const EdgeInsets.fromLTRB(13,5,13,9),
+          child:Wrap(alignment:WrapAlignment.spaceBetween,
+            spacing:6,runSpacing:4,children:[
+            TextButton.icon(
+              key:const Key('fit-ia-pause'),
+              onPressed:()async{
+                if(!await _allowDiscard()||!mounted)return;
+                Navigator.pop(context);
+              },
+              icon:const Icon(Icons.pause_circle_outline),
+              label:Text(tr('Continuar después','Continue later'))),
+            if(!aiEnabled)
+              TextButton.icon(
+                key:const Key('fit-ia-enable-ai'),
+                onPressed:consentBusy?null:_consent,
+                icon:const Icon(Icons.auto_awesome_outlined,size:16),
+                label:Text(tr('Activar IA','Enable AI'))),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _rightPane(){
+    final theme=Theme.of(context),colors=theme.colorScheme;
+    final raw=insights?['brief'];
+    final brief=raw is Map?Map<String,dynamic>.from(raw):<String,dynamic>{};
+    final sentence=(brief[en?'en':'es']??'').toString().trim();
+    final items=answerHistory;
+    return ListView(
+      key:const Key('fit-ia-insights-panel'),
+      padding:EdgeInsets.zero,children:[
+        Card(margin:const EdgeInsets.only(bottom:12),
+          child:Padding(padding:const EdgeInsets.all(17),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Row(children:[
+                Icon(Icons.auto_stories_outlined,color:colors.primary),
+                const SizedBox(width:9),
+                Expanded(child:Text(tr('Resumen ejecutivo',
+                  'Executive summary'),
+                  style:theme.textTheme.titleMedium?.copyWith(
+                    fontWeight:FontWeight.w800))),
+              ]),
+              const SizedBox(height:13),
+              Text(sentence.isEmpty
+                ?tr('Tu resumen irá tomando forma conforme respondas.',
+                  'Your summary will take shape as you answer.')
+                :sentence,
+                key:const Key('fit-ia-executive-summary'),
+                style:theme.textTheme.bodyLarge?.copyWith(height:1.45)),
+              const SizedBox(height:11),
+              if(aiEnabled)
+                TextButton.icon(
+                  key:const Key('fit-ia-refresh-summary'),
+                  onPressed:summaryBusy?null:()=>_refreshSummary(),
+                  icon:const Icon(Icons.auto_awesome_outlined,size:18),
+                  label:Text(tr('Actualizar historia completa',
+                    'Refresh full story'))),
+            ]),
+          ),
+        ),
+        Card(margin:const EdgeInsets.only(bottom:12),
+          child:Padding(padding:const EdgeInsets.all(17),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Text(tr('Nivel de conocimiento','Profile depth'),
+                style:theme.textTheme.titleMedium?.copyWith(
+                  fontWeight:FontWeight.w800)),
+              const SizedBox(height:10),
+              Wrap(spacing:10,crossAxisAlignment:WrapCrossAlignment.center,
+                children:[
+                  Chip(
+                    key:const Key('fit-ia-strength'),
+                    label:Text(FitIaDepth.label(level,en)),
+                    avatar:const Icon(Icons.layers_outlined,size:17)),
+                  Text(tr('Respuestas: ','Answers: ')+
+                    FitIaDepth.answered(overview,pillar).toString()),
+                  Text(tr('Temas: ','Topics: ')+
+                    ((overview?[pillar] is Map)
+                      ?(overview![pillar] as Map)['topics']?.toString()??'0'
+                      :'0')),
+                ]),
+              const SizedBox(height:6),
+              Text(FitIaDepth.message(level,en),
+                style:theme.textTheme.bodySmall),
+            ]),
+          ),
+        ),
+        Card(
+          child:Padding(padding:const EdgeInsets.all(17),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Row(children:[
+                const Icon(Icons.fact_check_outlined,size:21),
+                const SizedBox(width:9),
+                Expanded(child:Text(tr('Lo que he aprendido',
+                  'What I’ve learned'),
+                  style:theme.textTheme.titleMedium?.copyWith(
+                    fontWeight:FontWeight.w800))),
+                Text(items.length.toString(),
+                  style:theme.textTheme.labelSmall),
+              ]),
+              const SizedBox(height:10),
+              if(items.isEmpty)
+                Text(tr('Aquí aparecerán tus preguntas y respuestas.',
+                  'Your questions and answers will appear here.'),
+                  style:theme.textTheme.bodySmall),
+              for(final entry in items.take(30))...[
+                Text((entry[en?'question_en':'question_es']??'').toString(),
+                  style:theme.textTheme.bodySmall?.copyWith(
+                    fontWeight:FontWeight.w600)),
+                const SizedBox(height:4),
+                Text((entry[en?'answer_en':'answer_es']??'').toString(),
+                  style:theme.textTheme.bodyMedium?.copyWith(
+                    color:colors.primary)),
+                const Divider(height:23),
+              ],
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+  void _showMobileInsights(){
+    showModalBottomSheet<void>(
+      context:context,isScrollControlled:true,showDragHandle:true,
+      builder:(ctx)=>SafeArea(
+        child:SizedBox(height:MediaQuery.sizeOf(ctx).height*.78,
+          child:Padding(padding:const EdgeInsets.symmetric(horizontal:13),
+            child:_rightPane()))),
+    );
+  }
+
   @override
   Widget build(BuildContext context){
-    final colors=Theme.of(context).colorScheme;
     return Scaffold(
       key:const Key('fit-ia-conversation-page'),
       appBar:AppBar(
         title:const Text('Fit-IA'),
         actions:[
+          if(current==0 && widget.ownerId.isNotEmpty)
+            IconButton(
+              key:const Key('fit-ia-view-private-apps'),
+              tooltip:tr('Mis aplicaciones deportivas',
+                'My sports apps'),
+              onPressed:_showMyApplications,
+              icon:const Icon(Icons.insights_outlined)),
           IconButton(key:const Key('fit-ia-view-story'),
             tooltip:tr('Mi historia','My story'),
             onPressed:_story,
             icon:const Icon(Icons.auto_stories_outlined)),
           PopupMenuButton<String>(
-            tooltip:tr('Privacidad','Privacy'),
+            tooltip:tr('Privacidad y configuración',
+              'Privacy and settings'),
             onSelected:(v){
               if(v=='consent')unawaited(_consent());
               if(v=='delete')unawaited(_delete());
             },
             itemBuilder:(_)=>[
               PopupMenuItem(value:'consent',
-                child:Text(aiEnabled?tr('Desactivar IA externa',
-                  'Disable external AI'):tr('Activar IA externa','Enable AI'))),
+                child:Text(aiEnabled?tr('Desactivar IA en mi cuenta',
+                  'Disable account AI'):tr('Activar IA en mi cuenta',
+                  'Enable account AI'))),
               PopupMenuItem(value:'delete',child:Text(tr(
                 'Eliminar mis conversaciones','Delete my conversations'))),
             ],
           ),
         ],
       ),
-      body:SafeArea(child:Center(child:ConstrainedBox(
-        constraints:const BoxConstraints(maxWidth:900),
-        child:Column(children:[
-          Padding(padding:const EdgeInsets.fromLTRB(16,12,16,9),
-            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              Text(tr('Conócete conversando','Get to know yourself through chat'),
-                style:Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight:FontWeight.w800)),
-              const SizedBox(height:7),
-              Text(tr('Sin formularios ni porcentajes. '
-                'No necesitas responder las 100 preguntas.',
-                'No forms or percentages. You do not need all 100 answers.'),
-                style:Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height:13),
-              _tabs(),
-              if(current==0 && widget.ownerId.isNotEmpty)
-                Align(alignment:Alignment.centerRight,
-                  child:TextButton.icon(
-                    key:const Key('fit-ia-move-my-apps'),
-                    onPressed:_showMyApplications,
-                    icon:const Icon(Icons.insights_outlined),
-                    label:Text(tr('Lo que mis aplicaciones dicen de mí',
-                      'What my apps say about me')),
-                  )),
-              const SizedBox(height:12),
-              Row(children:[
-                const Icon(Icons.shield_outlined,size:16),
-                const SizedBox(width:7),
-                Expanded(child:Text(realAi?tr(
-                  'IA activa con consentimiento · Respuestas privadas',
-                  'AI enabled with consent · Private answers'):
-                  tr('Modo guiado privado · IA externa desactivada',
-                    'Private guided mode · External AI disabled'),
-                  style:Theme.of(context).textTheme.bodySmall)),
-                Text(FitIaDepth.label(level,en),
-                  key:const Key('fit-ia-strength'),
-                  style:TextStyle(color:colors.primary,
-                    fontWeight:FontWeight.w800)),
+      body:SafeArea(child:LayoutBuilder(
+        builder:(context,limits){
+          final desktop=limits.maxWidth>=1040;
+          return Center(child:ConstrainedBox(
+            constraints:const BoxConstraints(maxWidth:1500),
+            child:Padding(
+              padding:const EdgeInsets.all(14),
+              child:Column(children:[
+                Align(alignment:Alignment.centerLeft,
+                  child:Column(crossAxisAlignment:CrossAxisAlignment.start,
+                    children:[
+                      Text(tr('Conócete con Fit-IA','Get to know yourself with Fit-IA'),
+                        style:Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight:FontWeight.w800)),
+                      const SizedBox(height:9),
+                      _tabs(),
+                    ])),
+                const SizedBox(height:13),
+                Expanded(child:desktop
+                  ?Row(children:[
+                    Expanded(flex:7,child:_leftPane()),
+                    const SizedBox(width:14),
+                    Expanded(flex:4,child:_rightPane()),
+                  ])
+                  :Column(children:[
+                    Expanded(child:_leftPane()),
+                    Padding(
+                      padding:const EdgeInsets.only(top:7),
+                      child:OutlinedButton.icon(
+                        key:const Key('fit-ia-mobile-insights'),
+                        onPressed:_showMobileInsights,
+                        icon:const Icon(Icons.insights_outlined),
+                        label:Text(tr('Ver resumen y respuestas',
+                          'View summary and answers'))),
+                    ),
+                  ]),
+                ),
               ]),
-              const SizedBox(height:4),
-              Text(FitIaDepth.message(level,en),
-                style:Theme.of(context).textTheme.bodySmall),
-              if(!aiEnabled)TextButton.icon(
-                key:const Key('fit-ia-enable-ai'),
-                onPressed:consentBusy?null:_consent,
-                icon:const Icon(Icons.auto_awesome_outlined,size:18),
-                label:Text(tr('Habilitar comentarios con IA',
-                  'Enable AI comments'))),
-            ]),
-          ),
-          if(error!=null)MaterialBanner(
-            content:Text(error!),leading:const Icon(Icons.info_outline),
-            actions:[TextButton(onPressed:_load,
-              child:Text(tr('Reintentar','Retry')))],
-          ),
-          if(notice!=null)Padding(
-            padding:const EdgeInsets.symmetric(horizontal:15),
-            child:Text(notice!,style:Theme.of(context).textTheme.bodySmall)),
-          Expanded(child:loading
-            ?const Center(child:CircularProgressIndicator())
-            :ListView(
-              key:const Key('fit-ia-chat-history'),
-              controller:scroll,padding:const EdgeInsets.all(16),
-              children:[
-                for(final m in messages)_bubble(m),
-                if(messages.isEmpty)
-                  Text(tr('Fit-IA prepara tu primera pregunta…',
-                    'Fit-IA is preparing your first question…')),
-                if(question==null&&messages.isNotEmpty)
-                  Text(tr('Ya exploramos las preguntas de este pilar.',
-                    'We have covered this pillar’s question bank.')),
-              ],
-            )),
-          if(!loading&&question!=null)_choices(),
-          Padding(padding:const EdgeInsets.fromLTRB(16,7,16,10),
-            child:Row(children:[
-              TextButton.icon(
-                key:const Key('fit-ia-pause'),
-                onPressed:()=>Navigator.pop(context),
-                icon:const Icon(Icons.pause_circle_outline),
-                label:Text(tr('Continuar después','Continue later'))),
-              const Spacer(),
-              if(aiEnabled)TextButton.icon(
-                key:const Key('fit-ia-refresh-summary'),
-                onPressed:summaryBusy?null:()=>_refreshSummary(),
-                icon:const Icon(Icons.auto_stories_outlined),
-                label:Text(tr('Mi resumen','My summary'))),
-            ]),
-          ),
-        ]),
-      ))),
+            ),
+          ));
+        },
+      )),
     );
   }
 }

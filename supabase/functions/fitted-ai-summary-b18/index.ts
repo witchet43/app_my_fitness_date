@@ -55,6 +55,12 @@ Deno.serve(async(req)=>{
   if(inputBody.action!=="refresh")return respond(400,{status:"invalid_action"});
   if(!openAi)return respond(200,{status:"editorial_fallback",reason:"ai_unconfigured"});
   try{
+    // This permission applies to ALL generative features in the account.
+    // Never rely solely on the profile-summary legacy consent flag.
+    const preference=await rpc<Record<string,unknown>>(
+      "fitted_ai_account_preference_v1",{},token);
+    if(preference.configured!==true||preference.enabled!==true)
+      return respond(403,{status:"consent_required"});
     const input=await rpc<Record<string,unknown>>(
       "fitted_summary_context_b17",{},token);
     if(input.available!==true)return respond(403,{status:"consent_required"});

@@ -19,6 +19,7 @@ import 'features/member_profile_v26.dart';
 import 'features/member_onboarding_b1.dart';
 import 'features/activities_b1.dart';
 import 'features/public_entry_shell.dart';
+import 'features/fitted_ai_account_settings.dart';
 import 'widgets/mfd_branding.dart';
 
 /// V26 sign-in gate: no member screen is reachable without remote validation
@@ -57,6 +58,7 @@ class _MemberV26AppState extends State<MemberV26App> {
   bool adminMfaVerified=false;
   bool passwordRecoveryRequested=false;
   bool legalAccepted=false;
+  bool aiConfigured=false;
   bool editing=false;
   bool busy=false;
   String? failure;
@@ -135,6 +137,7 @@ class _MemberV26AppState extends State<MemberV26App> {
         _validatedUserId = null;
         if(mounted){setState((){
           verified=false; legalAccepted=false;
+          aiConfigured=false;
           brandAdministrator=false;adminMfaVerified=false;
           profile=null;editing=false;loading=false;
         });}
@@ -153,7 +156,8 @@ class _MemberV26AppState extends State<MemberV26App> {
         _validatedUserId = response.user!.id;
         if(mounted)setState((){
           verified=true;brandAdministrator=false;adminMfaVerified=false;
-          legalAccepted=false;profile=null;editing=false;loading=false;
+          legalAccepted=false;aiConfigured=false;
+          profile=null;editing=false;loading=false;
         });
         return;
       }
@@ -173,7 +177,8 @@ class _MemberV26AppState extends State<MemberV26App> {
         if(mounted){setState((){
           verified=true;brandAdministrator=true;
           adminMfaVerified=allow==true;
-          legalAccepted=false;profile=null;editing=false;loading=false;
+          legalAccepted=false;aiConfigured=false;
+          profile=null;editing=false;loading=false;
         });}
         return;
       }
@@ -183,6 +188,11 @@ class _MemberV26AppState extends State<MemberV26App> {
           r['document_version']==widget.termsVersion);
       final privacy=records.any((r)=>r['consent_kind']=='privacy' &&
           r['document_version']==widget.privacyVersion);
+      // Every account makes one explicit choice; AI is never pre-enabled.
+      final aiPref=terms&&privacy
+        ?await widget.api.fittedAiAccountPreference()
+          .timeout(const Duration(seconds:14))
+        :<String,dynamic>{'configured':false,'enabled':false};
       final own=terms && privacy
         ? await widget.api.loadProfile().timeout(Duration(seconds: 24))
         : null;
@@ -190,6 +200,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       if(mounted){setState((){
         verified=true;brandAdministrator=false;adminMfaVerified=false;
         legalAccepted=terms&&privacy;
+        aiConfigured=aiPref['configured']==true;
         profile=own;
         loading=false;
       });}
@@ -198,6 +209,7 @@ class _MemberV26AppState extends State<MemberV26App> {
       _validatedUserId = null;
       if(mounted){setState((){
         verified=false;legalAccepted=false;
+        aiConfigured=false;
         brandAdministrator=false;adminMfaVerified=false;
         profile=null;loading=false;
         failure='No fue posible validar tu sesión de manera segura.';
@@ -332,11 +344,15 @@ class _MemberV26AppState extends State<MemberV26App> {
     email.dispose();password.dispose();
   }
 
-  Future<void> acceptLegal() async {
+  Future<void> acceptLegal(bool aiConsent) async {
     setState(()=>busy=true);
     try{
       await widget.api.acceptConsent('terms',widget.termsVersion);
       await widget.api.acceptConsent('privacy',widget.privacyVersion);
+      // Explicit opt-in is collected with registration/legal setup, never
+      // automatically inferred from agreement to terms or privacy.
+      await widget.api.setFittedAiAccountPreference(
+        aiConsent,source:'onboarding');
       await refresh();
     }catch(_){
       if(mounted)setState(()=>failure='No pudimos registrar tu consentimiento.');
@@ -376,6 +392,28 @@ class _MemberV26AppState extends State<MemberV26App> {
     liveBrand.dispose();
     localeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _chooseAiOnFirstAccess(bool enabled) async{
+    await widget.api.setFittedAiAccountPreference(enabled,source:'onboarding');
+    await refresh();
+  }
+
+  Future<void> _openAiAccountSettings() async{
+    final current=await widget.api.fittedAiAccountPreference();
+    final ctx=_navigatorKey.currentContext;
+    if(ctx==null || !mounted)return;
+    final choice=await showDialog<bool>(
+      context:ctx,
+      builder:(_)=>FittedAiAccountSettingsDialog(
+        initial:current['enabled']==true),
+    );
+    if(choice==null || !mounted)return;
+    if(current['enabled']!=choice){
+      await widget.api.setFittedAiAccountPreference(
+        choice,source:'settings');
+    }
+    await refresh();
   }
 
   Widget _legal() => _LegalGate(
@@ -440,6 +478,9 @@ class _MemberV26AppState extends State<MemberV26App> {
       }
     }else if(!legalAccepted){
       body=_legal();
+    }else if(!aiConfigured){
+      body=FittedAiAccountGate(
+        onChoose:_chooseAiOnFirstAccess);
     }else if(profile==null || profile!['onboarding_complete']!=true || editing){
       body=Scaffold(
         appBar:AppBar(title:FittedText('Completa tu perfil'),
@@ -456,6 +497,7 @@ class _MemberV26AppState extends State<MemberV26App> {
         profile:profile!,api:widget.api,
         onEdit:()=>setState(()=>editing=true),
         onLogout:logout,
+        onSettings:_openAiAccountSettings,
       );
     }
     return AnimatedBuilder(
@@ -489,7 +531,7 @@ class _LegalGate extends StatefulWidget {
   final String termsUrl;
   final String privacyUrl;
   final bool submitting;
-  final VoidCallback onAccept;
+  final void Function(bool aiConsent) onAccept;
   final VoidCallback onLogout;
   @override
   State<_LegalGate> createState()=>_LegalGateState();
@@ -498,6 +540,7 @@ class _LegalGateState extends State<_LegalGate> {
   bool terms=false;
   bool privacy=false;
   bool adult=false;
+  bool aiConsent=false;
   Future<void> open(String url) async {
     final uri=Uri.tryParse(url);
     if(uri!=null && uri.scheme=='https') {
@@ -533,10 +576,18 @@ class _LegalGateState extends State<_LegalGate> {
           subtitle:FittedText('La declaración no sustituye '
             'la verificación externa de edad.'),
           value:adult,onChanged:(v)=>setState(()=>adult=v??false)),
+        CheckboxListTile(
+          key:const Key('fitted-registration-ai-opt-in'),
+          title:FittedText('Autorizo el uso de inteligencia artificial'),
+          subtitle:FittedText('Las conversaciones y resúmenes privados '
+            'pueden procesarse mediante OpenAI. Es opcional, puedes '
+            'cambiarlo después en Configuración y no publica tu perfil.'),
+          value:aiConsent,
+          onChanged:(value)=>setState(()=>aiConsent=value??false)),
         FilledButton(
           key:Key('v26-accept-legal'),
           onPressed:terms&&privacy&&adult&&!widget.submitting
-            ?widget.onAccept:null,
+            ?()=>widget.onAccept(aiConsent):null,
           child:FittedText(widget.submitting?'Guardando...':'Continuar')),
         TextButton(onPressed:widget.onLogout,
           child:FittedText('Salir de mi cuenta')),

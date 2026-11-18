@@ -50,12 +50,62 @@ class FakeFitIa implements FitIaRepository{
     ],
   };
   @override
+  Future<Map<String,dynamic>> fitIaChatOlder(String pillar,int before)async=>
+      {'messages':<Map<String,dynamic>>[],'has_more':false};
+  @override
+  Future<Map<String,dynamic>> fitIaChatState(String pillar,
+      {String locale='es'})async=>current(pillar);
+  @override
+  Future<Map<String,dynamic>> fitIaChatSend(String pillar,
+      String text,String clientId,{String locale='es'})async=>
+      current(pillar);
+  @override
+  Future<Map<String,dynamic>> fitIaChatRetry(String pillar,
+      {String locale='es'})async=>current(pillar);
+  @override
   Future<Map<String,dynamic>> fitIaState(String pillar)async=>current(pillar);
   @override
   Future<Map<String,dynamic>> fitIaOverview()async=>{
     for(final key in FitIaDepth.keys)key:depth(key),
     'ai_enabled':ai,
   };
+  @override
+  Future<Map<String,dynamic>> fitIaForm(String pillar)async=>{
+    'pillar':pillar,
+    'questions':[question(pillar)],
+    'depth':depth(pillar),
+  };
+  @override
+  Future<Map<String,dynamic>> fitIaInsights(String pillar)async=>{
+    'brief':{
+      'es':chosen.containsKey(pillar)
+        ?'Compartiste: '+chosen[pillar]!+'.'
+        :'Aún no hay respuestas.',
+      'en':'What you shared',
+      'count':counts[pillar],
+      'topics':counts[pillar],
+    },
+    'answers':[
+      if(chosen.containsKey(pillar)){
+        'question_id':pillar+'_001',
+        'question_es':questions[pillar],
+        'question_en':'A question about '+pillar,
+        'answer_es':chosen[pillar],
+        'answer_en':'My favorite',
+      },
+    ],
+  };
+  @override
+  Future<Map<String,dynamic>> fitIaSubmitForm(
+      String pillar,List<Map<String,String>> answers)async{
+    for(final entry in answers){
+      counts[pillar]=counts[pillar]!+1;
+      chosen[pillar]=entry['choice_key']=='opt_1'
+        ?'Mi favorita':'La segunda';
+      saveCalls++;
+    }
+    return {'status':'saved','saved':answers.length,'depth':depth(pillar)};
+  }
   @override
   Future<Map<String,dynamic>> fitIaAnswer(
       String pillar,String questionId,String choice,{String locale='es'})async{
@@ -96,10 +146,10 @@ void main(){
       repository:repository)));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('fit-ia-conversation-page')),findsOneWidget);
-    expect(find.text('Cómo me muevo'),findsOneWidget);
+    expect(find.text('Cómo me muevo'),findsWidgets);
     expect(find.text('Cómo vivo'),findsOneWidget);
     expect(find.text('Cómo me relaciono'),findsOneWidget);
-    expect(find.text('Débil'),findsWidgets);
+    expect(find.byKey(const Key('fit-ia-mobile-insights')),findsOneWidget);
     expect(find.text('¿Qué actividad disfrutas más?'),findsOneWidget);
     expect(find.textContaining('%'),findsNothing);
     await tester.tap(find.byKey(const Key('fit-ia-option-opt_1')));
@@ -118,6 +168,32 @@ void main(){
       reason:'Returning to a pillar must preserve previously saved answers.');
     expect(tester.takeException(),isNull);
   });
+  testWidgets('Desktop split view, executive summary and traditional form persist',
+    (tester)async{
+    await tester.binding.setSurfaceSize(const Size(1390,940));
+    addTearDown(()=>tester.binding.setSurfaceSize(null));
+    final fake=FakeFitIa();
+    await tester.pumpWidget(MaterialApp(home:FitIaConversationPage(
+      repository:fake)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('fit-ia-insights-panel')),findsOneWidget);
+    expect(find.byKey(const Key('fit-ia-executive-summary')),findsOneWidget);
+    expect(find.text('Resumen ejecutivo'),findsOneWidget);
+    expect(find.text('Nivel de conocimiento'),findsOneWidget);
+    expect(find.text('Lo que he aprendido'),findsOneWidget);
+    await tester.tap(find.text('Formulario'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('fit-ia-traditional-form')),findsOneWidget);
+    await tester.tap(find.byKey(const Key('fit-ia-form-move_001-opt_1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('fit-ia-save-form')));
+    await tester.pumpAndSettle();
+    expect(fake.saveCalls,1);
+    expect(fake.chosen['move'],'Mi favorita');
+    expect(find.textContaining('Compartiste'),findsWidgets);
+    expect(tester.takeException(),isNull);
+  });
+
   testWidgets('AI consent is opt-in; pause retains answers',
     (tester)async{
     await tester.binding.setSurfaceSize(const Size(600,940));
