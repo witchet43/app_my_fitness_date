@@ -13,7 +13,10 @@
   "dependencies": {
     "expo": "~57.0.31",
     "react": "19.2.3",
-    "react-native": "0.86.3"
+    "react-native": "0.86.3",
+    "@supabase/supabase-js": "^2.75.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "react-native-url-polyfill": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
