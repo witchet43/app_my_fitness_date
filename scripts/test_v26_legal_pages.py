@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,6 +7,18 @@ import build_v26_legal_pages
 
 
 class LegalReleaseV26Tests(unittest.TestCase):
+    def test_public_and_authenticated_manifests_remain_separate(self):
+        root = Path(__file__).resolve().parents[1]
+        public = json.loads(
+            (root / "release/public_web_manifest.json").read_text(encoding="utf-8"))
+        v26 = json.loads(
+            (root / "release/v26_authenticated_member_manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual("public_anonymous_web", public["channel"])
+        self.assertEqual("authenticated_member_web", v26["channel"])
+        self.assertFalse(public["requires_authentication"])
+        self.assertTrue(v26["requires_authentication"])
+        self.assertEqual("NOT_PUBLISHED", v26["publication_status"])
+
     def test_drafts_cannot_go_live(self):
         root = Path(__file__).resolve().parents[1]
         for slug, (relative, _) in build_v26_legal_pages.DOCUMENTS.items():

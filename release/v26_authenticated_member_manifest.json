@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "channel": "authenticated_member_web",
+  "product": "my_fitness_date",
+  "candidate": "v26-draft",
+  "module": "secure_registration_profile_and_gated_fitdating",
+  "requires_authentication": true,
+  "enabled_features": [
+    "email_registration",
+    "email_login",
+    "private_member_profile",
+    "google_oauth_when_verified",
+    "private_training_places"
+  ],
+  "disabled_features": [
+    "qa_login",
+    "public_profile_discovery",
+    "fitdating_discovery",
+    "paid_memberships",
+    "google_oauth_unverified",
+    "production_api_gateway_unhosted"
+  ],
+  "network_backend_enabled": false,
+  "publication_status": "NOT_PUBLISHED",
+  "production_deploy_requires": [
+    "google_oauth_prod_e2e",
+    "approved_v26_legal_pages",
+    "hosted_profile_api_gateway",
+    "rls_two_user_anti_bola",
+    "flutter_analyze",
+    "flutter_test",
+    "http_commit_smoke",
+    "physical_android_qa",
+    "independent_security_review"
+  ],
+  "beta_and_real_user_gates": "release/readiness.json: comprehensive real-user beta pending"
+}

@@ -1,10 +1,25 @@
 {
   "schema_version": 1,
-  "candidate": "v20-deployment-dev",
+  "candidate": "v26-draft-production-readiness",
   "project_ref": "jtrdvnwbxpfdnbzasvcj",
   "release_channel": "not_published",
-  "environment": "development",
+  "environment": "draft",
   "gates": {
+    "google_oauth_prod_e2e": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "hosted_profile_api_gateway": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
+    "approved_v26_legal_pages": {
+      "status": "pending",
+      "evidence_url": null,
+      "verified_at": null
+    },
     "hosted_email_configuration": {
       "status": "pending",
       "evidence_url": null,
