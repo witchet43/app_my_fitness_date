@@ -137,7 +137,9 @@ export default function App() {
         <Text style={s.signoutText}>Cerrar sesión</Text>
       </Pressable>}
     </View>
-    <View style={s.tabs}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}
+      style={s.tabs} contentContainerStyle={s.tabsContent}
+      keyboardShouldPersistTaps="handled" accessibilityLabel="Secciones de la aplicación">
       {visibleTabs.map(item=><Pressable key={item.id} accessibilityRole="tab"
         accessibilityState={{selected:tab===item.id}} onPress={()=>setTab(item.id)}
         style={[s.tab,tab===item.id&&s.tabActive]}>
@@ -145,7 +147,7 @@ export default function App() {
           {item.emoji} {item.title}
         </Text>
       </Pressable>)}
-    </View>
+    </ScrollView>
     <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <View style={s.notice}><Text style={s.noticeText}>DESARROLLO · Sin usuarios reales · Acceso controlado pendiente</Text></View>
       {tab==='admin' && !moderator && <Text style={s.warning}>Acceso administrativo no autorizado.</Text>}
@@ -210,7 +212,7 @@ export default function App() {
       </>}
       {authError?<Text style={s.warning}>{authError}</Text>:null}
     </ScrollView>
-    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.10.0</Text></View>
+    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.11.0</Text></View>
   </SafeAreaView>;
 }
 
@@ -223,8 +225,9 @@ const s=StyleSheet.create({
  subtitle:{marginTop:5,color:'#B6C6CB',fontSize:12},
  signout:{marginTop:9,alignSelf:'flex-start'},
  signoutText:{color:'#B6F266',fontSize:12,fontWeight:'700'},
- tabs:{flexDirection:'row',marginHorizontal:16,backgroundColor:'#15252C',borderRadius:14,padding:4},
- tab:{flex:1,paddingVertical:12,alignItems:'center',borderRadius:11},
+ tabs:{marginHorizontal:16,backgroundColor:'#15252C',borderRadius:14,maxHeight:52},
+ tabsContent:{flexDirection:'row',padding:4,alignItems:'center'},
+ tab:{minWidth:106,paddingHorizontal:12,paddingVertical:12,alignItems:'center',borderRadius:11},
  tabActive:{backgroundColor:'#B6F266'},
  tabText:{color:'#BECBD0',fontWeight:'700',fontSize:11},
  tabTextActive:{color:'#101C20'},
