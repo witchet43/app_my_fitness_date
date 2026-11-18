@@ -173,3 +173,7 @@ Estos controles provienen del **producto existente y Estándar Maestro v1.9**, n
 4. [Visión previa MVP](../MVP.md), [arquitectura](../adr/0001-flutter-microservices-standard.md), [diseño](../design/ACTIVE_CHEMISTRY_AUDIT_V25.md), [gates](../../release/readiness.json).
 
 **No sustituye decisiones de producto ni el registro de control del estándar SaaS.** Aprobaciones de alcance, arquitectura, datos, UI, gastos y release requieren su propia evidencia.
+
+## Adenda de decisión de producto — 17 de noviembre de 2026
+
+[Fitted: FIT, PULSE, SYNC e IMPULSO](FITTED_SOCIAL_INTERACTIONS.md) documenta los cuatro conceptos aprobados y 12 requisitos adicionales SI-01..SI-12; no forman parte de las 84 referencias históricas del PDF. FIT es interés explícito privado; SYNC es interés recíproco elegible; IMPULSO es reconocimiento social y PULSE es contenido voluntario. Esta decisión delimita el lenguaje y comportamiento funcional, sin cerrar otros aspectos de D-08 ni habilitar chat o publicación de datos externos. Implementación y liberación pendientes.
