@@ -7,11 +7,12 @@ import LiveTogether from './src/features/LiveTogether';
 import LiveDating from './src/features/LiveDating';
 import AdminModeration from './src/features/AdminModeration';
 import ModerationInbox from './src/features/ModerationInbox';
+import AccountCenter from './src/features/AccountCenter';
 import { supabase, supabaseIsConfigured } from './src/lib/supabase';
 import { currentUser, demoActivities, demoCandidates, demoPosts } from './src/demo/fixtures';
 import { isEligibleForDating, type GymShieldMode } from './src/domain/gymShield';
 
-type Tab = 'community' | 'together' | 'dating' | 'inbox' | 'admin';
+type Tab = 'community' | 'together' | 'dating' | 'inbox' | 'admin' | 'account';
 const TABS: Array<{ id: Tab; title: string; emoji: string }> = [
   { id: 'community', title: 'Comunidad', emoji: '◉' },
   { id: 'together', title: 'Actividades', emoji: '◎' },
@@ -25,6 +26,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(!supabaseIsConfigured);
   const [authError, setAuthError] = useState('');
   const [moderator, setModerator] = useState(false);
+  const [deletionPending,setDeletionPending]=useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -68,9 +70,29 @@ export default function App() {
     return () => { active = false; };
   }, [session?.user.id]);
 
+  useEffect(()=>{
+    setDeletionPending(false);
+    if(!session||!supabase)return;
+    let active=true;
+    void (async()=>{
+      try{
+        const {data,error}=await supabase!.rpc('my_account_status');
+        if(active && !error){
+          const pending=Boolean((data as {pending?:boolean}|null)?.pending);
+          setDeletionPending(pending);
+          if(pending)setTab('account');
+        }
+      }catch{ /* AccountCenter reports status errors to the account owner. */ }
+    })();
+    return ()=>{active=false;};
+  },[session?.user.id]);
+
   const visibleTabs: Array<{ id: Tab; title: string; emoji: string }> = session
-    ? [...TABS,{id:'inbox',title:'Buzón',emoji:'✉'},
-       ...(moderator ? [{id:'admin' as Tab,title:'Moderación',emoji:'⚑'}] : [])]
+    ? deletionPending
+      ? [{id:'account',title:'Cuenta',emoji:'⚙'}]
+      : [...TABS,{id:'inbox',title:'Buzón',emoji:'✉'},
+         ...(moderator ? [{id:'admin' as Tab,title:'Moderación',emoji:'⚑'}] : []),
+         {id:'account',title:'Cuenta',emoji:'⚙'}]
     : TABS;
 
   const matches = useMemo(() =>
@@ -98,14 +120,17 @@ export default function App() {
     <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <View style={s.notice}><Text style={s.noticeText}>DESARROLLO · Sin usuarios reales · Acceso controlado pendiente</Text></View>
       {tab==='admin' && !moderator && <Text style={s.warning}>Acceso administrativo no autorizado.</Text>}
+      {deletionPending && tab!=='account' && <Text style={s.warning}>La solicitud de baja está pendiente. Abre Cuenta para revisarla o cancelarla.</Text>}
       {supabaseIsConfigured ? (
         !authReady ? <Text style={s.lead}>Comprobando sesión...</Text> :
         session ? <View key={session.user.id + tab}>
-          {tab==='community' && <LiveCommunity session={session}/>}
-          {tab==='together' && <LiveTogether session={session}/>}
-          {tab==='dating' && <LiveDating session={session}/>}
-          {tab==='inbox' && <ModerationInbox session={session}/>}
-          {tab==='admin' && moderator && <AdminModeration session={session}/>}
+          {tab==='community' && !deletionPending && <LiveCommunity session={session}/>}
+          {tab==='together' && !deletionPending && <LiveTogether session={session}/>}
+          {tab==='dating' && !deletionPending && <LiveDating session={session}/>}
+          {tab==='inbox' && !deletionPending && <ModerationInbox session={session}/>}
+          {tab==='admin' && moderator && !deletionPending && <AdminModeration session={session}/>}
+          {tab==='account' && <AccountCenter session={session}
+            onStatusChange={pending=>{setDeletionPending(pending);if(pending)setTab('account');}}/>}
         </View> : <AuthPanel/>
       ) : <>
         <Text style={s.lead}>Demostración local con datos ficticios. Configura Supabase para activar las funciones sociales.</Text>
@@ -142,7 +167,7 @@ export default function App() {
       </>}
       {authError?<Text style={s.warning}>{authError}</Text>:null}
     </ScrollView>
-    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.7.0</Text></View>
+    <View style={s.footer}><Text style={s.footerText}>PROTOTIPO TÉCNICO · v0.8.0</Text></View>
   </SafeAreaView>;
 }
 
