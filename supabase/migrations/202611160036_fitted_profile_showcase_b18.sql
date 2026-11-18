@@ -1,6 +1,18 @@
 -- B18: only a candidate actually returned by the existing B11 safety gate
 -- can have their explicitly-shared biography and approved profile photograph read.
 begin;
+create table if not exists app_private.member_profile_summaries_b17(
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  summary_es text not null default '',
+  summary_en text not null default '',
+  summary_mode text not null default 'manual',
+  ai_consented boolean not null default false,
+  ai_consented_at timestamptz,
+  share_consented boolean not null default false,
+  manual_summary_es text not null default '',
+  manual_summary_en text not null default '',
+  updated_at timestamptz not null default now()
+);
 create or replace function public.fitted_candidate_showcase_b18(p_user uuid)
 returns jsonb language plpgsql stable security definer set search_path=''
 as $fn$
