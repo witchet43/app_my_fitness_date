@@ -2,9 +2,13 @@ import React,{useState} from 'react';
 import {Pressable,StyleSheet,Text,TextInput,View} from 'react-native';
 import {supabase} from '../lib/supabase';
 import {isAdult} from '../domain/onboarding';
+import {canShowQaSignup} from '../domain/hostedAuthPolicy';
 
 type Phase='login'|'confirm'|'forgot'|'reset';
 export default function AuthPanel(){
+ const qaSignupAllowed=canShowQaSignup(
+   process.env.EXPO_PUBLIC_SUPABASE_URL,process.env.EXPO_PUBLIC_QA_SIGNUP_FLAG,
+ );
  const [phase,setPhase]=useState<Phase>('login');
  const [email,setEmail]=useState('');
  const [password,setPassword]=useState('');
@@ -25,6 +29,7 @@ export default function AuthPanel(){
    setMessage('Introduce un correo válido y una contraseña de al menos ocho caracteres.');
    return;
   }
+  if(signUp&&!qaSignupAllowed){setMessage('El registro público no está habilitado.');return;}
   if(signUp&&(!adultConfirmed||!isAdult(dob))){
    setMessage('Para crear una cuenta debes declarar al menos 18 años.');
    return;
@@ -117,7 +122,8 @@ export default function AuthPanel(){
     disabled={busy} style={styles.primary} onPress={()=>void submit(false)}>
     <Text style={styles.primaryText}>{busy?'Procesando…':'Entrar'}</Text>
    </Pressable>
-   <Text style={styles.help}>Para crear una cuenta de desarrollo, declara tu fecha de nacimiento (AAAA-MM-DD).</Text>
+   {qaSignupAllowed&&<>
+   <Text style={styles.help}>Para crear una cuenta de desarrollo local, declara tu fecha de nacimiento (AAAA-MM-DD).</Text>
    <TextInput testID="auth-date-of-birth" accessibilityLabel="Fecha de nacimiento"
     style={styles.input} placeholder="1994-01-15" placeholderTextColor="#92A3AA"
     keyboardType="numbers-and-punctuation" value={dob} onChangeText={setDob} editable={!busy}/>
@@ -128,8 +134,10 @@ export default function AuthPanel(){
    </Pressable>
    <Pressable testID="auth-signup" accessibilityRole="button" accessibilityLabel="Crear cuenta de desarrollo"
     disabled={busy} onPress={()=>void submit(true)} style={styles.secondary}>
-    <Text style={styles.link}>Crear cuenta de desarrollo</Text>
+    <Text style={styles.link}>Crear cuenta de desarrollo local</Text>
    </Pressable>
+   </>}
+   {!qaSignupAllowed&&<Text style={styles.help}>El registro está cerrado. Solo pueden ingresar cuentas de prueba autorizadas.</Text>}
    <Pressable testID="auth-forgot" accessibilityRole="button" accessibilityLabel="Olvidé mi contraseña"
     disabled={busy} onPress={()=>changePhase('forgot')} style={styles.secondary}>
     <Text style={styles.link}>Olvidé mi contraseña</Text>
