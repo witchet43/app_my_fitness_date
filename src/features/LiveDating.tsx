@@ -38,16 +38,18 @@ export default function LiveDating({ session }: { session: Session }) {
   const nextSlotId = useRef(2);
   const [hasSetup, setHasSetup] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const [adultApproved,setAdultApproved]=useState(false);
+  const [adultCheckFailed,setAdultCheckFailed]=useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [reportId,setReportId]=useState<string|null>(null);
 
 
   const refreshCandidates = useCallback(async () => {
-    if (!supabase) return;
-    const { data, error } = await supabase.rpc('discover_dating_candidates', { p_limit: 20 });
+    if (!supabase || !adultApproved) { setCandidates([]); return; }
+    const { data, error } = await supabase.rpc('discover_dating_candidates', { p_limit: 10 });
     if (error) throw error;
     setCandidates((data || []) as Candidate[]);
-  }, []);
+  }, [adultApproved]);
 
   useEffect(() => {
     if (!session || !supabase) {
@@ -56,6 +58,8 @@ export default function LiveDating({ session }: { session: Session }) {
       setReportId(null);
       setEnabled(false);
       setHasSetup(false);
+      setAdultApproved(false);
+      setAdultCheckFailed(false);
       setGyms([]);
       setGymId('');
       setDisplayName('');
@@ -72,12 +76,19 @@ export default function LiveDating({ session }: { session: Session }) {
     async function load() {
       setBusy(true);
       try {
-        const [gymResult, ownResult] = await Promise.all([
+        setAdultApproved(false);
+        setAdultCheckFailed(false);
+        setCandidates([]);
+        const [gymResult, ownResult, ageResult] = await Promise.all([
           client.from('gyms').select('id,name,city').order('name'),
           client.rpc('my_dating_setup'),
+          client.rpc('my_adult_eligibility'),
         ]);
         if (gymResult.error) throw gymResult.error;
         if (ownResult.error) throw ownResult.error;
+        if (ageResult.error) throw ageResult.error;
+        const approved=(ageResult.data as {approved?:unknown}|null)?.approved===true;
+        if (!cancelled) setAdultApproved(approved);
         const birthResult = await client.rpc('my_dating_birthdate');
         if (birthResult.error) throw birthResult.error;
         if (cancelled) return;
@@ -92,7 +103,7 @@ export default function LiveDating({ session }: { session: Session }) {
           setSports(current.sports.join(', '));
           setGymId(current.gym_id);
           setMode(current.mode);
-          setEnabled(current.dating_enabled);
+          setEnabled(current.dating_enabled && approved);
           const saved = current.weekly_slots.map((s, index) => ({
             id: index + 1, day: s.day, start: clockString(s.startMinutes), end: clockString(s.endMinutes),
           }));
@@ -101,11 +112,15 @@ export default function LiveDating({ session }: { session: Session }) {
         } else {
           setGymId(catalog[0]?.id ?? '');
         }
-        const result = await client.rpc('discover_dating_candidates', { p_limit: 20 });
-        if (result.error) throw result.error;
-        if (!cancelled) setCandidates((result.data || []) as Candidate[]);
+        if(approved){
+          const result = await client.rpc('discover_dating_candidates', { p_limit: 10 });
+          if (result.error) throw result.error;
+          if (!cancelled) setCandidates((result.data || []) as Candidate[]);
+        }else if(!cancelled){
+          setCandidates([]);
+        }
       } catch (e) {
-        if (!cancelled) setMessage(errorMessage(e));
+        if (!cancelled) {setAdultApproved(false);setAdultCheckFailed(true);setCandidates([]);setMessage(errorMessage(e));}
       } finally {
         if (!cancelled) setBusy(false);
       }
@@ -117,6 +132,10 @@ export default function LiveDating({ session }: { session: Session }) {
 
   async function saveSettings() {
     if (!supabase) return;
+    if (!adultApproved || adultCheckFailed) {
+      setMessage('FitDating requiere una revisión de mayoría de edad autorizada y vigente.');
+      return;
+    }
     if (!isAdult(dob)) {
       setMessage('Ingresa una fecha válida. FitDating solo está disponible para mayores de 18 años.');
       return;
@@ -196,6 +215,10 @@ export default function LiveDating({ session }: { session: Session }) {
     <ScrollView nestedScrollEnabled>
       <Text style={styles.heading}>Gym Shield · Perfil privado</Text>
       <Text style={styles.hint}>Datos del gimnasio y los horarios privados. Los demás usuarios solo reciben perfiles permitidos, sin conocer por qué alguien fue excluido.</Text>
+      {!adultApproved && <Text testID="dating-age-gate" style={styles.feedback}>
+        FitDating bloqueado: se requiere revisión externa de mayoría de edad por personal autorizado.
+        {adultCheckFailed ? ' No fue posible comprobar el estado de revisión.' : ' Tu cuenta social permanece activa.'}
+      </Text>}
       <Text style={styles.caption}>Nombre público</Text>
       <TextInput testID="dating-name" accessibilityLabel="Nombre para citas"
         style={styles.field} placeholder="Tu nombre visible" placeholderTextColor="#80949B" value={displayName} onChangeText={setDisplayName} />
@@ -264,7 +287,7 @@ export default function LiveDating({ session }: { session: Session }) {
         <Text style={styles.body}>＋ Agregar bloque semanal ({slots.length}/14)</Text>
       </Pressable>
       <Pressable testID="dating-save" accessibilityRole="button" accessibilityLabel="Guardar preferencias de citas"
-        style={styles.button} disabled={busy || gyms.length === 0} onPress={() => void saveSettings()}>
+        style={styles.button} disabled={busy || !adultApproved || adultCheckFailed || gyms.length === 0} onPress={() => void saveSettings()}>
         <Text style={styles.buttonText}>{busy ? 'Guardando...' : hasSetup && enabled ? 'Guardar preferencias' : 'Guardar y activar FitDating'}</Text>
       </Pressable>
       {enabled ? (
@@ -276,7 +299,7 @@ export default function LiveDating({ session }: { session: Session }) {
       <Text style={styles.heading}>Personas recomendadas</Text>
       {!enabled ? <Text style={styles.hint}>Activa voluntariamente FitDating para recibir recomendaciones.</Text> : null}
       {enabled && candidates.length === 0 ? <Text style={styles.hint}>Todavía no hay perfiles compatibles.</Text> : null}
-      {enabled && candidates.map(c => (
+      {enabled && adultApproved && candidates.map(c => (
         <View key={c.user_id} style={styles.candidate}>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{c.display_name}</Text>
@@ -294,7 +317,7 @@ export default function LiveDating({ session }: { session: Session }) {
       ))}
       {reportId && <ReportPicker busy={busy} onSubmit={reason=>void submitReport(reportId,reason)}
         onCancel={()=>setReportId(null)}/>} 
-      <Text style={styles.hint}>Aviso: la autodeclaración de edad no constituye verificación. No habilitar una beta con usuarios reales sin los controles adicionales de seguridad y moderación.</Text>
+      <Text style={styles.hint}>La fecha de nacimiento autodeclarada no prueba la edad. La revisión externa autorizada no está disponible todavía para usuarios reales.</Text>
     </ScrollView>
   );
 }
