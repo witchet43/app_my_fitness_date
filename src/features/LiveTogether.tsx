@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import ReportPicker,{type ReportReason} from './ReportPicker';
 
 type SportsEvent = { id:string; title:string; description:string;
   sport:string; city:string; starts_at:string };
@@ -12,6 +13,7 @@ export default function LiveTogether({ session }:{session:Session}) {
   const [joined,setJoined]=useState<string[]>([]);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState('');
+  const [reportId,setReportId]=useState<string|null>(null);
 
   const refresh=useCallback(async ()=>{
     if(!supabase)return;
@@ -44,6 +46,17 @@ export default function LiveTogether({ session }:{session:Session}) {
     }catch(e){setMessage(formatError(e));}finally{setBusy(false);}
   }
 
+  async function submitReport(eventId:string,reason:ReportReason){
+    if(!supabase)return;
+    setBusy(true);setMessage('');
+    try{
+      const {error}=await supabase.rpc('submit_safety_report',{
+        p_target_type:'event',p_target_id:eventId,p_reason:reason,p_details:null,
+      });
+      if(error)throw error;
+      setReportId(null);setMessage('Actividad reportada para revisión.');
+    }catch(e){setMessage(formatError(e));}finally{setBusy(false);}
+  }
   return <View>
     <Text style={s.title}>Fitness Together</Text>
     <Text style={s.hint}>Actividades deportivas públicas para personas con intereses afines.
@@ -66,6 +79,11 @@ export default function LiveTogether({ session }:{session:Session}) {
             {attending?'Cancelar participación':'Me interesa asistir'}
           </Text>
         </Pressable>
+        <Pressable disabled={busy} onPress={()=>setReportId(event.id)} style={s.reportButton}>
+          <Text style={s.reportText}>Reportar actividad</Text>
+        </Pressable>
+        {reportId===event.id && <ReportPicker busy={busy} onSubmit={reason=>void submitReport(event.id,reason)}
+          onCancel={()=>setReportId(null)}/>}
       </View>;
     })}
     <Text style={s.hint}>Para esta versión únicamente organizadores aprobados por administración pueden crear eventos.
@@ -87,4 +105,6 @@ const s=StyleSheet.create({
  warning:{color:'#F3D2A1',fontSize:12,marginVertical:8},
  refresh:{padding:10,alignSelf:'flex-start'},
  refreshText:{color:'#B6F266',fontSize:12,fontWeight:'800'},
+ reportButton:{padding:11,alignSelf:'flex-start'},
+ reportText:{color:'#FFC5C0',fontSize:12},
 });

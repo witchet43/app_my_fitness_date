@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import ReportPicker,{type ReportReason} from './ReportPicker';
 
 type SocialProfile = { user_id:string; display_name:string; city:string; sports:string[] };
 type Post = {
@@ -19,6 +20,8 @@ export default function LiveCommunity({ session }:{ session:Session }) {
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [reportId,setReportId]=useState<string|null>(null);
+  const [notice,setNotice]=useState('');
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -106,6 +109,28 @@ export default function LiveCommunity({ session }:{ session:Session }) {
     } catch (e) {setError(errorText(e));} finally {setBusy(false);}
   }
 
+  async function submitReport(postId:string,reason:ReportReason){
+    if(!supabase)return;
+    setBusy(true);setError('');setNotice('');
+    try {
+      const {error}=await supabase.rpc('submit_safety_report',{
+        p_target_type:'post',p_target_id:postId,p_reason:reason,p_details:null,
+      });
+      if(error)throw error;
+      setReportId(null);setNotice('Reporte recibido para revisión.');
+    }catch(error){setError(errorText(error));}finally{setBusy(false);}
+  }
+  async function blockAuthor(authorId:string){
+    if(!supabase||authorId===session.user.id)return;
+    setBusy(true);setError('');setNotice('');
+    try {
+      const {error}=await supabase.rpc('block_user',{p_blocked_user_id:authorId});
+      if(error)throw error;
+      await load();
+      setReportId(null);setNotice('Cuenta bloqueada.');
+    }catch(error){setError(errorText(error));}finally{setBusy(false);}
+  }
+
   return <View>
     <Text style={s.title}>Fitness Community</Text>
     <Text style={s.hint}>Tu perfil social es independiente de FitDating. No se comparten gimnasios, horarios ni preferencias románticas.</Text>
@@ -130,6 +155,7 @@ export default function LiveCommunity({ session }:{ session:Session }) {
       </Pressable>
     </View>}
     {error ? <Text style={s.error}>{error}</Text> : null}
+    {notice ? <Text style={s.success}>{notice}</Text> : null}
     <View style={s.header}><Text style={s.heading}>Publicaciones recientes</Text>
       <Pressable onPress={() => void load().catch(e=>setError(errorText(e)))}>
         <Text style={s.link}>Actualizar</Text>
@@ -140,9 +166,16 @@ export default function LiveCommunity({ session }:{ session:Session }) {
       <Text style={s.sport}>{post.sport.toUpperCase()}</Text>
       <Text style={s.heading}>{post.social_profiles?.display_name || 'Atleta'}</Text>
       <Text style={s.content}>{post.body}</Text>
-      {post.author_id===session.user.id && <Pressable disabled={busy} onPress={() => void removePost(post.id)}>
+      {post.author_id===session.user.id ? <Pressable disabled={busy} onPress={() => void removePost(post.id)}>
         <Text style={s.delete}>Eliminar mi publicación</Text>
-      </Pressable>}
+      </Pressable> : <>
+        <View style={s.actions}>
+          <Pressable disabled={busy} onPress={()=>setReportId(post.id)}><Text style={s.delete}>Reportar</Text></Pressable>
+          <Pressable disabled={busy} onPress={()=>void blockAuthor(post.author_id)}><Text style={s.delete}>Bloquear autor</Text></Pressable>
+        </View>
+        {reportId===post.id && <ReportPicker busy={busy} onSubmit={reason=>void submitReport(post.id,reason)}
+          onCancel={()=>setReportId(null)}/>}
+      </>}
     </View>)}
     <Text style={s.warning}>Entorno de desarrollo. No compartir datos personales, ubicaciones precisas ni fotografías de terceros.</Text>
   </View>;
@@ -165,5 +198,7 @@ const s=StyleSheet.create({
   link:{color:'#B6F266',fontSize:12,fontWeight:'800'},
   error:{color:'#FFD1AB',fontSize:12,marginVertical:9},
   delete:{color:'#FFBEBC',marginTop:13,fontSize:12},
+  actions:{flexDirection:'row',gap:20,marginTop:8},
+  success:{color:'#C5F3AF',fontSize:12,marginTop:8},
   warning:{color:'#8299A3',marginVertical:10,fontSize:11,lineHeight:17},
 });
