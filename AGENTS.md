@@ -4,6 +4,7 @@ Antes de diseñar, editar o desplegar, consultar:
 - Índice: https://docs.google.com/document/d/1jl6c96siJ1ef501iYKH3tM7eEV1bcB_IRDmownnxiLQ/edit
 - Estándar: https://docs.google.com/document/d/11hytKADuIUpmWzHEmAfZwcYNJ04M7n1ev4A1fbeZy9Q/edit
 - `product.manifest.yaml`, `docs/compliance/SAAS_V19_CONTROL_BASELINE.csv` y `docs/SAAS_FACTORY_ADOPTION_V19.md`.
+- **Antes de modificar marca, UX, interfaz, copy, onboarding o descubrimiento:** `docs/design/SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md` (dirección confirmada: estilo elegante, público 40+, relaciones serias, sin estética romántica típica). No sustituir los logos heredados ni bloquear por edad 40+ sin decisión específica.
 
 Política de ejecución:
 1. Trabajar en ramas y PR revisables, no alterar main ni desplegar por inferencia. Respetar la cadena de PR #23–#27.
