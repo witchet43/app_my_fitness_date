@@ -1,17 +1,10 @@
 {
   "schema_version": 1,
-  "channel": "member_profile_v27",
+  "channel": "public_anonymous_web",
   "product": "my_fitness_date",
   "module": "secure_registration_profile_and_gated_fitdating",
-  "requires_authentication": true,
-  "enabled_features": [
-    "anonymous_pace_calculator",
-    "email_registration",
-    "email_login",
-    "private_member_profile",
-    "private_training_places",
-    "fitdating_consent_and_eligibility"
-  ],
+  "requires_authentication": false,
+  "enabled_features": ["anonymous_pace_calculator"],
   "disabled_features": [
     "qa_login",
     "public_media_upload",
@@ -19,17 +12,11 @@
     "chat",
     "unverified_dating_discovery",
     "paid_memberships",
-    "google_oauth_unverified"
+    "public_signup",
+    "dating_discovery"
   ],
-  "network_backend_enabled": true,
-  "production_deploy_requires": [
-    "flutter_analyze",
-    "flutter_test",
-    "cloudflare_pages_upload",
-    "http_commit_smoke",
-    "edge_api_deployment",
-    "rls_verified"
-  ],
+  "network_backend_enabled": false,
+  "production_deploy_requires": ["flutter_analyze", "flutter_test", "cloudflare_pages_upload", "http_commit_smoke"],
   "beta_and_real_user_gates": "release/readiness.json: comprehensive real-user beta pending (dating candidate discovery independently gated by verified age)",
   "brand": "Active Chemistry",
   "design_revision": "v27",

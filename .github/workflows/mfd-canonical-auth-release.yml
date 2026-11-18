@@ -92,6 +92,15 @@ jobs:
         run: |
           python3 scripts/verify_hosted_auth.py
           python3 scripts/check_public_legal.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=json.loads(Path("release/v26_authenticated_member_manifest.json").read_text())
+          assert manifest["channel"]=="authenticated_member_web"
+          assert manifest["publication_status"]=="NOT_PUBLISHED"
+          assert "google_oauth_prod_e2e" in manifest["production_deploy_requires"]
+          print("V26 authenticated-member manifest is present and fail-closed")
+          PY
           node scripts/test_fitted_legal_brand.cjs
           python3 - <<'PY'
           from pathlib import Path
@@ -196,7 +205,6 @@ jobs:
             --dart-define=MFD_OAUTH_REDIRECT_URL=https://my-fitness-date.pages.dev/
           cp cloudflare/_headers build/web/_headers
           cp cloudflare/_redirects build/web/_redirects
-          cp -R cloudflare/privacy cloudflare/terms build/web/
           cp cloudflare/brand-legal.js build/web/brand-legal.js
           python3 - <<'PY'
           import re
@@ -226,6 +234,8 @@ jobs:
             "dating_access":"reviewed_adults_with_operator_activation"
           })+"\n")
           PY
+      - name: Fail closed on unapproved V26 legal documents
+        run: python3 scripts/build_v26_legal_pages.py --destination apps/flutter_client/build/web
       - name: Publish canonical production website on Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
