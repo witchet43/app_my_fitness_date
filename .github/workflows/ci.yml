@@ -102,6 +102,20 @@ jobs:
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611160031_fitted_pulso_real_private_b12.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611160032_fitted_pulso_real_moderation_b13.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611160034_fitted_manual_age_review_b14.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611160036_fitted_profile_showcase_b18.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611160037_fitted_editorial_manual_story_b19.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611160038_brand_studio_palette_logo_catalog.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170039_fitted_brand_font_catalog.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170040_fit_ia_conversation_schema.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170041_fit_ia_100_move_questions.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170042_fit_ia_100_life_questions.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170043_fit_ia_100_relationship_questions.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170044_fitted_global_ai_account_consent.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170045_fit_ia_admin_form_depth_v2.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170046_fit_ia_edit_history_pending_safe.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170047_fit_ia_natural_chat_v3.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170048_fit_ia_chat_history_pagination.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/migrations/202611170049_fit_ia_assistant_brand_name.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_gym_shield_v30_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_dynamic_match_policy_v2_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_shield_private_v28_integration.sql
@@ -115,3 +129,5 @@ jobs:
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_pulso_real_moderation_b13_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_manual_age_review_b14_integration.sql
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_manual_age_review_b14_e2e.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fit_ia_owner_conversation_integration.sql
+          psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/fitted_ai_account_global_consent_integration.sql
