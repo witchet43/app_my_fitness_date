@@ -7,10 +7,12 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.myfitnessdate.dev"
     },
     "android": {
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.myfitnessdate.dev"
     },
     "experiments": {
       "tsconfigPaths": true

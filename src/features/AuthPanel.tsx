@@ -102,31 +102,40 @@ export default function AuthPanel(){
    setBusy(false);
   }
  }
- return <View style={styles.box}>
+ return <View style={styles.box} testID="auth-panel">
   <Text style={styles.title}>Tu cuenta fitness</Text>
   <Text style={styles.help}>Comunidad y Actividades son independientes de las citas. La beta pública todavía no está disponible.</Text>
-  <TextInput style={styles.input} placeholder="Correo electrónico" placeholderTextColor="#92A3AA"
+  <TextInput testID="auth-email" accessibilityLabel="Correo electrónico"
+    style={styles.input} placeholder="Correo electrónico" placeholderTextColor="#92A3AA"
    autoCapitalize="none" autoComplete="email" keyboardType="email-address"
    value={email} onChangeText={setEmail} editable={!busy}/>
   {phase==='login'&&<>
-   <TextInput style={styles.input} placeholder="Contraseña" placeholderTextColor="#92A3AA"
+   <TextInput testID="auth-password" accessibilityLabel="Contraseña"
+    style={styles.input} placeholder="Contraseña" placeholderTextColor="#92A3AA"
     secureTextEntry value={password} onChangeText={setPassword} editable={!busy}/>
-   <Pressable disabled={busy} style={styles.primary} onPress={()=>void submit(false)}>
+   <Pressable testID="auth-login" accessibilityRole="button" accessibilityLabel="Iniciar sesión"
+    disabled={busy} style={styles.primary} onPress={()=>void submit(false)}>
     <Text style={styles.primaryText}>{busy?'Procesando…':'Entrar'}</Text>
    </Pressable>
    <Text style={styles.help}>Para crear una cuenta de desarrollo, declara tu fecha de nacimiento (AAAA-MM-DD).</Text>
-   <TextInput style={styles.input} placeholder="1994-01-15" placeholderTextColor="#92A3AA"
+   <TextInput testID="auth-date-of-birth" accessibilityLabel="Fecha de nacimiento"
+    style={styles.input} placeholder="1994-01-15" placeholderTextColor="#92A3AA"
     keyboardType="numbers-and-punctuation" value={dob} onChangeText={setDob} editable={!busy}/>
-   <Pressable disabled={busy} onPress={()=>setAdultConfirmed(x=>!x)} style={styles.check}>
+   <Pressable testID="auth-adult-consent" accessibilityRole="checkbox"
+    accessibilityState={{checked:adultConfirmed}} accessibilityLabel="Confirmo que tengo al menos 18 años"
+    disabled={busy} onPress={()=>setAdultConfirmed(x=>!x)} style={styles.check}>
     <Text style={styles.help}>{adultConfirmed?'☑':'☐'} Confirmo que tengo al menos 18 años.</Text>
    </Pressable>
-   <Pressable disabled={busy} onPress={()=>void submit(true)} style={styles.secondary}>
+   <Pressable testID="auth-signup" accessibilityRole="button" accessibilityLabel="Crear cuenta de desarrollo"
+    disabled={busy} onPress={()=>void submit(true)} style={styles.secondary}>
     <Text style={styles.link}>Crear cuenta de desarrollo</Text>
    </Pressable>
-   <Pressable disabled={busy} onPress={()=>changePhase('forgot')} style={styles.secondary}>
+   <Pressable testID="auth-forgot" accessibilityRole="button" accessibilityLabel="Olvidé mi contraseña"
+    disabled={busy} onPress={()=>changePhase('forgot')} style={styles.secondary}>
     <Text style={styles.link}>Olvidé mi contraseña</Text>
    </Pressable>
-   <Pressable disabled={busy} onPress={()=>changePhase('confirm')} style={styles.secondary}>
+   <Pressable testID="auth-have-code" accessibilityRole="button" accessibilityLabel="Ya tengo un código"
+    disabled={busy} onPress={()=>changePhase('confirm')} style={styles.secondary}>
     <Text style={styles.link}>Ya tengo un código de confirmación</Text>
    </Pressable>
   </>}
@@ -135,13 +144,16 @@ export default function AuthPanel(){
    <TextInput style={styles.input} value={code} onChangeText={setCode}
     placeholder="Código de confirmación" placeholderTextColor="#92A3AA"
     keyboardType="number-pad" maxLength={10} editable={!busy}/>
-   <Pressable disabled={busy} style={styles.primary} onPress={()=>void confirmSignup()}>
+   <Pressable testID="auth-verify-email" accessibilityRole="button" accessibilityLabel="Confirmar correo"
+    disabled={busy} style={styles.primary} onPress={()=>void confirmSignup()}>
     <Text style={styles.primaryText}>{busy?'Verificando…':'Confirmar correo'}</Text>
    </Pressable>
   </>}
   {phase==='forgot'&&<>
    <Text style={styles.help}>Te enviaremos un código al correo si existe una cuenta asociada.</Text>
-   <Pressable disabled={busy} style={styles.primary} onPress={()=>void requestRecovery()}>
+   <Pressable testID="auth-request-recovery" accessibilityRole="button"
+    accessibilityLabel="Solicitar recuperación de contraseña"
+    disabled={busy} style={styles.primary} onPress={()=>void requestRecovery()}>
     <Text style={styles.primaryText}>Solicitar recuperación</Text>
    </Pressable>
   </>}
@@ -156,7 +168,9 @@ export default function AuthPanel(){
    <TextInput style={styles.input} placeholder="Confirmar nueva contraseña"
     placeholderTextColor="#92A3AA" secureTextEntry value={passwordConfirm}
     onChangeText={setPasswordConfirm} editable={!busy}/>
-   <Pressable disabled={busy} style={styles.primary} onPress={()=>void completeRecovery()}>
+   <Pressable testID="auth-complete-recovery" accessibilityRole="button"
+    accessibilityLabel="Guardar nueva contraseña"
+    disabled={busy} style={styles.primary} onPress={()=>void completeRecovery()}>
     <Text style={styles.primaryText}>{busy?'Actualizando…':'Cambiar contraseña'}</Text>
    </Pressable>
   </>}

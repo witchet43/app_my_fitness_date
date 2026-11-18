@@ -84,13 +84,14 @@ export default function AccountCenter({session,onStatusChange}:AccountCenterProp
    setMessage('Solicitud cancelada. Las citas permanecen desactivadas hasta que vuelvas a aceptarlas.');
   }catch(e){setMessage(formatError(e));}finally{setBusy(false);}
  }
- return <View>
+ return <View testID="account-view">
   <Text style={styles.title}>Privacidad y cuenta</Text>
   <Text style={styles.help}>Tus datos deportivos y románticos son independientes. Puedes exportar una copia técnica de tus datos o solicitar la baja.</Text>
   <View style={styles.card}>
    <Text style={styles.subtitle}>Exportación de datos</Text>
    <Text style={styles.help}>Incluye perfil social, configuración privada de Dating, horarios, publicaciones, eventos, participaciones y notificaciones. No incluye copias de seguridad, logs ni todo el historial de Supabase Auth.</Text>
-   <Pressable disabled={busy} style={styles.secondary} onPress={()=>void exportOwnData()}>
+   <Pressable testID="account-export" accessibilityRole="button" accessibilityLabel="Exportar mis datos"
+     disabled={busy} style={styles.secondary} onPress={()=>void exportOwnData()}>
     <Text style={styles.link}>Exportar mis datos</Text>
    </Pressable>
    <Text style={styles.warning}>La exportación incluye información personal sensible. Solo compártela o guárdala en un destino seguro.</Text>
@@ -110,7 +111,8 @@ export default function AccountCenter({session,onStatusChange}:AccountCenterProp
       placeholderTextColor="#8FA5AD" value={password} onChangeText={setPassword}/>
     <TextInput style={styles.input} autoCapitalize="characters" placeholder="Escribe SOLICITAR"
       placeholderTextColor="#8FA5AD" value={confirmation} onChangeText={setConfirmation}/>
-    <Pressable style={styles.danger} disabled={busy} onPress={()=>void requestDeletion()}>
+    <Pressable testID="account-delete-request" accessibilityRole="button" accessibilityLabel="Solicitar eliminación de cuenta"
+      style={styles.danger} disabled={busy} onPress={()=>void requestDeletion()}>
      <Text style={styles.dangerText}>{busy?'Procesando…':'Solicitar eliminación de mi cuenta'}</Text>
     </Pressable>
    </>}

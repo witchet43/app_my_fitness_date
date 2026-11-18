@@ -197,13 +197,15 @@ export default function LiveDating({ session }: { session: Session }) {
       <Text style={styles.heading}>Gym Shield · Perfil privado</Text>
       <Text style={styles.hint}>Datos del gimnasio y los horarios privados. Los demás usuarios solo reciben perfiles permitidos, sin conocer por qué alguien fue excluido.</Text>
       <Text style={styles.caption}>Nombre público</Text>
-      <TextInput style={styles.field} placeholder="Tu nombre visible" placeholderTextColor="#80949B" value={displayName} onChangeText={setDisplayName} />
+      <TextInput testID="dating-name" accessibilityLabel="Nombre para citas"
+        style={styles.field} placeholder="Tu nombre visible" placeholderTextColor="#80949B" value={displayName} onChangeText={setDisplayName} />
       <Text style={styles.caption}>Ciudad</Text>
       <TextInput style={styles.field} value={city} onChangeText={setCity} />
       <Text style={styles.caption}>Deportes (separados por coma)</Text>
       <TextInput style={styles.field} value={sports} onChangeText={setSports} />
       <Text style={styles.caption}>Fecha de nacimiento · privada, autodeclarada</Text>
-      <TextInput style={styles.field} placeholder="1995-08-30" placeholderTextColor="#80949B" value={dob} onChangeText={setDob} keyboardType="numbers-and-punctuation" />
+      <TextInput testID="dating-dob" accessibilityLabel="Fecha de nacimiento para citas"
+        style={styles.field} placeholder="1995-08-30" placeholderTextColor="#80949B" value={dob} onChangeText={setDob} keyboardType="numbers-and-punctuation" />
       <Text style={styles.caption}>Gimnasio habitual · solo visible para ti</Text>
       {gyms.length === 0 ? <Text style={styles.feedback}>No hay gimnasios configurados. Aplica la migración SQL al proyecto Supabase.</Text> : null}
       {gyms.map(g => (
@@ -214,7 +216,10 @@ export default function LiveDating({ session }: { session: Session }) {
       ))}
       <Text style={styles.caption}>¿Con quién te gustaría coincidir?</Text>
       {MODE_OPTIONS.map(option => (
-        <Pressable key={option.value} style={[styles.choice, mode === option.value && styles.active]}
+        <Pressable key={option.value} testID={'dating-mode-'+option.value}
+          accessibilityRole="radio" accessibilityLabel={option.label}
+          accessibilityState={{checked:mode===option.value}}
+          style={[styles.choice, mode === option.value && styles.active]}
           onPress={() => setMode(option.value)}>
           <Text style={styles.body}>{mode === option.value ? '◉' : '○'} {option.label}</Text>
         </Pressable>
@@ -258,7 +263,8 @@ export default function LiveDating({ session }: { session: Session }) {
         }}>
         <Text style={styles.body}>＋ Agregar bloque semanal ({slots.length}/14)</Text>
       </Pressable>
-      <Pressable style={styles.button} disabled={busy || gyms.length === 0} onPress={() => void saveSettings()}>
+      <Pressable testID="dating-save" accessibilityRole="button" accessibilityLabel="Guardar preferencias de citas"
+        style={styles.button} disabled={busy || gyms.length === 0} onPress={() => void saveSettings()}>
         <Text style={styles.buttonText}>{busy ? 'Guardando...' : hasSetup && enabled ? 'Guardar preferencias' : 'Guardar y activar FitDating'}</Text>
       </Pressable>
       {enabled ? (

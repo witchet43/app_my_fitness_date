@@ -39,7 +39,9 @@ jobs:
       - name: Unit tests
         run: npm test
       - name: Android JavaScript bundle
-        run: npx expo export --platform android --output-dir /tmp/mfd-bundle
+        run: npx expo export --platform android --output-dir /tmp/mfd-android-bundle
+      - name: iOS JavaScript bundle
+        run: npx expo export --platform ios --output-dir /tmp/mfd-ios-bundle
       - name: PostgreSQL Gym Shield integration tests
         run: |
           psql -h localhost -U postgres -d app_test -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql

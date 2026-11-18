@@ -131,12 +131,13 @@ export default function LiveCommunity({ session }:{ session:Session }) {
     }catch(error){setError(errorText(error));}finally{setBusy(false);}
   }
 
-  return <View>
+  return <View testID="community-view">
     <Text style={s.title}>Fitness Community</Text>
     <Text style={s.hint}>Tu perfil social es independiente de FitDating. No se comparten gimnasios, horarios ni preferencias románticas.</Text>
     <View style={s.card}>
       <Text style={s.heading}>{profile?'Editar perfil deportivo':'Crear perfil deportivo'}</Text>
-      <TextInput style={s.field} value={displayName} onChangeText={setDisplayName} placeholder="Nombre público" placeholderTextColor="#839AA2"/>
+      <TextInput testID="community-name" accessibilityLabel="Nombre público"
+        style={s.field} value={displayName} onChangeText={setDisplayName} placeholder="Nombre público" placeholderTextColor="#839AA2"/>
       <TextInput style={s.field} value={city} onChangeText={setCity} placeholder="Ciudad" placeholderTextColor="#839AA2"/>
       <TextInput style={s.field} value={sports} onChangeText={setSports} placeholder="Deportes separados por coma" placeholderTextColor="#839AA2"/>
       <Pressable style={s.button} disabled={busy} onPress={() => void saveProfile()}>
@@ -147,10 +148,11 @@ export default function LiveCommunity({ session }:{ session:Session }) {
       <Text style={s.heading}>Comparte tu entrenamiento</Text>
       <TextInput style={s.field} value={sport} onChangeText={setSport}
         placeholder="Disciplina" placeholderTextColor="#839AA2"/>
-      <TextInput multiline style={[s.field,s.textarea]} value={body} maxLength={500}
+      <TextInput testID="community-post-body" accessibilityLabel="Contenido de publicación" multiline style={[s.field,s.textarea]} value={body} maxLength={500}
         onChangeText={setBody} placeholder="¿Qué hiciste hoy?" placeholderTextColor="#839AA2"/>
       <Text style={s.hint}>{body.length}/500 caracteres</Text>
-      <Pressable style={s.button} disabled={busy} onPress={() => void publish()}>
+      <Pressable testID="community-publish" accessibilityRole="button" accessibilityLabel="Publicar en comunidad"
+        style={s.button} disabled={busy} onPress={() => void publish()}>
         <Text style={s.buttonText}>Publicar</Text>
       </Pressable>
     </View>}

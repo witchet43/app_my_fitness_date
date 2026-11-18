@@ -57,7 +57,7 @@ export default function LiveTogether({ session }:{session:Session}) {
       setReportId(null);setMessage('Actividad reportada para revisión.');
     }catch(e){setMessage(formatError(e));}finally{setBusy(false);}
   }
-  return <View>
+  return <View testID="activities-view">
     <Text style={s.title}>Fitness Together</Text>
     <Text style={s.hint}>Actividades deportivas públicas para personas con intereses afines.
       No hace falta activar FitDating.</Text>
@@ -73,7 +73,9 @@ export default function LiveTogether({ session }:{session:Session}) {
         <Text style={s.heading}>{event.title}</Text>
         <Text style={s.body}>{event.description}</Text>
         <Text style={s.hint}>{event.city} · {new Date(event.starts_at).toLocaleString('es-MX')}</Text>
-        <Pressable style={attending?s.outline:s.primary} disabled={busy}
+        <Pressable testID={'activity-rsvp-'+event.id} accessibilityRole="button"
+          accessibilityLabel={attending?'Cancelar participación':'Confirmar participación'}
+          style={attending?s.outline:s.primary} disabled={busy}
           onPress={()=>void changeAttendance(event.id,attending)}>
           <Text style={attending?s.outlineText:s.primaryText}>
             {attending?'Cancelar participación':'Me interesa asistir'}
