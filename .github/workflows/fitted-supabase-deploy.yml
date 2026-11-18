@@ -1,14 +1,24 @@
 name: Fitted - controlled Supabase deployment
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/fitted-supabase-deploy.yml"
+      - "scripts/fitted_backend_preflight.py"
   workflow_dispatch:
     inputs:
-      component:
-        description: "Component to deploy"
+      action:
+        description: "Read-only verification or explicitly authorized deployment"
         type: choice
-        options: [function, migrations]
+        options: [verify, function, migrations]
         required: true
+        default: verify
       function_slug:
-        description: "Function slug (function deployment only)"
+        description: "Allowlisted function slug, when action=function"
+        type: string
+        required: false
+      confirmation:
+        description: "For production writes only: DEPLOY_FITTED_PROD"
         type: string
         required: false
 permissions:
@@ -17,14 +27,36 @@ concurrency:
   group: fitted-supabase-production
   cancel-in-progress: false
 jobs:
-  supabase-production:
+  verify:
+    name: Read-only production preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify production HTTP health, DB heartbeat and anonymous denial
+        run: python3 scripts/fitted_backend_preflight.py
+      - name: Validate documentary controls without approving release
+        run: python3 scripts/check_saas_factory.py
+  deploy:
+    name: Controlled production write
+    needs: verify
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.action != 'verify' &&
+      inputs.confirmation == 'DEPLOY_FITTED_PROD' &&
+      vars.FITTED_PROD_DEPLOY_ENABLED == 'true' &&
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       PROJECT_REF: jtrdvnwbxpfdnbzasvcj
+      COMPONENT: ${{ inputs.action }}
+      FUNCTION_SLUG: ${{ inputs.function_slug }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,30 +65,37 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - name: Check configuration and release control
-        run: |
-          test -n "$SUPABASE_ACCESS_TOKEN"
-          python3 scripts/check_saas_factory.py
-          test "${{ github.ref }}" = "refs/heads/main"
-      - name: Deploy explicitly requested component
-        env:
-          COMPONENT: ${{ inputs.component }}
-          FUNCTION_SLUG: ${{ inputs.function_slug }}
+      - name: Enforce configuration and source policy
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$COMPONENT" == "function" ]]; then
-            case "$FUNCTION_SLUG" in
-              fit-ia-v1|fitted-ai-summary-b18|member-api-v26|heartbeat)
-                test -d "supabase/functions/$FUNCTION_SLUG"
-                supabase functions deploy "$FUNCTION_SLUG" --project-ref "$PROJECT_REF"
-                ;;
-              *) echo "Function not allowlisted"; exit 1 ;;
-            esac
-          elif [[ "$COMPONENT" == "migrations" ]]; then
-            test -n "$SUPABASE_DB_PASSWORD"
-            supabase link --project-ref "$PROJECT_REF"
-            supabase db push
-          else
-            exit 1
-          fi
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test "${{ github.ref }}" = "refs/heads/main"
+          python3 scripts/check_saas_factory.py
+          case "$COMPONENT" in function|migrations) ;; *) exit 1 ;; esac
+      - name: Deploy approved function only
+        if: inputs.action == 'function'
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$FUNCTION_SLUG" in
+            fit-ia-v1|fitted-ai-summary-b18|member-api-v26|heartbeat)
+              test -f "supabase/functions/$FUNCTION_SLUG/index.ts"
+              supabase functions deploy "$FUNCTION_SLUG" --project-ref "$PROJECT_REF"
+              ;;
+            *) echo "Function not allowlisted"; exit 1 ;;
+          esac
+      - name: Inspect migrations without modifying remote database
+        if: inputs.action == 'migrations'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_PASSWORD"
+          supabase link --project-ref "$PROJECT_REF"
+          supabase db push --dry-run
+      - name: Apply explicitly approved migrations
+        if: inputs.action == 'migrations'
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db push
