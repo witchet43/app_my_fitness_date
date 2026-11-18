@@ -157,3 +157,9 @@ Esta sección **actualiza el rumbo del producto** sin reescribir el PDF FITTED n
 **Documentación vinculante:** [Estándar 40+ de diseño, paleta, tipo y tono](../design/SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md) y [requisitos BR-01..BR-12](LIFESTYLE_COMPATIBILITY_REQUIREMENTS.md).
 
 **No modificar** `release/readiness.json`, autenticación, políticas de edad, documentos legales, pagos ni exposición de datos a partir de esta directriz documental.
+
+## 10. Adenda de decisión de producto — lenguaje social Fitted (17-nov-2026)
+
+[Fitted: FIT, PULSE, SYNC e IMPULSO](FITTED_SOCIAL_INTERACTIONS.md) documenta los cuatro conceptos aprobados y 12 requisitos adicionales SI-01..SI-12; no forman parte de las 84 referencias históricas del PDF ni de los requisitos BR-01..BR-12 posteriores a la dirección 40+.
+
+FIT es interés explícito privado; SYNC es interés recíproco elegible; IMPULSO es reconocimiento social y PULSE es contenido voluntario. Esta decisión delimita el lenguaje y comportamiento funcional, sin cerrar otros aspectos de D-08 ni habilitar chat o publicación de datos externos. La implementación y la liberación siguen pendientes de evidencia y gates aplicables.

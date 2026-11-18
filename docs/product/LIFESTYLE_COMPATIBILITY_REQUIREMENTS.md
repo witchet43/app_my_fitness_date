@@ -200,3 +200,11 @@ Estos controles provienen del **producto existente y Estándar Maestro v1.9**, n
 **Precedencia explícita:** si una propuesta del PDF (p. ej., `still exploring`, swipe «photo-first» o lenguaje informal de dating) sugiere citas casuales o una estética de enamorados, **la dirección posterior confirmada por el propietario prevalece** para My Fitness Date. Mantener intacta la lectura histórica del PDF.
 
 **Decisión aún pendiente:** si «mayores de 40» es únicamente público objetivo o también una **restricción de edad de admisión**. **No** introducir por inferencia el segundo caso en Auth, API o términos.
+
+---
+
+## N. Adenda de decisión de producto — lenguaje social Fitted (17-nov-2026)
+
+[Fitted: FIT, PULSE, SYNC e IMPULSO](FITTED_SOCIAL_INTERACTIONS.md) documenta los cuatro conceptos aprobados y 12 requisitos adicionales SI-01..SI-12; no forman parte de las 84 referencias históricas del PDF ni de los requisitos BR-01..BR-12.
+
+FIT es interés explícito privado; SYNC es interés recíproco elegible; IMPULSO es reconocimiento social y PULSE es contenido voluntario. Esta decisión define el lenguaje social y delimita el comportamiento funcional sin habilitar chat, publicación de datos externos ni implementación. Todos los requisitos SI siguen pendientes de validación y gates aplicables.

@@ -41,3 +41,7 @@
 4. Enlazar issue → PR → pruebas → release; revisar el Estándar Maestro v1.9 y el estado `release/readiness.json` antes de desplegar.
 
 **Estado:** documentación incorporada para análisis; no hay autorización para renombrar el producto ni activar dating/chat/mensajería o nuevos tratamientos de datos.
+
+## Decisión de producto aprobada — 17 de noviembre de 2026
+
+- [Fitted: FIT, PULSE, SYNC e IMPULSO](FITTED_SOCIAL_INTERACTIONS.md): lenguaje social oficial, separación de reconocimiento e interés privado, criterios SI-01..SI-12 y backlog. Aprobación de conceptos, no de implementación ni release; preserva el PDF original y las decisiones restantes.
