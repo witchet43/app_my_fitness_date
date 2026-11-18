@@ -785,7 +785,6 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               onEditIdentity:widget.onEdit,
             ),
           ),
-          ),
           section(FittedLocaleScope.t(context,
             'Mis aplicaciones deportivas','My sports apps'),
             Icons.insights_outlined,FitDateColors.aqua,
