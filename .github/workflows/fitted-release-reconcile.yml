@@ -1,0 +1,47 @@
+name: Fitted - production release reconciliation
+on:
+  workflow_run:
+    workflows: ["Fitted - canonical unified authentication release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Exact deployed commit SHA to verify"
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fitted-production-reconcile
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Confirm public Cloudflare commit and HTTP routes
+        env:
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || inputs.sha }}
+        run: python3 scripts/fitted_release_audit.py --sha "$EXPECTED_SHA"
+      - name: Record provenance
+        env:
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || inputs.sha }}
+        run: |
+          mkdir -p release-evidence
+          python3 - <<'PY'
+          import json,os
+          d={"commit":os.environ["EXPECTED_SHA"],"status":"CLOUDFLARE_SHA_VERIFIED",
+             "note":"Supabase migration/function parity and authenticated E2E require independent evidence; this job does not certify those."}
+          open("release-evidence/result.json","w").write(json.dumps(d,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fitted-production-release-evidence
+          path: release-evidence/result.json
+          retention-days: 30

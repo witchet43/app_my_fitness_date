@@ -32,13 +32,22 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/mfd-canonical-auth-release.yml"
+      - "apps/flutter_client/**"
+      - "cloudflare/**"
+      - "scripts/build_fitted_brand_assets.py"
+      - "scripts/check_fitted_brand_assets.py"
+      - "scripts/check_public_legal.py"
+      - "scripts/test_fitted_legal_brand.cjs"
+      - "scripts/verify_hosted_auth.py"
+      - "scripts/fitted_release_audit.py"
+      - "!**/*.md"
   workflow_dispatch:
 permissions:
   contents: read
   deployments: write
 concurrency:
   group: mfd-canonical-cloudflare-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   canonical-release:
     runs-on: ubuntu-latest
