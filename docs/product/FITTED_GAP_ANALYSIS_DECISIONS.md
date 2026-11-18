@@ -137,3 +137,23 @@
 | SaaS Factory v1.9 | Marco de ingeniería aprobado y 219 controles | **No** |
 
 **Responsable de decisiones:** por designar/confirmar. **Evidencia de investigación:** SIN_DATOS. **Estado general:** exploración documentada, **sin features desplegadas por este cambio**.
+
+---
+
+## 9. Dirección posterior del propietario — relaciones serias, público 40+ (11-nov-2026)
+
+Esta sección **actualiza el rumbo del producto** sin reescribir el PDF FITTED ni dar por implementadas sus ideas. La visión confirmada para **My Fitness Date** es una app de **conexiones serias con intención de relación estable**, dirigida principalmente a **personas mayores de 40 años**, con estética **elegante, discreta y formal**.
+
+**Decisiones de producto YA confirmadas:** no app vulgar, hookups, citas casuales, rosa/rojo de enamorados como identidad, iconografía repetitiva de corazones, sexualización, gamificación de likes ni copy adolescente; la plataforma se centra en valores, proyectos y compatibilidad de vida.
+
+**Decisiones que CONTINÚAN abiertas:**
+- D-01: marca FITTED vs. My Fitness Date. Se conserva My Fitness Date.
+- D-02: comunidad deportiva con FitDating opt-in vs. dating-first. **La seriedad de las relaciones ya está decidida**, pero no la estructura de navegación/módulos.
+- D-03/D-04/D-08: MVP, variables de matching y posible mensajería; ninguna función nueva se activa por el nuevo posicionamiento.
+- Nuevo **D-15:** ¿el foco de marketing 40+ también exige limitar legal y técnicamente los registros a 40+? **No decidido**; mantener la elegibilidad actual hasta aprobación expresa y revisión jurídica.
+- Nuevo **D-16:** ¿qué nuevo logo/isotipo sustituye el corazón rojo/rosa de los assets anteriores? **No decidido**; no borrar recursos existentes ni proclamar que cumplen el estándar.
+- Nuevo **D-17:** aprobar valores HEX exactos y fuentes después de pruebas de contraste, licencias y diseño con el público; la **dirección sobria sí** está aprobada, pero la paleta y la pareja tipográfica presentadas son propuestas visuales por validar.
+
+**Documentación vinculante:** [Estándar 40+ de diseño, paleta, tipo y tono](../design/SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md) y [requisitos BR-01..BR-12](LIFESTYLE_COMPATIBILITY_REQUIREMENTS.md).
+
+**No modificar** `release/readiness.json`, autenticación, políticas de edad, documentos legales, pagos ni exposición de datos a partir de esta directriz documental.

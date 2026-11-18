@@ -173,3 +173,30 @@ Estos controles provienen del **producto existente y Estándar Maestro v1.9**, n
 4. [Visión previa MVP](../MVP.md), [arquitectura](../adr/0001-flutter-microservices-standard.md), [diseño](../design/ACTIVE_CHEMISTRY_AUDIT_V25.md), [gates](../../release/readiness.json).
 
 **No sustituye decisiones de producto ni el registro de control del estándar SaaS.** Aprobaciones de alcance, arquitectura, datos, UI, gastos y release requieren su propia evidencia.
+
+---
+
+## M. Requisitos de producto confirmados por el propietario (posteriores al PDF FITTED)
+
+**Origen:** directriz explícita del propietario (11-nov-2026), distinta del PDF exploratorio. **Estado:** `DIRECCIÓN CONFIRMADA`; **implementación:** `NO_EVALUADA`. Los IDs BR no se incluyen en las 84 referencias F/E/N originales y **no** equivalen a CI ni release aprobados.
+
+| ID | Requisito vinculante de dirección | Verificación futura |
+| --- | --- | --- |
+| BR-01 | Posicionamiento principal de conexiones con propósito y relaciones **serias y estables** | Copys/UX no venden hookups ni encuentros fugaces |
+| BR-02 | Público principal **mayores de 40 años**, personas maduras, serias y formales | Pruebas de contenido/uso con personas 40+ sin asumir un filtro técnico de edad |
+| BR-03 | Estética sobria, refinada y contemporánea, no vulgar ni adolescente | Auditoría visual contra el estándar de marca |
+| BR-04 | Colores neutros bosque/piedra/marfil con acentos discretos; no rosa/fucsia/rojo románticos como identidad | Tokens contrastados, revisión de diseño y QA claro/oscuro |
+| BR-05 | Tipografía editorial para títulos y sans accesible para UI; tamaños adecuados 40+ | Escala, licencias, legibilidad a 200% y WCAG 2.2 AA |
+| BR-06 | No usar corazones, cupidos, llamas, erotización ni gamificación del atractivo como motivos visuales | Inspección de iconos, UI, imágenes y microcopy |
+| BR-07 | No promocionar «citas casuales», «sin compromiso», «ligue» o presión de swipe constante | Revisión de registro, onboarding, perfil, discovery y notificaciones |
+| BR-08 | Priorizar valores, convivencia, proyectos de vida, tiempo compartido y expectativas relacionales | Prototipos How I Move / Live / Relate y evaluación de comprensión |
+| BR-09 | Fotos adultas auténticas y respetuosas, sin rankings ni estereotipos corporales | Revisión consentimientos, moderación, diversidad y privacidad |
+| BR-10 | Logos de corazón existentes son legado en conflicto; nuevo isotipo/wordmark requiere aprobación | ADR/decisión de marca y tests favicon, splash, app icon antes de sustituir |
+| BR-11 | Diseño transversal Web/Android/iOS, UI accesible, botones legibles y de tamaño suficiente | QA de pantallas, lectores y controles en dispositivos |
+| BR-12 | Conservar Gym Shield, opt-in, edad verificada, RLS y reportes | Pruebas de seguridad; no se derivan elegibilidades de marketing 40+ |
+
+**Documento rector:** [Estándar de marca 40+ para relaciones serias](../design/SERIOUS_RELATIONSHIPS_40PLUS_BRAND_STANDARD.md).
+
+**Precedencia explícita:** si una propuesta del PDF (p. ej., `still exploring`, swipe «photo-first» o lenguaje informal de dating) sugiere citas casuales o una estética de enamorados, **la dirección posterior confirmada por el propietario prevalece** para My Fitness Date. Mantener intacta la lectura histórica del PDF.
+
+**Decisión aún pendiente:** si «mayores de 40» es únicamente público objetivo o también una **restricción de edad de admisión**. **No** introducir por inferencia el segundo caso en Auth, API o términos.
