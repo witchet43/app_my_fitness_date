@@ -5,14 +5,16 @@ import '../core/fit_ia_repository.dart';
 import '../core/fitted_locale.dart';
 import '../core/live_brand.dart';
 import '../widgets/fit_ia_mascot.dart';
+import 'private_strava_evidence_card.dart';
 
 /// Fit-IA v3 is AI-only. Curated questions are model guidance, never a
 /// mandatory fixed questionnaire. Text is durably stored before AI inference.
 class FitIaNaturalChatPage extends StatefulWidget{
   const FitIaNaturalChatPage({super.key,required this.repository,
-    this.initialPillar=0}):assert(initialPillar>=0&&initialPillar<3);
+    this.initialPillar=0,this.ownerId='' }):assert(initialPillar>=0&&initialPillar<3);
   final FitIaRepository repository;
   final int initialPillar;
+  final String ownerId;
   @override
   State<FitIaNaturalChatPage> createState()=>_FitIaNaturalChatPageState();
 }
@@ -489,6 +491,11 @@ class _FitIaNaturalChatPageState extends State<FitIaNaturalChatPage>{
     final current=depth;
     return ListView(key:const Key('fit-ia-insights-panel'),
       padding:EdgeInsets.zero,children:[
+        if(active==0 && widget.ownerId.isNotEmpty)
+          Padding(
+            padding:const EdgeInsets.only(bottom:12),
+            child:PrivateStravaEvidenceCard(
+              ownerId:widget.ownerId)),
         Card(margin:const EdgeInsets.only(bottom:12),
           child:Padding(padding:const EdgeInsets.all(18),
             child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[

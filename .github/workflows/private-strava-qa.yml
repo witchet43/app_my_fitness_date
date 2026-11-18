@@ -1,0 +1,49 @@
+name: Fitted - private activity evidence QA
+on:
+  push:
+    branches: [feat/private-strava-export-insights-20261116]
+    paths:
+      - .build-gates/private-strava-qa-request.txt
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-activity-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SaaS Factory checks without deploying
+        run: python3 scripts/check_saas_factory.py
+      - name: Enforce owner-only and zero Strava API use
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          feature=Path('apps/flutter_client/lib/src/features/private_strava_evidence_card.dart').read_text()
+          owner=Path('apps/flutter_client/lib/src/features/member_profile_v26.dart').read_text()
+          conv=Path('apps/flutter_client/lib/src/features/fit_ia_conversation_page.dart').read_text()
+          engine=Path('apps/flutter_client/lib/src/core/private_activity_evidence.dart').read_text()
+          assert "PrivateStravaEvidenceCard(" in owner and "selectedArea==0" in owner
+          assert "if(current==0 && widget.ownerId.isNotEmpty)" in conv
+          assert "PrivateStravaEvidenceCard(ownerId:widget.ownerId)" in conv
+          assert "FilePicker.pickFile" in feature and "file.readAsBytes()" in feature
+          assert "SharedPreferences" in feature
+          assert "activityDay" in engine and "primarySportShare" in engine
+          assert "api.strava.com" not in engine and "OAuthProvider" not in engine
+          assert "supabase.functions.invoke" not in feature and "fitIa" not in feature
+          PY
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Restore Flutter project
+        working-directory: apps/flutter_client
+        run: |
+          flutter create --platforms=web . --project-name=my_fitness_date
+          flutter pub get
+      - name: Analyze Dart and test private activity analyzer
+        working-directory: apps/flutter_client
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test test/private_activity_evidence_test.dart

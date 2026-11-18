@@ -1,0 +1,4 @@
+Private Strava export local-only Dart analyze + targeted tests; single QA run.
+Rerun after correcting QA assertion against comment text.
+Rerun after adapting FilePicker v13 API based on pub.dev docs.
+Final rerun after merge with main and Dart build fixes.

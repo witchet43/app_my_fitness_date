@@ -5,6 +5,7 @@ import '../core/member_v26_api.dart';
 import 'dating_v27.dart';
 import 'fit_ia_natural_chat_page.dart';
 import 'fitted_profile_story_v28.dart';
+import 'private_strava_evidence_card.dart';
 import '../core/fitted_profile_insights_v29.dart';
 import 'fitted_gym_shield_v28.dart';
 import 'fitted_two_panel_home_b18.dart';
@@ -548,7 +549,8 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
   Future<void> configurePillars([int initialPillar=0])async{
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder:(_)=>FitIaNaturalChatPage(
-        repository:widget.api,initialPillar:initialPillar)));
+        repository:widget.api,initialPillar:initialPillar,
+        ownerId:widget.api.auth.auth.currentUser?.id ?? '')));
     if(mounted)await reload();
   }
 
@@ -783,6 +785,14 @@ class _MemberProfileHomeV26State extends State<MemberProfileHomeV26> {
               onEditIdentity:widget.onEdit,
             ),
           ),
+          section(FittedLocaleScope.t(context,
+            'Mis aplicaciones deportivas','My sports apps'),
+            Icons.insights_outlined,FitDateColors.aqua,
+            PrivateStravaEvidenceCard(
+              key:ValueKey('private-strava-owner-' +
+                (widget.api.auth.auth.currentUser?.id ?? 'signed-out')),
+              ownerId:widget.api.auth.auth.currentUser?.id ?? '',
+            )),
 
           if((lifestyle!=null &&
                 (lifestyle!['challenge']??'').toString().trim().isNotEmpty) ||
